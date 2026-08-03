@@ -1,0 +1,90 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# --- Virtual environment ---
+.venv/
+venv/
+env/
+
+# --- IDE / editor temp files ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# --- Secrets / environment files ---
+.env
+.env.*
+*.pem
+*.key
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+
+# --- Test / lint caches ---
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Datasets and generated frames (kept out of git; large/regenerable) ---
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# data/frames has train/val/test subfolders (Milestone 2); keep the
+# subfolders themselves but ignore the (potentially huge) PNGs inside.
+data/frames/*
+!data/frames/train/
+!data/frames/val/
+!data/frames/test/
+data/frames/train/*
+!data/frames/train/.gitkeep
+data/frames/val/*
+!data/frames/val/.gitkeep
+data/frames/test/*
+!data/frames/test/.gitkeep
+
+# --- Training / inference outputs (regenerable; can be large) ---
+outputs/checkpoints/*
+!outputs/checkpoints/.gitkeep
+outputs/compressed/*
+!outputs/compressed/.gitkeep
+outputs/reconstructed/*
+!outputs/reconstructed/.gitkeep
+outputs/metrics/*
+!outputs/metrics/.gitkeep
+outputs/visualizations/*
+!outputs/visualizations/.gitkeep
+
+# --- Model checkpoint / export formats ---
+*.pt
+*.pth
+*.ckpt
+*.onnx
+
+# --- Custom Neural Video Codec binary format ---
+*.nvc
+*.bin
+
+# --- Video / image artifacts (raw footage, reconstructed output, frame dumps) ---
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+
+# --- Logs and temp files ---
+*.log
+*.tmp

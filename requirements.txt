@@ -1,0 +1,33 @@
+# Neural Video Compression & Streaming Engine - dependencies
+#
+# Install with:
+#   pip install -r requirements.txt
+#
+# IMPORTANT (torch / torchvision):
+# The versions below install a working CPU build on every platform. If you
+# have an NVIDIA GPU and want CUDA acceleration matched to your driver
+# version, follow the CUDA-specific install instructions in README.md
+# BEFORE running this file, or re-run `pip install torch torchvision`
+# with the index URL from https://pytorch.org/get-started/locally/
+# afterward to replace the CPU build.
+
+torch>=2.4,<3.0
+torchvision>=0.19,<1.0
+
+# Computer vision / video frame I/O
+opencv-python>=4.9,<5.0
+
+# Numerical computing
+numpy>=1.26,<3.0
+
+# Image I/O utilities
+Pillow>=10.2,<11.0
+
+# Plotting for metrics and visualizations
+matplotlib>=3.8,<4.0
+
+# Progress bars for frame/data processing loops
+tqdm>=4.66,<5.0
+
+# --- Development / testing (not part of the runtime engine) ---
+pytest>=8.0,<9.0
