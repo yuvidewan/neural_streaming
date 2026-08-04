@@ -1,4 +1,5 @@
-"""Video/image-sequence inspection, frame extraction, and dataset ingestion.
+"""Video/image-sequence inspection, frame extraction, dataset ingestion,
+and the PyTorch data pipeline built on top of it.
 
 - video_utils:      OpenCV VideoCapture wrapper with clear validation errors
 - sequence_utils:   folder-of-images (e.g. DAVIS-style) discovery + validation
@@ -9,7 +10,10 @@
                      backward compatibility, still used directly by ingest.py
 - ingest:           source-agnostic pipeline (video or image sequence) used
                      by scripts/prepare_dataset.py
+- validation:       DatasetValidationError + frame tensor sanity checks
+- frame_dataset:    FrameDataset (torch.utils.data.Dataset), reads manifest.json
+- transforms:       train/eval transform pipelines for FrameDataset
+- loaders:          create_train_loader/create_val_loader/create_test_loader
 
-A torch.utils.data.Dataset/DataLoader built on top of the extracted PNG
-frames is planned for a later milestone and not implemented here.
+No neural network, VAE, compression, or streaming code lives here yet.
 """

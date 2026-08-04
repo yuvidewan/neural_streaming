@@ -1,5 +1,7 @@
-"""Compression quality and performance metrics (not yet implemented).
+"""Compression quality and performance metrics.
 
-Planned: PSNR, MS-SSIM, MSE, bits-per-pixel (BPP), compression ratio,
-encoding time, decoding time, and comparisons against H.264/H.265.
+- basic_metrics: MSE, PSNR (implemented)
+
+Not implemented yet: MS-SSIM, bits-per-pixel (BPP), compression ratio,
+encoding/decoding time, and comparisons against H.264/H.265.
 """

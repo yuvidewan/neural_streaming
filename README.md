@@ -14,13 +14,13 @@ that compares to conventional codecs on quality and size.
 
 ## Current Development Status
 
-**Milestone 2.5 (this repository state): repository foundation + a source-agnostic dataset ingestion pipeline (video files and image-sequence datasets).**
+**Milestone 3 (this repository state): repository foundation + dataset ingestion + a PyTorch data pipeline. No neural network yet.**
 
 Implemented:
 - Repository/directory structure
 - Python environment configuration (`requirements.txt`, `pyproject.toml`)
 - A typed configuration mechanism (`src/nvc/utils/config.py`), now including
-  preprocessing settings
+  preprocessing and data-loading settings
 - `scripts/check_environment.py` environment verification
 - Video metadata inspection (`src/nvc/data/video_utils.py`)
 - Image-sequence (folder-of-frames, e.g. DAVIS-style) discovery and
@@ -36,14 +36,25 @@ Implemented:
   as-is for backward compatibility
 - `scripts/prepare_dataset.py` CLI supporting `--source-type video`,
   `--source-type image-sequence`, or auto-detection
-- Package skeleton with no logic yet (`src/nvc/{models,compression,evaluation}`)
+- **`FrameDataset`**, a `torch.utils.data.Dataset` that reads `manifest.json`
+  and lazily loads RGB frame tensors (`src/nvc/data/frame_dataset.py`)
+- Train/eval transform pipelines - horizontal flip + optional crop only
+  (`src/nvc/data/transforms.py`)
+- `create_train_loader`/`create_val_loader`/`create_test_loader` DataLoader
+  factories with Windows-safe defaults (`src/nvc/data/loaders.py`)
+- Dataset/tensor validation utilities (`src/nvc/data/validation.py`)
+- `get_device()` and `seed_everything()` utilities
+  (`src/nvc/utils/device.py`, `src/nvc/utils/seed.py`)
+- `MSE`/`PSNR` metrics (`src/nvc/evaluation/basic_metrics.py`)
+- `scripts/inspect_dataset.py` - reports dataset sizes/tensor stats and can
+  save a sample visualization grid
+- Package skeleton with no logic yet (`src/nvc/{models,compression}`)
 
 **Not implemented yet** (do not assume any of this works):
-- A PyTorch `Dataset`/`DataLoader` over the extracted frames
 - Any neural network (encoder, decoder, VAE)
 - Quantization, entropy coding, or the `.nvc` format itself
 - Reconstruction or video reassembly
-- PSNR / MS-SSIM / MSE / BPP / compression-ratio / timing evaluation
+- MS-SSIM / BPP / compression-ratio / timing evaluation
 - Comparison against H.264/H.265
 - FastAPI serving layer
 - ONNX Runtime inference
@@ -83,7 +94,8 @@ neural_streaming/
 ├── configs/                 # JSON config files (default.json)
 ├── data/
 │   ├── raw/                 # Video datasets: source video files go here (gitignored)
-│   ├── frames/              # Extracted PNG frames (gitignored)
+│   ├── external/            # Extracted third-party datasets, e.g. DAVIS (gitignored)
+│   ├── frames/               # Extracted PNG frames (gitignored)
 │   │   ├── train/
 │   │   ├── val/
 │   │   └── test/
@@ -95,10 +107,11 @@ neural_streaming/
 │   ├── compressed/          # .nvc files (gitignored)
 │   ├── reconstructed/       # Decoded frames/video (gitignored)
 │   ├── metrics/             # Evaluation results (gitignored)
-│   └── visualizations/      # Plots/figures (gitignored)
+│   └── visualizations/      # Plots/figures, e.g. dataset_grid.png (gitignored)
 ├── scripts/
 │   ├── check_environment.py
-│   └── prepare_dataset.py   # video and image-sequence ingestion CLI
+│   ├── prepare_dataset.py   # video and image-sequence ingestion CLI
+│   └── inspect_dataset.py   # PyTorch data pipeline sanity-check / visualization CLI
 ├── src/
 │   └── nvc/
 │       ├── data/
@@ -108,16 +121,25 @@ neural_streaming/
 │       │   ├── sources.py           # DatasetSource strategy (video / image-sequence)
 │       │   ├── ingest.py            # unified pipeline used by the CLI
 │       │   ├── dataset_prep.py      # original Milestone 2 video-only pipeline
-│       │   └── errors.py            # shared DatasetSourceError base
+│       │   ├── errors.py            # shared DatasetSourceError base
+│       │   ├── validation.py        # DatasetValidationError + frame tensor checks
+│       │   ├── frame_dataset.py     # FrameDataset (torch.utils.data.Dataset)
+│       │   ├── transforms.py        # train/eval transform pipelines
+│       │   └── loaders.py           # DataLoader factories
 │       ├── models/          # Encoder/decoder networks (empty package)
 │       ├── compression/     # Quantization, entropy coding, .nvc I/O (empty package)
-│       ├── evaluation/      # PSNR/MS-SSIM/etc. metrics (empty package)
-│       └── utils/           # Config (implemented)
+│       ├── evaluation/
+│       │   └── basic_metrics.py     # MSE, PSNR (MS-SSIM not yet implemented)
+│       └── utils/
+│           ├── config.py            # Config dataclass (implemented)
+│           ├── device.py            # get_device()
+│           └── seed.py              # seed_everything()
 ├── tests/
-│   ├── helpers.py                    # shared synthetic video/sequence fixtures
+│   ├── helpers.py                    # shared synthetic video/sequence/manifest fixtures
 │   ├── test_project_setup.py
 │   ├── test_dataset_preparation.py   # video pipeline (Milestone 2)
-│   └── test_dataset_ingestion.py     # image-sequence + unified pipeline (Milestone 2.5)
+│   ├── test_dataset_ingestion.py     # image-sequence + unified pipeline (Milestone 2.5)
+│   └── test_pytorch_pipeline.py      # FrameDataset/transforms/loaders/metrics (Milestone 3)
 ├── .gitignore
 ├── pyproject.toml
 ├── README.md
@@ -401,6 +423,111 @@ directly - `scripts/prepare_dataset.py` now calls the newer, source-agnostic
 `src/nvc/data/ingest.py` instead, which supports both source types and
 produces the unified manifest described above.
 
+## PyTorch Data Pipeline
+
+**Status: implemented (Milestone 3).** This is the `torch.utils.data`
+layer every future model (autoencoder, VAE, quantizer, ...) will consume.
+It only loads and batches frames - there is no neural network, no
+compression, and nothing here trains anything.
+
+### FrameDataset
+
+`src/nvc/data/frame_dataset.py` implements `FrameDataset(torch.utils.data.Dataset)`.
+It reads `manifest.json` directly (not by globbing `data/frames/`), so it
+works identically whether the underlying frames came from raw videos or an
+image-sequence dataset like DAVIS - exactly the point of Milestone 2.5's
+unified manifest. Construction only parses the (small) manifest JSON and
+builds a flat list of file paths per split; **no image is read or decoded
+until `__getitem__` is called**, so datasets of any size never get
+preloaded into RAM.
+
+Each `__getitem__` call:
+1. Reads the PNG/JPEG with OpenCV (`cv2.imread`) - consistent with the
+   rest of `src/nvc/data/`, which already uses OpenCV throughout.
+2. Converts BGR to RGB (`cv2.cvtColor(..., cv2.COLOR_BGR2RGB)`) - OpenCV
+   always loads into memory as BGR regardless of the file's actual
+   (correct) colors, so this conversion is required on every read. This
+   is the mirror image of `frame_extraction.py`'s write path, which
+   intentionally does *not* convert, because `cv2.imwrite` expects BGR.
+3. Converts to a `torch.float32` tensor, shape `[3, H, W]`, scaled to
+   `[0, 1]` (dividing by 255) - **no ImageNet normalization**, since this
+   is a reconstruction task, not classification; the model needs to
+   reproduce actual pixel values, not classify against a pretrained
+   feature distribution.
+4. Validates the tensor's dtype/shape/channel-count/pixel-range
+   (`src/nvc/data/validation.py`) and applies the split's transform.
+
+Missing manifests and missing frame directories raise a clear
+`DatasetValidationError` at construction time (fail fast, before any
+training loop starts); a missing/corrupt individual image raises the same
+error at `__getitem__` time instead of a confusing `None`/`AttributeError`
+from OpenCV's silent failure.
+
+### Transforms
+
+`src/nvc/data/transforms.py` provides `build_train_transform(crop_size=None)`
+and `build_eval_transform(crop_size=None)`. Training may apply an optional
+fixed-size `RandomCrop` plus `RandomHorizontalFlip` (p=0.5) - nothing else.
+Validation/test apply the deterministic counterpart (`CenterCrop` to the
+same size, no flip) so eval results are reproducible run to run. No
+vertical flip, color jitter, rotation, or perspective warp - those would
+teach the model to reconstruct frames that don't look like real video.
+
+### DataLoader factories
+
+`src/nvc/data/loaders.py` provides `create_train_loader()`,
+`create_val_loader()`, and `create_test_loader()`. Train shuffles (with a
+seeded `torch.Generator` for reproducible epoch order); validation and
+test never shuffle. All three default to `num_workers=0` - the
+Windows-safe default, since worker processes on Windows are spawned (not
+forked) and require the caller's entry point to be guarded by
+`if __name__ == "__main__":`; pass `num_workers` > 0 explicitly once
+you've set that up.
+
+### Dataset validation
+
+`src/nvc/data/validation.py` defines `DatasetValidationError` and
+`validate_frame_tensor()`, checking dtype (`float32`), shape (`[C, H, W]`),
+channel count (3), dimensions (against the manifest's recorded target
+resolution, when known), and pixel range (`[0, 1]`). `FrameDataset` runs
+this on every sample it loads; it's also directly unit-testable against
+synthetic bad tensors.
+
+### Visualization / inspection
+
+```powershell
+python scripts\inspect_dataset.py
+python scripts\inspect_dataset.py --visualize
+```
+
+Prints total/train/val/test frame and batch counts, a sample batch's
+shape/dtype/pixel range, and the selected device. `--visualize` saves a
+grid of sample training frames to `outputs/visualizations/dataset_grid.png`
+via `torchvision.utils.make_grid` + matplotlib - since `FrameDataset`
+already converted BGR to RGB on load, no further color correction is
+needed before display.
+
+### Device utility
+
+`src/nvc/utils/device.py` provides `get_device()`: returns
+`torch.device("cuda")` and prints the GPU name + VRAM when a CUDA GPU is
+available, otherwise returns `torch.device("cpu")` and prints that. Never
+mandatory - everything in this project runs on CPU.
+
+### Reproducibility
+
+`src/nvc/utils/seed.py` provides `seed_everything(seed, deterministic=False)`,
+seeding Python's `random`, NumPy, and PyTorch (CPU and any GPU) together.
+`deterministic=True` additionally requests PyTorch's deterministic
+algorithms - opt-in, since it can be slower and some ops don't support it.
+
+### Metrics
+
+`src/nvc/evaluation/basic_metrics.py` implements only `mse()` and `psnr()`
+(no MS-SSIM yet). For identical inputs, `mse() == 0.0` and
+`psnr() == float("inf")` - handled explicitly rather than relying on
+floating-point divide-by-zero behavior.
+
 ## 12-Week Roadmap (Minor Project Scope)
 
 This roadmap covers the core neural codec only (proof of concept, local
@@ -413,7 +540,7 @@ contract, and each milestone requires explicit sign-off before starting.
 |------|-------|
 | 1-2  | Repository foundation, environment setup, dataset selection strategy *(done - Milestone 1)* |
 | 3-4  | Frame extraction pipeline (OpenCV), train/val/test dataset preparation, and generalized ingestion for image-sequence datasets like DAVIS *(done - Milestones 2 & 2.5)* |
-| 5-6  | Encoder network: CNN downsampling architecture (VAE encoder) |
+| 5-6  | PyTorch data pipeline (`FrameDataset`, transforms, DataLoaders) *(done - Milestone 3)*; encoder network: CNN downsampling architecture (VAE encoder) *(not started)* |
 | 7    | Latent space design, quantization, and entropy coding groundwork |
 | 8    | `.nvc` binary serialization format and decoder network (deconvolutional/generative) |
 | 9    | End-to-end encode/decode pipeline integration and training loop |

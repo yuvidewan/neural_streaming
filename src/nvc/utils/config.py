@@ -41,6 +41,7 @@ class Config:
     frames_dir: Path = PROJECT_ROOT / "data" / "frames"
     processed_data_dir: Path = PROJECT_ROOT / "data" / "processed"
     checkpoint_dir: Path = PROJECT_ROOT / "outputs" / "checkpoints"
+    visualizations_dir: Path = PROJECT_ROOT / "outputs" / "visualizations"
 
     # --- Dataset preprocessing parameters ---
     every_n_frames: int = 1
@@ -50,6 +51,10 @@ class Config:
     random_seed: int = 42
     supported_video_extensions: tuple[str, ...] = (".mp4", ".avi", ".mov", ".mkv", ".webm")
     supported_image_extensions: tuple[str, ...] = (".jpg", ".jpeg", ".png")
+
+    # --- PyTorch data pipeline parameters ---
+    num_workers: int = 0
+    random_crop_size: int | None = None
 
     @classmethod
     def from_json(cls, path: str | Path) -> "Config":
@@ -66,7 +71,10 @@ class Config:
             )
 
         config = cls()
-        path_fields = {"raw_data_dir", "frames_dir", "processed_data_dir", "checkpoint_dir"}
+        path_fields = {
+            "raw_data_dir", "frames_dir", "processed_data_dir",
+            "checkpoint_dir", "visualizations_dir",
+        }
         tuple_fields = {"supported_video_extensions", "supported_image_extensions"}
         for key, value in overrides.items():
             if key in path_fields:
