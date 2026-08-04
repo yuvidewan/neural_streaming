@@ -49,6 +49,7 @@ class Config:
     test_ratio: float = 0.1
     random_seed: int = 42
     supported_video_extensions: tuple[str, ...] = (".mp4", ".avi", ".mov", ".mkv", ".webm")
+    supported_image_extensions: tuple[str, ...] = (".jpg", ".jpeg", ".png")
 
     @classmethod
     def from_json(cls, path: str | Path) -> "Config":
@@ -66,7 +67,7 @@ class Config:
 
         config = cls()
         path_fields = {"raw_data_dir", "frames_dir", "processed_data_dir", "checkpoint_dir"}
-        tuple_fields = {"supported_video_extensions"}
+        tuple_fields = {"supported_video_extensions", "supported_image_extensions"}
         for key, value in overrides.items():
             if key in path_fields:
                 value = Path(value)

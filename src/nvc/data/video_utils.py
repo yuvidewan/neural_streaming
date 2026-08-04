@@ -14,8 +14,10 @@ from typing import Iterable
 
 import cv2
 
+from nvc.data.errors import DatasetSourceError
 
-class VideoError(Exception):
+
+class VideoError(DatasetSourceError):
     """Base class for all video inspection/extraction errors."""
 
 

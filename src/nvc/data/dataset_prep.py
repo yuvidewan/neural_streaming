@@ -1,5 +1,12 @@
 """Dataset-level orchestration: video discovery, video-level train/val/test
 splitting, per-video frame extraction, and manifest/statistics generation.
+
+This is the original (Milestone 2) video-only pipeline, kept as-is for
+backward compatibility - assign_splits() and relpath_posix() are reused
+directly by the newer, source-agnostic pipeline in ingest.py, which also
+supports image-sequence datasets (see sources.py). New code that needs to
+handle both videos and image sequences should use ingest.ingest_dataset()
+instead of prepare_dataset() below.
 """
 
 from __future__ import annotations
@@ -99,7 +106,7 @@ def assign_splits(
     return assignment
 
 
-def _relpath_posix(path: Path, start: Path) -> str:
+def relpath_posix(path: Path, start: Path) -> str:
     return Path(os.path.relpath(path, start)).as_posix()
 
 
@@ -170,7 +177,7 @@ def prepare_dataset(
                 "target_width": result.target_width,
                 "target_height": result.target_height,
                 "preserve_aspect_ratio": result.preserve_aspect_ratio,
-                "frame_output_dir": _relpath_posix(output_dir, manifest_path.parent),
+                "frame_output_dir": relpath_posix(output_dir, manifest_path.parent),
                 "frame_filename_pattern": f"{result.filename_prefix}_{{index:06d}}.png",
                 "output_bytes": result.total_output_bytes,
             }

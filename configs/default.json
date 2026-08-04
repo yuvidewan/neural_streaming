@@ -10,5 +10,6 @@
   "val_ratio": 0.1,
   "test_ratio": 0.1,
   "random_seed": 42,
-  "supported_video_extensions": [".mp4", ".avi", ".mov", ".mkv", ".webm"]
+  "supported_video_extensions": [".mp4", ".avi", ".mov", ".mkv", ".webm"],
+  "supported_image_extensions": [".jpg", ".jpeg", ".png"]
 }

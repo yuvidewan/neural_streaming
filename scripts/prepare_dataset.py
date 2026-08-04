@@ -1,15 +1,25 @@
-"""Milestone 2 CLI: raw videos -> resized train/val/test PNG frame datasets + manifest.
+"""Dataset ingestion CLI: raw videos OR image-sequence folders -> resized
+train/val/test PNG frame datasets + manifest.
 
 Example usage (PowerShell, from the project root, with .venv activated):
 
+    # Video dataset (source type auto-detected from data/raw contents)
     python scripts\\prepare_dataset.py --input data\\raw
 
     python scripts\\prepare_dataset.py `
+        --source-type video `
         --input data\\raw `
         --width 256 `
         --height 256 `
         --every-n-frames 2 `
         --seed 42
+
+    # Image-sequence dataset, e.g. DAVIS's JPEGImages/480p/<sequence>/*.jpg
+    python scripts\\prepare_dataset.py `
+        --source-type image-sequence `
+        --input "D:\\Datasets\\DAVIS\\JPEGImages\\480p"
+
+If --source-type is omitted, it is auto-detected from --input and printed.
 
 Run `python scripts\\prepare_dataset.py --help` for the full option list.
 This script only extracts and organizes frames - it does not train, encode,
@@ -22,21 +32,39 @@ import argparse
 import sys
 from pathlib import Path
 
-from nvc.data.dataset_prep import prepare_dataset
+from nvc.data.ingest import ingest_dataset
 from nvc.utils.config import load_default_config
+
+_CLI_TO_INTERNAL_SOURCE_TYPE = {
+    "video": "video",
+    "image-sequence": "image_sequence",
+}
+_ITEM_LABELS = {
+    "video": "Videos",
+    "image_sequence": "Sequences",
+}
 
 
 def build_arg_parser(defaults) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Validate, extract, resize, and split video frames from data/raw "
-            "into train/val/test PNG datasets, and write a manifest.json."
+            "Validate, extract, resize, and split frames from either a folder of "
+            "raw videos or a folder of image-sequence subfolders into train/val/test "
+            "PNG datasets, and write a manifest.json."
         ),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
+        "--source-type", choices=["video", "image-sequence"], default=None,
+        help="Dataset kind. Omit to auto-detect from --input.",
+    )
+    parser.add_argument(
         "--input", type=Path, default=defaults.raw_data_dir,
-        help="Directory containing raw source videos.",
+        help=(
+            "For --source-type video: a folder containing video files directly "
+            "inside it. For image-sequence: a folder whose direct subfolders "
+            "are each one image sequence (e.g. DAVIS's JPEGImages/480p)."
+        ),
     )
     parser.add_argument(
         "--output", type=Path, default=defaults.frames_dir,
@@ -56,7 +84,7 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--every-n-frames", type=int, default=defaults.every_n_frames,
-        help="Keep 1 out of every N frames from each video (1 = every frame).",
+        help="Keep 1 out of every N frames from each video/sequence (1 = every frame).",
     )
     parser.add_argument(
         "--no-preserve-aspect-ratio", dest="preserve_aspect_ratio",
@@ -68,46 +96,54 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--train-ratio", type=float, default=defaults.train_ratio,
-        help="Fraction of videos (not frames) assigned to the training split.",
+        help="Fraction of videos/sequences (not frames) assigned to the training split.",
     )
     parser.add_argument(
         "--val-ratio", type=float, default=defaults.val_ratio,
-        help="Fraction of videos assigned to the validation split.",
+        help="Fraction of videos/sequences assigned to the validation split.",
     )
     parser.add_argument(
         "--test-ratio", type=float, default=defaults.test_ratio,
-        help="Fraction of videos assigned to the test split.",
+        help="Fraction of videos/sequences assigned to the test split.",
     )
     parser.add_argument(
         "--seed", type=int, default=defaults.random_seed,
-        help="Random seed controlling the video-level train/val/test split.",
+        help="Random seed controlling the item-level train/val/test split.",
     )
     return parser
 
 
 def _print_report(manifest: dict) -> None:
+    source_type = manifest["source_type"]
+    item_label = _ITEM_LABELS.get(source_type, "Items")
     summary = manifest["summary"]
+
+    detected_note = " (auto-detected)" if manifest["source_type_auto_detected"] else ""
+
     print("=" * 50)
     print("Dataset Preparation Summary")
     print("=" * 50)
-    print(f"Videos found:      {summary['total_videos_found']}")
-    print(f"Videos processed:  {summary['total_videos_processed']}")
-    print(f"Videos skipped:    {summary['total_videos_skipped']}")
+    print(f"Source type:          {source_type}{detected_note}")
+    print(f"{item_label} found:      {summary['total_items_found']}")
+    print(f"{item_label} processed:  {summary['total_items_processed']}")
+    print(f"{item_label} skipped:    {summary['total_items_skipped']}")
     print()
     for split in ("train", "val", "test"):
         print(
-            f"  {split:<5}: {summary['videos_per_split'][split]:>3} videos, "
+            f"  {split:<5}: {summary['items_per_split'][split]:>3} {item_label.lower()}, "
             f"{summary['frames_per_split'][split]:>6} frames"
         )
     print()
-    print(f"Total frames extracted: {summary['total_frames_extracted']}")
-    print(f"Approx. output size:    {summary['total_output_bytes'] / (1024 * 1024):.2f} MB")
+    singular_label = item_label[:-1].lower()
+    print(f"Total frames extracted:            {summary['total_frames_extracted']}")
+    print(f"Average frames per {singular_label}: {summary['average_frames_per_item']:.1f}")
+    print(f"Approx. output size:               {summary['total_output_bytes'] / (1024 * 1024):.2f} MB")
 
     if manifest["errors"]:
         print()
-        print(f"Skipped videos ({len(manifest['errors'])}):")
+        print(f"Skipped {item_label.lower()} ({len(manifest['errors'])}):")
         for err in manifest["errors"]:
-            print(f"  [SKIPPED] {err['source_video']}: {err['message']}")
+            print(f"  [SKIPPED] {err['source_name']}: {err['message']}")
 
     print("=" * 50)
 
@@ -126,11 +162,16 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[ERROR] Input directory does not exist: {args.input}", file=sys.stderr)
         return 1
 
+    internal_source_type = (
+        _CLI_TO_INTERNAL_SOURCE_TYPE[args.source_type] if args.source_type else None
+    )
+
     try:
-        manifest = prepare_dataset(
-            raw_dir=args.input,
+        manifest = ingest_dataset(
+            input_root=args.input,
             frames_root=args.output,
             manifest_path=args.manifest,
+            source_type=internal_source_type,
             target_width=args.width,
             target_height=args.height,
             every_n_frames=args.every_n_frames,
@@ -139,11 +180,15 @@ def main(argv: list[str] | None = None) -> int:
             val_ratio=args.val_ratio,
             test_ratio=args.test_ratio,
             seed=args.seed,
-            supported_extensions=defaults.supported_video_extensions,
+            video_extensions=defaults.supported_video_extensions,
+            image_extensions=defaults.supported_image_extensions,
         )
     except ValueError as exc:
         print(f"[ERROR] {exc}", file=sys.stderr)
         return 1
+
+    if manifest["source_type_auto_detected"]:
+        print(f"[INFO] Auto-detected source type: {manifest['source_type']}")
 
     _print_report(manifest)
     print(f"\nManifest written to: {args.manifest}")

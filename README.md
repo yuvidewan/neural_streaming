@@ -14,7 +14,7 @@ that compares to conventional codecs on quality and size.
 
 ## Current Development Status
 
-**Milestone 2 (this repository state): repository foundation + dataset preparation pipeline.**
+**Milestone 2.5 (this repository state): repository foundation + a source-agnostic dataset ingestion pipeline (video files and image-sequence datasets).**
 
 Implemented:
 - Repository/directory structure
@@ -23,11 +23,19 @@ Implemented:
   preprocessing settings
 - `scripts/check_environment.py` environment verification
 - Video metadata inspection (`src/nvc/data/video_utils.py`)
-- Frame extraction with configurable sampling and deterministic resize/crop
-  (`src/nvc/data/frame_extraction.py`)
-- Video-level train/val/test splitting, manifest generation, and dataset
-  statistics (`src/nvc/data/dataset_prep.py`)
-- `scripts/prepare_dataset.py` CLI tying the above together
+- Image-sequence (folder-of-frames, e.g. DAVIS-style) discovery and
+  validation (`src/nvc/data/sequence_utils.py`)
+- Frame extraction with configurable sampling and deterministic resize/crop,
+  shared by both source types (`src/nvc/data/frame_extraction.py`)
+- A small `DatasetSource` strategy abstraction (`src/nvc/data/sources.py`)
+  with `VideoDatasetSource` and `ImageSequenceDatasetSource` implementations
+- Item-level train/val/test splitting, unified manifest generation, and
+  dataset statistics for either source type (`src/nvc/data/ingest.py`),
+  plus source-type auto-detection
+- The original video-only pipeline (`src/nvc/data/dataset_prep.py`) is kept
+  as-is for backward compatibility
+- `scripts/prepare_dataset.py` CLI supporting `--source-type video`,
+  `--source-type image-sequence`, or auto-detection
 - Package skeleton with no logic yet (`src/nvc/{models,compression,evaluation}`)
 
 **Not implemented yet** (do not assume any of this works):
@@ -74,7 +82,7 @@ built to support.
 neural_streaming/
 ├── configs/                 # JSON config files (default.json)
 ├── data/
-│   ├── raw/                 # Source video files you place here (gitignored)
+│   ├── raw/                 # Video datasets: source video files go here (gitignored)
 │   ├── frames/              # Extracted PNG frames (gitignored)
 │   │   ├── train/
 │   │   ├── val/
@@ -90,17 +98,26 @@ neural_streaming/
 │   └── visualizations/      # Plots/figures (gitignored)
 ├── scripts/
 │   ├── check_environment.py
-│   └── prepare_dataset.py
+│   └── prepare_dataset.py   # video and image-sequence ingestion CLI
 ├── src/
 │   └── nvc/
-│       ├── data/            # video_utils, frame_extraction, dataset_prep (implemented)
+│       ├── data/
+│       │   ├── video_utils.py       # video validation + metadata
+│       │   ├── sequence_utils.py    # image-sequence validation + metadata
+│       │   ├── frame_extraction.py  # shared sampling/resize/crop/PNG export
+│       │   ├── sources.py           # DatasetSource strategy (video / image-sequence)
+│       │   ├── ingest.py            # unified pipeline used by the CLI
+│       │   ├── dataset_prep.py      # original Milestone 2 video-only pipeline
+│       │   └── errors.py            # shared DatasetSourceError base
 │       ├── models/          # Encoder/decoder networks (empty package)
 │       ├── compression/     # Quantization, entropy coding, .nvc I/O (empty package)
 │       ├── evaluation/      # PSNR/MS-SSIM/etc. metrics (empty package)
 │       └── utils/           # Config (implemented)
 ├── tests/
+│   ├── helpers.py                    # shared synthetic video/sequence fixtures
 │   ├── test_project_setup.py
-│   └── test_dataset_preparation.py
+│   ├── test_dataset_preparation.py   # video pipeline (Milestone 2)
+│   └── test_dataset_ingestion.py     # image-sequence + unified pipeline (Milestone 2.5)
 ├── .gitignore
 ├── pyproject.toml
 ├── README.md
@@ -198,41 +215,99 @@ exists) so that:
 
 `scripts/check_environment.py` reports which case applies to your machine.
 
-## Dataset Preparation
+## Dataset Ingestion
 
-**Status: implemented (Milestone 2).** This stage turns raw videos into a
-resized, split, PNG frame dataset. It does not train anything and does not
-touch compression - it only prepares data for a future PyTorch `Dataset`.
+**Status: implemented (Milestone 2.5).** This stage turns raw source data
+into a resized, split, PNG frame dataset. It does not train anything and
+does not touch compression - it only prepares data for a future PyTorch
+`Dataset`.
 
-### Where raw videos go
+### Supported dataset types
 
-Place source video files directly in `data/raw/` (no subfolders). This
-directory is gitignored - videos are never committed.
+Two source types, both producing the same kind of output:
 
-### Supported formats
+1. **`video`** - a folder of raw video files (Milestone 2's original
+   pipeline). Frames are decoded from each video with OpenCV.
+2. **`image-sequence`** - a folder whose direct subfolders are each one
+   already-extracted sequence of images, e.g. DAVIS's
+   `JPEGImages/480p/<sequence>/00000.jpg` layout. Any dataset using that
+   same "one folder per sequence" convention works - nothing is
+   DAVIS-specific.
 
-`.mp4`, `.avi`, `.mov`, `.mkv`, `.webm` (configurable via
-`supported_video_extensions` in `configs/default.json`). Whether a given
-file actually opens depends on your installed OpenCV/FFmpeg codec support,
-not just its extension - corrupt or codec-unsupported files are detected
-and skipped with a clear message rather than crashing the whole run.
+If `--source-type` is omitted, it's auto-detected from `--input`: if video
+files sit directly inside it, it's treated as `video`; otherwise, if its
+subfolders contain supported images, it's treated as `image-sequence`. The
+CLI prints which one it picked.
 
-### How frames are extracted
+### Supported layouts
 
-`src/nvc/data/video_utils.py` opens each video with OpenCV and validates it
-(exists, readable, sane dimensions) before anything else touches it.
-`src/nvc/data/frame_extraction.py` then reads frames sequentially and saves
-the sampled ones - OpenCV frames are kept in their native BGR order and
-written directly with `cv2.imwrite`, which expects BGR, so colors come out
-correct with no extra conversion step.
+```
+Video:                          Image sequence:
+data/raw/                       <root>/
+├── clip1.mp4                   ├── bear/
+├── clip2.avi                   │   ├── 00000.jpg
+└── ...                         │   ├── 00001.jpg
+                                 │   └── ...
+                                 ├── camel/
+                                 │   └── ...
+                                 └── ...
+```
+
+Supported video extensions: `.mp4`, `.avi`, `.mov`, `.mkv`, `.webm`
+(`supported_video_extensions` in `configs/default.json`). Supported image
+extensions: `.jpg`, `.jpeg`, `.png` (`supported_image_extensions`), and a
+sequence folder may mix them. Whether a file actually opens depends on your
+installed OpenCV/FFmpeg codec support, not just its extension - corrupt,
+empty, unreadable, or inconsistent-resolution items are detected and
+skipped with a clear message rather than crashing the whole run.
+
+### How to import DAVIS
+
+1. Download the DAVIS 2017 TrainVal 480p archive and extract it anywhere,
+   e.g. `D:\Datasets\DAVIS\`. Extracted, it contains
+   `DAVIS\JPEGImages\480p\<sequence>\*.jpg`.
+2. Point `--input` at the `480p` folder (the one whose direct children are
+   the sequence folders):
+   ```powershell
+   python scripts\prepare_dataset.py `
+       --source-type image-sequence `
+       --input "D:\Datasets\DAVIS\JPEGImages\480p" `
+       --output data\frames `
+       --manifest data\processed\manifest.json `
+       --width 256 --height 256
+   ```
+   (`--source-type` can be omitted - a folder of subfolders full of `.jpg`
+   files auto-detects as `image-sequence`.)
+
+### How to import a normal MP4 dataset
+
+Unchanged from Milestone 2: drop videos directly into `data/raw/` (no
+subfolders) and run:
+
+```powershell
+python scripts\prepare_dataset.py --input data\raw
+```
+
+### How frames are obtained and processed
+
+`src/nvc/data/video_utils.py` and `src/nvc/data/sequence_utils.py` each
+validate their kind of item (exists, readable, sane/consistent dimensions)
+before anything else touches it, raising a clear typed error otherwise.
+`src/nvc/data/frame_extraction.py` then reads frames one at a time - either
+decoded from the video stream or read from each image file - and both
+paths call the *same* `resize_frame()`/`save_frame_png()` code, so
+resizing, cropping, sampling, and PNG output behave identically regardless
+of source. OpenCV frames are kept in native BGR order and written directly
+with `cv2.imwrite`, which expects BGR, so colors come out correct with no
+extra conversion step.
 
 ### Why PNG
 
-Frames are saved as PNG (lossless) rather than JPEG. This project measures
-*neural* compression quality (PSNR/MS-SSIM, in a later milestone) against
-the original video - saving training data as JPEG would bake in a second,
-uncontrolled lossy compression step and make later quality comparisons
-meaningless.
+Frames are saved as PNG (lossless) rather than JPEG - including for
+sequences that started out as JPEG. This project measures *neural*
+compression quality (PSNR/MS-SSIM, in a later milestone) against the
+original frames; re-saving as JPEG here would bake in an extra, uncontrolled
+lossy step and make later quality comparisons meaningless.
 
 ### Resizing / cropping behavior
 
@@ -245,41 +320,45 @@ target - only do this deliberately.
 
 ### Sampling
 
-`--every-n-frames N` keeps 1 out of every N frames from each video
+`--every-n-frames N` keeps 1 out of every N frames from each video/sequence
 (`1` = every frame, the default). Output frames are numbered sequentially
-in output order, e.g. `clip_000001.png`, `clip_000002.png`, ... - not by
-their original position in the source video.
+in output order, e.g. `bear_000001.png`, `bear_000002.png`, ... - not by
+their original position in the source.
 
 ### Train / validation / test split (and why it's leak-free)
 
-Splitting happens **per video**, not per frame: each source video is
-assigned entirely to train, val, or test (default 80/10/10, configurable
-via `--train-ratio`/`--val-ratio`/`--test-ratio`), and *all* of its
-extracted frames go to that split's folder. This is what prevents data
-leakage - if frames were split independently, near-duplicate frames from
-the same clip could end up in both the training and test sets, making
-evaluation results meaningless. The split is deterministic for a given
-`--seed` (default from config), so re-running the script reproduces the
-same assignment.
+Splitting happens **per item** (a whole video, or a whole sequence folder),
+not per frame: each item is assigned entirely to train, val, or test
+(default 80/10/10, configurable via `--train-ratio`/`--val-ratio`/
+`--test-ratio`), and *all* of its extracted frames go to that split's
+folder. This is what prevents data leakage - if frames were split
+independently, near-duplicate frames from the same clip/sequence could end
+up in both the training and test sets, making evaluation meaningless. The
+split is deterministic for a given `--seed`, so re-running the script
+reproduces the same assignment. This logic (`assign_splits()`) is shared
+by both source types, not reimplemented per type.
 
-Two videos with the same filename stem (e.g. `clip.mp4` and `clip.mov`)
-would overwrite each other's output frames, so this is rejected up front
-with a clear error instead of silently corrupting the dataset - rename one
-of the files.
+Two items with the same name (e.g. `clip.mp4`/`clip.mov`, or two sequence
+folders both named `bear`) would overwrite each other's output frames, so
+this is rejected up front with a clear error instead of silently
+corrupting the dataset - rename one of them.
 
 ### How to run it
 
 ```powershell
-# Uses configs/default.json defaults (256x256, every frame, 80/10/10 split)
+# Video, auto-detected (uses configs/default.json defaults)
 python scripts\prepare_dataset.py --input data\raw
 
-# Common overrides
+# Video, explicit source type + overrides
 python scripts\prepare_dataset.py `
+    --source-type video `
     --input data\raw `
-    --width 256 `
-    --height 256 `
-    --every-n-frames 2 `
-    --seed 42
+    --width 256 --height 256 --every-n-frames 2 --seed 42
+
+# Image-sequence (e.g. DAVIS)
+python scripts\prepare_dataset.py `
+    --source-type image-sequence `
+    --input "D:\Datasets\DAVIS\JPEGImages\480p"
 
 python scripts\prepare_dataset.py --help
 ```
@@ -288,12 +367,12 @@ python scripts\prepare_dataset.py --help
 
 ```
 data/
-├── raw/
+├── raw/                          # (video workflow only)
 │   └── <your videos>
 ├── frames/
-│   ├── train/<video>_000001.png ...
-│   ├── val/<video>_000001.png ...
-│   └── test/<video>_000001.png ...
+│   ├── train/<name>_000001.png ...
+│   ├── val/<name>_000001.png ...
+│   └── test/<name>_000001.png ...
 └── processed/
     └── manifest.json
 ```
@@ -301,16 +380,26 @@ data/
 ### Manifest
 
 Every run writes `data/processed/manifest.json` (path configurable via
-`--manifest`), containing the settings used, one record per successfully
-processed video (source video, split, original resolution/FPS/frame count,
-extracted frame count, target resolution, output directory, and filename
-pattern), a list of any skipped videos with the reason, and a summary
-(videos/frames per split, totals, approximate output size). Frame paths
-are stored as a directory + filename pattern rather than one entry per
-frame, since listing every frame individually would make the manifest
-grow unnecessarily large. This manifest is regenerated by the script (not
-committed to git, since it describes locally-present raw videos) and is
-meant to be read by later training/evaluation code.
+`--manifest`), with a schema that's identical regardless of source type -
+downstream training/evaluation code does not need to know whether frames
+came from a video or an image sequence. It contains the settings used, one
+record per successfully processed item (`source_type`, `source_name`,
+`split`, `frame_count`, `original_resolution`, `processed_resolution`,
+`frame_directory`, plus a few extras like FPS where applicable), a list of
+any skipped items with the reason, and a summary (items/frames per split,
+totals, average frames per item, approximate output size). Frame paths are
+stored as a directory + filename pattern rather than one entry per frame,
+since listing every frame individually would make the manifest grow
+unnecessarily large. This manifest is regenerated by the script (not
+committed to git, since it describes locally-present raw data).
+
+### Backward compatibility note
+
+`src/nvc/data/dataset_prep.py` (Milestone 2's original video-only
+`prepare_dataset()` function) is unchanged and still works if imported
+directly - `scripts/prepare_dataset.py` now calls the newer, source-agnostic
+`src/nvc/data/ingest.py` instead, which supports both source types and
+produces the unified manifest described above.
 
 ## 12-Week Roadmap (Minor Project Scope)
 
@@ -323,7 +412,7 @@ contract, and each milestone requires explicit sign-off before starting.
 | Week | Focus |
 |------|-------|
 | 1-2  | Repository foundation, environment setup, dataset selection strategy *(done - Milestone 1)* |
-| 3-4  | Frame extraction pipeline (OpenCV), train/val/test dataset preparation *(done - Milestone 2)* |
+| 3-4  | Frame extraction pipeline (OpenCV), train/val/test dataset preparation, and generalized ingestion for image-sequence datasets like DAVIS *(done - Milestones 2 & 2.5)* |
 | 5-6  | Encoder network: CNN downsampling architecture (VAE encoder) |
 | 7    | Latent space design, quantization, and entropy coding groundwork |
 | 8    | `.nvc` binary serialization format and decoder network (deconvolutional/generative) |

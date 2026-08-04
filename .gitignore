@@ -43,6 +43,10 @@ data/raw/*
 data/processed/*
 !data/processed/.gitkeep
 
+# data/external holds extracted third-party datasets (e.g. DAVIS) - never committed.
+data/external/*
+!data/external/.gitkeep
+
 # data/frames has train/val/test subfolders (Milestone 2); keep the
 # subfolders themselves but ignore the (potentially huge) PNGs inside.
 data/frames/*

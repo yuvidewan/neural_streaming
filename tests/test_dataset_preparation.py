@@ -9,7 +9,6 @@ of requiring a real external dataset.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import cv2
 import numpy as np
@@ -24,24 +23,7 @@ from nvc.data.video_utils import (
     probe_video,
 )
 
-
-def make_synthetic_video(
-    path: Path,
-    *,
-    num_frames: int = 10,
-    width: int = 64,
-    height: int = 48,
-    fps: float = 10.0,
-) -> Path:
-    """Write a tiny synthetic .mp4 with solid-color frames for testing."""
-    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-    writer = cv2.VideoWriter(str(path), fourcc, fps, (width, height))
-    assert writer.isOpened(), f"Could not open VideoWriter for {path}"
-    for i in range(num_frames):
-        frame = np.full((height, width, 3), fill_value=(i * 20) % 256, dtype=np.uint8)
-        writer.write(frame)
-    writer.release()
-    return path
+from helpers import make_synthetic_video
 
 
 # --- Video metadata (video_utils.probe_video) ---
