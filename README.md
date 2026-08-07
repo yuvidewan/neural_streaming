@@ -14,7 +14,11 @@ that compares to conventional codecs on quality and size.
 
 ## Current Development Status
 
-**Milestone 3 (this repository state): repository foundation + dataset ingestion + a PyTorch data pipeline. No neural network yet.**
+**Milestone 4 (this repository state): repository foundation + dataset ingestion + PyTorch data pipeline + a baseline convolutional autoencoder with a full training/checkpoint/reconstruction pipeline.**
+
+This is a deterministic reconstruction baseline, not a VAE - it exists to
+validate the model/training/checkpoint/inference pipeline before Milestone 5
+introduces stochastic latents, quantization, and entropy coding.
 
 Implemented:
 - Repository/directory structure
@@ -48,12 +52,25 @@ Implemented:
 - `MSE`/`PSNR` metrics (`src/nvc/evaluation/basic_metrics.py`)
 - `scripts/inspect_dataset.py` - reports dataset sizes/tensor stats and can
   save a sample visualization grid
-- Package skeleton with no logic yet (`src/nvc/{models,compression}`)
+- **`BaselineAutoencoder`** - a deterministic (non-variational) convolutional
+  autoencoder (`src/nvc/models/encoder.py`, `decoder.py`, `autoencoder.py`)
+  with an explicit `encode()`/`decode()`/`forward()` interface
+- A training engine - epoch-level train/validate loops, checkpointing, and
+  resume (`src/nvc/training/trainer.py`, `checkpoint.py`)
+- `scripts/train_autoencoder.py` - training CLI with a CPU smoke-test mode
+  (`--max-batches`) and `--resume`
+- `scripts/reconstruct.py` - loads a checkpoint, reconstructs test-split
+  frames, reports MSE/PSNR, saves an Original | Reconstruction comparison
+- `scripts/plot_training_history.py` - plots epoch vs. train/val MSE and
+  val PSNR from the training history JSON
+- Compression package skeleton with no logic yet (`src/nvc/compression`)
 
 **Not implemented yet** (do not assume any of this works):
-- Any neural network (encoder, decoder, VAE)
+- Variational latents (mu/logvar, KL divergence) - the current model is a
+  plain deterministic autoencoder
 - Quantization, entropy coding, or the `.nvc` format itself
-- Reconstruction or video reassembly
+- Video reassembly
+- Perceptual/adversarial/SSIM/rate losses - training uses plain MSE only
 - MS-SSIM / BPP / compression-ratio / timing evaluation
 - Comparison against H.264/H.265
 - FastAPI serving layer
@@ -82,10 +99,14 @@ Implemented:
 [ Reconstructed Frame ]
 ```
 
-Core model: a Variational Autoencoder (VAE) with simple temporal
-conditioning between frames. None of the boxes above are implemented yet -
-this diagram describes the target design that the repository structure was
-built to support.
+Target core model: a Variational Autoencoder (VAE) with simple temporal
+conditioning between frames, plus quantization and entropy coding for a real
+`.nvc` bitstream. **Current state (Milestone 4):** the Encoder/Decoder boxes
+are implemented as a deterministic (non-variational) baseline - see
+"Baseline Autoencoder" below - trained with plain MSE. The
+`[ Quantization & Entropy Coding ]` step and the `.nvc` binary format are
+not implemented yet; today `encode()` returns an unquantized float32 latent
+tensor.
 
 ## Repository Structure
 
@@ -103,15 +124,18 @@ neural_streaming/
 ├── docs/                    # Design notes, written up as work progresses
 ├── notebooks/                # Exploratory notebooks
 ├── outputs/
-│   ├── checkpoints/         # Model weights (gitignored)
+│   ├── checkpoints/         # latest.pt, best.pt, history.json (gitignored)
 │   ├── compressed/          # .nvc files (gitignored)
 │   ├── reconstructed/       # Decoded frames/video (gitignored)
 │   ├── metrics/             # Evaluation results (gitignored)
-│   └── visualizations/      # Plots/figures, e.g. dataset_grid.png (gitignored)
+│   └── visualizations/      # dataset_grid.png, reconstructions.png, training_curves.png (gitignored)
 ├── scripts/
 │   ├── check_environment.py
-│   ├── prepare_dataset.py   # video and image-sequence ingestion CLI
-│   └── inspect_dataset.py   # PyTorch data pipeline sanity-check / visualization CLI
+│   ├── prepare_dataset.py         # video and image-sequence ingestion CLI
+│   ├── inspect_dataset.py         # PyTorch data pipeline sanity-check / visualization CLI
+│   ├── train_autoencoder.py       # BaselineAutoencoder training CLI (Milestone 4)
+│   ├── reconstruct.py             # checkpoint -> reconstructed frames + MSE/PSNR (Milestone 4)
+│   └── plot_training_history.py   # training curve plots from history.json (Milestone 4)
 ├── src/
 │   └── nvc/
 │       ├── data/
@@ -126,7 +150,13 @@ neural_streaming/
 │       │   ├── frame_dataset.py     # FrameDataset (torch.utils.data.Dataset)
 │       │   ├── transforms.py        # train/eval transform pipelines
 │       │   └── loaders.py           # DataLoader factories
-│       ├── models/          # Encoder/decoder networks (empty package)
+│       ├── models/
+│       │   ├── encoder.py           # Encoder: strided-conv downsampler
+│       │   ├── decoder.py           # Decoder: transposed-conv upsampler
+│       │   └── autoencoder.py       # BaselineAutoencoder (encode/decode/forward)
+│       ├── training/
+│       │   ├── trainer.py           # train_one_epoch / validate_one_epoch
+│       │   └── checkpoint.py        # save_checkpoint / load_checkpoint / resume_training_state
 │       ├── compression/     # Quantization, entropy coding, .nvc I/O (empty package)
 │       ├── evaluation/
 │       │   └── basic_metrics.py     # MSE, PSNR (MS-SSIM not yet implemented)
@@ -139,7 +169,8 @@ neural_streaming/
 │   ├── test_project_setup.py
 │   ├── test_dataset_preparation.py   # video pipeline (Milestone 2)
 │   ├── test_dataset_ingestion.py     # image-sequence + unified pipeline (Milestone 2.5)
-│   └── test_pytorch_pipeline.py      # FrameDataset/transforms/loaders/metrics (Milestone 3)
+│   ├── test_pytorch_pipeline.py      # FrameDataset/transforms/loaders/metrics (Milestone 3)
+│   └── test_baseline_autoencoder.py  # model/training/checkpoint/reconstruction (Milestone 4)
 ├── .gitignore
 ├── pyproject.toml
 ├── README.md
@@ -528,6 +559,152 @@ algorithms - opt-in, since it can be slower and some ops don't support it.
 `psnr() == float("inf")` - handled explicitly rather than relying on
 floating-point divide-by-zero behavior.
 
+## Baseline Autoencoder
+
+**Status: implemented (Milestone 4).** A deterministic (non-variational)
+convolutional autoencoder that establishes a reconstruction baseline and
+validates the full model/training/checkpoint/inference pipeline. This is
+**not** a VAE: no `mu`/`logvar`, no KL divergence, no quantization, no
+entropy coding, and no rate-distortion loss - those come later, once this
+baseline pipeline is trusted. Training loss is plain MSE.
+
+### Architecture
+
+```
+RGB frame [3, 256, 256]
+        |
+        v
+  Encoder (4x Conv2d, kernel=4 stride=2 pad=1, ReLU between)
+    3 -> 32 -> 64 -> 128 -> latent_channels   (256 -> 128 -> 64 -> 32 -> 16)
+        |
+        v
+  Latent [latent_channels, 16, 16]   (spatial, not flattened)
+        |
+        v
+  Decoder (4x ConvTranspose2d, kernel=4 stride=2 pad=1, ReLU between, Sigmoid on output)
+    latent_channels -> 128 -> 64 -> 32 -> 3   (16 -> 32 -> 64 -> 128 -> 256)
+        |
+        v
+  Reconstructed RGB frame [3, 256, 256], values in [0, 1]
+```
+
+`kernel_size=4, stride=2, padding=1` was chosen specifically because it
+halves (Encoder) or doubles (Decoder) spatial size *exactly* with no
+rounding, so the reconstruction shape always matches the input shape with
+no final resizing hack. Input height/width must each be divisible by 16
+(four stride-2 steps); `Encoder` raises a clear `ValueError` otherwise.
+
+`src/nvc/models/autoencoder.py` implements `BaselineAutoencoder` with an
+explicit interface - `model.encode(x)`, `model.decode(z)`, and
+`model(x)` (equivalent to `decode(encode(x))`) - so a later milestone can
+insert a quantizer and entropy coder between `encode` and `decode` without
+restructuring this class. `model.config_dict()` returns the architecture
+config (`in_channels`, `latent_channels`, `base_channels`) needed to rebuild
+the model from a checkpoint, and `model.num_parameters()` reports the
+trainable parameter count.
+
+With default settings (`latent_channels=64`, `base_channels=32`): **593,411
+trainable parameters**, latent shape `[64, 16, 16]`.
+
+### Training
+
+`src/nvc/training/trainer.py` provides `train_one_epoch()` (real gradient
+updates via `Adam`) and `validate_one_epoch()` (`torch.no_grad()`, no
+parameter updates), both operating on the existing `FrameDataset`
+DataLoaders and reusing `mse()`/`psnr()` from `src/nvc/evaluation/basic_metrics.py`
+and `get_device()`/`seed_everything()` from `src/nvc/utils/`. Both accept a
+`max_batches` cap, used for the CPU smoke test below.
+
+Per-epoch history (`train_loss`, `val_loss`, `val_psnr`, `elapsed_seconds`)
+is stored as plain Python dicts and written to `outputs/checkpoints/history.json`
+after every epoch - machine-readable, not fabricated: only epochs that
+actually ran are recorded.
+
+Only `mse()` reconstruction loss is used - no KL divergence, perceptual
+loss, adversarial loss, SSIM loss, or rate loss yet.
+
+```powershell
+# A real training run (uses configs/default.json defaults)
+python scripts\train_autoencoder.py --epochs 50
+
+# Override hyperparameters
+python scripts\train_autoencoder.py --epochs 50 --batch-size 8 --learning-rate 1e-4 --latent-channels 64
+
+python scripts\train_autoencoder.py --help
+```
+
+### Checkpoints
+
+`src/nvc/training/checkpoint.py` provides `save_checkpoint()`/`load_checkpoint()`/
+`resume_training_state()`. Every epoch, `scripts/train_autoencoder.py` writes
+`outputs/checkpoints/latest.pt`, and `outputs/checkpoints/best.pt` whenever
+validation MSE improves. Each checkpoint contains the model state dict,
+optimizer state dict, the last completed epoch, the full metric history, and
+the model's architecture config (`model.config_dict()`) - enough to resume
+training exactly or rebuild the model for inference without needing the
+original CLI arguments. Checkpoint binaries (`*.pt`) are gitignored, not
+committed.
+
+### Resuming training
+
+```powershell
+python scripts\train_autoencoder.py --epochs 20 --resume outputs\checkpoints\latest.pt
+```
+
+`--resume` restores model weights, optimizer state, and history, and
+continues epoch numbering from where the checkpoint left off (e.g. resuming
+a checkpoint at epoch 5 with `--epochs 20` runs epochs 6-25) rather than
+restarting at epoch 1. A `--latent-channels` value that doesn't match the
+checkpoint's architecture fails with a clear error from PyTorch's own
+`load_state_dict` shape check, caught and reprinted with a hint.
+
+### CPU smoke test
+
+Because CUDA is unavailable on this machine, `--max-batches` caps each
+epoch to a handful of batches so the entire training path - data loading,
+forward pass, loss, backward pass, optimizer step, checkpointing - can be
+verified in seconds with real gradient updates. **This is a pipeline check,
+not a claim of a trained model:**
+
+```powershell
+python scripts\train_autoencoder.py --epochs 1 --max-batches 5
+```
+
+### Reconstruction
+
+`scripts/reconstruct.py` loads a checkpoint (rebuilding
+`BaselineAutoencoder` from the checkpoint's saved `model_config`, not from
+CLI flags), encodes and decodes real test-split frames via `FrameDataset`/
+`create_test_loader`, reports MSE/PSNR on that batch, and saves an
+Original | Reconstruction comparison image under `outputs/visualizations/`.
+
+```powershell
+python scripts\reconstruct.py --checkpoint outputs\checkpoints\best.pt
+python scripts\reconstruct.py --checkpoint outputs\checkpoints\latest.pt --num-samples 4
+```
+
+### Training curve plots
+
+`scripts/plot_training_history.py` reads `outputs/checkpoints/history.json`
+and plots epoch vs. training MSE, validation MSE, and validation PSNR to
+`outputs/visualizations/training_curves.png`. It only plots epochs actually
+present in the history file - a smoke-test history with one or two epochs
+produces a one- or two-point plot, not a fabricated curve.
+
+```powershell
+python scripts\plot_training_history.py
+```
+
+### Raw latent dimensionality ratio - not a compression ratio
+
+`scripts/train_autoencoder.py` reports `input_elements / latent_elements`
+(e.g. `3*256*256 / (64*16*16) = 12.0`) as the **"raw latent dimensionality
+ratio."** This is explicitly *not* a compression ratio: the latent tensor is
+still `float32` and has not been quantized or entropy-coded, so it does not
+represent an actual bitstream size. Real compression-ratio and
+bits-per-pixel (BPP) numbers require quantization and entropy coding, which
+are out of scope for this milestone.
+
 ## 12-Week Roadmap (Minor Project Scope)
 
 This roadmap covers the core neural codec only (proof of concept, local
@@ -540,9 +717,9 @@ contract, and each milestone requires explicit sign-off before starting.
 |------|-------|
 | 1-2  | Repository foundation, environment setup, dataset selection strategy *(done - Milestone 1)* |
 | 3-4  | Frame extraction pipeline (OpenCV), train/val/test dataset preparation, and generalized ingestion for image-sequence datasets like DAVIS *(done - Milestones 2 & 2.5)* |
-| 5-6  | PyTorch data pipeline (`FrameDataset`, transforms, DataLoaders) *(done - Milestone 3)*; encoder network: CNN downsampling architecture (VAE encoder) *(not started)* |
+| 5-6  | PyTorch data pipeline (`FrameDataset`, transforms, DataLoaders) *(done - Milestone 3)*; baseline convolutional autoencoder (encoder/decoder CNN, MSE training loop, checkpointing, reconstruction CLI) *(done - Milestone 4)* |
 | 7    | Latent space design, quantization, and entropy coding groundwork |
-| 8    | `.nvc` binary serialization format and decoder network (deconvolutional/generative) |
+| 8    | `.nvc` binary serialization format and a variational encoder/decoder (mu/logvar, KL divergence) |
 | 9    | End-to-end encode/decode pipeline integration and training loop |
 | 10   | Evaluation: PSNR, MS-SSIM, MSE, BPP, compression ratio, encode/decode timing; baseline comparison vs. H.264/H.265 |
 | 11   | Experiments, tuning, visualizations, documentation |

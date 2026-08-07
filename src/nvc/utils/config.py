@@ -30,6 +30,7 @@ class Config:
 
     # --- Model parameters ---
     latent_dim: int = 128
+    latent_channels: int = 64  # BaselineAutoencoder's spatial latent channel count
 
     # --- Training parameters ---
     batch_size: int = 8
