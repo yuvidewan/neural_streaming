@@ -24,7 +24,17 @@ def psnr(prediction: torch.Tensor, target: torch.Tensor, *, max_value: float = 1
     floating-point division-by-zero behavior - this is the correct
     mathematical limit, made explicit.
     """
-    error = mse(prediction, target)
+    return psnr_from_mse(mse(prediction, target), max_value=max_value)
+
+
+def psnr_from_mse(error: torch.Tensor | float, *, max_value: float = 1.0) -> torch.Tensor:
+    """PSNR from an already-computed MSE.
+
+    Exists so callers that aggregate MSE over a whole dataset (rather than
+    averaging per-batch PSNR) can convert without restating the formula.
+    """
+    if not isinstance(error, torch.Tensor):
+        error = torch.tensor(float(error))
     if error == 0:
         return torch.tensor(float("inf"))
     return 10.0 * torch.log10((max_value ** 2) / error)

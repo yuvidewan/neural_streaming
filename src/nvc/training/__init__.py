@@ -8,7 +8,12 @@ epoch loop or checkpoint format.
 - checkpoint: save_checkpoint / load_checkpoint / resume_training_state
 """
 
-from .checkpoint import load_checkpoint, resume_training_state, save_checkpoint
+from .checkpoint import (
+    load_checkpoint,
+    load_model_from_checkpoint,
+    resume_training_state,
+    save_checkpoint,
+)
 from .trainer import train_one_epoch, validate_one_epoch
 
 __all__ = [
@@ -16,5 +21,6 @@ __all__ = [
     "validate_one_epoch",
     "save_checkpoint",
     "load_checkpoint",
+    "load_model_from_checkpoint",
     "resume_training_state",
 ]

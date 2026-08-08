@@ -69,6 +69,11 @@ outputs/reconstructed/*
 !outputs/reconstructed/.gitkeep
 outputs/metrics/*
 !outputs/metrics/.gitkeep
+# Codec calibration (quantization params + entropy model tables). Regenerable
+# from a checkpoint via scripts/calibrate_quantizer.py, and large (a 64x256
+# frequency table per bit depth).
+outputs/calibration/*
+!outputs/calibration/.gitkeep
 outputs/visualizations/*
 !outputs/visualizations/.gitkeep
 

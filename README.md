@@ -14,11 +14,15 @@ that compares to conventional codecs on quality and size.
 
 ## Current Development Status
 
-**Milestone 4 (this repository state): repository foundation + dataset ingestion + PyTorch data pipeline + a baseline convolutional autoencoder with a full training/checkpoint/reconstruction pipeline.**
+**Milestone 6 (this repository state): a working end-to-end neural image codec.** Dataset ingestion + PyTorch data pipeline + a trained convolutional autoencoder + fixed-calibration quantization + arithmetic entropy coding into a real `.nvc` binary file.
 
-This is a deterministic reconstruction baseline, not a VAE - it exists to
-validate the model/training/checkpoint/inference pipeline before Milestone 5
-introduces stochastic latents, quantization, and entropy coding.
+Measured on the DAVIS test split: **1.88 BPP at 27.17 dB (12.75x vs raw
+uint8 RGB)** at 8-bit, or **1.38 BPP at 27.10 dB (17.41x)** at 6-bit.
+
+The model is a deterministic autoencoder, not a VAE, and the entropy model
+is a static counted table - no learned/context/hyperprior model, no
+quantization-aware training, and no inter-frame prediction, so this
+compresses **still frames**, not yet video.
 
 Implemented:
 - Repository/directory structure
@@ -63,15 +67,38 @@ Implemented:
   frames, reports MSE/PSNR, saves an Original | Reconstruction comparison
 - `scripts/plot_training_history.py` - plots epoch vs. train/val MSE and
   val PSNR from the training history JSON
-- Compression package skeleton with no logic yet (`src/nvc/compression`)
+- **`UniformQuantizer`** - uniform scalar affine quantization of latents,
+  global and per-channel modes, arbitrary bit widths
+  (`src/nvc/compression/quantization.py`)
+- Raw latent storage arithmetic (`src/nvc/compression/storage_analysis.py`)
+- Latent extraction and descriptive statistics
+  (`src/nvc/evaluation/latent_analysis.py`)
+- `scripts/analyze_latent.py` - latent statistics + distribution plots
+- `scripts/quantization_experiment.py` - end-to-end quantized
+  reconstruction experiment across bit widths and modes
+- **Fixed quantization calibration** from the training split only
+  (`src/nvc/compression/calibration.py`)
+- **`EmpiricalEntropyModel`** - static per-channel symbol frequency tables
+  with smoothing (`src/nvc/compression/entropy_model.py`)
+- **Arithmetic entropy coder** implemented from first principles
+  (`src/nvc/compression/range_coder.py`)
+- **The `.nvc` binary format** with `NVCWriter`/`NVCReader` and full header
+  validation (`src/nvc/compression/nvc_format.py`)
+- **End-to-end codec** (`src/nvc/compression/codec.py`) plus
+  `scripts/calibrate_quantizer.py`, `encode.py`, `decode.py`,
+  `benchmark_codec.py`
+- Real measured BPP / compression-ratio benchmarking
 
 **Not implemented yet** (do not assume any of this works):
 - Variational latents (mu/logvar, KL divergence) - the current model is a
   plain deterministic autoencoder
-- Quantization, entropy coding, or the `.nvc` format itself
+- Learned entropy models, hyperpriors, context or autoregressive models -
+  the entropy model is a static counted table
+- Quantization-aware training - the model was trained on float latents only
+- Inter-frame / temporal prediction, so this codes still frames, not video
 - Video reassembly
 - Perceptual/adversarial/SSIM/rate losses - training uses plain MSE only
-- MS-SSIM / BPP / compression-ratio / timing evaluation
+- MS-SSIM evaluation, and any comparison against H.264/H.265
 - Comparison against H.264/H.265
 - FastAPI serving layer
 - ONNX Runtime inference
@@ -103,10 +130,12 @@ Target core model: a Variational Autoencoder (VAE) with simple temporal
 conditioning between frames, plus quantization and entropy coding for a real
 `.nvc` bitstream. **Current state (Milestone 4):** the Encoder/Decoder boxes
 are implemented as a deterministic (non-variational) baseline - see
-"Baseline Autoencoder" below - trained with plain MSE. The
-`[ Quantization & Entropy Coding ]` step and the `.nvc` binary format are
-not implemented yet; today `encode()` returns an unquantized float32 latent
-tensor.
+"Baseline Autoencoder" below - trained with plain MSE. As of Milestone 6
+**every box in this diagram is implemented for still frames**, including
+quantization, entropy coding, and the `.nvc` binary file. What remains is
+depth rather than coverage: the VAE formulation, a learned entropy model,
+and the temporal conditioning that would make this a *video* codec rather
+than an image codec applied frame by frame.
 
 ## Repository Structure
 
@@ -127,15 +156,21 @@ neural_streaming/
 │   ├── checkpoints/         # latest.pt, best.pt, history.json (gitignored)
 │   ├── compressed/          # .nvc files (gitignored)
 │   ├── reconstructed/       # Decoded frames/video (gitignored)
-│   ├── metrics/             # Evaluation results (gitignored)
-│   └── visualizations/      # dataset_grid.png, reconstructions.png, training_curves.png (gitignored)
+│   ├── metrics/             # latent_statistics.json, quantization_results.json/.csv (gitignored)
+│   └── visualizations/      # dataset/reconstruction/training/latent/quantization plots (gitignored)
 ├── scripts/
 │   ├── check_environment.py
 │   ├── prepare_dataset.py         # video and image-sequence ingestion CLI
 │   ├── inspect_dataset.py         # PyTorch data pipeline sanity-check / visualization CLI
 │   ├── train_autoencoder.py       # BaselineAutoencoder training CLI (Milestone 4)
 │   ├── reconstruct.py             # checkpoint -> reconstructed frames + MSE/PSNR (Milestone 4)
-│   └── plot_training_history.py   # training curve plots from history.json (Milestone 4)
+│   ├── plot_training_history.py   # training curve plots from history.json (Milestone 4)
+│   ├── analyze_latent.py          # latent statistics + distribution plots (Milestone 5)
+│   ├── quantization_experiment.py # quantized reconstruction experiment (Milestone 5)
+│   ├── calibrate_quantizer.py     # fixed calibration + entropy model (Milestone 6)
+│   ├── encode.py                  # image -> .nvc (Milestone 6)
+│   ├── decode.py                  # .nvc -> image (Milestone 6)
+│   └── benchmark_codec.py         # real BPP / ratio benchmark (Milestone 6)
 ├── src/
 │   └── nvc/
 │       ├── data/
@@ -156,10 +191,18 @@ neural_streaming/
 │       │   └── autoencoder.py       # BaselineAutoencoder (encode/decode/forward)
 │       ├── training/
 │       │   ├── trainer.py           # train_one_epoch / validate_one_epoch
-│       │   └── checkpoint.py        # save_checkpoint / load_checkpoint / resume_training_state
-│       ├── compression/     # Quantization, entropy coding, .nvc I/O (empty package)
+│       │   └── checkpoint.py        # save/load/resume + load_model_from_checkpoint
+│       ├── compression/
+│       │   ├── quantization.py      # UniformQuantizer (global / per-channel)
+│       │   ├── calibration.py       # fixed params from the train split
+│       │   ├── entropy_model.py     # static per-channel frequency tables
+│       │   ├── range_coder.py       # arithmetic coder (from scratch)
+│       │   ├── nvc_format.py        # .nvc container: header/writer/reader
+│       │   ├── codec.py             # end-to-end frame <-> .nvc
+│       │   └── storage_analysis.py  # raw latent storage arithmetic
 │       ├── evaluation/
-│       │   └── basic_metrics.py     # MSE, PSNR (MS-SSIM not yet implemented)
+│       │   ├── basic_metrics.py     # MSE, PSNR (MS-SSIM not yet implemented)
+│       │   └── latent_analysis.py   # latent extraction + statistics
 │       └── utils/
 │           ├── config.py            # Config dataclass (implemented)
 │           ├── device.py            # get_device()
@@ -170,7 +213,9 @@ neural_streaming/
 │   ├── test_dataset_preparation.py   # video pipeline (Milestone 2)
 │   ├── test_dataset_ingestion.py     # image-sequence + unified pipeline (Milestone 2.5)
 │   ├── test_pytorch_pipeline.py      # FrameDataset/transforms/loaders/metrics (Milestone 3)
-│   └── test_baseline_autoencoder.py  # model/training/checkpoint/reconstruction (Milestone 4)
+│   ├── test_baseline_autoencoder.py  # model/training/checkpoint/reconstruction (Milestone 4)
+│   ├── test_quantization.py          # quantizer/latent analysis/storage/integrity (Milestone 5)
+│   └── test_entropy_coding.py        # calibration/entropy model/coder/.nvc/codec (Milestone 6)
 ├── .gitignore
 ├── pyproject.toml
 ├── README.md
@@ -705,6 +750,420 @@ represent an actual bitstream size. Real compression-ratio and
 bits-per-pixel (BPP) numbers require quantization and entropy coding, which
 are out of scope for this milestone.
 
+## Latent Representation & Quantization
+
+**Status: implemented (Milestone 5).** This milestone measures the learned
+latent representation and establishes a quantization layer between encoder
+and decoder. It is an *analysis and design* step, not the codec:
+**entropy coding is not implemented yet**, and **`.nvc` bitstream generation
+is not implemented yet**. The quantizer emits integer tensors, not a
+compressed file.
+
+```
+frame -> Encoder -> float latent -> Quantizer -> integer latent
+      -> Dequantizer -> approximate latent -> Decoder -> reconstruction
+```
+
+### What the latent actually is
+
+`BaselineAutoencoder.encode()` returns a `[B, 64, 16, 16]` float32 tensor:
+64 channels at 1/16 the input resolution in each spatial dimension. It stays
+spatial rather than flattened, which is what makes per-channel scaling (and
+later, spatial entropy models) natural.
+
+Measured over the **full DAVIS test split (719 frames, 11,780,096 latent
+values)** with the epoch-50 checkpoint - see
+`outputs/metrics/latent_statistics.json` for the full record:
+
+| Statistic | Value |
+|---|---|
+| min / max | -16.485 / 13.713 |
+| mean / median | 0.121 / 0.099 |
+| standard deviation | 2.237 |
+| exactly zero | 0.0000% |
+| near zero (abs < 0.01) | 0.6218% |
+| per-channel std | 0.553 to 3.801 |
+| per-channel range width | 6.77 to 23.96 (3.5x spread) |
+
+Two findings drive the quantizer design:
+
+1. **The distribution is sharply peaked at zero with long tails** (visible
+   in `latent_histogram.png`, especially the log-count panel). Most mass
+   sits within roughly +/-5, but the observed range runs to -16.5. A single
+   global scale must stretch across those rare outliers, spending most of
+   its grid on values that almost never occur.
+2. **Channels have genuinely different dynamic ranges** (3.5x spread), so a
+   per-channel scale can fit each channel's actual range.
+
+There are essentially no exact zeros - the encoder's final layer is linear,
+with no ReLU - so sparsity is not something this representation offers.
+`latent_heatmap.png` shows the channels retain visible spatial structure
+(horizon lines, subject position), confirming the representation is
+spatially organized rather than scrambled.
+
+### Why quantization is necessary
+
+The latent is float32. Storing or transmitting 32 bits per latent value
+wastes most of those bits: the decoder does not need that precision, and
+entropy coding (a later milestone) needs a *discrete* symbol alphabet to
+assign codewords to. Quantization maps the continuous latent onto a finite
+integer grid, which is the prerequisite for any real bitstream.
+
+### The quantizer
+
+`src/nvc/compression/quantization.py` implements `UniformQuantizer`, a
+uniform scalar **affine** quantizer written out longhand (not delegated to
+`torch.ao.quantization`, which would hide the arithmetic this milestone
+exists to measure).
+
+For bit width `b`, with `q_min = 0` and `q_max = 2**b - 1`, over an observed
+range `[x_min, x_max]`:
+
+```
+scale      = (x_max - x_min) / (q_max - q_min)
+zero_point = q_min - round(x_min / scale)
+
+quantize:    q     = clamp(round(x / scale) + zero_point, q_min, q_max)
+dequantize:  x_hat = (q - zero_point) * scale
+```
+
+Two deliberate details:
+
+- **`zero_point` is not clamped** into `[q_min, q_max]`. It is separate
+  metadata, not packed into the integer field, so clamping would be a
+  self-inflicted constraint that breaks ranges not straddling zero (a
+  channel centered near 5.0 needs a large negative zero_point). Leaving it
+  unclamped also makes exact `0.0` exactly representable whenever 0 lies
+  inside the range - worth having, since latents are roughly zero-centered.
+- **Zero-width ranges are widened** to `[c - 0.5, c + 0.5]`. A constant
+  tensor or channel would otherwise give `scale = 0` and divide by zero.
+
+### Global vs. per-channel scaling
+
+| Mode | Parameters | Behavior |
+|---|---|---|
+| `global` | one (scale, zero_point) for the whole tensor | Cheapest metadata. One wide-range channel stretches the grid for every other channel. |
+| `per_channel` | one pair per latent channel, computed over (B, H, W) | Adapts to each channel's range, at 64x the metadata. |
+
+Which is better was **measured, not assumed** - see below.
+
+### Quantization experiment results
+
+Full DAVIS test split (719 frames), epoch-50 checkpoint, seed 42. MSE is
+aggregated over every pixel of the split and PSNR derived from that single
+aggregate (not a mean of per-batch PSNR). Full record in
+`outputs/metrics/quantization_results.json` / `.csv`.
+
+| Configuration | Bits | PSNR (dB) | dPSNR | Image MSE | Latent MSE | Latent MAE | Max abs latent err |
+|---|---|---|---|---|---|---|---|
+| Float32 baseline | 32 | 27.274 | - | 0.001873 | 0 | 0 | 0 |
+| Global | 8 | 27.254 | -0.02 | 0.001882 | 0.000528 | 0.019602 | 0.0591 |
+| Per-channel | 8 | 27.271 | -0.00 | 0.001875 | 0.000077 | 0.007116 | 0.0470 |
+| Global | 6 | 26.967 | -0.31 | 0.002010 | 0.008643 | 0.079312 | 0.2391 |
+| Per-channel | 6 | 27.232 | -0.04 | 0.001891 | 0.001255 | 0.028804 | 0.1901 |
+| Global | 4 | 23.746 | -3.53 | 0.004221 | 0.149804 | 0.329055 | 1.0043 |
+| Per-channel | 4 | 26.597 | -0.68 | 0.002189 | 0.022086 | 0.120815 | 0.7980 |
+
+Conclusions from the measurement:
+
+- **8-bit is effectively free.** Per-channel 8-bit costs 0.003 dB against
+  the float32 baseline - below any perceptible threshold - while using a
+  quarter of the raw storage.
+- **Per-channel wins at every width, and the gap widens as bits shrink**
+  (0.02 dB at 8-bit, 0.27 dB at 6-bit, 2.85 dB at 4-bit). This is the
+  predicted consequence of the 3.5x per-channel range spread.
+- **4-bit global collapses** (-3.53 dB, with visible blocking in
+  `quantization_comparison.png`), whereas 4-bit per-channel holds up
+  surprisingly well at -0.68 dB.
+- Latent-space error and image-space error move together but are **not the
+  same quantity** and are reported separately throughout.
+
+Note that latent MSE is far larger in magnitude than image MSE - the decoder
+is partially tolerant of latent perturbation, so latent error must not be
+read as a proxy for reconstruction quality.
+
+### Raw latent storage - NOT a compression ratio
+
+`src/nvc/compression/storage_analysis.py` computes plain "values x bits"
+arithmetic. For one `[3, 256, 256]` frame (196,608 values) against one
+`[64, 16, 16]` latent (16,384 values):
+
+| Representation | Bits | Bytes | Raw size ratio vs. uint8 RGB frame |
+|---|---|---|---|
+| Raw uint8 RGB frame | 1,572,864 | 196,608 | 1.00x |
+| float32 latent | 524,288 | 65,536 | 3.00x |
+| 8-bit latent | 131,072 | 16,384 | 12.00x |
+| 6-bit latent | 98,304 | 12,288 | 16.00x |
+| 4-bit latent | 65,536 | 8,192 | 24.00x |
+
+**These are theoretical raw tensor storage figures, not compression ratios
+and not codec bitrates.** They exclude:
+
+- **Entropy coding**, which is not implemented. Given how peaked the latent
+  distribution is, real entropy coding should beat these figures
+  substantially - a uniform `b` bits per symbol is the worst case.
+- **Quantization metadata.** Scale and zero_point are not counted (64
+  channels x 2 values is negligible per frame, but it is not zero).
+- **Bit packing.** 6-bit and 4-bit are counted at their theoretical cost;
+  nothing actually packs them yet - in memory they sit in int32 tensors.
+- A fair codec baseline. The comparison is against *raw* uint8 RGB, not
+  against PNG/JPEG/H.264.
+
+### Current limitations
+
+- Scale and zero_point are calibrated **per batch from the tensor being
+  quantized** ("dynamic"). A real codec must transmit them as side
+  information or freeze them from a calibration set; neither is done yet.
+- The autoencoder was trained **without** quantization in the loop, so the
+  decoder has never seen quantized latents during training.
+  Quantization-aware training is not implemented.
+- No entropy coding, no arithmetic/range coding, no `.nvc` bitstream.
+- The quantizer is applied at inference only and never touches the trained
+  weights - verified by the model-integrity tests.
+
+### How to run it
+
+```powershell
+python scripts\analyze_latent.py --checkpoint outputs\checkpoints\best.pt
+python scripts\quantization_experiment.py --checkpoint outputs\checkpoints\best.pt
+
+# Quick subset runs
+python scripts\analyze_latent.py --checkpoint outputs\checkpoints\best.pt --max-batches 10
+python scripts\quantization_experiment.py --checkpoint outputs\checkpoints\best.pt --max-batches 10
+```
+
+Outputs: `outputs/metrics/latent_statistics.json`,
+`outputs/metrics/quantization_results.json` / `.csv`, and
+`latent_histogram.png`, `latent_channel_statistics.png`,
+`latent_heatmap.png`, `quantization_comparison.png` under
+`outputs/visualizations/`.
+
+## Entropy Coding & the .nvc Bitstream
+
+**Status: implemented (Milestone 6).** This is the milestone where the
+project becomes an actual codec: quantized latents are entropy-coded into a
+real binary file, so the numbers below are **measured bitrate**, not
+theoretical tensor storage.
+
+```
+encode:  frame -> Encoder -> latent -> fixed quantizer -> symbols
+               -> arithmetic coder -> .nvc
+
+decode:  .nvc -> arithmetic decoder -> symbols -> dequantizer
+              -> approximate latent -> Decoder -> frame
+```
+
+Still **not** implemented: learned/neural entropy models, hyperpriors,
+context or autoregressive models, quantization-aware training, and any
+inter-frame or temporal prediction. The entropy model here is a static table
+counted from calibration data.
+
+### Fixed quantization calibration
+
+Milestone 5 derived scale/zero_point from whichever tensor was being
+quantized. That cannot be a codec - the decoder receives only a bitstream
+and cannot re-derive parameters it never saw. `scripts/calibrate_quantizer.py`
+therefore derives them **once, from the training split only**, and writes
+them to a calibration file both sides load.
+
+Method: **per-channel percentile ranges at (0.1, 99.9)**, the documented
+default. Percentiles rather than min/max because the Milestone 5 analysis
+found a sharply peaked distribution with long tails (range about
+[-16.5, 13.7] against a standard deviation of 2.24) - letting a few extreme
+values define the grid would spend most of the quantization steps on empty
+space. Setting the percentiles to (0.0, 100.0) reproduces plain min/max
+calibration exactly, so that option is retained rather than removed. The
+percentiles were **not** tuned against validation or test data.
+
+Clipping is the cost of that choice and is measured, not assumed. On the
+400-frame training calibration set, 0.192% of values fell outside the
+8-bit range (0.170% at 6-bit, 0.110% at 4-bit); on the test split the
+encoder clips 0.447% / 0.418% / 0.318%.
+
+### Entropy model
+
+`src/nvc/compression/entropy_model.py` counts symbol occurrences in the
+calibration data to estimate `P(symbol)`, with **one independent frequency
+table per latent channel**. Because symbols are coded in channel-major
+order, the decoder knows which table applies at every position without any
+side information.
+
+Two safeguards make it usable as a coding model:
+
+- **No zero probabilities.** A symbol with probability 0 is unencodable, and
+  calibration cannot be assumed to have seen every symbol. Add-one (Laplace)
+  smoothing plus a hard floor of `MIN_FREQUENCY = 1` guarantee every symbol
+  in `[0, 2**bits)` stays encodable.
+- **Integer frequencies summing to exactly 65536.** The coder's interval
+  arithmetic must be bit-identical on both sides; floats would drift. The
+  rounding this introduces is reported as "probability quantization" in the
+  efficiency breakdown below.
+
+Measured on the calibration set (8-bit): all 256 symbols observed, aggregate
+order-0 empirical entropy **7.306 bits/symbol**, per-channel model mean
+**7.179 bits/symbol**, against 8.0 bits/symbol fixed width.
+
+### Arithmetic coder
+
+`src/nvc/compression/range_coder.py` implements integer arithmetic coding
+from first principles - no compression library is called. Arithmetic coding
+was chosen over Huffman because it is not restricted to whole-bit codewords,
+which matters at low bit depths, and because it is the natural base for the
+learned entropy models planned later.
+
+The interval [low, high] is held in 32-bit fixed point and renormalized as
+it narrows: entirely in the lower half emits a 0, entirely in the upper half
+emits a 1, and the classic **underflow** case (straddling the midpoint but
+inside [1/4, 3/4)) rescales around the midpoint and records a *pending* bit
+to be emitted later with the opposite polarity. The decoder mirrors every
+step, keeping both sides in lockstep. `total <= 2**30` guarantees the
+interval products cannot overflow.
+
+### .nvc binary format specification
+
+Version 1. All multi-byte integers are **little-endian** and unsigned; no
+implicit padding anywhere.
+
+```
+Header (37 fixed bytes + quantization parameter block)
+├── magic                4 bytes   b"NVC1"
+├── format_version       uint8     currently 1
+├── quantization_bits    uint8
+├── quantization_mode    uint8     0 = global, 1 = per_channel
+├── entropy_coder_id     uint8     1 = static_arithmetic_v1
+├── image_width          uint16
+├── image_height         uint16
+├── image_channels       uint8
+├── latent_channels      uint16
+├── latent_height        uint16
+├── latent_width         uint16
+├── symbol_count         uint32
+├── num_quant_params     uint16    1 (global) or latent_channels
+├── payload_length       uint32    bytes
+├── entropy_model_id     8 bytes   first 8 bytes of a SHA-256
+└── quantization params  num_quant_params x { float32 scale, float32 zero_point }
+
+Payload
+└── payload_length bytes of arithmetic-coded symbols (MSB-first bit packing)
+```
+
+`NVCWriter` / `NVCReader` (`src/nvc/compression/nvc_format.py`) validate
+magic bytes, version, coder id, bit depth, every dimension, the
+symbol_count/latent-dimension consistency, the parameter count against the
+mode, truncated parameter blocks, truncated payloads, and trailing data.
+Every failure raises `NVCFormatError` with a specific message rather than
+decoding silently-wrong output.
+
+Two deliberate design choices:
+
+- **Quantization parameters are embedded** so a .nvc is self-describing for
+  dequantization. At 64 channels that is 512 bytes - real overhead on a
+  single frame, reported honestly rather than hidden (see the BPP figures,
+  given both payload-only and total-file). A sequence-level header shared
+  across frames is the obvious fix once this codes video.
+- **The entropy model is not embedded** - it is a 64x256 table, constant
+  across every frame from a given calibration. The header carries
+  `entropy_model_id` instead, and decoding with a mismatched calibration
+  raises rather than emitting garbage.
+
+### Encode / decode workflow
+
+```powershell
+# 1. Calibrate once from the training split (writes outputs/calibration/)
+python scripts\calibrate_quantizer.py --checkpoint outputs\checkpoints\best.pt
+
+# 2. Encode an image to .nvc
+python scripts\encode.py `
+    --checkpoint outputs\checkpoints\best.pt `
+    --input data\frames\test\bmx-bumps_000001.png `
+    --output outputs\compressed\frame.nvc
+
+# 3. Decode it back (--reference also reports PSNR)
+python scripts\decode.py `
+    --checkpoint outputs\checkpoints\best.pt `
+    --input outputs\compressed\frame.nvc `
+    --output outputs\reconstructed\frame.png `
+    --reference data\frames\test\bmx-bumps_000001.png
+```
+
+Bit depth is configurable, not a separate codec: `--bits 6` at calibration
+time produces a 6-bit calibration that the same encoder/decoder consume.
+
+### Measured results - DAVIS test split (719 frames, real .nvc files)
+
+| Bits | Mode | PSNR (dB) | Total BPP | Payload BPP | Ratio | Mean bytes | Payload b/sym | Clipped |
+|---|---|---|---|---|---|---|---|---|
+| 8 | per-channel | 27.167 | 1.8844 | 1.8174 | 12.75x | 15,437 | 7.2696 | 0.447% |
+| 6 | per-channel | 27.103 | 1.3819 | 1.3149 | 17.41x | 11,320 | 5.2595 | 0.418% |
+| 4 | per-channel | 26.237 | 0.8692 | 0.8022 | 27.80x | 7,120 | 3.2087 | 0.318% |
+
+Spread at 8-bit across the 719 frames: total BPP 1.7603 (min) / 1.8844
+(mean) / 2.1964 (max); compression ratio 10.93x to 13.63x.
+
+**6-bit is the better operating point than 8-bit.** Going from 6 to 8 bits
+costs 36% more bits for 0.064 dB - essentially nothing. That reverses the
+Milestone 5 recommendation, which could not see bitrate because nothing was
+entropy-coded yet.
+
+Header overhead is **549 bytes = 3.56%** of the mean 8-bit file (13.2% of
+the smaller 4-bit file, where the same fixed cost is spread over fewer
+payload bytes).
+
+### Three representations of the same frame (8-bit operating point)
+
+| Representation | Bytes | BPP | Ratio | PSNR |
+|---|---|---|---|---|
+| A. Raw uint8 RGB | 196,608 | 24.0000 | 1.00x | - (lossless source) |
+| B. Fixed-width quantized latent | 16,384 | 2.0000 | 12.00x | 27.167 dB |
+| C. Entropy-coded .nvc (measured) | 15,437 | 1.8844 | 12.75x | 27.167 dB |
+
+B and C have identical PSNR because entropy coding is lossless - C is
+simply B stored more efficiently, plus a header.
+
+### Entropy coding efficiency
+
+| Bits | Fixed width | Test entropy | Model expected | Actual payload | Coder overhead |
+|---|---|---|---|---|---|
+| 8 | 8.0000 | 7.3867 | 7.2694 | 7.2696 | +0.0003 |
+| 6 | 6.0000 | 5.3783 | 5.2592 | 5.2595 | +0.0003 |
+| 4 | 4.0000 | 3.3463 | 3.2084 | 3.2087 | +0.0003 |
+
+(bits/symbol; "model expected" is the cross-entropy of the test symbols
+under the calibrated model.)
+
+The coder lands within **0.0003 bits/symbol** of its model's expectation -
+about 0.004% overhead, essentially optimal. Reading the columns left to
+right accounts for the full gap between 8.0 and 7.27 bits/symbol:
+
+- **Fixed width -> test entropy (-0.61):** what order-0 entropy coding can
+  win, given how peaked the symbol distribution is.
+- **Test entropy -> model expected (-0.12):** the per-channel model beats the
+  aggregate order-0 figure, because channels have genuinely different
+  distributions and each gets its own table.
+- **Model expected -> actual payload (+0.0003):** everything the
+  implementation loses - probability quantization to integer frequencies,
+  finite-sequence effects, coder termination bits, and byte padding.
+
+Note the theoretical entropy is **not** the achievable file size: it excludes
+the 549-byte header entirely. Total-file bits/symbol at 8-bit is 7.5359, not
+7.2696.
+
+### Current limitations
+
+- The entropy model is static and order-0 per channel. It ignores spatial
+  correlation between neighbouring latent positions, which a context or
+  hyperprior model would exploit - the largest remaining win.
+- The model was trained without quantization in the loop, and the loss had
+  no rate term. Nothing has optimized the rate/distortion trade-off jointly.
+- Quantization parameters are re-sent in every frame (512 of the 549 header
+  bytes).
+- The arithmetic coder is pure Python: about 47 ms/frame encode and 56
+  ms/frame decode at 8-bit. Correct and measurable, but not real-time.
+- Still image only - no inter-frame prediction, so this does not yet
+  compress *video*, and there is no comparison against H.264/H.265.
+- Calibration is tied to a specific checkpoint; a retrained model needs
+  re-calibration (the `entropy_model_id` check makes a mismatch loud).
+
 ## 12-Week Roadmap (Minor Project Scope)
 
 This roadmap covers the core neural codec only (proof of concept, local
@@ -718,9 +1177,9 @@ contract, and each milestone requires explicit sign-off before starting.
 | 1-2  | Repository foundation, environment setup, dataset selection strategy *(done - Milestone 1)* |
 | 3-4  | Frame extraction pipeline (OpenCV), train/val/test dataset preparation, and generalized ingestion for image-sequence datasets like DAVIS *(done - Milestones 2 & 2.5)* |
 | 5-6  | PyTorch data pipeline (`FrameDataset`, transforms, DataLoaders) *(done - Milestone 3)*; baseline convolutional autoencoder (encoder/decoder CNN, MSE training loop, checkpointing, reconstruction CLI) *(done - Milestone 4)* |
-| 7    | Latent space design, quantization, and entropy coding groundwork |
-| 8    | `.nvc` binary serialization format and a variational encoder/decoder (mu/logvar, KL divergence) |
-| 9    | End-to-end encode/decode pipeline integration and training loop |
+| 7    | Latent space analysis and uniform scalar quantization *(done - Milestone 5)*; entropy modeling and arithmetic coding *(done - Milestone 6)* |
+| 8    | `.nvc` binary serialization format *(done - Milestone 6)*; a variational encoder/decoder (mu/logvar, KL divergence) and/or a learned entropy model *(not started)* |
+| 9    | End-to-end encode/decode pipeline integration *(done for still frames - Milestone 6)*; temporal/inter-frame coding |
 | 10   | Evaluation: PSNR, MS-SSIM, MSE, BPP, compression ratio, encode/decode timing; baseline comparison vs. H.264/H.265 |
 | 11   | Experiments, tuning, visualizations, documentation |
 | 12   | Final report, demo, cleanup, presentation prep |

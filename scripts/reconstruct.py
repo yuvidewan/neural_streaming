@@ -24,8 +24,7 @@ import torch
 from nvc.data.loaders import create_test_loader
 from nvc.data.validation import DatasetValidationError
 from nvc.evaluation.basic_metrics import mse, psnr
-from nvc.models import BaselineAutoencoder
-from nvc.training import load_checkpoint
+from nvc.training import load_model_from_checkpoint
 from nvc.utils.config import load_default_config
 from nvc.utils.device import get_device
 
@@ -95,10 +94,7 @@ def main(argv: list[str] | None = None) -> int:
 
     device = get_device() if args.device == "auto" else torch.device(args.device)
 
-    checkpoint = load_checkpoint(args.checkpoint, map_location=device)
-    model = BaselineAutoencoder(**checkpoint["model_config"]).to(device)
-    model.load_state_dict(checkpoint["model_state_dict"])
-    model.eval()
+    model, checkpoint = load_model_from_checkpoint(args.checkpoint, device=device)
 
     try:
         test_loader = create_test_loader(

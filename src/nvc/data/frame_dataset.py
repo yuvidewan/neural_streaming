@@ -14,10 +14,10 @@ import json
 from pathlib import Path
 from typing import Callable
 
-import cv2
 import torch
 from torch.utils.data import Dataset
 
+from nvc.data.image_io import read_image_as_tensor
 from nvc.data.validation import DatasetValidationError, validate_frame_tensor
 
 VALID_SPLITS = ("train", "val", "test")
@@ -87,19 +87,11 @@ class FrameDataset(Dataset):
     def __getitem__(self, index: int) -> torch.Tensor:
         path = self._frame_paths[index]
 
-        # cv2.imread returns BGR (OpenCV's native in-memory order) or None
-        # if the file is missing/corrupt/unsupported. Every other consumer
-        # here (PyTorch models, matplotlib, torchvision) expects RGB, so
-        # this conversion is required - unlike on the write side (see
-        # frame_extraction.py), where cv2.imwrite already expects BGR.
-        image = cv2.imread(str(path))
-        if image is None:
-            raise DatasetValidationError(
-                f"Could not read image (missing, corrupt, or unsupported): {path}"
-            )
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-        tensor = torch.from_numpy(image).permute(2, 0, 1).contiguous().to(torch.float32) / 255.0
+        # Shared with the codec CLIs via image_io, so the BGR->RGB and
+        # [0, 1] scaling convention is defined in exactly one place. (The
+        # write side in frame_extraction.py deliberately does not convert,
+        # because cv2.imwrite already expects BGR.)
+        tensor = read_image_as_tensor(path)
 
         validate_frame_tensor(
             tensor,

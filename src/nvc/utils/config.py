@@ -32,6 +32,10 @@ class Config:
     latent_dim: int = 128
     latent_channels: int = 64  # BaselineAutoencoder's spatial latent channel count
 
+    # --- Latent quantization parameters (Milestone 5) ---
+    quantization_bits: int = 8
+    quantization_mode: str = "per_channel"  # "global" or "per_channel"
+
     # --- Training parameters ---
     batch_size: int = 8
     learning_rate: float = 1e-4
@@ -43,6 +47,7 @@ class Config:
     processed_data_dir: Path = PROJECT_ROOT / "data" / "processed"
     checkpoint_dir: Path = PROJECT_ROOT / "outputs" / "checkpoints"
     visualizations_dir: Path = PROJECT_ROOT / "outputs" / "visualizations"
+    metrics_dir: Path = PROJECT_ROOT / "outputs" / "metrics"
 
     # --- Dataset preprocessing parameters ---
     every_n_frames: int = 1
@@ -74,7 +79,7 @@ class Config:
         config = cls()
         path_fields = {
             "raw_data_dir", "frames_dir", "processed_data_dir",
-            "checkpoint_dir", "visualizations_dir",
+            "checkpoint_dir", "visualizations_dir", "metrics_dir",
         }
         tuple_fields = {"supported_video_extensions", "supported_image_extensions"}
         for key, value in overrides.items():

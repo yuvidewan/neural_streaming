@@ -13,6 +13,8 @@ from typing import Any
 
 import torch
 
+from nvc.models import BaselineAutoencoder
+
 
 def save_checkpoint(
     path: str | Path,
@@ -49,6 +51,33 @@ def load_checkpoint(
     # (not untrusted third-party files), and they carry plain history/config
     # dicts alongside the tensors, not just a bare state_dict.
     return torch.load(path, map_location=map_location, weights_only=False)
+
+
+def load_model_from_checkpoint(
+    path: str | Path,
+    *,
+    device: str | torch.device | None = None,
+    eval_mode: bool = True,
+) -> tuple[BaselineAutoencoder, dict[str, Any]]:
+    """Rebuild a trained BaselineAutoencoder from a checkpoint.
+
+    The architecture comes from the checkpoint's own saved `model_config`,
+    so callers never have to re-specify the training-time arguments (e.g.
+    --latent-channels). Returns (model, checkpoint) so callers can also read
+    `epoch`/`history` without loading the file twice.
+
+    This is the single model-loading path shared by every inference-side
+    consumer (reconstruction, latent analysis, quantization experiments) -
+    it is deliberately not reimplemented per script.
+    """
+    checkpoint = load_checkpoint(path, map_location=device)
+    model = BaselineAutoencoder(**checkpoint["model_config"])
+    model.load_state_dict(checkpoint["model_state_dict"])
+    if device is not None:
+        model = model.to(device)
+    if eval_mode:
+        model.eval()
+    return model, checkpoint
 
 
 def resume_training_state(
