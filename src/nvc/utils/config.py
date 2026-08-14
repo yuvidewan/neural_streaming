@@ -49,6 +49,12 @@ class Config:
     visualizations_dir: Path = PROJECT_ROOT / "outputs" / "visualizations"
     metrics_dir: Path = PROJECT_ROOT / "outputs" / "metrics"
 
+    # --- Vimeo-90K large-scale training dataset (Milestone 6.5) ---
+    # Not committed and not auto-downloaded - see README.md, "Large-Scale
+    # Training Dataset", for how to obtain and place it.
+    vimeo_root: Path = PROJECT_ROOT / "data" / "external" / "vimeo_septuplet"
+    vimeo_manifest_path: Path = PROJECT_ROOT / "data" / "processed" / "vimeo_manifest.json"
+
     # --- Dataset preprocessing parameters ---
     every_n_frames: int = 1
     train_ratio: float = 0.8
@@ -80,6 +86,7 @@ class Config:
         path_fields = {
             "raw_data_dir", "frames_dir", "processed_data_dir",
             "checkpoint_dir", "visualizations_dir", "metrics_dir",
+            "vimeo_root", "vimeo_manifest_path",
         }
         tuple_fields = {"supported_video_extensions", "supported_image_extensions"}
         for key, value in overrides.items():

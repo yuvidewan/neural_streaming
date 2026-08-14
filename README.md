@@ -14,7 +14,7 @@ that compares to conventional codecs on quality and size.
 
 ## Current Development Status
 
-**Milestone 6 (this repository state): a working end-to-end neural image codec.** Dataset ingestion + PyTorch data pipeline + a trained convolutional autoencoder + fixed-calibration quantization + arithmetic entropy coding into a real `.nvc` binary file.
+**Milestone 6.5 (this repository state): a working end-to-end neural image codec (Milestone 6, unchanged) plus large-scale training data pipeline support for Vimeo-90K Septuplet.** Milestone 6.5 is architecture/pipeline only - **no retraining has happened**; the model, quantizer, entropy model, and `.nvc` format are exactly as Milestone 6 left them.
 
 Measured on the DAVIS test split: **1.88 BPP at 27.17 dB (12.75x vs raw
 uint8 RGB)** at 8-bit, or **1.38 BPP at 27.10 dB (17.41x)** at 6-bit.
@@ -88,6 +88,14 @@ Implemented:
   `scripts/calibrate_quantizer.py`, `encode.py`, `decode.py`,
   `benchmark_codec.py`
 - Real measured BPP / compression-ratio benchmarking
+- **Vimeo-90K Septuplet dataset support** - discovery, official leakage-safe
+  train/test splitting, deterministic subset selection, and a lazy,
+  non-duplicating sequence manifest (`src/nvc/data/vimeo.py`)
+- **`SequenceFrameDataset`** - generic sequence-manifest-backed Dataset the
+  existing model/training code consumes with zero changes
+  (`src/nvc/data/sequence_dataset.py`)
+- `scripts/prepare_training_dataset.py` - Vimeo validation/statistics and
+  reproducible subset-manifest builder (does not train anything)
 
 **Not implemented yet** (do not assume any of this works):
 - Variational latents (mu/logvar, KL divergence) - the current model is a
@@ -96,6 +104,8 @@ Implemented:
   the entropy model is a static counted table
 - Quantization-aware training - the model was trained on float latents only
 - Inter-frame / temporal prediction, so this codes still frames, not video
+- Training on Vimeo-90K - the data pipeline exists, but no training run has
+  used it yet; the current checkpoint is still DAVIS-only
 - Video reassembly
 - Perceptual/adversarial/SSIM/rate losses - training uses plain MSE only
 - MS-SSIM evaluation, and any comparison against H.264/H.265
@@ -170,7 +180,8 @@ neural_streaming/
 │   ├── calibrate_quantizer.py     # fixed calibration + entropy model (Milestone 6)
 │   ├── encode.py                  # image -> .nvc (Milestone 6)
 │   ├── decode.py                  # .nvc -> image (Milestone 6)
-│   └── benchmark_codec.py         # real BPP / ratio benchmark (Milestone 6)
+│   ├── benchmark_codec.py         # real BPP / ratio benchmark (Milestone 6)
+│   └── prepare_training_dataset.py # Vimeo-90K validate/subset CLI (Milestone 6.5)
 ├── src/
 │   └── nvc/
 │       ├── data/
@@ -183,8 +194,10 @@ neural_streaming/
 │       │   ├── errors.py            # shared DatasetSourceError base
 │       │   ├── validation.py        # DatasetValidationError + frame tensor checks
 │       │   ├── frame_dataset.py     # FrameDataset (torch.utils.data.Dataset)
+│       │   ├── sequence_dataset.py  # SequenceFrameDataset (generic, sequence-manifest-backed)
+│       │   ├── vimeo.py             # Vimeo-90K discovery, leakage-safe splits, subsetting
 │       │   ├── transforms.py        # train/eval transform pipelines
-│       │   └── loaders.py           # DataLoader factories
+│       │   └── loaders.py           # DataLoader factories (Frame* and Sequence*)
 │       ├── models/
 │       │   ├── encoder.py           # Encoder: strided-conv downsampler
 │       │   ├── decoder.py           # Decoder: transposed-conv upsampler
@@ -215,7 +228,8 @@ neural_streaming/
 │   ├── test_pytorch_pipeline.py      # FrameDataset/transforms/loaders/metrics (Milestone 3)
 │   ├── test_baseline_autoencoder.py  # model/training/checkpoint/reconstruction (Milestone 4)
 │   ├── test_quantization.py          # quantizer/latent analysis/storage/integrity (Milestone 5)
-│   └── test_entropy_coding.py        # calibration/entropy model/coder/.nvc/codec (Milestone 6)
+│   ├── test_entropy_coding.py        # calibration/entropy model/coder/.nvc/codec (Milestone 6)
+│   └── test_vimeo_dataset.py         # Vimeo discovery/leakage/subsetting/DAVIS regression (Milestone 6.5)
 ├── .gitignore
 ├── pyproject.toml
 ├── README.md
@@ -1164,6 +1178,197 @@ the 549-byte header entirely. Total-file bits/symbol at 8-bit is 7.5359, not
 - Calibration is tied to a specific checkpoint; a retrained model needs
   re-calibration (the `entropy_model_id` check makes a mismatch loud).
 
+## Large-Scale Training Dataset
+
+**Status: implemented (Milestone 6.5) - pipeline/architecture only. No
+retraining has happened, and the model/quantizer/entropy model/`.nvc`
+format are all unchanged from Milestone 6.**
+
+DAVIS (6,208 frames) proved the pipeline end-to-end but is too small to
+train a production-quality codec. This milestone adds support for
+**Vimeo-90K Septuplet** (~91,701 seven-frame sequences, ~642,000 frames,
+~82 GB) as a large-scale training source, without duplicating that 82 GB
+onto disk a second time.
+
+**Roles going forward:**
+- **DAVIS = development/baseline dataset** - fast iteration, what every
+  milestone so far has trained and benchmarked on.
+- **Vimeo-90K = large-scale training dataset** - what real training runs
+  will eventually use (not yet - that's eventual Milestone 7+ scope).
+- **UVG / Xiph = future held-out codec evaluation** - not integrated yet;
+  named here only to record the intended role.
+
+### Why not the existing PNG-extraction pipeline
+
+`scripts/prepare_dataset.py` (Milestones 2/2.5) resizes and re-saves every
+frame as a new PNG under `data/frames/`. That's the right call for DAVIS,
+but running it over Vimeo-90K would silently create a **second ~82 GB
+copy** of the dataset. Instead, `scripts/prepare_training_dataset.py`
+builds a small manifest that *references* the original Vimeo files by
+`(sequence_id, filename)`; frames are read directly from the source
+location and cropped in memory, never resized-and-rewritten to disk:
+
+```
+Original Vimeo frame -> lazy loading -> random/center 256x256 crop -> tensor
+```
+
+### Dataset-source architecture
+
+`src/nvc/data/vimeo.py` is the **only** module that knows Vimeo-90K's
+directory layout. Everything downstream - `SequenceFrameDataset`
+(`src/nvc/data/sequence_dataset.py`), the `create_sequence_*_loader`
+factories, and the model/training code - talks only to a generic
+**sequence manifest** schema. A future sequence-oriented dataset needs only
+its own discovery module producing that same schema; nothing else changes.
+This mirrors the existing `DatasetSource` strategy pattern from
+Milestones 2.5/6 (`sources.py`) at the architecture level, without
+routing Vimeo through it, since that pipeline's `process()` step is
+specifically the PNG-duplication behavior described above.
+
+```
+FrameDataset          <- data/processed/manifest.json      (DAVIS, per-frame)
+SequenceFrameDataset  <- data/processed/vimeo_manifest*.json (Vimeo, per-sequence, flattened to per-frame)
+```
+
+`SequenceFrameDataset.__getitem__` returns a single `[3, H, W]` float32
+tensor in `[0, 1]`, exactly like `FrameDataset` - **the existing
+Milestone 4 `BaselineAutoencoder` and training engine consume Vimeo frames
+with zero code changes.** (Verified: `create_sequence_train_loader` ->
+`BaselineAutoencoder` -> `train_one_epoch` runs unmodified against a
+synthetic Vimeo-shaped manifest - see the Milestone 6.5 test suite.)
+Sequence identity is preserved alongside the flattened index -
+`dataset.sequence_id_at(i)` / `dataset.frame_index_at(i)` - for future
+temporal/inter-frame models; nothing in this milestone uses it yet.
+
+### Expected directory structure
+
+```
+vimeo_septuplet/
+├── sequences/
+│   └── <group>/<sequence>/{im1.png, ..., im7.png}   (e.g. 00001/0001/)
+├── sep_trainlist.txt      one "<group>/<sequence>" id per line
+└── sep_testlist.txt       one "<group>/<sequence>" id per line
+```
+
+Nothing hardcodes the two-level `<group>/<sequence>` nesting: a sequence's
+id is whatever relative-path string appears in the official list file, and
+its directory is `sequences/<that string>`. `find_vimeo_root()` validates
+the root and `sequences/` subdirectory exist and raises a clear,
+actionable error otherwise - it does not download anything.
+
+### Leakage prevention (critical, and tested)
+
+`sep_trainlist.txt` and `sep_testlist.txt` are **authoritative** and are
+never merged, re-split, or shuffled together. `load_official_split_ids()`
+loads both and explicitly asserts they're disjoint before returning them -
+a defensive check on top of trusting the official files, not a substitute
+for it; a corrupted or hand-edited list raises `VimeoLeakageError` rather
+than silently proceeding. Test sequences are never used for training, for
+quantization calibration (Milestone 6's calibration was already
+train-split-only), or for hyperparameter tuning.
+
+`tests/test_vimeo_dataset.py::test_official_train_test_ids_are_disjoint`
+and `test_overlapping_lists_are_rejected` enforce this automatically, and
+`test_max_sequences_subset_cannot_reach_into_the_test_list` proves subset
+selection can't cross the boundary either.
+
+### Deterministic subset selection
+
+```powershell
+python scripts\prepare_training_dataset.py `
+    --dataset vimeo90k --split train --max-sequences 10000 --seed 42
+```
+
+`select_deterministic_subset()`: sort all ids -> seed a `random.Random` ->
+shuffle -> truncate. Selection uses only ids and the seed - never anything
+about compression quality or model performance - so the same
+`(split, max_sequences, seed)` always yields the identical subset (verified
+by a reproducibility smoke test: two independent runs produced
+byte-identical manifests). Omitting `--max-sequences` uses every sequence
+in the official list.
+
+### Preprocessing: crop, never stretch
+
+Vimeo frames are 448x256; the current model expects 256x256. Reusing the
+existing `transforms.py` (unchanged): `RandomCrop(256)` for training,
+`CenterCrop(256)` for validation/test - exactly DAVIS's pattern, applied to
+un-resized source frames instead of pre-resized ones. A crop can only
+select a contiguous sub-region, so this **never stretches or distorts** the
+image, unlike a resize would. (`test_crop_never_stretches_the_aspect_ratio`
+verifies the cropped tensor is an exact pixel-for-pixel slice of the
+source, not an interpolated resize.)
+
+### Dataset statistics
+
+```powershell
+python scripts\prepare_training_dataset.py --dataset vimeo90k --validate-only
+```
+
+Reports sequence/frame counts **from the official list files**, not a
+filesystem walk of `sequences/` (which can hold 90,000+ subdirectories) -
+counts are cheap and exact without scanning. A small number of images
+(default 3) are opened to report actual observed resolution, and a
+20-sequence deterministic sample per split is validated (all 7 frames
+present) as a structural spot-check. Pass `--full-scan` to validate every
+sequence in both official lists instead - correct but potentially slow
+over the full ~91,701-sequence dataset; cheap when combined with
+`--max-sequences`, since cost then scales with the subset, not the whole
+list.
+
+### Storage-aware workflow
+
+Do not assume the 82 GB *download* implies exactly 82 GB *extracted* - PNG
+frames are already compressed, so extracted size is typically close to but
+not identical to archive size, and this project doesn't create a second
+processed copy (see above), so no separate "processed cache" size applies
+here. Check actual sizes locally rather than trusting a published figure:
+
+```powershell
+# Total size of the extracted dataset
+Get-ChildItem "D:\Datasets\vimeo_septuplet" -Recurse -File |
+    Measure-Object -Property Length -Sum |
+    ForEach-Object { "{0:N2} GB" -f ($_.Sum / 1GB) }
+
+# Free space on the target drive before extracting
+Get-PSDrive D | Select-Object Used, Free
+```
+
+### Validating a real download
+
+```powershell
+# 1. Download the official Vimeo-90K Septuplet dataset (~82 GB) yourself -
+#    this project never downloads it automatically. Extract it anywhere.
+
+# 2. Point --vimeo-root at the extracted folder and validate structure
+python scripts\prepare_training_dataset.py `
+    --dataset vimeo90k --vimeo-root "D:\Datasets\vimeo_septuplet" --validate-only
+
+# 3. (Optional, slower) Validate every sequence rather than a sample
+python scripts\prepare_training_dataset.py `
+    --dataset vimeo90k --vimeo-root "D:\Datasets\vimeo_septuplet" `
+    --validate-only --full-scan
+```
+
+Or set it once in `configs/default.json` (`"vimeo_root": "D:\\Datasets\\vimeo_septuplet"`)
+instead of passing `--vimeo-root` every time. **As of this milestone, the
+real dataset has not been downloaded on this machine** - only the
+synthetic-fixture test suite has been run; `--validate-only` above was
+executed against the (absent) default path and correctly failed with a
+clear, actionable error rather than a fabricated success.
+
+### Current limitations
+
+- No temporal/inter-frame model - Vimeo's 7-frame temporal structure is
+  preserved (sequence id + frame index) but nothing consumes it yet.
+- No processed-frame cache. Lazy loading re-reads and re-crops from the
+  original PNGs every epoch; a future optional cache could trade disk for
+  I/O, but isn't implemented (per this milestone's explicit scope).
+- No validation split for Vimeo - only the official `train`/`test` lists
+  exist upstream, and none is invented here.
+- `--full-scan` over the complete ~91,701-sequence dataset opens on the
+  order of 640,000 file-existence checks; combine with `--max-sequences`
+  for routine use.
+
 ## 12-Week Roadmap (Minor Project Scope)
 
 This roadmap covers the core neural codec only (proof of concept, local
@@ -1179,7 +1384,7 @@ contract, and each milestone requires explicit sign-off before starting.
 | 5-6  | PyTorch data pipeline (`FrameDataset`, transforms, DataLoaders) *(done - Milestone 3)*; baseline convolutional autoencoder (encoder/decoder CNN, MSE training loop, checkpointing, reconstruction CLI) *(done - Milestone 4)* |
 | 7    | Latent space analysis and uniform scalar quantization *(done - Milestone 5)*; entropy modeling and arithmetic coding *(done - Milestone 6)* |
 | 8    | `.nvc` binary serialization format *(done - Milestone 6)*; a variational encoder/decoder (mu/logvar, KL divergence) and/or a learned entropy model *(not started)* |
-| 9    | End-to-end encode/decode pipeline integration *(done for still frames - Milestone 6)*; temporal/inter-frame coding |
+| 9    | End-to-end encode/decode pipeline integration *(done for still frames - Milestone 6)*; large-scale (Vimeo-90K) training data pipeline *(done - Milestone 6.5)*; temporal/inter-frame coding |
 | 10   | Evaluation: PSNR, MS-SSIM, MSE, BPP, compression ratio, encode/decode timing; baseline comparison vs. H.264/H.265 |
 | 11   | Experiments, tuning, visualizations, documentation |
 | 12   | Final report, demo, cleanup, presentation prep |

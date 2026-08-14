@@ -43,7 +43,9 @@ data/raw/*
 data/processed/*
 !data/processed/.gitkeep
 
-# data/external holds extracted third-party datasets (e.g. DAVIS) - never committed.
+# data/external holds extracted third-party datasets (e.g. DAVIS, and
+# Vimeo-90K Septuplet under data/external/vimeo_septuplet/ - see README.md,
+# "Large-Scale Training Dataset") - never committed, regardless of size.
 data/external/*
 !data/external/.gitkeep
 

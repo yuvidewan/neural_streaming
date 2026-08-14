@@ -48,6 +48,46 @@ def make_sequence(
     return sequence_dir
 
 
+def make_vimeo_dataset(
+    root: Path,
+    *,
+    train_sequence_ids: list[str],
+    test_sequence_ids: list[str],
+    width: int = 448,
+    height: int = 256,
+    incomplete_ids: list[str] = (),
+) -> Path:
+    """Build a tiny synthetic Vimeo-90K Septuplet-style dataset on disk.
+
+    Creates root/sequences/<id>/im1.png..im7.png for every id in
+    train_sequence_ids + test_sequence_ids, plus sep_trainlist.txt and
+    sep_testlist.txt. `incomplete_ids` (a subset of the above) get only 3 of
+    the 7 required frames, for testing IncompleteVimeoSequenceError.
+
+    Real sequence ids look like "00001/0001" (two path segments) - tests
+    can pass ids with a "/" to exercise that nesting, or flat ids to check
+    nothing hardcodes a fixed depth.
+    """
+    sequences_dir = root / "sequences"
+    frame = np.zeros((height, width, 3), dtype=np.uint8)
+
+    for sequence_id in [*train_sequence_ids, *test_sequence_ids]:
+        seq_dir = sequences_dir / sequence_id
+        seq_dir.mkdir(parents=True, exist_ok=True)
+        frame_count = 3 if sequence_id in incomplete_ids else 7
+        for i in range(1, frame_count + 1):
+            cv2.imwrite(str(seq_dir / f"im{i}.png"), frame)
+
+    root.mkdir(parents=True, exist_ok=True)
+    (root / "sep_trainlist.txt").write_text(
+        "\n".join(train_sequence_ids) + "\n", encoding="utf-8"
+    )
+    (root / "sep_testlist.txt").write_text(
+        "\n".join(test_sequence_ids) + "\n", encoding="utf-8"
+    )
+    return root
+
+
 def make_tiny_manifest(
     tmp_path: Path,
     *,

@@ -12,8 +12,15 @@ and the PyTorch data pipeline built on top of it.
                      by scripts/prepare_dataset.py
 - validation:       DatasetValidationError + frame tensor sanity checks
 - frame_dataset:    FrameDataset (torch.utils.data.Dataset), reads manifest.json
-- transforms:       train/eval transform pipelines for FrameDataset
-- loaders:          create_train_loader/create_val_loader/create_test_loader
+- image_io:         single-image read/write in the project's tensor convention
+- transforms:       train/eval transform pipelines for FrameDataset/SequenceFrameDataset
+- loaders:          create_train_loader/create_val_loader/create_test_loader,
+                    plus create_sequence_*_loader for sequence manifests
+- vimeo:            Vimeo-90K Septuplet discovery, leakage-safe splitting,
+                    deterministic subsetting, sequence manifest builder
+- sequence_dataset: SequenceFrameDataset - generic lazy per-frame loading
+                    over a sequence manifest (Vimeo today, any future
+                    sequence-oriented dataset with no code changes here)
 
 No neural network, VAE, compression, or streaming code lives here yet.
 """
