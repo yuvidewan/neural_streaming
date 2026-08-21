@@ -78,6 +78,11 @@ outputs/calibration/*
 !outputs/calibration/.gitkeep
 outputs/visualizations/*
 !outputs/visualizations/.gitkeep
+# Benchmark runs (Milestone 7): timestamped result/plot directories plus
+# intermediate encoded video and .nvc artifacts. Regenerable via
+# scripts/benchmark_rd.py; can be large.
+outputs/benchmarks/*
+!outputs/benchmarks/.gitkeep
 
 # --- Model checkpoint / export formats ---
 *.pt

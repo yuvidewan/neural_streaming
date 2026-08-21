@@ -48,6 +48,7 @@ class Config:
     checkpoint_dir: Path = PROJECT_ROOT / "outputs" / "checkpoints"
     visualizations_dir: Path = PROJECT_ROOT / "outputs" / "visualizations"
     metrics_dir: Path = PROJECT_ROOT / "outputs" / "metrics"
+    benchmarks_dir: Path = PROJECT_ROOT / "outputs" / "benchmarks"
 
     # --- Vimeo-90K large-scale training dataset (Milestone 6.5) ---
     # Not committed and not auto-downloaded - see README.md, "Large-Scale
@@ -85,7 +86,7 @@ class Config:
         config = cls()
         path_fields = {
             "raw_data_dir", "frames_dir", "processed_data_dir",
-            "checkpoint_dir", "visualizations_dir", "metrics_dir",
+            "checkpoint_dir", "visualizations_dir", "metrics_dir", "benchmarks_dir",
             "vimeo_root", "vimeo_manifest_path",
         }
         tuple_fields = {"supported_video_extensions", "supported_image_extensions"}

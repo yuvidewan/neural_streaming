@@ -26,6 +26,11 @@ Pillow>=10.2,<11.0
 # Plotting for metrics and visualizations
 matplotlib>=3.8,<4.0
 
+# MS-SSIM perceptual metric (Milestone 7 evaluation harness).
+# Used instead of a hand-rolled implementation: MS-SSIM's Gaussian window
+# sizing and five-scale weighting are easy to get subtly wrong.
+pytorch-msssim>=1.0,<2.0
+
 # Progress bars for frame/data processing loops
 tqdm>=4.66,<5.0
 

@@ -14,7 +14,7 @@ that compares to conventional codecs on quality and size.
 
 ## Current Development Status
 
-**Milestone 6.5 (this repository state): a working end-to-end neural image codec (Milestone 6, unchanged) plus large-scale training data pipeline support for Vimeo-90K Septuplet.** Milestone 6.5 is architecture/pipeline only - **no retraining has happened**; the model, quantizer, entropy model, and `.nvc` format are exactly as Milestone 6 left them.
+**Milestone 7 (this repository state): the end-to-end neural image codec (unchanged since Milestone 6) plus a Vimeo-90K training data pipeline and a reproducible evaluation harness that benchmarks it against H.264 and H.265.** Milestones 6.5 and 7 are pipeline/evaluation work only - **no retraining has happened**, and the model, quantizer, entropy model, and `.nvc` format are exactly as Milestone 6 left them.
 
 Measured on the DAVIS test split: **1.88 BPP at 27.17 dB (12.75x vs raw
 uint8 RGB)** at 8-bit, or **1.38 BPP at 27.10 dB (17.41x)** at 6-bit.
@@ -96,6 +96,11 @@ Implemented:
   (`src/nvc/data/sequence_dataset.py`)
 - `scripts/prepare_training_dataset.py` - Vimeo validation/statistics and
   reproducible subset-manifest builder (does not train anything)
+- **MS-SSIM** perceptual metric (`src/nvc/evaluation/perceptual_metrics.py`)
+- **Rate-distortion benchmark harness** comparing NVC against H.264/H.265
+  via FFmpeg, with weighted aggregation and full reproducibility metadata
+  (`src/nvc/evaluation/{ffmpeg,sequences,codecs,rd_benchmark}.py`)
+- `scripts/benchmark_rd.py` and `scripts/plot_rate_distortion.py`
 
 **Not implemented yet** (do not assume any of this works):
 - Variational latents (mu/logvar, KL divergence) - the current model is a
@@ -108,7 +113,7 @@ Implemented:
   used it yet; the current checkpoint is still DAVIS-only
 - Video reassembly
 - Perceptual/adversarial/SSIM/rate losses - training uses plain MSE only
-- MS-SSIM evaluation, and any comparison against H.264/H.265
+- VMAF / LPIPS perceptual metrics (MS-SSIM is implemented as of Milestone 7)
 - Comparison against H.264/H.265
 - FastAPI serving layer
 - ONNX Runtime inference
@@ -167,7 +172,8 @@ neural_streaming/
 │   ├── compressed/          # .nvc files (gitignored)
 │   ├── reconstructed/       # Decoded frames/video (gitignored)
 │   ├── metrics/             # latent_statistics.json, quantization_results.json/.csv (gitignored)
-│   └── visualizations/      # dataset/reconstruction/training/latent/quantization plots (gitignored)
+│   ├── visualizations/      # dataset/reconstruction/training/latent/quantization plots (gitignored)
+│   └── benchmarks/          # timestamped RD benchmark runs + plots (gitignored)
 ├── scripts/
 │   ├── check_environment.py
 │   ├── prepare_dataset.py         # video and image-sequence ingestion CLI
@@ -181,7 +187,9 @@ neural_streaming/
 │   ├── encode.py                  # image -> .nvc (Milestone 6)
 │   ├── decode.py                  # .nvc -> image (Milestone 6)
 │   ├── benchmark_codec.py         # real BPP / ratio benchmark (Milestone 6)
-│   └── prepare_training_dataset.py # Vimeo-90K validate/subset CLI (Milestone 6.5)
+│   ├── prepare_training_dataset.py # Vimeo-90K validate/subset CLI (Milestone 6.5)
+│   ├── benchmark_rd.py            # NVC vs H.264/H.265 RD benchmark (Milestone 7)
+│   └── plot_rate_distortion.py    # RD curves from results.json (Milestone 7)
 ├── src/
 │   └── nvc/
 │       ├── data/
@@ -214,7 +222,12 @@ neural_streaming/
 │       │   ├── codec.py             # end-to-end frame <-> .nvc
 │       │   └── storage_analysis.py  # raw latent storage arithmetic
 │       ├── evaluation/
-│       │   ├── basic_metrics.py     # MSE, PSNR (MS-SSIM not yet implemented)
+│       │   ├── basic_metrics.py     # MSE, PSNR
+│       │   ├── perceptual_metrics.py # MS-SSIM (Milestone 7)
+│       │   ├── ffmpeg.py            # FFmpeg discovery + safe invocation
+│       │   ├── sequences.py         # benchmark sequence discovery/validation
+│       │   ├── codecs.py            # NVC / H.264 / H.265 behind one interface
+│       │   ├── rd_benchmark.py      # orchestration, aggregation, result schema
 │       │   └── latent_analysis.py   # latent extraction + statistics
 │       └── utils/
 │           ├── config.py            # Config dataclass (implemented)
@@ -229,7 +242,10 @@ neural_streaming/
 │   ├── test_baseline_autoencoder.py  # model/training/checkpoint/reconstruction (Milestone 4)
 │   ├── test_quantization.py          # quantizer/latent analysis/storage/integrity (Milestone 5)
 │   ├── test_entropy_coding.py        # calibration/entropy model/coder/.nvc/codec (Milestone 6)
-│   └── test_vimeo_dataset.py         # Vimeo discovery/leakage/subsetting/DAVIS regression (Milestone 6.5)
+│   ├── test_vimeo_dataset.py         # Vimeo discovery/leakage/subsetting/DAVIS regression (Milestone 6.5)
+│   ├── test_perceptual_metrics.py    # MS-SSIM (Milestone 7)
+│   ├── test_ffmpeg_utils.py          # FFmpeg discovery/exec, mocked (Milestone 7)
+│   └── test_rd_benchmark.py          # sequences/BPP/aggregation/schema/plots (Milestone 7)
 ├── .gitignore
 ├── pyproject.toml
 ├── README.md
@@ -1369,6 +1385,227 @@ clear, actionable error rather than a fabricated success.
   order of 640,000 file-existence checks; combine with `--max-sequences`
   for routine use.
 
+## Milestone 7 - Evaluation & Benchmarking
+
+**Status: implemented (Milestone 7).** A reproducible harness that measures
+the NVC neural codec against **H.264 (libx264)** and **H.265 (libx265)** on
+real sequences, scoring every codec with the *same* project-side metric
+implementations.
+
+This milestone is **evaluation only**. The model, quantizer, entropy model,
+`.nvc` format, and calibration methodology are byte-for-byte unchanged from
+Milestone 6; nothing was retrained.
+
+### Metrics
+
+| Metric | Meaning | Where |
+|---|---|---|
+| **PSNR** | Pixel-error quality in dB. Higher is better. | `nvc.evaluation.basic_metrics` (unchanged) |
+| **MS-SSIM** | Multi-scale structural similarity, ~[0, 1]. Higher is better. | `nvc.evaluation.perceptual_metrics` (new) |
+| **BPP** | `total compressed bytes x 8 / total pixels` | `CodecResult.bpp` |
+| **Compression ratio** | `raw uint8 RGB bytes / compressed bytes` | `CodecResult.compression_ratio` |
+
+MS-SSIM is added because PSNR is a poor predictor of perceived quality - it
+systematically favors blur over the errors viewers actually notice, and
+every serious codec comparison in this field reports a structural metric
+alongside it. The implementation wraps
+[`pytorch-msssim`](https://pypi.org/project/pytorch-msssim/) rather than
+being hand-rolled: MS-SSIM's Gaussian window sizing and five-scale
+weighting are easy to get subtly wrong. It requires both spatial
+dimensions >= 161 (it downsamples four times); smaller frames raise a clear
+`MetricInputError` and are reported as MS-SSIM-unavailable rather than
+given a fabricated score.
+
+**MSE and PSNR behavior is unchanged** - MS-SSIM is a strictly additive
+metric.
+
+### What bytes are counted
+
+- **NVC** - the complete `.nvc` file on disk, header included. Files are
+  actually written and `stat()`-ed; the size is never estimated.
+- **H.264/H.265** - the complete encoded container (`.mp4`) on disk.
+
+Payload-only figures are never compared against total-file figures. The
+compression-ratio baseline is **raw uint8 RGB storage**
+(`frames x width x height x 3`), which is *not* equivalent to uncompressed
+YUV video.
+
+### Comparison methodology - read this before quoting any number
+
+> **NVC currently operates as an intra-only, frame-independent neural
+> codec, while H.264 and H.265 exploit temporal redundancy through
+> inter-frame prediction.**
+
+In the default mode the classical codecs therefore carry a large
+structural advantage that has nothing to do with transform quality: they
+encode a *video*, NVC encodes each frame in isolation. This is a
+methodology limitation of the current codec, stated plainly rather than
+hidden, and it is recorded in the `methodology_note` field of every
+`results.json`.
+
+`--intra-only` builds an all-intra H.264/H.265 configuration (every frame a
+keyframe: `-g 1` for x264, `-x265-params keyint=1:min-keyint=1` for x265)
+which removes exactly that advantage, for the closer like-for-like
+comparison. It is an explicit option rather than the default, because
+normal video encoding is how these codecs are actually used.
+
+A second, smaller asymmetry: H.264/H.265 default to `yuv420p`, which
+**subsamples chroma**, while NVC codes full-resolution RGB. `--pix-fmt` is
+configurable for that reason, and the value used is recorded in every
+result row.
+
+Metrics are always computed by this project from decoded pixels. FFmpeg's
+own `-psnr` output is deliberately **not** parsed as authoritative: a codec
+scoring itself with its own metric implementation, in its own internal
+color space, is not comparable to NVC being scored by ours.
+
+### FFmpeg requirement
+
+The classical-codec benchmarks need FFmpeg on `PATH` with **libx264** and
+**libx265** compiled in. Nothing is auto-installed, and no install
+directory is hardcoded - discovery is via `PATH`.
+
+```powershell
+ffmpeg -version
+ffprobe -version
+```
+
+```powershell
+# Windows
+winget install Gyan.FFmpeg
+# macOS:  brew install ffmpeg
+# Linux:  sudo apt install ffmpeg
+```
+
+Open a **new** terminal afterwards - an already-running shell keeps its old
+`PATH` and will still report "not recognized". Missing executables or a
+build without the required encoders produce a clear `FFmpegNotFoundError` /
+`EncoderNotAvailableError` naming the fix, never a silent failure. To
+benchmark the neural codec alone without FFmpeg, pass `--codecs nvc`.
+
+### Calibration must match the checkpoint
+
+Quantization ranges and entropy tables are **model-specific**. Using a
+calibration built for one checkpoint with a different one still *encodes
+successfully* - the `.nvc` `entropy_model_id` check only compares the
+encoder and decoder side, and both read the same calibration file - so the
+failure is silent and produces badly degraded, invalid numbers.
+
+The harness therefore measures the actual fit before running and **refuses
+a mismatch**. Measured on this project: a matched pair clips ~0.05% of
+latent values, while the DAVIS calibration applied to the Vimeo checkpoint
+clips **~18%**. The check is empirical rather than filename-based, because
+checkpoints get renamed (`best.pt` became `davis_baseline_best.pt`).
+
+To benchmark a different checkpoint, generate a calibration for it first
+(calibration reads the **training** split only, never the evaluation
+frames):
+
+```powershell
+python scripts\calibrate_quantizer.py `
+    --checkpoint outputs\checkpoints\vimeo_epoch17_best.pt `
+    --bits 8 `
+    --output outputs\calibration\vimeo_epoch17_8bit.json
+```
+
+`--allow-calibration-mismatch` overrides the guard, and flags the results
+as not methodologically valid in the output.
+
+### Running a benchmark
+
+```powershell
+# Smoke test - validates the entire path in well under a minute
+python scripts\benchmark_rd.py `
+    --checkpoint outputs\checkpoints\davis_baseline_best.pt `
+    --calibration outputs\calibration\latent_quantization.json `
+    --codecs nvc h264 h265 `
+    --max-sequences 2 --max-frames-per-sequence 10
+
+# Full DAVIS test split (9 sequences, 719 frames)
+python scripts\benchmark_rd.py `
+    --checkpoint outputs\checkpoints\davis_baseline_best.pt `
+    --calibration outputs\calibration\latent_quantization.json `
+    --codecs nvc h264 h265
+
+# The fairer like-for-like comparison: all-intra H.264/H.265
+python scripts\benchmark_rd.py `
+    --checkpoint outputs\checkpoints\davis_baseline_best.pt `
+    --calibration outputs\calibration\latent_quantization.json `
+    --codecs nvc h264 h265 --intra-only
+
+# Rate-distortion plots, generated from results.json
+python scripts\plot_rate_distortion.py --run-dir outputs\benchmarks\<run>
+```
+
+Useful options: `--codecs`, `--nvc-bits 8 6 4`, `--crf 18 23 28 33`,
+`--preset`, `--pix-fmt`, `--intra-only`, `--split`, `--max-sequences`,
+`--max-frames-per-sequence`, `--output-dir`, `--run-name`, `--device`,
+`--seed`, `--keep-temp`.
+
+### Where results are stored
+
+Every run gets its own timestamped directory, so no earlier benchmark is
+ever silently overwritten:
+
+```
+outputs/benchmarks/2026-08-22_150000/
+├── results.json      per-sequence rows + aggregates + methodology notes
+├── results.csv       one row per (sequence, codec configuration)
+├── aggregate.csv     one row per codec configuration
+├── metadata.json     full reproducibility record
+└── plots/
+    ├── rd_psnr_vs_bpp.png
+    └── rd_msssim_vs_bpp.png
+```
+
+`metadata.json` records what produced the numbers: timestamp, dataset,
+sequence ids and frame counts, selected CRFs and NVC bit depths, seed,
+device and GPU name, Python/PyTorch/FFmpeg versions, platform, project
+version, and the **SHA-256 of both the checkpoint and the calibration
+file** - so any result can be traced back to exactly the artifacts that
+generated it.
+
+Benchmark outputs are gitignored (regenerable, and the intermediate encode
+artifacts can be large).
+
+### How aggregate metrics are calculated
+
+DAVIS test sequences range from 52 to 104 frames, so averaging
+per-sequence averages would silently over-weight short sequences. Every
+dataset-level figure is **frame- or pixel-weighted**:
+
+| Field | Definition |
+|---|---|
+| `aggregate_bpp` | `sum(total_bytes) * 8 / sum(frames * width * height)` |
+| `mean_psnr` | frame-weighted mean of per-frame PSNR |
+| `mean_msssim` | frame-weighted mean of per-frame MS-SSIM |
+| `pooled_psnr` | PSNR derived from MSE pooled over every pixel of every frame |
+| `compression_ratio` | `sum(frames * width * height * 3) / sum(total_bytes)` |
+
+`mean_psnr` and `pooled_psnr` are both reported because they answer
+different questions and neither is universally correct: the mean of
+per-frame PSNR is what codec literature usually quotes, while pooling MSE
+first is error-weighted and dominated by the worst frames. They are
+labeled distinctly rather than one being silently chosen. This definition
+list also ships inside every `results.json` under
+`aggregation_methodology`.
+
+### Results are measured, never hardcoded
+
+Every number in `results.json`/`results.csv` comes from an actual encode
+and decode executed during that run. The plotting script reads only
+`results.json` - it contains no baked-in values. **No benchmark figures are
+published in this README**, precisely so that nothing here can drift from
+what the harness actually produces: run it and read the output.
+
+At the time this milestone was completed, only a **smoke benchmark**
+(2 sequences, 20 frames) had been run to validate the pipeline - not a full
+DAVIS benchmark. On that smoke run H.264 and H.265 outperformed NVC by a
+wide margin at matched quality, which is the expected consequence of NVC
+being intra-only, trained with plain MSE, and having no rate-distortion
+objective or learned entropy model. **No claim that NVC beats H.264 or
+H.265 is made or supported by any measurement in this repository.**
+
 ## 12-Week Roadmap (Minor Project Scope)
 
 This roadmap covers the core neural codec only (proof of concept, local
@@ -1385,9 +1622,13 @@ contract, and each milestone requires explicit sign-off before starting.
 | 7    | Latent space analysis and uniform scalar quantization *(done - Milestone 5)*; entropy modeling and arithmetic coding *(done - Milestone 6)* |
 | 8    | `.nvc` binary serialization format *(done - Milestone 6)*; a variational encoder/decoder (mu/logvar, KL divergence) and/or a learned entropy model *(not started)* |
 | 9    | End-to-end encode/decode pipeline integration *(done for still frames - Milestone 6)*; large-scale (Vimeo-90K) training data pipeline *(done - Milestone 6.5)*; temporal/inter-frame coding |
-| 10   | Evaluation: PSNR, MS-SSIM, MSE, BPP, compression ratio, encode/decode timing; baseline comparison vs. H.264/H.265 |
+| 10   | Evaluation: PSNR, MS-SSIM, MSE, BPP, compression ratio, encode/decode timing; baseline comparison vs. H.264/H.265 *(harness done - Milestone 7; full DAVIS benchmark not yet run)* |
 | 11   | Experiments, tuning, visualizations, documentation |
 | 12   | Final report, demo, cleanup, presentation prep |
 
 Development proceeds milestone by milestone with explicit approval before
 moving to the next one.
+
+""
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+""
