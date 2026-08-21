@@ -12,6 +12,7 @@ uses a tiny synthetic sequence rather than any real dataset.
 from __future__ import annotations
 
 import json
+import math
 
 import pytest
 import torch
@@ -277,16 +278,48 @@ def test_frame_metrics_scores_identical_frames_perfectly():
     assert metrics.pooled_mse == 0.0
 
 
-def test_frame_metrics_skips_msssim_for_frames_below_its_size_floor():
+def test_frame_metrics_skips_msssim_for_frames_below_its_size_floor(caplog):
     # Small frames must still yield PSNR, with MS-SSIM reported as absent
-    # rather than as a fabricated number.
+    # rather than as a fabricated number - and the drop must be logged, not
+    # silent, so a caller can tell a clean result apart from a partial one.
     metrics = FrameMetrics()
     frame = torch.rand(1, 3, 32, 32)
 
-    metrics.add(frame, frame)
+    with caplog.at_level("WARNING"):
+        metrics.add(frame, frame, frame_label="seq/000001")
 
     assert metrics.mean_psnr == float("inf")
     assert metrics.mean_msssim is None
+    assert metrics.msssim_dropped == 1
+    assert metrics.msssim_frame_count == 0
+    assert "seq/000001" in caplog.text
+
+
+def test_frame_metrics_mean_psnr_is_not_poisoned_by_one_perfect_frame():
+    # A single bit-exact frame alongside imperfect ones must not make the
+    # whole sequence's mean_psnr report +inf - that would silently hide the
+    # real error in every other frame. Regression test for the bug where
+    # mean_psnr was a plain sum()/len() over per-frame PSNR values.
+    metrics = FrameMetrics()
+    perfect = torch.rand(1, 3, 32, 32)
+    metrics.add(perfect, perfect)  # MSE == 0 -> PSNR == +inf
+    reference = torch.zeros(1, 3, 32, 32)
+    noisy = torch.full((1, 3, 32, 32), 0.1)
+    metrics.add(noisy, reference)  # MSE == 0.01 -> finite PSNR
+
+    from nvc.evaluation.basic_metrics import psnr_from_mse
+
+    assert math.isfinite(metrics.mean_psnr)
+    assert metrics.mean_psnr == pytest.approx(float(psnr_from_mse(0.01)))
+
+
+def test_frame_metrics_mean_psnr_is_inf_only_when_every_frame_is_perfect():
+    metrics = FrameMetrics()
+    frame = torch.rand(1, 3, 32, 32)
+    metrics.add(frame, frame)
+    metrics.add(frame, frame)
+
+    assert metrics.mean_psnr == float("inf")
 
 
 def test_frame_metrics_pools_error_across_frames():
@@ -340,6 +373,35 @@ def test_aggregate_handles_missing_msssim():
     aggregate = aggregate_results([_result(mean_msssim=None)])[0]
 
     assert aggregate["mean_msssim"] is None
+
+
+def test_aggregate_msssim_weighted_by_actual_scored_frames_not_nominal_count():
+    # "long" nominally has 90 frames but only 20 actually produced an
+    # MS-SSIM score (the rest were, e.g., below the minimum spatial size).
+    # Weighting by frame_count=90 would over-count its influence; weighting
+    # by msssim_frame_count=20 is what the docstring's "frame-weighted"
+    # claim actually means for a partially-scored result.
+    long_sequence = _result(
+        sequence_id="long", frame_count=90, mean_msssim=0.98, msssim_frame_count=20,
+    )
+    short_sequence = _result(
+        sequence_id="short", frame_count=10, mean_msssim=0.88, msssim_frame_count=10,
+    )
+
+    aggregate = aggregate_results([long_sequence, short_sequence])[0]
+
+    assert aggregate["mean_msssim"] == pytest.approx((0.98 * 20 + 0.88 * 10) / 30)
+
+
+def test_aggregate_msssim_falls_back_to_frame_count_when_unset():
+    # Results built without msssim_frame_count (e.g. older code, or tests
+    # that don't care about this distinction) must aggregate exactly as
+    # before: weighted by the nominal frame_count.
+    result = _result(frame_count=90, mean_msssim=0.98)
+
+    assert result.msssim_frame_count is None
+    aggregate = aggregate_results([result])[0]
+    assert aggregate["mean_msssim"] == pytest.approx(0.98)
 
 
 def test_aggregate_groups_by_codec_and_configuration():
@@ -400,6 +462,31 @@ def test_results_json_is_valid_and_carries_the_methodology_note(tmp_path):
     # The temporal-fairness caveat must travel with the numbers.
     note = document["metadata"]["methodology_note"].lower()
     assert "intra-only" in note and "temporal redundancy" in note
+
+
+def test_results_json_sanitizes_infinite_metrics_to_valid_json(tmp_path):
+    # A pixel-perfect frame legitimately produces mean_psnr == +inf (see
+    # FrameMetrics.mean_psnr). json.dumps emits the non-standard `Infinity`
+    # token for that by default, which is not valid JSON (RFC 8259) and
+    # breaks strict parsers (browsers, jq, non-Python JSON libraries).
+    # Regression test: the written file must be strict-JSON-readable, and
+    # the non-finite value must come back as null rather than crash.
+    run = BenchmarkRun(
+        output_dir=tmp_path,
+        metadata={"methodology_note": METHODOLOGY_NOTE},
+        results=[_result(mean_psnr=float("inf"))],
+    )
+    paths = write_results(tmp_path, run)
+
+    raw_text = paths["results_json"].read_text(encoding="utf-8")
+    # Python's own json.loads accepts the non-standard Infinity/NaN tokens
+    # (a CPython extension), so the real proof of RFC 8259 compliance is
+    # that the token never appears in the file at all - a strict external
+    # parser (JS JSON.parse, jq) would reject it if it did.
+    assert "Infinity" not in raw_text
+
+    document = json.loads(raw_text)
+    assert document["per_sequence"][0]["mean_psnr"] is None
 
 
 def test_results_csv_has_a_header_and_one_row_per_measurement(tmp_path):
@@ -509,6 +596,25 @@ def test_intra_only_is_marked_in_the_configuration_label():
     )
 
     assert codec.configuration == "crf23-intra"
+
+
+def test_configuration_label_disambiguates_non_default_preset_and_pix_fmt():
+    # Two configs sharing crf but differing in preset/pix_fmt must not get
+    # the same configuration label, or aggregate_results (which groups by
+    # (codec, configuration)) would silently average two different
+    # operating points together. Regression test for that bug.
+    default_preset = FFmpegCodecConfig(name="h264", encoder="libx264", crf=23)
+    other_preset = FFmpegCodecConfig(
+        name="h264", encoder="libx264", crf=23, preset="veryslow",
+    )
+    other_pix_fmt = FFmpegCodecConfig(
+        name="h264", encoder="libx264", crf=23, pix_fmt="yuv444p",
+    )
+
+    assert default_preset.configuration == "crf23"
+    assert other_preset.configuration != default_preset.configuration
+    assert other_pix_fmt.configuration != default_preset.configuration
+    assert other_preset.configuration != other_pix_fmt.configuration
 
 
 @pytest.mark.parametrize(

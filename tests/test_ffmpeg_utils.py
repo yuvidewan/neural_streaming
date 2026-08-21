@@ -31,6 +31,10 @@ from nvc.evaluation.ffmpeg import (
 
 _ENCODER_OUTPUT = """Encoders:
  V..... = Video
+ A..... = Audio
+ S..... = Subtitle
+ D..... = Data
+ T..... = Attachments
  ------
  V....D libx264              libx264 H.264 / AVC / MPEG-4 AVC
  V....D libx265              libx265 H.265 / HEVC
@@ -234,6 +238,12 @@ def test_available_encoders_parses_the_encoder_listing(monkeypatch):
     assert "libx264" in encoders
     assert "libx265" in encoders
     assert "aac" in encoders
+    # The multi-line flag legend above the "------" separator must never be
+    # mistaken for encoder rows (regression guard: each legend line's first
+    # token is also 6 characters, the same shape as a real encoder row).
+    assert "=" not in encoders
+    assert "Video" not in encoders
+    assert len(encoders) == 3
 
 
 def test_require_encoders_passes_when_all_present(monkeypatch):

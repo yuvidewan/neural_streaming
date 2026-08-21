@@ -67,19 +67,23 @@ def _plot_metric(
     plotted = False
 
     for codec, rows in sorted(series.items()):
-        points = [(r["aggregate_bpp"], r[metric_key]) for r in rows
+        # Keep each row paired with its own point explicitly - zipping the
+        # (unfiltered) `rows` against separately-filtered x/y lists would
+        # shift every row after the first missing metric onto the wrong
+        # point's label.
+        points = [(r, r["aggregate_bpp"], r[metric_key]) for r in rows
                   if r.get(metric_key) is not None]
         if not points:
             continue
         plotted = True
-        x_values = [p[0] for p in points]
-        y_values = [p[1] for p in points]
+        x_values = [point[1] for point in points]
+        y_values = [point[2] for point in points]
         axes.plot(
             x_values, y_values,
             marker=_MARKERS.get(codec, "d"), markersize=6,
             linewidth=1.6, label=_LABELS.get(codec, codec),
         )
-        for row, x_value, y_value in zip(rows, x_values, y_values):
+        for row, x_value, y_value in points:
             axes.annotate(
                 row["codec_configuration"], (x_value, y_value),
                 textcoords="offset points", xytext=(6, -10), fontsize=7.5, alpha=0.8,

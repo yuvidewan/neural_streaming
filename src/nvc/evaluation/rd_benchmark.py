@@ -32,6 +32,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import math
 import platform
 import sys
 from dataclasses import dataclass
@@ -241,9 +242,14 @@ def aggregate_results(results: list[CodecResult]) -> list[dict]:
         # Frame-weighted: each sequence contributes in proportion to length.
         weighted_psnr = sum(r.mean_psnr * r.frame_count for r in group) / total_frames
         scored = [r for r in group if r.mean_msssim is not None]
+        # Weight by the frames that actually produced an MS-SSIM score, not
+        # the sequence's nominal frame_count - a result can have fewer
+        # (e.g. some frames dropped below MS-SSIM's minimum spatial size),
+        # and weighting by the nominal count would over-count its influence
+        # on this figure relative to how many frames it actually scored.
         weighted_msssim = (
-            sum(r.mean_msssim * r.frame_count for r in scored)
-            / sum(r.frame_count for r in scored)
+            sum(r.mean_msssim * (r.msssim_frame_count or r.frame_count) for r in scored)
+            / sum((r.msssim_frame_count or r.frame_count) for r in scored)
             if scored else None
         )
         pooled_mse = sum(r.pooled_mse * r.total_pixels * 3 for r in group) / raw_bytes
@@ -288,6 +294,25 @@ def create_run_directory(base_dir: str | Path, run_name: str | None = None) -> P
     return run_dir
 
 
+def _json_safe(value):
+    """Recursively replace non-finite floats (inf/-inf/nan) with None.
+
+    `json.dumps` happily emits `Infinity`/`NaN` for these by default - valid
+    Python, but not valid JSON (RFC 8259), so any strict-mode parser (a
+    browser results viewer, `jq`, most non-Python JSON libraries) fails to
+    read the file. A pixel-perfect frame or sequence can genuinely produce
+    an infinite PSNR (see `psnr_from_mse`), so this only affects how such a
+    value is written to results.json, never the value used elsewhere.
+    """
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    if isinstance(value, dict):
+        return {key: _json_safe(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_json_safe(item) for item in value]
+    return value
+
+
 def write_results(run_dir: Path, run: BenchmarkRun) -> dict[str, Path]:
     """Write results.json, results.csv, and metadata.json."""
     run_dir = Path(run_dir)
@@ -312,7 +337,7 @@ def write_results(run_dir: Path, run: BenchmarkRun) -> dict[str, Path]:
     }
 
     json_path = run_dir / "results.json"
-    json_path.write_text(json.dumps(document, indent=2), encoding="utf-8")
+    json_path.write_text(json.dumps(_json_safe(document), indent=2), encoding="utf-8")
 
     metadata_path = run_dir / "metadata.json"
     metadata_path.write_text(json.dumps(run.metadata, indent=2), encoding="utf-8")

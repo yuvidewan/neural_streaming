@@ -110,6 +110,8 @@ def run_command(
             arguments,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout,
             check=False,
         )
@@ -165,10 +167,22 @@ def available_encoders() -> set[str]:
     """Names of every encoder the installed FFmpeg build supports."""
     completed = run_command([find_ffmpeg(), "-hide_banner", "-encoders"], timeout=60)
     encoders: set[str] = set()
+    # `ffmpeg -encoders` prints a multi-line flag legend first (one line per
+    # media type, e.g. " V..... = Video", " A..... = Audio"), then a
+    # "------" separator, then the actual encoder rows. Every legend line's
+    # first token is also 6 characters, so it must be skipped by position
+    # (before the separator), not just by shape - matching it as if it were
+    # an encoder row previously added a spurious "=" entry to the result.
+    past_separator = False
     for line in (completed.stdout or "").splitlines():
+        if line.startswith(" ---"):
+            past_separator = True
+            continue
+        if not past_separator:
+            continue
         # Encoder rows look like: " V....D libx264   libx264 H.264 / AVC ..."
         parts = line.split()
-        if len(parts) >= 2 and len(parts[0]) == 6 and not line.startswith(" ---"):
+        if len(parts) >= 2 and len(parts[0]) == 6:
             encoders.add(parts[1])
     return encoders
 

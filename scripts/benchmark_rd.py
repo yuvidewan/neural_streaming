@@ -199,6 +199,7 @@ def _build_nvc_codecs(args, sequences, device) -> tuple[list, dict]:
         codecs.append(NVCCodec(
             model, params=params, entropy_model=entropy_model,
             checkpoint_name=args.checkpoint.name, device=device,
+            keep_files=args.keep_temp,
         ))
 
     return codecs, {
@@ -318,7 +319,15 @@ def main(argv: list[str] | None = None) -> int:
                     f"{result.bpp:>7.4f} bpp  {result.mean_psnr:>6.2f} dB  "
                     f"MS-SSIM {result.mean_msssim if result.mean_msssim is None else f'{result.mean_msssim:.4f}'}"
                 )
-            except Exception as exc:  # noqa: BLE001 - one bad config must not abort the run
+            except (FFmpegError, RuntimeError, OSError) as exc:
+                # Deliberately narrow: these are the exception types an
+                # external encode/decode tool or the numeric pipeline can
+                # legitimately raise (a bad FFmpeg config, CUDA OOM, a full
+                # disk), so one bad config is logged and the run continues.
+                # A bare `except Exception` here previously swallowed real
+                # programming bugs (AttributeError/TypeError from a typo)
+                # too, logging them as indistinguishable routine failures.
+                # Those now propagate and stop the run, as they should.
                 print(f"  [FAIL] {sequence.sequence_id} {label}: {exc}")
                 failures.append({
                     "sequence_id": sequence.sequence_id, "codec": label,

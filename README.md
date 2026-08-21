@@ -114,7 +114,6 @@ Implemented:
 - Video reassembly
 - Perceptual/adversarial/SSIM/rate losses - training uses plain MSE only
 - VMAF / LPIPS perceptual metrics (MS-SSIM is implemented as of Milestone 7)
-- Comparison against H.264/H.265
 - FastAPI serving layer
 - ONNX Runtime inference
 - Neural frame interpolation or super-resolution (major-project scope, later)
@@ -1628,7 +1627,3 @@ contract, and each milestone requires explicit sign-off before starting.
 
 Development proceeds milestone by milestone with explicit approval before
 moving to the next one.
-
-""
-$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-""

@@ -36,6 +36,8 @@ configurable for that reason and is recorded in every result.
 
 from __future__ import annotations
 
+import logging
+import math
 import shutil
 import time
 from abc import ABC, abstractmethod
@@ -72,6 +74,8 @@ DEFAULT_PIX_FMT = "yuv420p"
 DEFAULT_CRF_VALUES = (18, 23, 28, 33)
 DEFAULT_NVC_BIT_DEPTHS = (8, 6, 4)
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @dataclass
 class FrameMetrics:
@@ -79,31 +83,67 @@ class FrameMetrics:
 
     psnr_values: list[float] = field(default_factory=list)
     msssim_values: list[float] = field(default_factory=list)
+    msssim_dropped: int = 0
     squared_error_sum: float = 0.0
     element_count: int = 0
 
-    def add(self, reconstruction: torch.Tensor, reference: torch.Tensor) -> None:
-        """Score one [1, 3, H, W] reconstruction against its reference."""
+    def add(
+        self,
+        reconstruction: torch.Tensor,
+        reference: torch.Tensor,
+        *,
+        frame_label: str | None = None,
+    ) -> None:
+        """Score one [1, 3, H, W] reconstruction against its reference.
+
+        `frame_label` (e.g. "seq/000012") is only used to identify the frame
+        in the warning logged when MS-SSIM cannot be scored for it.
+        """
         frame_mse = mse_metric(reconstruction, reference)
         self.psnr_values.append(float(psnr_from_mse(frame_mse)))
         self.squared_error_sum += float(torch.sum((reconstruction - reference) ** 2))
         self.element_count += reference.numel()
         try:
             self.msssim_values.append(float(msssim(reconstruction, reference)))
-        except MetricInputError:
+        except MetricInputError as exc:
             # Frames below MS-SSIM's 161px floor still get PSNR; the result
             # reports MS-SSIM as unavailable rather than a fabricated value.
-            pass
+            # Logged (not silent) so a caller can tell a clean result apart
+            # from one where some frames were dropped from the average.
+            self.msssim_dropped += 1
+            _LOGGER.warning(
+                "MS-SSIM skipped for frame %s: %s",
+                frame_label or "<unknown>", exc,
+            )
 
     @property
     def mean_psnr(self) -> float:
-        return sum(self.psnr_values) / len(self.psnr_values)
+        """Frame-weighted mean PSNR in dB.
+
+        A bit-exact frame yields PSNR = +inf (the correct mathematical
+        limit - see `psnr_from_mse`). Averaging dB values directly means a
+        single +inf frame would make a plain sum()/len() report +inf for
+        the WHOLE sequence, even when every other frame has real,
+        substantial error - silently hiding that error. So +inf is only
+        reported here when every frame was bit-exact; otherwise the mean is
+        taken over the finite frames only, which is the only numerically
+        meaningful way to combine a mix of finite and infinite dB values.
+        """
+        finite = [value for value in self.psnr_values if math.isfinite(value)]
+        if not finite:
+            return float("inf")
+        return sum(finite) / len(finite)
 
     @property
     def mean_msssim(self) -> float | None:
         if not self.msssim_values:
             return None
         return sum(self.msssim_values) / len(self.msssim_values)
+
+    @property
+    def msssim_frame_count(self) -> int:
+        """Number of frames that actually contributed to `mean_msssim`."""
+        return len(self.msssim_values)
 
     @property
     def pooled_mse(self) -> float:
@@ -128,6 +168,10 @@ class CodecResult:
     encode_seconds: float
     decode_seconds: float
     details: dict = field(default_factory=dict)
+    # Frames that actually contributed to mean_msssim (None: unknown, treat
+    # as frame_count). Differs from frame_count whenever a frame was
+    # dropped, e.g. below MS-SSIM's minimum spatial size.
+    msssim_frame_count: int | None = None
 
     @property
     def total_pixels(self) -> int:
@@ -161,6 +205,7 @@ class CodecResult:
             "compression_ratio": self.compression_ratio,
             "mean_psnr": self.mean_psnr,
             "mean_msssim": self.mean_msssim,
+            "msssim_frame_count": self.msssim_frame_count,
             "pooled_psnr": self.pooled_psnr,
             "pooled_mse": self.pooled_mse,
             "encode_time_seconds": self.encode_seconds,
@@ -207,8 +252,22 @@ class FFmpegCodecConfig:
 
     @property
     def configuration(self) -> str:
+        """A label unique to this operating point, used to group results.
+
+        Only crf (+ an -intra suffix) appears for the common case, to keep
+        the label short and existing run directories/labels unchanged. If
+        preset or pix_fmt is overridden from the default, it's appended too
+        - otherwise two configs that differ only in preset or pix_fmt would
+        share a label and aggregate_results() would silently average them
+        together as if they were the same operating point.
+        """
+        parts = [f"crf{self.crf}"]
+        if self.preset != DEFAULT_PRESET:
+            parts.append(f"preset-{self.preset}")
+        if self.pix_fmt != DEFAULT_PIX_FMT:
+            parts.append(f"pixfmt-{self.pix_fmt}")
         suffix = "-intra" if self.intra_only else ""
-        return f"crf{self.crf}{suffix}"
+        return "-".join(parts) + suffix
 
     def intra_arguments(self) -> list[str]:
         """Encoder-specific flags that force every frame to be a keyframe."""
@@ -247,47 +306,73 @@ class FFmpegVideoCodec(Codec):
         _, pattern = materialize_sequence_for_ffmpeg(sequence, input_dir)
         ffmpeg = find_ffmpeg()
 
-        encode_command = [
-            ffmpeg, "-hide_banner", "-loglevel", "error", "-y",
-            "-framerate", str(self.config.framerate),
-            "-start_number", "1",
-            "-i", str(input_dir / pattern),
-            "-c:v", self.config.encoder,
-            "-crf", str(self.config.crf),
-            "-preset", self.config.preset,
-            "-pix_fmt", self.config.pix_fmt,
-            *self.config.intra_arguments(),
-            str(video_path),
-        ]
-        start = time.perf_counter()
-        run_ffmpeg_command(encode_command, timeout=3600)
-        encode_seconds = time.perf_counter() - start
+        try:
+            encode_command = [
+                ffmpeg, "-hide_banner", "-loglevel", "error", "-y",
+                "-framerate", str(self.config.framerate),
+                "-start_number", "1",
+                "-i", str(input_dir / pattern),
+                "-c:v", self.config.encoder,
+                "-crf", str(self.config.crf),
+                "-preset", self.config.preset,
+                "-pix_fmt", self.config.pix_fmt,
+                *self.config.intra_arguments(),
+                str(video_path),
+            ]
+            start = time.perf_counter()
+            run_ffmpeg_command(encode_command, timeout=3600)
+            encode_seconds = time.perf_counter() - start
 
-        total_bytes = video_path.stat().st_size
+            total_bytes = video_path.stat().st_size
 
-        decode_command = [
-            ffmpeg, "-hide_banner", "-loglevel", "error", "-y",
-            "-i", str(video_path),
-            "-start_number", "1",
-            str(decoded_dir / pattern),
-        ]
-        start = time.perf_counter()
-        run_ffmpeg_command(decode_command, timeout=3600)
-        decode_seconds = time.perf_counter() - start
+            # Verify the encode itself preserved the frame count via ffprobe
+            # (which actually decodes every frame to count it) before
+            # trusting the decode step below - a dropped/duplicated frame
+            # here would otherwise misalign every per-frame metric silently.
+            encoded_frame_count = probe_frame_count(video_path)
+            if encoded_frame_count != sequence.frame_count:
+                raise FFmpegCommandError(
+                    f"{self.name} encoded {encoded_frame_count} frames but the source "
+                    f"sequence '{sequence.sequence_id}' has {sequence.frame_count}. "
+                    "Per-frame metrics would be misaligned; refusing to score."
+                )
 
-        decoded_paths = sorted(decoded_dir.glob("frame_*.png"))
-        if len(decoded_paths) != sequence.frame_count:
-            raise FFmpegCommandError(
-                f"{self.name} decoded {len(decoded_paths)} frames but the source "
-                f"sequence '{sequence.sequence_id}' has {sequence.frame_count}. "
-                "Per-frame metrics would be misaligned; refusing to score."
-            )
+            decode_command = [
+                ffmpeg, "-hide_banner", "-loglevel", "error", "-y",
+                "-i", str(video_path),
+                "-start_number", "1",
+                str(decoded_dir / pattern),
+            ]
+            start = time.perf_counter()
+            run_ffmpeg_command(decode_command, timeout=3600)
+            decode_seconds = time.perf_counter() - start
 
-        metrics = FrameMetrics()
-        for reference_path, decoded_path in zip(sequence.frame_paths, decoded_paths):
-            reference = read_image_as_tensor(reference_path).unsqueeze(0)
-            decoded = read_image_as_tensor(decoded_path).unsqueeze(0)
-            metrics.add(decoded, reference)
+            decoded_paths = sorted(decoded_dir.glob("frame_*.png"))
+            if len(decoded_paths) != sequence.frame_count:
+                raise FFmpegCommandError(
+                    f"{self.name} decoded {len(decoded_paths)} frames but the source "
+                    f"sequence '{sequence.sequence_id}' has {sequence.frame_count}. "
+                    "Per-frame metrics would be misaligned; refusing to score."
+                )
+
+            metrics = FrameMetrics()
+            for reference_path, decoded_path in zip(sequence.frame_paths, decoded_paths):
+                reference = read_image_as_tensor(reference_path).unsqueeze(0)
+                decoded = read_image_as_tensor(decoded_path).unsqueeze(0)
+                metrics.add(
+                    decoded, reference,
+                    frame_label=f"{sequence.sequence_id}/{decoded_path.name}",
+                )
+        except Exception:
+            # Nothing here is meant to survive a failed run - clean up
+            # whatever partial artifacts were written so they don't linger
+            # on disk until the caller's end-of-run temp cleanup (which is
+            # skipped entirely under --keep-temp).
+            if video_path.exists():
+                video_path.unlink(missing_ok=True)
+            if decoded_dir.exists():
+                shutil.rmtree(decoded_dir, ignore_errors=True)
+            raise
 
         return CodecResult(
             codec=self.name,
@@ -313,6 +398,7 @@ class FFmpegVideoCodec(Codec):
                 "container": self.config.container,
                 "temporal_prediction": not self.config.intra_only,
             },
+            msssim_frame_count=metrics.msssim_frame_count,
         )
 
 
@@ -378,16 +464,24 @@ class NVCCodec(Codec):
             nvc_path.write_bytes(encoded.data)
             total_bytes += nvc_path.stat().st_size
 
-            start = time.perf_counter()
-            reconstruction, _ = decode_frame(
-                self.model, nvc_path.read_bytes(), entropy_model=self.entropy_model,
-            )
-            decode_seconds += time.perf_counter() - start
+            try:
+                start = time.perf_counter()
+                reconstruction, _ = decode_frame(
+                    self.model, nvc_path.read_bytes(), entropy_model=self.entropy_model,
+                )
+                decode_seconds += time.perf_counter() - start
 
-            metrics.add(reconstruction.to(reference.device), reference)
-
-            if not self.keep_files:
-                nvc_path.unlink()
+                metrics.add(
+                    reconstruction.to(reference.device), reference,
+                    frame_label=f"{sequence.sequence_id}/frame_{index:06d}",
+                )
+            finally:
+                # Clean up even on a decode failure - otherwise a bad frame
+                # mid-sequence leaves its .nvc file orphaned on disk rather
+                # than relying entirely on the caller's end-of-run cleanup
+                # (which is skipped entirely under --keep-temp).
+                if not self.keep_files:
+                    nvc_path.unlink(missing_ok=True)
 
         return CodecResult(
             codec=self.name,
@@ -411,4 +505,5 @@ class NVCCodec(Codec):
                 "temporal_prediction": False,
                 "intra_only": True,
             },
+            msssim_frame_count=metrics.msssim_frame_count,
         )
