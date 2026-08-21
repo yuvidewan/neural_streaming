@@ -1,0 +1,113 @@
+@startwbs
+<style>
+wbsDiagram {
+  LineColor #666666
+  FontName Arial
+
+  node {
+    Padding 8
+    Margin 15
+    RoundCorner 8
+    BackgroundColor #F8F9FA
+    LineColor #CCCCCC
+  }
+
+  .root {
+    BackgroundColor #1155CC
+    FontColor #FFFFFF
+    FontSize 14
+    FontStyle bold
+  }
+
+  .phase {
+    BackgroundColor #6AA84F
+    FontColor #FFFFFF
+    FontStyle bold
+  }
+}
+</style>
+
+* Real-Time Neural Video Compression & Streaming Engine <<root>>
+
+** 1. Foundations & Problem Definition <<phase>>
+*** 1.1 Literature Review & Problem Identification
+**** 1.1.1 Conventional Codec Review (H.264 / H.265 / AV1)
+**** 1.1.2 VAE & Learned Compression Literature (Kingma & Welling, Balle et al.)
+**** 1.1.3 Problem Statement & Project Scope Freeze
+**** 1.1.4 Synopsis & PERT Chart Submission
+*** 1.2 Dataset Collection & Preprocessing
+**** 1.2.1 Dataset Selection & Acquisition (DAVIS, Vimeo-90K, UVG-HD)
+**** 1.2.2 Frame Extraction Pipeline (Video & Image-Sequence Sources)
+**** 1.2.3 Resize, Normalize & Augmentation Transforms
+**** 1.2.4 Leak-Free Train / Val / Test Split & Manifest Generation
+
+** 2. System & Data Architecture Design <<phase>>
+*** 2.1 Encoder / Decoder Architecture Design
+**** 2.1.1 Convolutional Downsampling Stack
+**** 2.1.2 Mirrored Transposed-Convolution Decoder
+**** 2.1.3 Latent Dimension & Channel Sizing
+*** 2.2 PyTorch Data Pipeline Design
+**** 2.2.1 FrameDataset Specification
+**** 2.2.2 Train / Eval Transform Pipelines
+**** 2.2.3 DataLoader Factories
+*** 2.3 Feasibility & Project Planning
+**** 2.3.1 Technical & Economic Feasibility Assessment
+**** 2.3.2 Bill of Materials & Tooling Selection
+**** 2.3.3 PERT Chart & Milestone Scheduling
+
+** 3. Core Codec Build <<phase>>
+*** 3.1 Encoder Implementation
+**** 3.1.1 Strided-Conv Downsampler (PyTorch)
+**** 3.1.2 Shape Validation & Unit Tests
+*** 3.2 Decoder Implementation & Integration
+**** 3.2.1 Transposed-Conv Upsampler
+**** 3.2.2 End-to-End Autoencoder Assembly (encode / decode / forward)
+*** 3.3 Latent Quantization
+**** 3.3.1 Uniform Scalar Affine Quantizer
+**** 3.3.2 Global vs. Per-Channel Calibration
+**** 3.3.3 Fixed Calibration from Training Split
+*** 3.4 Entropy Coding
+**** 3.4.1 Empirical Per-Channel Frequency Model
+**** 3.4.2 Arithmetic (Range) Coder From First Principles
+*** 3.5 .nvc Bitstream Format
+**** 3.5.1 Header & Container Specification
+**** 3.5.2 NVCWriter / NVCReader Implementation
+**** 3.5.3 Encode / Decode CLI Scripts
+
+** 4. Model Training & Tuning <<phase>>
+*** 4.1 Training Loop Implementation
+**** 4.1.1 Trainer (Train / Validate Epoch Loops)
+**** 4.1.2 Checkpointing & Resume Logic
+*** 4.2 Baseline Training Run
+**** 4.2.1 CPU Smoke Test
+**** 4.2.2 Full Baseline Training Pass
+*** 4.3 Hyperparameter Tuning
+**** 4.3.1 Learning Rate / Batch Size / Latent Channel Sweep
+**** 4.3.2 Best Checkpoint Selection
+
+** 5. Evaluation & Validation <<phase>>
+*** 5.1 Reconstruction & Qualitative Validation
+**** 5.1.1 Test-Split Reconstruction Script
+**** 5.1.2 Visual Comparison Grids
+*** 5.2 Quantitative Performance Evaluation
+**** 5.2.1 MSE / PSNR Metrics
+**** 5.2.2 BPP & Compression Ratio Benchmarking
+**** 5.2.3 MS-SSIM & Codec Comparison (H.264 / H.265)
+*** 5.3 Result Analysis
+**** 5.3.1 Bit-Width & Quantization Mode Comparison
+**** 5.3.2 Entropy Coding Efficiency Breakdown
+**** 5.3.3 Limitations & Future-Work Analysis
+
+** 6. Documentation & Delivery <<phase>>
+*** 6.1 Final Report Writing
+**** 6.1.1 Technical Report Compilation
+**** 6.1.2 Results & Analysis Write-Up
+*** 6.2 Presentation & Demo Preparation
+**** 6.2.1 Slide Deck
+**** 6.2.2 Live Encode / Decode Demo
+*** 6.3 Repository Cleanup & Handover
+**** 6.3.1 Code Cleanup & Final Testing
+**** 6.3.2 Documentation Handover
+*** 6.4 Project Sign-off
+
+@endwbs
