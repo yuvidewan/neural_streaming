@@ -14,15 +14,16 @@ that compares to conventional codecs on quality and size.
 
 ## Current Development Status
 
-**Milestone 7 (this repository state): the end-to-end neural image codec (unchanged since Milestone 6) plus a Vimeo-90K training data pipeline and a reproducible evaluation harness that benchmarks it against H.264 and H.265.** Milestones 6.5 and 7 are pipeline/evaluation work only - **no retraining has happened**, and the model, quantizer, entropy model, and `.nvc` format are exactly as Milestone 6 left them.
+**Milestone 8A (this repository state): the Milestone 7 codec/evaluation stack unchanged, plus quantization-aware training (QAT) infrastructure - a differentiable, distortion-only noise relaxation that a future training run can opt into.** This milestone is **infrastructure and tests only**: no QAT training run has been performed yet, so there is no QAT checkpoint and no QAT benchmark result. See "Milestone 8A" below for the mechanism, the exact commands to run the actual experiment, and what has/hasn't been measured.
 
 Measured on the DAVIS test split: **1.88 BPP at 27.17 dB (12.75x vs raw
 uint8 RGB)** at 8-bit, or **1.38 BPP at 27.10 dB (17.41x)** at 6-bit.
 
 The model is a deterministic autoencoder, not a VAE, and the entropy model
-is a static counted table - no learned/context/hyperprior model, no
-quantization-aware training, and no inter-frame prediction, so this
-compresses **still frames**, not yet video.
+is a static counted table - no learned/context/hyperprior model, and no
+inter-frame prediction, so this compresses **still frames**, not yet video.
+Quantization-aware training is now implemented (Milestone 8A) but has not
+yet been used to produce a trained checkpoint.
 
 Implemented:
 - Repository/directory structure
@@ -101,13 +102,19 @@ Implemented:
   via FFmpeg, with weighted aggregation and full reproducibility metadata
   (`src/nvc/evaluation/{ffmpeg,sequences,codecs,rd_benchmark}.py`)
 - `scripts/benchmark_rd.py` and `scripts/plot_rate_distortion.py`
+- **Quantization-aware training infrastructure** - differentiable uniform
+  noise relaxation, distortion-only (`src/nvc/training/quantization_noise.py`);
+  see "Milestone 8A" below. Infrastructure and tests only as of this
+  commit - **no QAT checkpoint has been trained yet**, so no QAT benchmark
+  numbers exist either.
 
 **Not implemented yet** (do not assume any of this works):
 - Variational latents (mu/logvar, KL divergence) - the current model is a
   plain deterministic autoencoder
 - Learned entropy models, hyperpriors, context or autoregressive models -
   the entropy model is a static counted table
-- Quantization-aware training - the model was trained on float latents only
+- A trained quantization-aware checkpoint (the QAT *mechanism* is
+  implemented - see Milestone 8A - but no full training run has used it yet)
 - Inter-frame / temporal prediction, so this codes still frames, not video
 - Training on Vimeo-90K - the data pipeline exists, but no training run has
   used it yet; the current checkpoint is still DAVIS-only
@@ -1604,6 +1611,202 @@ wide margin at matched quality, which is the expected consequence of NVC
 being intra-only, trained with plain MSE, and having no rate-distortion
 objective or learned entropy model. **No claim that NVC beats H.264 or
 H.265 is made or supported by any measurement in this repository.**
+
+## Milestone 8A - Quantization-Aware Training
+
+**Status: infrastructure and tests only.** No QAT training run has been
+performed yet - there is no QAT checkpoint, no QAT calibration, and no QAT
+benchmark result. This section documents the mechanism and the exact
+commands to run the actual experiment; it makes no performance claims.
+
+### The hypothesis
+
+Milestone 7 measured that NVC's 8-bit and 6-bit operating points are
+almost indistinguishable (+0.07 dB PSNR for 35% more bits), while quality
+degrades faster going into 4-bit - the learned latent representation is not
+especially robust to coarse quantization. This milestone tests one thing:
+
+> Training the autoencoder with quantization-noise relaxation should make
+> the learned representation more robust to low-bit quantization,
+> particularly improving the 4-bit operating point.
+
+This is **distortion-only** training (`loss = MSE(reconstruction,
+target)`) - no rate/bitrate loss, no entropy loss, no learned entropy
+model, hyperprior, context model, or temporal prediction. Those remain
+out of scope for this milestone by design, so the result isolates exactly
+one variable.
+
+### The mechanism
+
+The real quantizer (`nvc.compression.quantization.UniformQuantizer`,
+unchanged - **this milestone does not touch it**) has zero gradient almost
+everywhere, so gradient descent never sees "this part of the latent is
+about to be destroyed by quantization." The standard fix: during training
+only, replace the real quantization step with the differentiable surrogate
+it approximates - additive uniform noise at the real quantizer's step size:
+
+```
+z = encoder(x)
+z_tilde = z + noise,   noise ~ Uniform(-scale/2, scale/2)     [training only]
+x_hat = decoder(z_tilde)
+loss = MSE(x_hat, x)
+```
+
+`scale` is exactly the per-channel `QuantizationParams.scale` a real
+`UniformQuantizer` would use at the bit depth being trained for - not an
+arbitrary noise magnitude. Implemented in
+`src/nvc/training/quantization_noise.py` as `QuantizationNoise`, a small,
+non-`nn.Module` class (no learnable parameters, never appears in a
+checkpoint's `state_dict()`).
+
+**Where the scale comes from.** `QuantizationNoise` is built once, before
+training starts, from an existing calibration file produced by
+`scripts/calibrate_quantizer.py` against Vimeo **train**-split frames only
+(the exact mechanism Milestone 6/7 already use to freeze quantization
+parameters for the codec) - never a dynamic per-batch estimate, and never
+DAVIS. A per-batch estimate would keep moving as the encoder's output
+distribution shifts during training, undermining the robustness objective
+itself, and would make runs non-reproducible in the ordinary sense. A
+single frozen artifact is stable, reproducible, and auditable: which
+calibration file produced a given checkpoint's training noise is recorded
+in that checkpoint's history.
+
+**Training vs. evaluation.** Injection is gated on `nn.Module`'s own
+`self.training` flag (`model.train()` / `model.eval()`), not a `forward()`
+argument. Every existing caller (`train_one_epoch`, `validate_one_epoch`,
+`reconstruct.py`, the benchmark scripts, `load_model_from_checkpoint`'s
+`eval_mode=True` default) already sets this correctly, so:
+
+- the standard evaluation/inference path can **never** accidentally inject
+  noise, by construction, not by convention;
+- `model(x)`'s call signature and behavior are **unchanged** when
+  `quantization_noise` is not attached (the default);
+- zero changes were needed to `train_one_epoch`/`validate_one_epoch` or to
+  the Colab notebook's main training loop - only the model-construction
+  line changes.
+
+`quantization_noise` is a keyword-only `BaselineAutoencoder` constructor
+argument, deliberately **excluded** from `config_dict()`/`model_config`: it
+is a training method, not an architectural choice, so
+`BaselineAutoencoder(**checkpoint["model_config"])` (the standard
+inference-loading path) never re-attaches it - correct, since eval mode
+would ignore it anyway. A QAT training run must re-attach it explicitly on
+every invocation, the same way `--latent-channels` must already be
+re-supplied identically across `--resume` runs.
+
+### Configuration
+
+New `Config` fields (`src/nvc/utils/config.py`), all opt-in - defaults
+preserve existing training behavior exactly:
+
+| Field | Default | Meaning |
+|---|---|---|
+| `qat_enabled` | `False` | Master switch. |
+| `qat_bits` | `4` | Bit depth the relaxation targets. |
+| `qat_mode` | `"per_channel"` | Must match the calibration file's own mode. |
+| `qat_calibration_path` | `None` | Frozen calibration artifact (train split only). |
+
+Mirrored as `--qat-enabled` / `--qat-bits` / `--qat-mode` /
+`--qat-calibration` on `scripts/train_autoencoder.py`, and as
+`QAT_ENABLED` / `QAT_BITS` / `QAT_MODE` / `QAT_CALIBRATION_PATH` at the top
+of `colab_train_vimeo.ipynb` (Section 0's config cell), matching that
+notebook's existing style for `LATENT_CHANNELS`/`CROP_SIZE`/etc. No
+warmup/scheduling field was added - not justified for a single-variable
+experiment, and it would add a second implicit variable to what is
+supposed to be an isolated test.
+
+### Running the real experiment
+
+**STEP 1 - calibrate a training-time noise scale from Vimeo train data**,
+against the checkpoint you're about to fine-tune:
+
+```powershell
+python scripts\calibrate_quantizer.py `
+    --checkpoint outputs\checkpoints\vimeo_epoch17_best.pt `
+    --manifest <a Vimeo train manifest> `
+    --bits 4 --mode per_channel `
+    --output outputs\calibration\vimeo_qat_4bit_train.json
+```
+
+**STEP 2 - run QAT training**, resuming from the existing Vimeo checkpoint
+into a **separate** checkpoint directory so `latest.pt`/`best.pt` there
+never collide with the non-QAT checkpoints:
+
+```powershell
+python scripts\train_autoencoder.py --epochs 20 `
+    --resume outputs\checkpoints\vimeo_epoch17_best.pt `
+    --qat-enabled --qat-bits 4 --qat-mode per_channel `
+    --qat-calibration outputs\calibration\vimeo_qat_4bit_train.json `
+    --checkpoint-dir outputs\checkpoints\vimeo_qat_noise
+```
+
+On Colab, flip `QAT_ENABLED = True` in `colab_train_vimeo.ipynb`'s config
+cell (and set `QAT_CALIBRATION_PATH`/`QAT_RESUME_FROM`) instead - the
+notebook writes to its own `checkpoints_qat_noise/` folder and its own
+`progress_qat_noise.json` on Drive, so it never touches the baseline run's
+progress or checkpoints. Every epoch's history entry records
+`qat_enabled`/`qat_bits`/`qat_mode`, in both the CLI script and the
+notebook, so a `history.json` can never be mistaken for the wrong
+experiment.
+
+**STEP 3-5 - recalibrate the trained QAT checkpoint at all three bit
+depths**, exactly as Milestone 7 does, from Vimeo train data only:
+
+```powershell
+python scripts\calibrate_quantizer.py --checkpoint outputs\checkpoints\vimeo_qat_noise_best.pt --manifest <vimeo train manifest> --bits 8 --output outputs\calibration\vimeo_qat_noise_8bit.json
+python scripts\calibrate_quantizer.py --checkpoint outputs\checkpoints\vimeo_qat_noise_best.pt --manifest <vimeo train manifest> --bits 6 --output outputs\calibration\vimeo_qat_noise_6bit.json
+python scripts\calibrate_quantizer.py --checkpoint outputs\checkpoints\vimeo_qat_noise_best.pt --manifest <vimeo train manifest> --bits 4 --output outputs\calibration\vimeo_qat_noise_4bit.json
+```
+
+Read each run's printed `Clipped by percentile` line - this is the
+recalibrated clipping percentage, and comparing it against Milestone 7's
+pre-QAT figures answers "does the latent distribution change under QAT."
+The calibration/checkpoint compatibility guard from Milestone 7
+(`CalibrationMismatchError`, `require_calibration_fit`) is untouched and
+must continue to refuse a mismatched pair - do not pass
+`--allow-calibration-mismatch` to make a mismatch go away.
+
+**STEP 6 - the full DAVIS RD benchmark**, same protocol as Milestone 7,
+same 9 sequences / 719 frames, so the two runs are directly comparable:
+
+```powershell
+python scripts\benchmark_rd.py `
+    --checkpoint outputs\checkpoints\vimeo_qat_noise_best.pt `
+    --calibration outputs\calibration\vimeo_qat_noise_8bit.json `
+    --nvc-bits 8 6 4 --codecs nvc --split test `
+    --run-name vimeo_qat_noise_vs_milestone7
+```
+
+(Drop `--codecs nvc` down to `nvc h264 h265` only if you also want fresh
+classical-codec numbers in the same run; H.264/H.265 are unchanged from
+Milestone 7 so re-running them is optional.)
+
+**STEP 7** - `python scripts\plot_rate_distortion.py --run-dir
+outputs\benchmarks\vimeo_qat_noise_vs_milestone7` for the PSNR-vs-BPP and
+MS-SSIM-vs-BPP curves, then compare the new `aggregate.csv` row-by-row
+against Milestone 7's `outputs/benchmarks/vimeo_vs_h264_h265_davis/aggregate.csv`
+at each bit depth to answer the questions this milestone exists to answer
+(does 4-bit improve, what happens to 6-bit, does 8-bit stay roughly flat,
+does the RD curve actually improve or just shift quality).
+
+### Known limitations
+
+- The QAT run's optimizer state (Adam moments) is warm-started from the
+  source checkpoint via the same `resume_training_state` used for ordinary
+  resumes - a from-scratch-optimizer comparison was not implemented, so
+  this is a controlled *fine-tune*, not a from-scratch QAT retrain.
+- `qat_bits` targets a single bit depth per training run; the model is not
+  trained with a randomized/scheduled bit depth per step. The trained
+  checkpoint is still evaluated at all three depths (8/6/4) afterward,
+  which is what answers "what happens to the depths not directly trained
+  for."
+- The noise scale is frozen from a calibration computed **before** QAT
+  training starts (against the pre-QAT checkpoint's latent distribution).
+  Since QAT training itself shifts that distribution somewhat, the
+  training-time scale is an approximation of what the *final* model's
+  quantization step will look like, not a moving target chasing it - this
+  is a deliberate stability/reproducibility trade-off (see "The mechanism"
+  above), not an oversight.
 
 ## 12-Week Roadmap (Minor Project Scope)
 

@@ -36,6 +36,18 @@ class Config:
     quantization_bits: int = 8
     quantization_mode: str = "per_channel"  # "global" or "per_channel"
 
+    # --- Quantization-aware training / noise relaxation (Milestone 8A) ---
+    # Distortion-only training-time latent perturbation; see
+    # nvc.training.quantization_noise. Disabled by default so existing
+    # training behavior is unchanged unless explicitly opted into.
+    qat_enabled: bool = False
+    qat_bits: int = 4  # bit depth the noise relaxation targets during training
+    qat_mode: str = "per_channel"  # must match the calibration file's mode
+    # Frozen calibration artifact (scripts/calibrate_quantizer.py output,
+    # Vimeo TRAIN split only) supplying the training-time noise scale. None
+    # is only valid when qat_enabled is False.
+    qat_calibration_path: Path | None = None
+
     # --- Training parameters ---
     batch_size: int = 8
     learning_rate: float = 1e-4
@@ -89,10 +101,16 @@ class Config:
             "checkpoint_dir", "visualizations_dir", "metrics_dir", "benchmarks_dir",
             "vimeo_root", "vimeo_manifest_path",
         }
+        # Unlike path_fields above, this one is Optional - None is its
+        # documented default (qat_calibration_path is only required when
+        # qat_enabled is True), so it must not be forced through Path().
+        nullable_path_fields = {"qat_calibration_path"}
         tuple_fields = {"supported_video_extensions", "supported_image_extensions"}
         for key, value in overrides.items():
             if key in path_fields:
                 value = Path(value)
+            elif key in nullable_path_fields:
+                value = Path(value) if value is not None else None
             elif key in tuple_fields:
                 value = tuple(value)
             setattr(config, key, value)

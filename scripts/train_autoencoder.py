@@ -16,6 +16,18 @@ Example usage (PowerShell, from the project root, with .venv activated):
     # Resume from the latest checkpoint, continuing epoch numbering
     python scripts\\train_autoencoder.py --epochs 20 --resume outputs\\checkpoints\\latest.pt
 
+    # Milestone 8A: quantization-aware training (distortion-only; see
+    # src/nvc/training/quantization_noise.py). --qat-calibration must be a
+    # calibration file computed from the TRAIN split (scripts/calibrate_
+    # quantizer.py's normal output) at the SAME bit depth as --qat-bits.
+    # Use a checkpoint-dir distinct from the baseline run so latest.pt/
+    # best.pt never collide with the non-QAT checkpoints:
+    python scripts\\train_autoencoder.py --epochs 20 `
+        --resume outputs\\checkpoints\\vimeo_epoch17_best.pt `
+        --qat-enabled --qat-bits 4 `
+        --qat-calibration outputs\\calibration\\vimeo_epoch17_4bit_qat_train.json `
+        --checkpoint-dir outputs\\checkpoints\\vimeo_qat_noise
+
 Run `python scripts\\train_autoencoder.py --help` for the full option list.
 """
 
@@ -32,7 +44,13 @@ import torch
 from nvc.data.loaders import create_train_loader, create_val_loader
 from nvc.data.validation import DatasetValidationError
 from nvc.models import BaselineAutoencoder
-from nvc.training import resume_training_state, save_checkpoint, train_one_epoch, validate_one_epoch
+from nvc.training import (
+    QuantizationNoise,
+    resume_training_state,
+    save_checkpoint,
+    train_one_epoch,
+    validate_one_epoch,
+)
 from nvc.utils.config import load_default_config
 from nvc.utils.device import get_device
 from nvc.utils.seed import seed_everything
@@ -74,6 +92,30 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
         "--resume", type=Path, default=None,
         help="Checkpoint path to restore model/optimizer/epoch/history from before continuing.",
     )
+    parser.add_argument(
+        "--qat-enabled", action="store_true", default=defaults.qat_enabled,
+        help=(
+            "Milestone 8A: inject differentiable Uniform(-scale/2, scale/2) "
+            "quantization noise into the latent during training (distortion-only; "
+            "no rate/entropy loss). Requires --qat-calibration. Off by default - "
+            "existing training behavior is unchanged unless this is passed."
+        ),
+    )
+    parser.add_argument(
+        "--qat-bits", type=int, default=defaults.qat_bits,
+        help="Bit depth the quantization-noise relaxation targets. Must match "
+             "--qat-calibration's own recorded bit depth.",
+    )
+    parser.add_argument(
+        "--qat-mode", choices=["global", "per_channel"], default=defaults.qat_mode,
+        help="Must match --qat-calibration's own recorded mode.",
+    )
+    parser.add_argument(
+        "--qat-calibration", type=Path, default=defaults.qat_calibration_path,
+        help="Calibration file (scripts/calibrate_quantizer.py output) computed "
+             "from the TRAIN split, supplying the frozen training-time noise scale. "
+             "Required when --qat-enabled is passed.",
+    )
     return parser
 
 
@@ -96,9 +138,24 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 1
+    if args.qat_enabled and args.qat_calibration is None:
+        parser.error("--qat-calibration is required when --qat-enabled is passed")
 
     seed_everything(args.seed)
     device = _resolve_device(args.device)
+
+    quantization_noise = None
+    if args.qat_enabled:
+        if not args.qat_calibration.is_file():
+            print(f"[ERROR] --qat-calibration not found: {args.qat_calibration}", file=sys.stderr)
+            return 1
+        try:
+            quantization_noise = QuantizationNoise.from_calibration(
+                args.qat_calibration, bits=args.qat_bits, mode=args.qat_mode,
+            )
+        except (ValueError, FileNotFoundError) as exc:
+            print(f"[ERROR] {exc}", file=sys.stderr)
+            return 1
 
     try:
         train_loader = create_train_loader(
@@ -113,7 +170,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[ERROR] {exc}", file=sys.stderr)
         return 1
 
-    model = BaselineAutoencoder(latent_channels=args.latent_channels).to(device)
+    model = BaselineAutoencoder(
+        latent_channels=args.latent_channels, quantization_noise=quantization_noise,
+    ).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
 
     history: list[dict] = []
@@ -162,6 +221,15 @@ def main(argv: list[str] | None = None) -> int:
     if args.max_batches is not None:
         print(f"[SMOKE TEST] Limited to {args.max_batches} batch(es) per epoch - this is not full training.")
 
+    if quantization_noise is not None:
+        print(
+            f"[QAT] Quantization-noise relaxation ENABLED - "
+            f"{quantization_noise.bits}-bit / {quantization_noise.mode}, "
+            f"scale from {args.qat_calibration} (distortion-only: loss is plain MSE)."
+        )
+    else:
+        print("[QAT] Quantization-noise relaxation disabled (baseline training).")
+
     checkpoint_dir = args.checkpoint_dir
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     history_path = checkpoint_dir / "history.json"
@@ -181,6 +249,13 @@ def main(argv: list[str] | None = None) -> int:
             "val_loss": val_metrics["loss"],
             "val_psnr": val_metrics["psnr"],
             "elapsed_seconds": elapsed,
+            # Milestone 8A: recorded every epoch (not just once in metadata)
+            # so a history.json file can never be mistaken for the wrong
+            # experiment type if baseline and QAT runs are ever compared
+            # side by side or a history file gets copied out of context.
+            "qat_enabled": quantization_noise is not None,
+            "qat_bits": quantization_noise.bits if quantization_noise is not None else None,
+            "qat_mode": quantization_noise.mode if quantization_noise is not None else None,
         }
         history.append(record)
 
