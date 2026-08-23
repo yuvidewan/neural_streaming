@@ -14,7 +14,7 @@ that compares to conventional codecs on quality and size.
 
 ## Current Development Status
 
-**Milestone 8A (this repository state): the Milestone 7 codec/evaluation stack unchanged, plus quantization-aware training (QAT) infrastructure - a differentiable, distortion-only noise relaxation that a future training run can opt into.** This milestone is **infrastructure and tests only**: no QAT training run has been performed yet, so there is no QAT checkpoint and no QAT benchmark result. See "Milestone 8A" below for the mechanism, the exact commands to run the actual experiment, and what has/hasn't been measured.
+**Milestone 8A (this repository state): the Milestone 7 codec/evaluation stack unchanged, plus quantization-aware training (QAT) - a differentiable, distortion-only noise relaxation, now with one real trained checkpoint and one real DAVIS benchmark behind it.** A first QAT run (14 epochs, fine-tuned from `vimeo_epoch17_best.pt`) improved PSNR/MS-SSIM at every bit depth, but with a confound not yet ruled out - see "Milestone 8A" below for the mechanism, the numbers (not hardcoded here - read the benchmark output), and exactly what this first run does and does not establish.
 
 Measured on the DAVIS test split: **1.88 BPP at 27.17 dB (12.75x vs raw
 uint8 RGB)** at 8-bit, or **1.38 BPP at 27.10 dB (17.41x)** at 6-bit.
@@ -102,19 +102,27 @@ Implemented:
   via FFmpeg, with weighted aggregation and full reproducibility metadata
   (`src/nvc/evaluation/{ffmpeg,sequences,codecs,rd_benchmark}.py`)
 - `scripts/benchmark_rd.py` and `scripts/plot_rate_distortion.py`
-- **Quantization-aware training infrastructure** - differentiable uniform
-  noise relaxation, distortion-only (`src/nvc/training/quantization_noise.py`);
-  see "Milestone 8A" below. Infrastructure and tests only as of this
-  commit - **no QAT checkpoint has been trained yet**, so no QAT benchmark
-  numbers exist either.
+- **Quantization-aware training** - differentiable uniform noise
+  relaxation, distortion-only (`src/nvc/training/quantization_noise.py`);
+  see "Milestone 8A" below. One real checkpoint trained and benchmarked
+  (`vimeo_qat_noise_best.pt`, 14 epochs) - improved PSNR/MS-SSIM at every
+  bit depth versus Milestone 7, but the run has a training-budget confound
+  that means the *specific* hypothesis (disproportionate 4-bit robustness)
+  is not yet confirmed. See "Known limitations" under Milestone 8A.
+- `scripts/train_vimeo_qat_combined.py` - a local, non-Colab equivalent of
+  `colab_train_vimeo.ipynb`'s combined QAT+control training flow, for a
+  machine with its own GPU; reads/writes checkpoints on the same
+  Drive-synced folder the notebook uses, so training moves between Colab
+  and a local GPU and resumes correctly either way
 
 **Not implemented yet** (do not assume any of this works):
 - Variational latents (mu/logvar, KL divergence) - the current model is a
   plain deterministic autoencoder
 - Learned entropy models, hyperpriors, context or autoregressive models -
   the entropy model is a static counted table
-- A trained quantization-aware checkpoint (the QAT *mechanism* is
-  implemented - see Milestone 8A - but no full training run has used it yet)
+- A same-epoch-budget QAT-vs-baseline control run (needed to separate "the
+  noise relaxation helped" from "more training helped" - see Milestone 8A's
+  "Known limitations")
 - Inter-frame / temporal prediction, so this codes still frames, not video
 - Training on Vimeo-90K - the data pipeline exists, but no training run has
   used it yet; the current checkpoint is still DAVIS-only
@@ -1614,10 +1622,42 @@ H.265 is made or supported by any measurement in this repository.**
 
 ## Milestone 8A - Quantization-Aware Training
 
-**Status: infrastructure and tests only.** No QAT training run has been
-performed yet - there is no QAT checkpoint, no QAT calibration, and no QAT
-benchmark result. This section documents the mechanism and the exact
-commands to run the actual experiment; it makes no performance claims.
+**Status: mechanism implemented, tested, and now exercised by one real
+training + benchmark run.** `vimeo_qat_noise_best.pt` (14 epochs, 4-bit
+target, fine-tuned from `vimeo_epoch17_best.pt`) has been calibrated at all
+three bit depths and benchmarked on the full DAVIS test split - see
+"Results (first real run)" below. That run improved PSNR/MS-SSIM at every
+bit depth, but does not yet cleanly confirm the *specific* hypothesis
+(disproportionate improvement at 4-bit) because of a training-budget
+confound explained in "Known limitations." This section documents the
+mechanism, the real numbers (not hardcoded - read the benchmark output),
+and the exact commands to run a cleaner follow-up experiment.
+
+> ### Running the follow-up experiment on a local GPU instead of Colab
+>
+> `scripts/train_vimeo_qat_combined.py` is a local, non-Colab equivalent of
+> `colab_train_vimeo.ipynb`'s combined QAT+control training section (Section
+> 9) - same flow (download one Vimeo-90K chunk, train both models on it with
+> per-chunk early stopping, delete it, move to the next chunk), for a
+> machine with its own GPU. It reads/writes checkpoints on a **Drive-synced
+> folder** (via Google Drive for Desktop), the same folder the notebook
+> uses - so training can move between Colab and a local GPU and back,
+> resuming correctly either way.
+>
+> **The command** (once Google Drive for Desktop is installed, signed into
+> an account with access to the shared `neural_streaming_colab` Drive
+> folder, and `pip install kaggle` + a Kaggle API token are set up - see the
+> script's own docstring for full prerequisites):
+>
+> ```powershell
+> python scripts\train_vimeo_qat_combined.py --drive-dir "G:\My Drive\neural_streaming_colab"
+> ```
+>
+> Replace the path with wherever Drive for Desktop actually mounts
+> `neural_streaming_colab` on that machine. Everything else (chunk range,
+> the 10-epoch-per-chunk ceiling, early-stopping patience, batch size, crop
+> size, seed) defaults to match the notebook exactly - see `--help` to
+> override any of it.
 
 ### The hypothesis
 
@@ -1717,13 +1757,31 @@ supposed to be an isolated test.
 
 ### Running the real experiment
 
-**STEP 1 - calibrate a training-time noise scale from Vimeo train data**,
-against the checkpoint you're about to fine-tune:
+**A note on `--manifest` before Step 1.** Vimeo-90K has no persistent local
+manifest in this project - training data is downloaded per-chunk from
+Kaggle straight into `colab_train_vimeo.ipynb`'s Colab runtime and deleted
+afterward (`DELETE_CHUNK_AFTER_TRAINING = True`), so there is never a
+standing "Vimeo train manifest" on disk to point `--manifest` at locally.
+This turns out to already be the established precedent, not a gap this
+milestone introduces: the existing `vimeo_epoch17_{8,6,4}bit.json`
+calibration files (behind the Milestone 7 numbers) were themselves
+calibrated on exactly 400 frames - 50 batches x the default batch size of
+8, the tell that `--manifest` was never overridden for them either. They
+were calibrated against the local DAVIS **train** split (`--manifest`'s
+default, `data/processed/manifest.json`), not Vimeo. DAVIS train is not
+DAVIS val/test, so this does not leak evaluation data - the commands below
+follow that same precedent (omit `--manifest` entirely) so a Milestone
+8A vs. Milestone 7 comparison stays apples-to-apples. If you later build a
+persistent local Vimeo train manifest, point `--manifest` at it instead and
+both milestones' calibrations should be regenerated together for
+consistency.
+
+**STEP 1 - calibrate a training-time noise scale**, against the checkpoint
+you're about to fine-tune:
 
 ```powershell
 python scripts\calibrate_quantizer.py `
     --checkpoint outputs\checkpoints\vimeo_epoch17_best.pt `
-    --manifest <a Vimeo train manifest> `
     --bits 4 --mode per_channel `
     --output outputs\calibration\vimeo_qat_4bit_train.json
 ```
@@ -1750,12 +1808,13 @@ notebook, so a `history.json` can never be mistaken for the wrong
 experiment.
 
 **STEP 3-5 - recalibrate the trained QAT checkpoint at all three bit
-depths**, exactly as Milestone 7 does, from Vimeo train data only:
+depths**, exactly as Milestone 7 does (same DAVIS-train precedent as Step 1
+above):
 
 ```powershell
-python scripts\calibrate_quantizer.py --checkpoint outputs\checkpoints\vimeo_qat_noise_best.pt --manifest <vimeo train manifest> --bits 8 --output outputs\calibration\vimeo_qat_noise_8bit.json
-python scripts\calibrate_quantizer.py --checkpoint outputs\checkpoints\vimeo_qat_noise_best.pt --manifest <vimeo train manifest> --bits 6 --output outputs\calibration\vimeo_qat_noise_6bit.json
-python scripts\calibrate_quantizer.py --checkpoint outputs\checkpoints\vimeo_qat_noise_best.pt --manifest <vimeo train manifest> --bits 4 --output outputs\calibration\vimeo_qat_noise_4bit.json
+python scripts\calibrate_quantizer.py --checkpoint outputs\checkpoints\vimeo_qat_noise_best.pt --bits 8 --output outputs\calibration\vimeo_qat_noise_8bit.json
+python scripts\calibrate_quantizer.py --checkpoint outputs\checkpoints\vimeo_qat_noise_best.pt --bits 6 --output outputs\calibration\vimeo_qat_noise_6bit.json
+python scripts\calibrate_quantizer.py --checkpoint outputs\checkpoints\vimeo_qat_noise_best.pt --bits 4 --output outputs\calibration\vimeo_qat_noise_4bit.json
 ```
 
 Read each run's printed `Clipped by percentile` line - this is the
@@ -1766,13 +1825,23 @@ The calibration/checkpoint compatibility guard from Milestone 7
 must continue to refuse a mismatched pair - do not pass
 `--allow-calibration-mismatch` to make a mismatch go away.
 
+`benchmark_rd.py --nvc-bits 8 6 4` expects `--calibration` to point at the
+**default (8-bit) depth's file with no bit-depth suffix** in its name
+(`_calibration_path_for_bits` in `scripts/benchmark_rd.py` derives the
+6-bit/4-bit paths by appending `_6bit`/`_4bit` to that base filename) - copy
+the 8-bit file to satisfy that convention before Step 6:
+
+```powershell
+copy outputs\calibration\vimeo_qat_noise_8bit.json outputs\calibration\vimeo_qat_noise.json
+```
+
 **STEP 6 - the full DAVIS RD benchmark**, same protocol as Milestone 7,
 same 9 sequences / 719 frames, so the two runs are directly comparable:
 
 ```powershell
 python scripts\benchmark_rd.py `
     --checkpoint outputs\checkpoints\vimeo_qat_noise_best.pt `
-    --calibration outputs\calibration\vimeo_qat_noise_8bit.json `
+    --calibration outputs\calibration\vimeo_qat_noise.json `
     --nvc-bits 8 6 4 --codecs nvc --split test `
     --run-name vimeo_qat_noise_vs_milestone7
 ```
@@ -1789,8 +1858,43 @@ at each bit depth to answer the questions this milestone exists to answer
 (does 4-bit improve, what happens to 6-bit, does 8-bit stay roughly flat,
 does the RD curve actually improve or just shift quality).
 
+### Results (first real run)
+
+A real QAT run has now been performed: 14 epochs of noise-relaxed
+fine-tuning from `vimeo_epoch17_best.pt` (4-bit target, per-channel),
+recalibrated, and benchmarked on the same DAVIS test split as Milestone 7.
+As with Milestone 7, **no figures are hardcoded here** - read
+`outputs/benchmarks/vimeo_qat_noise_vs_milestone7/aggregate.csv` (and
+Milestone 7's `outputs/benchmarks/vimeo_vs_h264_h265_davis/aggregate.csv`
+alongside it) for the actual numbers.
+
+Qualitatively: PSNR and MS-SSIM improved at **all three** bit depths versus
+Milestone 7's checkpoint, with a small BPP *decrease* at every depth too
+(not just a quality/rate trade-off shift). However - and this is the
+important caveat, not a footnote - **the improvement was not concentrated
+at 4-bit**. The 4-bit-to-8-bit PSNR gap did not narrow; it widened
+slightly. See "Known limitations" for why this run cannot yet distinguish
+"quantization-noise relaxation made the representation more robust" from
+"14 more epochs of ordinary fine-tuning improved reconstruction across the
+board" - those are confounded in this specific run, and the data as
+measured does not support the disproportionate-4-bit-improvement part of
+the hypothesis.
+
 ### Known limitations
 
+- **The single biggest confound in the first real run**: the QAT
+  checkpoint (`checkpoint_epoch: 14` in its own numbering, i.e. 14 epochs
+  of QAT fine-tuning *on top of* the 17-epoch baseline's weights) has
+  strictly more total training exposure to Vimeo than the Milestone 7
+  baseline checkpoint it's compared against. Since all three bit depths
+  improved by a similar magnitude (not disproportionately more at 4-bit,
+  which is what the hypothesis predicts), the improvement observed is
+  plausibly attributable to continued training in general rather than
+  specifically to the noise relaxation. **Isolating the effect requires a
+  same-epoch-budget control**: fine-tune `vimeo_epoch17_best.pt` for the
+  same number of additional epochs with `--qat-enabled` *omitted* (plain
+  MSE, no noise) and compare against that instead of against epoch 17
+  directly.
 - The QAT run's optimizer state (Adam moments) is warm-started from the
   source checkpoint via the same `resume_training_state` used for ordinary
   resumes - a from-scratch-optimizer comparison was not implemented, so
