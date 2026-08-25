@@ -104,3 +104,7 @@ outputs/benchmarks/*
 # --- Logs and temp files ---
 *.log
 *.tmp
+
+# --- Google Drive for Desktop's internal upload-staging cache, in case
+# this repo ever ends up inside a Drive-backed-up folder ---
+.tmp.driveupload/

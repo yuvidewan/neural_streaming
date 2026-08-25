@@ -1650,7 +1650,7 @@ and the exact commands to run a cleaner follow-up experiment.
 > script's own docstring for full prerequisites):
 >
 > ```powershell
-> python scripts\train_vimeo_qat_combined.py --drive-dir "G:\My Drive\neural_streaming_colab"
+> python scripts\train_vimeo_qat_combined.py --drive-dir "G:\My Drive\neural_streaming_colab_copy"
 > ```
 >
 > Replace the path with wherever Drive for Desktop actually mounts

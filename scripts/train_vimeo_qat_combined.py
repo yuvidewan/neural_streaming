@@ -46,7 +46,9 @@ import random
 import shutil
 import subprocess
 import sys
+import time
 import zipfile
+from datetime import timedelta
 from pathlib import Path
 
 import torch
@@ -274,8 +276,14 @@ def _train_one_chunk_with_early_stopping(
     epochs_without_improvement = 0
 
     for step in range(max_epochs):
-        train_metrics = train_one_epoch(model, train_loader, optimizer, device)
-        val_metrics = validate_one_epoch(model, test_loader, device)
+        train_metrics = train_one_epoch(
+            model, train_loader, optimizer, device,
+            progress_desc=f"[{run_name}] chunk {chunk_number} epoch {epoch} train",
+        )
+        val_metrics = validate_one_epoch(
+            model, test_loader, device,
+            progress_desc=f"[{run_name}] chunk {chunk_number} epoch {epoch} val",
+        )
         train_loss, val_loss, val_psnr = train_metrics["loss"], val_metrics["loss"], val_metrics["psnr"]
 
         history.append({
@@ -382,16 +390,32 @@ def main(argv: list[str] | None = None) -> int:
             "qat_enabled": run_type == "qat",
         }
 
-    for chunk_number in args.chunks:
+    run_start = time.time()
+    chunk_durations: list[float] = []
+    total_chunks = len(args.chunks)
+
+    for chunk_index, chunk_number in enumerate(args.chunks, start=1):
         pending = [name for name, run in runs.items() if chunk_number not in run["progress"]["completed_chunks"]]
         if not pending:
             print(f"[chunk {chunk_number}] already completed by both runs - skipping")
             continue
 
+        chunk_start = time.time()
         sep = "=" * 60
         print()
         print(sep)
-        print(f"[chunk {chunk_number}] starting (pending: {pending})")
+        print(f"[chunk {chunk_number}] starting ({chunk_index}/{total_chunks}, pending: {pending})")
+        if chunk_durations:
+            # Empirical ETA from chunks actually completed so far - never a
+            # guess made before any real timing exists. Early stopping and
+            # per-chunk download size both vary, so this refines as it goes
+            # rather than being fixed at the start.
+            avg = sum(chunk_durations) / len(chunk_durations)
+            remaining = total_chunks - chunk_index + 1
+            print(f"[chunk {chunk_number}] avg {timedelta(seconds=round(avg))}/chunk so far "
+                  f"({len(chunk_durations)} completed) - "
+                  f"estimated {timedelta(seconds=round(avg * remaining))} remaining "
+                  f"({remaining} chunk(s) left)")
         print(sep)
 
         try:
@@ -442,9 +466,12 @@ def main(argv: list[str] | None = None) -> int:
         finally:
             if not args.keep_chunk and scratch_dir.exists():
                 shutil.rmtree(scratch_dir)
+            chunk_durations.append(time.time() - chunk_start)
+            print(f"[chunk {chunk_number}] took {timedelta(seconds=round(chunk_durations[-1]))}")
 
     print()
-    print("All requested chunks processed (or already were) for both runs.")
+    print(f"All requested chunks processed (or already were) for both runs "
+          f"- total elapsed {timedelta(seconds=round(time.time() - run_start))}.")
     return 0
 
 
