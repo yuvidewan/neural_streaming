@@ -1,18 +1,19 @@
-"""Local (non-Colab) equivalent of colab_train_vimeo.ipynb's Section 9.
+"""Fully local equivalent of colab_train_vimeo.ipynb's Section 9 - no Drive,
+no Colab, nothing leaves this machine.
 
-Runs the exact same flow as the notebook - download one Vimeo-90K chunk
-from Kaggle, train BOTH the QAT and control models on it (each with its own
-per-chunk early stopping), delete the chunk, move to the next one - but on
-a local machine with its own GPU instead of a Colab runtime.
+Downloads one Vimeo-90K chunk from Kaggle, trains BOTH the QAT and control
+models on it (each with its own per-chunk early stopping), deletes the
+chunk to free disk space, moves to the next one. Checkpoints, progress, and
+history are all read from and written to a plain local directory
+(--output-dir, defaults to <repo>/outputs/qat_combined/) - nothing here
+talks to Google Drive or the internet except Kaggle downloads.
 
-Checkpoints/progress are read from and written to a **Google Drive folder**
-(via Google Drive for Desktop, which syncs Drive as a normal local
-directory - see --drive-dir below), the SAME folder the Colab notebook
-uses. This makes the two interchangeable: training can be started on Colab,
-continued on a local GPU, and resumed back on Colab later - --resume works
-identically because it just looks for the same checkpoints_qat_noise/
-latest.pt / checkpoints_qat_control/latest.pt / progress_*.json Drive knows
-about, regardless of which machine wrote them.
+Safe to interrupt and re-run: it always resumes from --output-dir's own
+checkpoints_qat_noise/latest.pt and checkpoints_qat_control/latest.pt plus
+their progress_*.json (which chunks are already done), so stopping and
+restarting the script picks up exactly where it left off. The very first
+time either run starts (no latest.pt yet), it bootstraps from
+--bootstrap-checkpoint instead and begins its own epoch count at 1.
 
 PREREQUISITES (once, on the machine running this script):
     1. This repo cloned, its venv created and activated, and
@@ -22,15 +23,16 @@ PREREQUISITES (once, on the machine running this script):
        ~/.kaggle/kaggle.json (Linux/Mac) or
        %USERPROFILE%\\.kaggle\\kaggle.json (Windows). Get one from
        kaggle.com -> Account -> Create New API Token.
-    3. Google Drive for Desktop installed and signed into an account that
-       has access to the SAME "neural_streaming_colab" Drive folder the
-       Colab notebook uses (the original owner shares it, or you're using
-       the same account). Once synced, note its local path - see --drive-dir.
+    3. A calibration file already generated from the TRAIN split (see
+       scripts\\calibrate_quantizer.py) and a starting checkpoint to
+       fine-tune from - both default to files already in this repo's
+       outputs/ folder (outputs/calibration/vimeo_epoch17_4bit.json and
+       outputs/checkpoints/vimeo_epoch17_best.pt); override with
+       --calibration-path / --bootstrap-checkpoint if yours live elsewhere.
 
-Example usage:
+Example usage (all defaults, just run it):
 
-    python scripts\\train_vimeo_qat_combined.py `
-        --drive-dir "G:\\My Drive\\neural_streaming_colab"
+    python scripts\\train_vimeo_qat_combined.py
 
 Everything else (chunk range, epochs-per-chunk ceiling, early-stopping
 patience, batch size, crop size, seed) defaults to match the notebook
@@ -74,19 +76,36 @@ KAGGLE_DATASET_PREFIX = "vimeo-90k"  # -> wangsally/vimeo-90k-1, vimeo-90k-2, ..
 def build_arg_parser(defaults) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Local equivalent of colab_train_vimeo.ipynb's Section 9: trains the "
+            "Fully local equivalent of colab_train_vimeo.ipynb's Section 9: trains the "
             "QAT and control models together, one Vimeo-90K chunk at a time, "
-            "reading/writing checkpoints on a Drive-synced folder."
+            "reading/writing checkpoints in a plain local output directory - no Drive, no Colab."
         ),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        "--drive-dir", type=Path, required=True,
+        "--output-dir", type=Path, default=None,
         help=(
-            "Local path to the Google-Drive-synced 'neural_streaming_colab' folder "
-            "(via Google Drive for Desktop) - the SAME folder the Colab notebook uses. "
-            "e.g. Windows: \"G:\\My Drive\\neural_streaming_colab\", "
-            "Mac: ~/Library/CloudStorage/GoogleDrive-<email>/My Drive/neural_streaming_colab"
+            "Local directory to read/write checkpoints_qat_noise/, checkpoints_qat_control/, "
+            "and progress_*.json for both runs. Re-running with the same --output-dir resumes "
+            "automatically. Defaults to <repo>/outputs/qat_combined."
+        ),
+    )
+    parser.add_argument(
+        "--bootstrap-checkpoint", type=Path, default=None,
+        help=(
+            "Checkpoint each run fine-tunes from the FIRST time it starts (ignored once "
+            "--output-dir has its own checkpoints_qat_noise/latest.pt or "
+            "checkpoints_qat_control/latest.pt to resume from instead). "
+            "Defaults to <repo>/outputs/checkpoints/vimeo_epoch17_best.pt."
+        ),
+    )
+    parser.add_argument(
+        "--calibration-path", type=Path, default=None,
+        help=(
+            "Calibration file supplying the QAT training-noise scale, generated from the "
+            "TRAIN split only (see scripts\\calibrate_quantizer.py). Required to exist before "
+            "this script runs. Defaults to "
+            "<repo>/outputs/calibration/vimeo_epoch17_<qat-bits>bit.json."
         ),
     )
     parser.add_argument(
@@ -332,32 +351,30 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 1
-    if not args.drive_dir.is_dir():
-        print(
-            f"[ERROR] --drive-dir not found: {args.drive_dir}\n"
-            "        This must be the LOCAL path where Google Drive for Desktop syncs "
-            "the 'neural_streaming_colab' folder - check Drive for Desktop is running "
-            "and has finished at least an initial sync.",
-            file=sys.stderr,
-        )
-        return 1
 
     seed_everything(args.seed)
     device = get_device() if args.device == "auto" else torch.device(args.device)
 
-    drive_dir = args.drive_dir
+    output_dir = args.output_dir or (defaults.checkpoint_dir.parent / "qat_combined")
+    output_dir.mkdir(parents=True, exist_ok=True)
     scratch_dir = args.scratch_dir or (defaults.raw_data_dir.parent / "external" / "_vimeo_scratch")
     vimeo_root = defaults.vimeo_root
     vimeo_root.mkdir(parents=True, exist_ok=True)
 
-    qat_calibration_path = drive_dir / "calibration" / "vimeo_qat_4bit_train.json"
-    qat_resume_from = drive_dir / "checkpoints" / "best.pt"
+    qat_resume_from = args.bootstrap_checkpoint or (defaults.checkpoint_dir / "vimeo_epoch17_best.pt")
+    qat_calibration_path = args.calibration_path or (
+        defaults.checkpoint_dir.parent / "calibration" / f"vimeo_epoch17_{args.qat_bits}bit.json"
+    )
+    print(f"[paths] output dir:          {output_dir}")
+    print(f"[paths] bootstrap checkpoint: {qat_resume_from}"
+          f"{' (missing - will fall back to random init)' if not qat_resume_from.is_file() else ''}")
+    print(f"[paths] calibration file:    {qat_calibration_path}")
     if not qat_calibration_path.is_file():
         print(
             f"[ERROR] {qat_calibration_path} not found.\n"
-            "        Generate it first (Section 5b of colab_train_vimeo.ipynb, or "
-            "scripts\\calibrate_quantizer.py --checkpoint <the base checkpoint> "
-            f"--bits {args.qat_bits} --mode {args.qat_mode} --output <this path>) "
+            "        Generate it first (scripts\\calibrate_quantizer.py --checkpoint "
+            f"<the base checkpoint> --bits {args.qat_bits} --mode {args.qat_mode} "
+            "--output <this path>) or pass an existing one via --calibration-path "
             "before running this script.",
             file=sys.stderr,
         )
@@ -373,9 +390,9 @@ def main(argv: list[str] | None = None) -> int:
 
     runs = {}
     for run_type, noise in (("qat", quantization_noise), ("qat_control", None)):
-        checkpoint_dir = drive_dir / ("checkpoints_qat_noise" if run_type == "qat" else "checkpoints_qat_control")
+        checkpoint_dir = output_dir / ("checkpoints_qat_noise" if run_type == "qat" else "checkpoints_qat_control")
         checkpoint_dir.mkdir(parents=True, exist_ok=True)
-        progress_path = drive_dir / ("progress_qat_noise.json" if run_type == "qat" else "progress_qat_control.json")
+        progress_path = output_dir / ("progress_qat_noise.json" if run_type == "qat" else "progress_qat_control.json")
 
         model = BaselineAutoencoder(latent_channels=latent_channels, quantization_noise=noise).to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)

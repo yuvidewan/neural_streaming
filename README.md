@@ -111,9 +111,10 @@ Implemented:
   is not yet confirmed. See "Known limitations" under Milestone 8A.
 - `scripts/train_vimeo_qat_combined.py` - a local, non-Colab equivalent of
   `colab_train_vimeo.ipynb`'s combined QAT+control training flow, for a
-  machine with its own GPU; reads/writes checkpoints on the same
-  Drive-synced folder the notebook uses, so training moves between Colab
-  and a local GPU and resumes correctly either way
+  machine with its own GPU; fully local by default (checkpoints/progress
+  under `outputs/qat_combined/`, no Drive or Colab involved), or point it at
+  a Drive-synced folder via `--output-dir` to move training between Colab
+  and a local GPU and resume correctly either way
 
 **Not implemented yet** (do not assume any of this works):
 - Variational latents (mu/logvar, KL divergence) - the current model is a
@@ -1639,25 +1640,33 @@ and the exact commands to run a cleaner follow-up experiment.
 > `colab_train_vimeo.ipynb`'s combined QAT+control training section (Section
 > 9) - same flow (download one Vimeo-90K chunk, train both models on it with
 > per-chunk early stopping, delete it, move to the next chunk), for a
-> machine with its own GPU. It reads/writes checkpoints on a **Drive-synced
-> folder** (via Google Drive for Desktop), the same folder the notebook
-> uses - so training can move between Colab and a local GPU and back,
-> resuming correctly either way.
+> machine with its own GPU. By default it is **fully local - no Google
+> Drive, no Colab, nothing leaves the machine**: checkpoints, progress, and
+> history are read from and written to a plain local directory
+> (`outputs/qat_combined/`), and it bootstraps from the checkpoint/
+> calibration files already committed under `outputs/` in this repo
+> (`vimeo_epoch17_best.pt` / `vimeo_epoch17_4bit.json`).
 >
-> **The command** (once Google Drive for Desktop is installed, signed into
-> an account with access to the shared `neural_streaming_colab` Drive
-> folder, and `pip install kaggle` + a Kaggle API token are set up - see the
-> script's own docstring for full prerequisites):
+> **The command** (once `pip install kaggle` + a Kaggle API token are set
+> up - see the script's own docstring for full prerequisites):
 >
 > ```powershell
-> python scripts\train_vimeo_qat_combined.py --drive-dir "G:\My Drive\neural_streaming_colab_copy"
+> python scripts\train_vimeo_qat_combined.py
 > ```
 >
-> Replace the path with wherever Drive for Desktop actually mounts
-> `neural_streaming_colab` on that machine. Everything else (chunk range,
-> the 10-epoch-per-chunk ceiling, early-stopping patience, batch size, crop
-> size, seed) defaults to match the notebook exactly - see `--help` to
-> override any of it.
+> That's it - no flags required. Re-running the exact same command later
+> (e.g. after closing the terminal, or after a crash/interruption) resumes
+> automatically: each run reloads its own `latest.pt` and skips whatever
+> chunks its own `progress_*.json` already marks complete, so nothing is
+> retrained from scratch. Everything else (chunk range, the
+> 10-epoch-per-chunk ceiling, early-stopping patience, batch size, crop
+> size, seed, where checkpoints are saved) defaults to match the notebook
+> exactly - see `--help` to override any of it.
+>
+> If you'd rather point it at a Google-Drive-synced folder instead (e.g. to
+> move training between this machine and Colab, picking up wherever either
+> one left off), pass `--output-dir "G:\My Drive\neural_streaming_colab_copy"`
+> - the flag is just a plain directory path, Drive-synced or not.
 
 ### The hypothesis
 
