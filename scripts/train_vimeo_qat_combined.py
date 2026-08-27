@@ -49,6 +49,7 @@ import shutil
 import subprocess
 import sys
 import time
+import traceback
 import zipfile
 from datetime import timedelta
 from pathlib import Path
@@ -142,7 +143,55 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
     )
     parser.add_argument("--kaggle-dataset-owner", default=KAGGLE_DATASET_OWNER)
     parser.add_argument("--kaggle-dataset-prefix", default=KAGGLE_DATASET_PREFIX)
+    parser.add_argument(
+        "--add-defender-exclusion", action="store_true",
+        help=(
+            "Windows only, opt-in, off by default: before the chunk loop starts, try to add "
+            "a Windows Defender exclusion for the scratch/vimeo data folder, via "
+            "'Add-MpPreference -ExclusionPath'. This needs Administrator privileges - if the "
+            "terminal isn't elevated it will just print a message and continue (never fatal). "
+            "Reduces the odds of the transient FileExistsError extraction issue and speeds up "
+            "extraction/training I/O. Nothing is changed unless you pass this flag."
+        ),
+    )
     return parser
+
+
+def _try_add_defender_exclusion(target_dir: Path) -> None:
+    """Best-effort, non-fatal: ask Windows Defender to stop scanning
+    target_dir (Add-MpPreference needs Administrator privileges - if the
+    current process isn't elevated this fails gracefully with a message
+    instead of blocking the run). No-op on non-Windows platforms.
+    """
+    if sys.platform != "win32":
+        print("[setup] --add-defender-exclusion is Windows-only - skipping.")
+        return
+    powershell = shutil.which("powershell") or shutil.which("pwsh")
+    if powershell is None:
+        print("[setup] Could not find powershell/pwsh on PATH - skipping Defender exclusion.", file=sys.stderr)
+        return
+
+    escaped = str(target_dir).replace("'", "''")
+    try:
+        result = subprocess.run(
+            [powershell, "-NoProfile", "-Command", f"Add-MpPreference -ExclusionPath '{escaped}'"],
+            capture_output=True, text=True, timeout=30,
+        )
+    except Exception as exc:  # subprocess itself failing to launch, timeout, etc.
+        print(f"[setup] Could not add Windows Defender exclusion automatically: {exc!r}", file=sys.stderr)
+        return
+
+    if result.returncode == 0:
+        print(f"[setup] Added Windows Defender exclusion for {target_dir}")
+    else:
+        print(
+            "[setup] Could not add Windows Defender exclusion automatically (this usually means "
+            "the terminal isn't running as Administrator). Training will continue without it - "
+            "add it manually if you want to: Windows Security -> Virus & threat protection -> "
+            f"Manage settings -> Add or remove exclusions -> Folder -> {target_dir}\n"
+            f"         Details: {result.stderr.strip()}",
+            file=sys.stderr,
+        )
 
 
 # --- Chunk download/extraction/relinking - ported verbatim from
@@ -160,19 +209,6 @@ def _find_sequences_source_root(chunk_dir: Path) -> Path:
         group_dir = clip_dir.parent
         return group_dir.parent
     raise RuntimeError(f"No im1.png found anywhere under {chunk_dir} - unexpected chunk layout")
-
-
-def _ensure_dir(path: Path) -> None:
-    """Make path a directory, reconciling a file wrongly occupying it or
-    one of its ancestors (see the comment in download_and_extract_chunk).
-    """
-    if not path.exists():
-        if path.parent != path:
-            _ensure_dir(path.parent)
-        path.mkdir(exist_ok=True)
-    elif not path.is_dir():
-        path.unlink()
-        path.mkdir(exist_ok=True)
 
 
 def download_and_extract_chunk(
@@ -193,30 +229,44 @@ def download_and_extract_chunk(
     if not zips:
         raise RuntimeError(f"[chunk {chunk_number}] no .zip downloaded into {scratch_dir}")
     print(f"[chunk {chunk_number}] extracting {zips[0].name} ...")
-    with zipfile.ZipFile(zips[0]) as zf:
-        # zf.extractall() raises FileExistsError (WinError 183) on Windows
-        # when this Kaggle mirror's zip lists the same path as BOTH a file
-        # entry and a directory entry - confirmed by reproduction, not a
-        # guess. os.mkdir() inside zipfile has no exist_ok, so whichever
-        # entry is extracted second collides with the first. Extract
-        # member-by-member and reconcile collisions in both directions
-        # instead of crashing - harmless for a dataset chunk we delete
-        # after training on it anyway.
-        for member in zf.infolist():
-            target = scratch_dir / member.filename
-            if member.is_dir():
-                _ensure_dir(target)
-                continue
-            _ensure_dir(target.parent)
-            if target.is_dir():
-                shutil.rmtree(target)
-            elif target.exists():
-                target.unlink()
-            with zf.open(member) as source, open(target, "wb") as dest:
-                shutil.copyfileobj(source, dest)
+    _extract_with_retry(zips[0], scratch_dir, chunk_number)
     zips[0].unlink()
 
     return _find_sequences_source_root(scratch_dir)
+
+
+def _extract_with_retry(zip_path: Path, dest_dir: Path, chunk_number: int, *, attempts: int = 5) -> None:
+    """zipfile.extractall() can intermittently raise FileExistsError partway
+    through a large extraction on Windows (WinError 183, "Cannot create a
+    file when that file already exists") when antivirus real-time scanning
+    locks a just-created file or directory mid-write - a known Windows-side
+    race with bulk small-file extraction, not a corrupt archive. Re-running
+    extractall from scratch is safe (it just overwrites whatever partial
+    files already landed), so retry a few times with a short backoff before
+    giving up.
+    """
+    last_exc: FileExistsError | None = None
+    for attempt in range(1, attempts + 1):
+        try:
+            with zipfile.ZipFile(zip_path) as zf:
+                zf.extractall(dest_dir)
+            return
+        except FileExistsError as exc:
+            last_exc = exc
+            print(
+                f"[chunk {chunk_number}] extraction hit a transient FileExistsError "
+                f"(attempt {attempt}/{attempts}): {exc} - retrying...",
+                file=sys.stderr,
+            )
+            time.sleep(2 * attempt)
+    raise RuntimeError(
+        f"[chunk {chunk_number}] extraction failed {attempts} times in a row with "
+        "FileExistsError. This is almost always Windows Defender (or another antivirus) "
+        "real-time-scanning and locking files during a large bulk extraction, not a bad "
+        f"download. Add a Windows Defender exclusion for {dest_dir.parent} (Windows Security "
+        "-> Virus & threat protection -> Manage settings -> Add or remove exclusions -> "
+        "Folder), then re-run this script - it will retry this chunk automatically."
+    ) from last_exc
 
 
 def relink_sequences_to_chunk(chunk_group_root: Path, vimeo_root: Path) -> list[str]:
@@ -393,6 +443,12 @@ def main(argv: list[str] | None = None) -> int:
     vimeo_root = defaults.vimeo_root
     vimeo_root.mkdir(parents=True, exist_ok=True)
 
+    if args.add_defender_exclusion:
+        # scratch_dir's parent (data/external/) covers both the raw chunk
+        # scratch space and vimeo_root - the two places under heavy
+        # small-file I/O during extraction and training.
+        _try_add_defender_exclusion(scratch_dir.parent)
+
     qat_resume_from = args.bootstrap_checkpoint or (defaults.checkpoint_dir / "vimeo_epoch17_best.pt")
     qat_calibration_path = args.calibration_path or (
         defaults.checkpoint_dir.parent / "calibration" / f"vimeo_epoch17_{args.qat_bits}bit.json"
@@ -512,6 +568,7 @@ def main(argv: list[str] | None = None) -> int:
 
         except Exception as exc:
             print(f"[chunk {chunk_number}] FAILED: {exc!r} - re-run this script to retry it", file=sys.stderr)
+            traceback.print_exc()
         finally:
             if not args.keep_chunk and scratch_dir.exists():
                 shutil.rmtree(scratch_dir)
