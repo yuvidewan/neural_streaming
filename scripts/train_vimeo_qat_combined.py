@@ -162,6 +162,19 @@ def _find_sequences_source_root(chunk_dir: Path) -> Path:
     raise RuntimeError(f"No im1.png found anywhere under {chunk_dir} - unexpected chunk layout")
 
 
+def _ensure_dir(path: Path) -> None:
+    """Make path a directory, reconciling a file wrongly occupying it or
+    one of its ancestors (see the comment in download_and_extract_chunk).
+    """
+    if not path.exists():
+        if path.parent != path:
+            _ensure_dir(path.parent)
+        path.mkdir(exist_ok=True)
+    elif not path.is_dir():
+        path.unlink()
+        path.mkdir(exist_ok=True)
+
+
 def download_and_extract_chunk(
     chunk_number: int, scratch_dir: Path, *, dataset_owner: str, dataset_prefix: str,
 ) -> Path:
@@ -181,7 +194,26 @@ def download_and_extract_chunk(
         raise RuntimeError(f"[chunk {chunk_number}] no .zip downloaded into {scratch_dir}")
     print(f"[chunk {chunk_number}] extracting {zips[0].name} ...")
     with zipfile.ZipFile(zips[0]) as zf:
-        zf.extractall(scratch_dir)
+        # zf.extractall() raises FileExistsError (WinError 183) on Windows
+        # when this Kaggle mirror's zip lists the same path as BOTH a file
+        # entry and a directory entry - confirmed by reproduction, not a
+        # guess. os.mkdir() inside zipfile has no exist_ok, so whichever
+        # entry is extracted second collides with the first. Extract
+        # member-by-member and reconcile collisions in both directions
+        # instead of crashing - harmless for a dataset chunk we delete
+        # after training on it anyway.
+        for member in zf.infolist():
+            target = scratch_dir / member.filename
+            if member.is_dir():
+                _ensure_dir(target)
+                continue
+            _ensure_dir(target.parent)
+            if target.is_dir():
+                shutil.rmtree(target)
+            elif target.exists():
+                target.unlink()
+            with zf.open(member) as source, open(target, "wb") as dest:
+                shutil.copyfileobj(source, dest)
     zips[0].unlink()
 
     return _find_sequences_source_root(scratch_dir)

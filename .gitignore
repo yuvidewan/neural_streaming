@@ -83,6 +83,10 @@ outputs/visualizations/*
 # scripts/benchmark_rd.py; can be large.
 outputs/benchmarks/*
 !outputs/benchmarks/.gitkeep
+# QAT+control combined training output (Milestone 8B): checkpoints (already
+# caught by *.pt below) plus progress_*.json/history.json, which are not.
+# Auto-created by scripts/train_vimeo_qat_combined.py - no .gitkeep needed.
+outputs/qat_combined/
 
 # --- Model checkpoint / export formats ---
 *.pt
