@@ -12,6 +12,13 @@ quantize and serialize that representation into a custom `.nvc` binary
 format, then decode it back into a reconstructed frame - and measure how
 that compares to conventional codecs on quality and size.
 
+> **See also:** [`OPTIMIZATION_ANALYSIS.md`](OPTIMIZATION_ANALYSIS.md) - a
+> code-level audit of where this codec can still be made faster and where
+> it can be made to compress better, each ranked by effort vs. payoff, plus
+> what the two goals cost each other. Includes a measured component-level
+> timing breakdown of the encode/decode path and an audit of what the
+> current design already gets right.
+
 ## Current Development Status
 
 **Milestone 8A (this repository state): the Milestone 7 codec/evaluation stack unchanged, plus quantization-aware training (QAT) - a differentiable, distortion-only noise relaxation, now with one real trained checkpoint and one real DAVIS benchmark behind it.** A first QAT run (14 epochs, fine-tuned from `vimeo_epoch17_best.pt`) improved PSNR/MS-SSIM at every bit depth, but with a confound not yet ruled out - see "Milestone 8A" below for the mechanism, the numbers (not hardcoded here - read the benchmark output), and exactly what this first run does and does not establish.
@@ -1379,13 +1386,17 @@ of *independent* operations in parallel). The forward pass is the opposite:
 convolutions are massively parallel matrix math, exactly what GPU/NPU
 hardware is built for - so exporting the trained model (ONNX -> a GPU/NPU
 execution path) instead of running it via ad-hoc PyTorch-on-CPU is the
-matching fix for *that* half. Right now the forward pass isn't the
-bottleneck at all - the model is tiny, so hardware-accelerating it buys
-comparatively little while the coder alone accounts for nearly all of the
-measured per-frame time - but that shifts if this project's model ever
-grows (e.g. the entropy/temporal options discussed above), which is exactly
-why both are recorded together as the next concrete target, not just the
-coder alone.
+matching fix for *that* half.
+
+**Update - this ordering has since reversed, and it was measured.** Before
+the C migration below, the coder dominated per-frame cost and hardware
+acceleration was correctly the lower priority of the two. With the coder
+now ~40x faster, a component-level timing of the full round trip puts the
+**neural forward passes at ~78% of the time and the arithmetic coder at
+~20%** - so hardware-accelerated inference is now the single largest
+remaining speed lever, not the smaller one. See
+[`OPTIMIZATION_ANALYSIS.md`](OPTIMIZATION_ANALYSIS.md) Part 0 for the
+measurement.
 
 ### Milestone 8B - the arithmetic coder, migrated to C
 
