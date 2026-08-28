@@ -159,8 +159,11 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
             "a Windows Defender exclusion for the scratch/vimeo data folder, via "
             "'Add-MpPreference -ExclusionPath'. This needs Administrator privileges - if the "
             "terminal isn't elevated it will just print a message and continue (never fatal). "
-            "Reduces the odds of the transient FileExistsError extraction issue and speeds up "
-            "extraction/training I/O. Nothing is changed unless you pass this flag."
+            "Speeds up extraction/training I/O generally (real-time scanning on tens of "
+            "thousands of small files is slow) - not a fix for any specific error; the "
+            "zip-extraction FileExistsError some chunks hit is a malformed-archive issue, "
+            "already handled unconditionally by _extract_reconciling_collisions, not "
+            "something this flag needs to address. Nothing is changed unless you pass this flag."
         ),
     )
     return parser
@@ -238,44 +241,54 @@ def download_and_extract_chunk(
     if not zips:
         raise RuntimeError(f"[chunk {chunk_number}] no .zip downloaded into {scratch_dir}")
     print(f"[chunk {chunk_number}] extracting {zips[0].name} ...")
-    _extract_with_retry(zips[0], scratch_dir, chunk_number)
+    _extract_reconciling_collisions(zips[0], scratch_dir)
     zips[0].unlink()
 
     return _find_sequences_source_root(scratch_dir)
 
 
-def _extract_with_retry(zip_path: Path, dest_dir: Path, chunk_number: int, *, attempts: int = 5) -> None:
-    """zipfile.extractall() can intermittently raise FileExistsError partway
-    through a large extraction on Windows (WinError 183, "Cannot create a
-    file when that file already exists") when antivirus real-time scanning
-    locks a just-created file or directory mid-write - a known Windows-side
-    race with bulk small-file extraction, not a corrupt archive. Re-running
-    extractall from scratch is safe (it just overwrites whatever partial
-    files already landed), so retry a few times with a short backoff before
-    giving up.
+def _ensure_dir(path: Path) -> None:
+    """Make path a directory, reconciling a file wrongly occupying it or
+    one of its ancestors (see _extract_reconciling_collisions below).
     """
-    last_exc: FileExistsError | None = None
-    for attempt in range(1, attempts + 1):
-        try:
-            with zipfile.ZipFile(zip_path) as zf:
-                zf.extractall(dest_dir)
-            return
-        except FileExistsError as exc:
-            last_exc = exc
-            print(
-                f"[chunk {chunk_number}] extraction hit a transient FileExistsError "
-                f"(attempt {attempt}/{attempts}): {exc} - retrying...",
-                file=sys.stderr,
-            )
-            time.sleep(2 * attempt)
-    raise RuntimeError(
-        f"[chunk {chunk_number}] extraction failed {attempts} times in a row with "
-        "FileExistsError. This is almost always Windows Defender (or another antivirus) "
-        "real-time-scanning and locking files during a large bulk extraction, not a bad "
-        f"download. Add a Windows Defender exclusion for {dest_dir.parent} (Windows Security "
-        "-> Virus & threat protection -> Manage settings -> Add or remove exclusions -> "
-        "Folder), then re-run this script - it will retry this chunk automatically."
-    ) from last_exc
+    if not path.exists():
+        if path.parent != path:
+            _ensure_dir(path.parent)
+        path.mkdir(exist_ok=True)
+    elif not path.is_dir():
+        path.unlink()
+        path.mkdir(exist_ok=True)
+
+
+def _extract_reconciling_collisions(zip_path: Path, dest_dir: Path) -> None:
+    """Extract zip_path into dest_dir member by member, reconciling any path
+    the archive lists as BOTH a file entry and a directory entry.
+
+    zipfile.ZipFile.extractall() raises FileExistsError (WinError 183,
+    "Cannot create a file when that file already exists") on Windows for
+    exactly this case: os.mkdir() inside zipfile has no exist_ok, so
+    whichever entry - file or directory - is extracted second collides with
+    the first. Confirmed by reproduction against this Kaggle mirror's chunk
+    archives, not a Windows Defender/antivirus race - a property of the
+    archive itself, so retrying the same extractall() call fails
+    identically every time rather than intermittently. Reconciling by
+    taking whichever entry the archive lists last for a given path is safe
+    here: this is a scratch chunk deleted after training on it anyway, not
+    data whose exact provenance matters long-term.
+    """
+    with zipfile.ZipFile(zip_path) as zf:
+        for member in zf.infolist():
+            target = dest_dir / member.filename
+            if member.is_dir():
+                _ensure_dir(target)
+                continue
+            _ensure_dir(target.parent)
+            if target.is_dir():
+                shutil.rmtree(target)
+            elif target.exists():
+                target.unlink()
+            with zf.open(member) as source, open(target, "wb") as dest:
+                shutil.copyfileobj(source, dest)
 
 
 def _reset_dir_with_retry(path: Path, *, attempts: int = 5) -> None:

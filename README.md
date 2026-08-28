@@ -12,6 +12,13 @@ quantize and serialize that representation into a custom `.nvc` binary
 format, then decode it back into a reconstructed frame - and measure how
 that compares to conventional codecs on quality and size.
 
+> **See also:** [`OPTIMIZATION_ANALYSIS.md`](OPTIMIZATION_ANALYSIS.md) - a
+> code-level audit of where this codec can still be made faster and where
+> it can be made to compress better, each ranked by effort vs. payoff, plus
+> what the two goals cost each other. Includes a measured component-level
+> timing breakdown of the encode/decode path and an audit of what the
+> current design already gets right.
+
 ## Current Development Status
 
 **Milestone 8A (this repository state): the Milestone 7 codec/evaluation stack unchanged, plus quantization-aware training (QAT) - a differentiable, distortion-only noise relaxation, now with one real trained checkpoint and one real DAVIS benchmark behind it.** A first QAT run (14 epochs, fine-tuned from `vimeo_epoch17_best.pt`) improved PSNR/MS-SSIM at every bit depth, but with a confound not yet ruled out - see "Milestone 8A" below for the mechanism, the numbers (not hardcoded here - read the benchmark output), and exactly what this first run does and does not establish.
@@ -115,6 +122,15 @@ Implemented:
   under `outputs/qat_combined/`, no Drive or Colab involved), or point it at
   a Drive-synced folder via `--output-dir` to move training between Colab
   and a local GPU and resume correctly either way
+- **The arithmetic coder, migrated to C** (Milestone 8B) -
+  `src/nvc/compression/_native/range_coder.c`, loaded via `ctypes` and
+  auto-compiled on first import; measured ~40x faster than the pure-Python
+  version it replaces, byte-identical output. **No Python fallback** - by
+  design, `encode_symbols`/`decode_symbols` only ever use the C backend,
+  raising a clear, actionable error if it can't be loaded/built rather than
+  silently degrading. The original Python implementation is kept, commented
+  out (not deleted, not callable), purely for reference - see "Milestone
+  8B" under "Entropy Coding & the .nvc Bitstream" below.
 
 **Not implemented yet** (do not assume any of this works):
 - Variational latents (mu/logvar, KL divergence) - the current model is a
@@ -133,6 +149,35 @@ Implemented:
 - FastAPI serving layer
 - ONNX Runtime inference
 - Neural frame interpolation or super-resolution (major-project scope, later)
+
+> ### Closing the speed gap - a C/C++ coder (done) + hardware-run inference (future)
+>
+> The single biggest concrete lever on this project's "Real-Time" goal.
+> Two separate fixes, aimed at two separate bottlenecks, that combine
+> rather than overlap - one is now built, one is a deliberate, unscheduled
+> future option:
+>
+> 1. **Rewrite the arithmetic coder in C/C++ - done (Milestone 8B).** It
+>    was the one place in this codebase running a raw, per-symbol Python
+>    loop instead of calling into compiled code - see "Milestone 8B" under
+>    Milestone 6 below for the measured numbers: **47.8x faster encode,
+>    32.5x faster decode**, byte-identical output, **no Python fallback**
+>    - original Python kept only as a commented-out reference.
+> 2. **Export the trained model and run it on existing neural-network
+>    hardware** (ONNX -> a GPU/NPU execution path) instead of ad-hoc
+>    PyTorch-on-CPU - **a future target, deliberately unscheduled, not
+>    started.** Doesn't require inventing anything - the hardware (phone
+>    NPUs, GPU tensor cores) already exists; this would be a deployment/
+>    export step, not new research. Recorded here as a known, viable
+>    option to come back to, not a current work item.
+>
+> Neither depended on the other, and neither depends on this project's own
+> compute constraints the way training does - the C rewrite was pure
+> software engineering on any machine, and the export step (whenever it
+> happens) just needs a checkpoint that already exists. Even both together
+> won't fully close the gap to H.264/H.265's dedicated fixed-function
+> silicon, but the first half is a real, measured step toward it, not an
+> estimate anymore.
 
 ## Planned Architecture
 
@@ -166,6 +211,94 @@ quantization, entropy coding, and the `.nvc` binary file. What remains is
 depth rather than coverage: the VAE formulation, a learned entropy model,
 and the temporal conditioning that would make this a *video* codec rather
 than an image codec applied frame by frame.
+
+### Why the transform stays CNN-based (for now)
+
+A transformer-based encoder/decoder was evaluated as an alternative to the
+current CNN and deliberately not adopted at this stage - not because the
+idea lacks support in the literature, but because its specific tradeoffs
+don't fit this project's constraints:
+
+- **Zhu, Yang & Cohen, "Transformer-based Transform Coding" (ICLR 2022)** -
+  a Swin-Transformer transform beats CNN baselines like Cheng et al. 2020
+  (the Milestone 8A literature review's ref [6]) on standard benchmarks.
+- **Liu, Sun & Katto, "Learned Image Compression with Mixed Transformer-CNN
+  Architectures" (CVPR 2023)** - found a *hybrid* CNN+transformer beats
+  either pure architecture alone.
+- **Qian et al., "Entroformer" (ICLR 2022)** - keeps a CNN transform, but
+  replaces the context model with a parallelizable, attention-based one -
+  targets the same gap this project's own entropy model already identifies
+  as its largest remaining win (see "Current limitations" under "Entropy
+  Coding & the .nvc Bitstream" below).
+- **Mentzer et al., "VCT: A Video Compression Transformer" (NeurIPS 2022)** -
+  uses attention across frames' latents for temporal modeling, instead of
+  the explicit motion estimation a CNN-based video codec (e.g. DVC) needs.
+
+**Why not adopted here:** self-attention costs more per parameter than
+convolution, working against this project's real-time goal rather than
+toward it; transformers generally need more data/compute to show their
+advantage over CNNs, and this project has already hit real compute limits
+(a Colab GPU-quota cutoff mid QAT run, and a CPU benchmark measuring ~2.3s
+per training batch on a GPU-less laptop); and the current model is small
+(0.59M parameters) - a regime the transformer-compression literature above
+doesn't clearly validate either way. **The one piece of this considered
+worth pursuing**: an Entroformer-style attention-based entropy/context
+model layered on the existing CNN transform, which targets the gap this
+README already calls out without touching the transform architecture or
+its throughput profile. Not yet implemented; recorded here as a candidate
+next step, not a plan.
+
+The two subsections below size up that candidate, plus the temporal option
+from the VCT citation above, against the current model - what each would
+add in weight, and what it would plausibly buy back in return. Figures here
+are rough, order-of-magnitude engineering estimates for this project's
+actual model size, **not measured results** - nothing below has been
+implemented or benchmarked.
+
+#### Option 2 in detail: an entropy/context model (attention- or CNN-based)
+
+The current entropy model (`EmpiricalEntropyModel`) is a static per-channel
+frequency table - effectively a lookup, with no learned parameters and no
+compute cost at encode/decode time. Any context model replacing it is new
+weight added to a currently free component, so this comparison is really
+"free and context-blind" vs. "small and context-aware":
+
+| | Current (static table) | + context model |
+|---|---|---|
+| Added parameters | 0 | Rough estimate ~0.1-0.3M - a handful of small conv or attention blocks operating on the 16x16x64 latent grid (256 positions). Against the 0.59M-parameter autoencoder, that's roughly **1.2-1.5x total model size**. |
+| Added compute | ~0 (table lookup) | One small forward pass (likely a few ms on any modern hardware for a network this size) - small next to the arithmetic coder's own measured ~47-56ms/frame, which stays the actual bottleneck either way. |
+| Decode structure | Fully parallel (1 pass) | 2+ passes instead of 1 (checkerboard-style CNN: 2 passes; Entroformer-style attention: a similar partially-parallel scheme) - slower than today's single pass, but nowhere near the fully sequential, one-symbol-at-a-time decode of classic autoregressive CNN context models (Minnen et al., 2018), which both of these options are specifically designed to avoid. |
+| Expected effect on rate | - (baseline) | Real, plausibly meaningful - in the published literature, adding context is consistently one of the largest single levers for closing the gap to classical codecs (often comparable in size to the hyperprior step itself). Not yet measured for *this* model's actual latent distribution. |
+
+Why attention is *more* tractable here than in the full-transform case
+above: self-attention's cost grows with the *square* of the number of
+tokens. Applied to the 16x16 latent (256 tokens), that's cheap. Applied
+inside the transform itself, where earlier feature maps are far larger
+(e.g. 128x128 = 16,384 tokens), the same mechanism would be roughly
+**4,000x more attention pairs** to compute. That gap is a real reason the
+entropy-model application is the lower-risk of the two, independent of the
+CNN-vs-transformer question - and it's why He et al., "Checkerboard Context
+Model for Efficient Learned Image Compression" (CVPR 2021), reaching a
+comparable parallel-decode benefit with a plain CNN, is as legitimate a
+choice here as Entroformer's attention-based version.
+
+#### Option 3 in detail: temporal modeling (attention vs. explicit motion)
+
+This one isn't an add-on to an existing component - the project is
+currently intra-only, so *any* inter-frame mechanism is new capability, not
+a heavier version of something already there. The comparison is between two
+ways of building it:
+
+| | Explicit motion (DVC-style CNN) | Attention across frames (VCT-style) |
+|---|---|---|
+| New parameters | Heaviest option - an optical-flow network (rough estimate: 1-5M params even at reduced scale), a (parameter-free) warping/motion-compensation step, and a residual encoder/decoder (rough estimate: +0.3-0.6M). Total plausibly **3-10x the current model's size**. | Rough estimate ~0.2-0.5M for a small temporal transformer over neighboring frames' latents (multiple 256-token frames, still cheap for the same quadratic-cost reason as Option 2) - likely lighter than the CNN route, roughly **1.5-2x** current size, mainly because it skips the flow network entirely. |
+| Robustness | A documented failure mode: motion-vector errors compound across frames ("drift"), and optical flow itself struggles with occlusion and non-rigid motion. | Learns whatever latent-space correspondence is useful without committing to an explicit pixel-level motion field - theoretically more robust to exactly the cases (occlusion, non-rigid motion) that break explicit flow. |
+| Expected effect on rate | Large either way - this closes the single biggest identified gap versus H.264/H.265 (intra-only vs. inter-frame coding is the largest source of the gap in this project's own benchmark methodology notes). | Same gap closed; the published VCT result suggests comparable or better rate-distortion than explicit-motion approaches, at what's plausibly the lighter parameter budget of the two. |
+
+Both options are large, new pieces of work relative to anything implemented
+so far - neither is "targeted" in the way Option 2 is. The comparison above
+is about which mechanism to build *if and when* temporal modeling is taken
+on, not a claim that either is close to ready.
 
 ## Repository Structure
 
@@ -1202,12 +1335,141 @@ the 549-byte header entirely. Total-file bits/symbol at 8-bit is 7.5359, not
   no rate term. Nothing has optimized the rate/distortion trade-off jointly.
 - Quantization parameters are re-sent in every frame (512 of the 549 header
   bytes).
-- The arithmetic coder is pure Python: about 47 ms/frame encode and 56
-  ms/frame decode at 8-bit. Correct and measurable, but not real-time.
+- The arithmetic coder was pure Python (about 47 ms/frame encode and 56
+  ms/frame decode at 8-bit) - correct and measurable, but not real-time.
+  **Superseded by Milestone 8B**: C is now the only backend (~40x faster
+  measured, see "Milestone 8B" below) - no Python fallback by design, and
+  the original Python kept only as a commented-out reference, not a live
+  code path. Still not literally hardware-accelerated like H.264/H.265, and
+  the neural forward pass is untouched by this - see "Milestone 8B" for
+  what it does and doesn't change.
 - Still image only - no inter-frame prediction, so this does not yet
   compress *video*, and there is no comparison against H.264/H.265.
 - Calibration is tied to a specific checkpoint; a retrained model needs
   re-calibration (the `entropy_model_id` check makes a mismatch loud).
+
+### Where a C/C++ rewrite would actually help (and where it wouldn't)
+
+Not everything here is slow "because it's Python" - most of the pipeline
+(the CNN forward pass, the quantizer's rounding/scaling) already runs
+through PyTorch's compiled C++/CUDA backend, so Python is just orchestrating
+calls into code that's already at C speed. Rewriting *that* in C/C++ would
+buy close to nothing. The place Python's own overhead is the actual
+bottleneck is narrow, specific, and already measured:
+
+- **The arithmetic coder (`src/nvc/compression/range_coder.py`) - done, see
+  "Milestone 8B" below.** It processes one symbol at a time (range
+  narrowing, renormalization, carry handling per symbol) - a tight,
+  sequential, per-element loop, exactly the pattern where Python's
+  per-iteration interpreter overhead dominates and compiled C removes
+  almost all of it. This has now actually been rewritten in C and
+  benchmarked, not just estimated - **measured 47.8x faster encode, 32.5x
+  faster decode**, byte-identical output. Numbers and methodology below.
+- **Dataset full-scan validation (`--full-scan` in
+  `prepare_training_dataset.py`) - a smaller, lower-priority candidate.**
+  Walks on the order of 640,000 file-existence checks across the full
+  Vimeo-90K listing (see "Current limitations" under "Large-Scale Training
+  Dataset" below). Real Python-loop overhead, but this runs occasionally for
+  dataset validation, not on the per-frame encode/decode path, so it doesn't
+  affect streaming throughput the way the arithmetic coder does.
+- **Not worth rewriting:** the encoder/decoder forward pass and the
+  quantizer's tensor ops. Both are already dispatched through PyTorch to
+  compiled C++/CUDA kernels - there's no meaningful "pure Python" cost left
+  to remove there.
+
+That last point is also *why* this isn't the same fix as hardware
+acceleration, and why the two are complementary rather than redundant.
+Arithmetic coding is sequential - encoding symbol N needs the coder's exact
+state after symbol N-1 - which is exactly what a CPU core (running fast C)
+is good at and a GPU/NPU is bad at (their speed comes from doing thousands
+of *independent* operations in parallel). The forward pass is the opposite:
+convolutions are massively parallel matrix math, exactly what GPU/NPU
+hardware is built for - so exporting the trained model (ONNX -> a GPU/NPU
+execution path) instead of running it via ad-hoc PyTorch-on-CPU is the
+matching fix for *that* half.
+
+**Update - this ordering has since reversed, and it was measured.** Before
+the C migration below, the coder dominated per-frame cost and hardware
+acceleration was correctly the lower priority of the two. With the coder
+now ~40x faster, a component-level timing of the full round trip puts the
+**neural forward passes at ~78% of the time and the arithmetic coder at
+~20%** - so hardware-accelerated inference is now the single largest
+remaining speed lever, not the smaller one. See
+[`OPTIMIZATION_ANALYSIS.md`](OPTIMIZATION_ANALYSIS.md) Part 0 for the
+measurement.
+
+### Milestone 8B - the arithmetic coder, migrated to C
+
+**Status: implemented and benchmarked.** Hardware-accelerated neural
+inference (the other half of the "next target" above) is a deliberate
+**future target with no committed timeframe** - a real option, not
+something being built now. The C migration is done.
+
+**What changed:** `src/nvc/compression/_native/range_coder.c` is a
+structurally identical C port of the same algorithm (same variable names,
+same control flow as the Python version, so the two can be read side by
+side), loaded from Python via `ctypes` and auto-compiled on first import if
+a C compiler is on `PATH`. **This build has no Python fallback for
+arithmetic coding, by deliberate choice** - `encode_symbols`/
+`decode_symbols` always use the C backend. If the native library can't be
+loaded or built, they raise a clear, actionable `RuntimeError`
+(`ensure_native_backend()`) naming the actual reason (compiler not found,
+compile error with the compiler's own message included, etc.) rather than
+silently degrading to the slow path or failing with a confusing error
+somewhere else. The compiled `.c` code itself also guards against
+allocation failure: `rc_encode` returns a status code the Python wrapper
+checks, raising `MemoryError` on genuine OOM instead of risking a native
+crash. The original Python implementation was **not deleted** - it's kept
+in full inside `range_coder.py`, **commented out**, purely for reference
+(reading the two side by side, or reinstating a fallback later if that's
+ever wanted) - it is not imported, not callable, not on any runtime path.
+
+**Compatibility check:** every file that imports `range_coder`
+(`codec.py`, `nvc_format.py`, `entropy_model.py`, the package `__init__`)
+uses it unchanged - the public `encode_symbols`/`decode_symbols` signatures
+and error-raising behavior are identical to before this migration. The
+full existing test suite (`tests/test_entropy_coding.py` and everything
+else, 387 tests) passes unmodified - it exercises `encode_symbols`/
+`decode_symbols` through the public API only, so it now directly tests the
+only implementation that still runs. (An earlier version of this
+migration kept a Python fallback and a dedicated test proving the C and
+Python outputs were byte-identical - that comparison already happened, is
+recorded in git history, and doesn't need to keep re-running against code
+that's no longer reachable.)
+
+**Measured results** (`scripts/benchmark_range_coder.py`, one frame's
+worth of symbols - 64 channels x 16x16 = 16,384 symbols, matching
+`BaselineAutoencoder`'s default latent shape, realistic per-channel
+skewed distribution, 30 timed repetitions after a warmup call, same
+machine, same process, immediately before/after so nothing else about the
+environment changed):
+
+| | Python (reference) | C (`_native/range_coder.c`) | Speedup |
+|---|---|---|---|
+| Encode | 102.4 ms/frame (median 89.3) | 2.14 ms/frame (median 2.26) | **47.8x** |
+| Decode | 107.5 ms/frame (median 105.2) | 3.31 ms/frame (median 3.46) | **32.5x** |
+| Combined | 210.0 ms/frame | 5.45 ms/frame | **38.5x** |
+| Payload size | 13,091 bytes (6.392 bits/symbol) | 13,091 bytes (6.392 bits/symbol) | identical |
+
+Raw numbers in `outputs/benchmarks/range_coder_python_baseline.json` and
+`range_coder_c_backend.json`. These are measured on this project's own
+development machine, not the machine the original 47/56 ms/frame figures
+earlier in this README were measured on - the *absolute* milliseconds
+will differ machine to machine, but the **speedup factor is what
+transfers**, and it landed inside the 15-50x range estimated before this
+was built, which is itself a small piece of evidence the reasoning behind
+that estimate held up.
+
+**What this does and doesn't change:** the entropy coder was never the
+whole per-frame cost - encode/decode also includes the neural forward
+pass, which this migration doesn't touch (see "Not worth rewriting"
+above). It also doesn't change *compression ratio* at all - byte-identical
+payloads, same bits/symbol, same `.nvc` file size. This is purely a
+latency fix, and the honest remaining gap to H.264/H.265's dedicated
+fixed-function silicon (Milestone 7's methodology notes, and the gap
+analysis referenced throughout this README) is not closed by it - just
+meaningfully narrowed on the one component that was actually written as
+loose Python.
 
 ## Large-Scale Training Dataset
 

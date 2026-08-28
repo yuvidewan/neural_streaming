@@ -9,6 +9,12 @@ dist/
 *.egg-info/
 .eggs/
 
+# --- Compiled native extensions (auto-built on demand, see
+# src/nvc/compression/_native/__init__.py - never commit the binary,
+# only the .c source) ---
+src/nvc/compression/_native/*.dll
+src/nvc/compression/_native/*.dylib
+
 # --- Virtual environment ---
 .venv/
 venv/
