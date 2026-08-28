@@ -115,6 +115,15 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
              "(wiped and recreated per chunk). Defaults to <repo>/data/external/_vimeo_scratch.",
     )
     parser.add_argument(
+        "--vimeo-root", type=Path, default=None,
+        help="Directory where this script rebuilds the sequences/ symlink tree (plus "
+             "sep_trainlist.txt/sep_testlist.txt) each chunk. Defaults to "
+             "<repo>/data/external/vimeo_septuplet. Like --scratch-dir, point this outside any "
+             "cloud-synced folder (OneDrive/Google Drive) if you hit FileExistsError here - a "
+             "synced folder can hold a sustained lock on a file inside it while re-uploading "
+             "the previous chunk's contents, which a few retries won't outlast.",
+    )
+    parser.add_argument(
         "--chunks", type=int, nargs="+", default=list(range(1, 11)),
         help="Which Kaggle chunk numbers to cycle through (wangsally/vimeo-90k-1..10).",
     )
@@ -269,6 +278,39 @@ def _extract_with_retry(zip_path: Path, dest_dir: Path, chunk_number: int, *, at
     ) from last_exc
 
 
+def _reset_dir_with_retry(path: Path, *, attempts: int = 5) -> None:
+    """Delete path (if present) and recreate it empty, retrying with
+    backoff. shutil.rmtree(path, ignore_errors=True) can silently fail to
+    fully remove path - e.g. when path is under a synced folder (OneDrive,
+    Google Drive) that's mid-upload and holding a lock on a file inside it,
+    or Windows Defender is scanning one - and the subsequent mkdir() then
+    crashes with FileExistsError because the old directory is still there.
+    Same root cause and fix shape as _extract_with_retry above.
+    """
+    last_exc: OSError | None = None
+    for attempt in range(1, attempts + 1):
+        shutil.rmtree(path, ignore_errors=True)
+        try:
+            path.mkdir(parents=True)
+            return
+        except FileExistsError as exc:
+            last_exc = exc
+            print(
+                f"[setup] Could not fully clear {path} (attempt {attempt}/{attempts}): "
+                f"{exc} - retrying...",
+                file=sys.stderr,
+            )
+            time.sleep(2 * attempt)
+    raise RuntimeError(
+        f"Could not clear and recreate {path} after {attempts} attempts. This usually means a "
+        "synced folder (OneDrive/Google Drive) or antivirus real-time scanning is holding a "
+        f"lock on something inside it. Either add a Defender exclusion for {path.parent} "
+        "(Windows Security -> Virus & threat protection -> Manage settings -> Add or remove "
+        "exclusions -> Folder), or move this project's data out of any cloud-synced folder, "
+        "then re-run this script."
+    ) from last_exc
+
+
 def relink_sequences_to_chunk(chunk_group_root: Path, vimeo_root: Path) -> list[str]:
     """Point vimeo_root/sequences at exactly this chunk's group folders via
     symlinks - no copying, so this costs no extra disk beyond the chunk
@@ -279,9 +321,7 @@ def relink_sequences_to_chunk(chunk_group_root: Path, vimeo_root: Path) -> list[
     running as Administrator; Linux/Mac need no special setup.
     """
     sequences_dir = vimeo_root / "sequences"
-    if sequences_dir.exists() or sequences_dir.is_symlink():
-        shutil.rmtree(sequences_dir, ignore_errors=True)
-    sequences_dir.mkdir(parents=True)
+    _reset_dir_with_retry(sequences_dir)
 
     group_names = []
     for group_dir in sorted(p for p in chunk_group_root.iterdir() if p.is_dir()):
@@ -440,7 +480,7 @@ def main(argv: list[str] | None = None) -> int:
     output_dir = args.output_dir or (defaults.checkpoint_dir.parent / "qat_combined")
     output_dir.mkdir(parents=True, exist_ok=True)
     scratch_dir = args.scratch_dir or (defaults.raw_data_dir.parent / "external" / "_vimeo_scratch")
-    vimeo_root = defaults.vimeo_root
+    vimeo_root = args.vimeo_root or defaults.vimeo_root
     vimeo_root.mkdir(parents=True, exist_ok=True)
 
     if args.add_defender_exclusion:
