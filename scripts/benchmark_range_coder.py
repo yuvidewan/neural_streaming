@@ -63,7 +63,7 @@ def _build_frame(seed: int) -> tuple[np.ndarray, np.ndarray, EmpiricalEntropyMod
     return frame, table_index, model
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--reps", type=int, default=30, help="Timed repetitions (default 30).")
     parser.add_argument("--seed", type=int, default=0)
@@ -75,7 +75,7 @@ def main() -> int:
         "--out", type=Path, default=None,
         help="Where to write the JSON results (default: outputs/benchmarks/range_coder_<label>.json)",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     symbols, table_index, model = _build_frame(args.seed)
     print(f"Frame: {NUM_SYMBOLS_PER_FRAME} symbols ({LATENT_CHANNELS} channels x "
