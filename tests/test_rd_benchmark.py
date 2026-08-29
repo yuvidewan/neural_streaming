@@ -35,6 +35,7 @@ from nvc.evaluation.rd_benchmark import (
     BenchmarkRun,
     CalibrationMismatchError,
     aggregate_results,
+    check_calibration_fit,
     create_run_directory,
     file_sha256,
     require_calibration_fit,
@@ -48,7 +49,7 @@ from nvc.evaluation.sequences import (
     validate_sequence_frames,
 )
 
-from helpers import make_tiny_manifest
+from helpers import make_tiny_checkpoint, make_tiny_manifest
 
 # MS-SSIM needs >160px; sequence tests that only exercise ordering/IO use
 # smaller frames, and the FFmpeg round-trip uses an even multiple of 2.
@@ -544,6 +545,50 @@ def test_file_sha256_is_stable_and_none_for_missing_files(tmp_path):
 
 
 # --- Calibration guard ---
+
+
+def test_check_calibration_fit_reports_low_high_clip_split(tmp_path):
+    # M8: check_calibration_fit() used to collapse count_clipped()'s
+    # low/high breakdown into a single clipped_percent. A calibration whose
+    # range is deliberately off-center (not just too narrow) can clip almost
+    # entirely on one side - that asymmetry is exactly what a shifted latent
+    # distribution (e.g. after QAT) would look like, and the aggregate
+    # percentage alone can't distinguish it from symmetric clipping.
+    from nvc.compression.calibration import calibrate_quantization_params
+    from nvc.evaluation.sequences import discover_sequences
+    from nvc.training import load_model_from_checkpoint
+
+    checkpoint_path = make_tiny_checkpoint(tmp_path / "ckpt.pt")
+    model, _ = load_model_from_checkpoint(checkpoint_path, device=torch.device("cpu"))
+
+    manifest_path = make_tiny_manifest(tmp_path, num_sequences=4, frames_per_sequence=8)
+    sequences = discover_sequences(manifest_path, split="train")
+
+    with torch.no_grad():
+        from nvc.data.image_io import read_image_as_tensor
+        probe_batch = torch.stack([
+            read_image_as_tensor(sequences[0].frame_paths[0]),
+            read_image_as_tensor(sequences[0].frame_paths[1]),
+        ])
+        probe_latents = model.encode(probe_batch)
+
+    # A narrow, deliberately shifted range (well above the latents' own
+    # spread) forces clipping that is almost entirely on the low side -
+    # the asymmetric case the aggregate-only metric couldn't show.
+    shifted = probe_latents + 50.0
+    narrow_params = calibrate_quantization_params(
+        shifted, bits=8, mode="per_channel", lower_percentile=45.0, upper_percentile=55.0,
+    )
+
+    fit = check_calibration_fit(model, sequences, narrow_params, device=torch.device("cpu"))
+
+    assert fit["fits"] is False  # mismatch is expected and intentional here
+    assert fit["clipped_low_percent"] > fit["clipped_high_percent"]
+    assert fit["clipped_low_percent"] + fit["clipped_high_percent"] == pytest.approx(
+        fit["clipped_percent"], abs=1e-6
+    )
+    assert fit["clipped_total"] > 0
+    assert fit["total_values"] > 0
 
 
 def test_calibration_guard_passes_for_a_fitting_calibration():

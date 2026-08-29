@@ -89,6 +89,7 @@ table, either extend the closest existing file or start a new
 | `test_scripts_codec_cli.py` | `calibrate_quantizer.py`, `encode.py`, `decode.py`, `reconstruct.py`, `analyze_latent.py`, `quantization_experiment.py`, `benchmark_codec.py` |
 | `test_scripts_rd_and_range_coder_benchmarks.py` | `benchmark_rd.py`, `plot_rate_distortion.py`, `benchmark_range_coder.py` |
 | `test_scripts_train_vimeo_qat_combined.py` | `train_vimeo_qat_combined.py` |
+| `test_scripts_compare_m8_models.py` | `compare_m8_models.py` |
 
 **Script contract** every `scripts/*.py` file follows, which is what makes
 all of the above possible:

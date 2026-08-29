@@ -122,9 +122,18 @@ def check_calibration_fit(
         latents = model.encode(batch)
 
     clipping = count_clipped(latents, params.to(latents.device))
+    total = clipping["total_values"]
     return {
         "frames_probed": len(frames),
         "clipped_percent": clipping["clipped_percent"],
+        # Low/high split from the same count_clipped() call already made
+        # above - surfaced separately so a calibration that clips almost
+        # entirely on one side (e.g. a distribution that shifted after QAT)
+        # is distinguishable from one that clips symmetrically.
+        "clipped_low_percent": 100.0 * clipping["clipped_low"] / total,
+        "clipped_high_percent": 100.0 * clipping["clipped_high"] / total,
+        "clipped_total": clipping["clipped_total"],
+        "total_values": total,
         "latent_min": float(latents.min()),
         "latent_max": float(latents.max()),
         "threshold_percent": CALIBRATION_CLIP_WARNING_PERCENT,
