@@ -5,13 +5,20 @@ and the rule this project follows going forward - **any change to code gets
 a matching change to tests in the same commit**, not a follow-up "add tests
 later" that never happens.
 
-459 tests, ~65s on a laptop CPU. No test needs a GPU, a real Kaggle
-download, or an external dataset - everything runs on synthetic data
+464 tests under `tests/`, ~65s on a laptop CPU. No test needs a GPU, a real
+Kaggle download, or an external dataset - everything runs on synthetic data
 generated in-process (`tests/helpers.py`), so the full suite runs
 identically in CI, on a fresh clone, or on a machine with no internet
 access at all. FFmpeg-dependent tests (`libx264`/`libx265` round trips)
 skip themselves automatically when FFmpeg isn't on `PATH`, rather than
 failing - see "FFmpeg-dependent tests" below.
+
+`hardware/` has its own small `test_parallel_entropy_poc.py` (3 tests) for
+the accelerator-architecture proof-of-concept - see `hardware/ARCHITECTURE.md`.
+It's exploratory design work, not `src/nvc/` or `scripts/*.py`, so it's
+outside this document's rule below, but a plain `pytest` from the project
+root still collects it (467 tests total) since nothing scopes discovery to
+`tests/` only.
 
 ## The rule
 
