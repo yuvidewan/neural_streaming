@@ -48,6 +48,22 @@ class Config:
     # is only valid when qat_enabled is False.
     qat_calibration_path: Path | None = None
 
+    # --- Differentiable rate estimation / D + lambda*R training (Milestone 9A) ---
+    # See nvc.training.rate_estimator.RateEstimator. Disabled by default so
+    # existing training behavior (including QAT-only training) is unchanged
+    # unless explicitly opted into.
+    rate_enabled: bool = False
+    # D + lambda * R. Must be >= 0 (see trainer._check_lambda_rate); 0.0 is
+    # valid and reproduces the distortion-only objective exactly.
+    rate_lambda: float = 0.0
+    # Calibration file supplying the rate estimator's bin width, used ONLY
+    # when rate_enabled is True and qat_enabled is False. When both QAT and
+    # rate training are enabled, the rate estimator instead reuses
+    # quantization_noise.scale directly (see scripts/train_autoencoder.py) -
+    # this path is for rate training WITHOUT QAT. None is only valid when
+    # rate_enabled is False, or when qat_enabled is also True.
+    rate_calibration_path: Path | None = None
+
     # --- Training parameters ---
     batch_size: int = 8
     learning_rate: float = 1e-4
@@ -101,10 +117,10 @@ class Config:
             "checkpoint_dir", "visualizations_dir", "metrics_dir", "benchmarks_dir",
             "vimeo_root", "vimeo_manifest_path",
         }
-        # Unlike path_fields above, this one is Optional - None is its
-        # documented default (qat_calibration_path is only required when
-        # qat_enabled is True), so it must not be forced through Path().
-        nullable_path_fields = {"qat_calibration_path"}
+        # Unlike path_fields above, these are Optional - None is their
+        # documented default (required only when the corresponding
+        # *_enabled flag is True), so they must not be forced through Path().
+        nullable_path_fields = {"qat_calibration_path", "rate_calibration_path"}
         tuple_fields = {"supported_video_extensions", "supported_image_extensions"}
         for key, value in overrides.items():
             if key in path_fields:

@@ -24,19 +24,35 @@ def save_checkpoint(
     epoch: int,
     history: list[dict[str, Any]],
     model_config: dict[str, Any],
+    extra: dict[str, Any] | None = None,
 ) -> None:
+    """`extra` (Milestone 9A): an optional, generic escape hatch for
+    milestone-specific training-time state that must NOT live in
+    `model_state_dict`/`model_config` - e.g. a rate estimator's own
+    parameters (`nvc.training.rate_estimator.RateEstimator`), which are
+    training-only infrastructure, never used at inference, and must never
+    change what `BaselineAutoencoder(**model_config)` + `load_state_dict`
+    produces on the ordinary inference path.
+
+    Omitted (the default, `None`): the saved dict has no `"extra"` key at
+    all - byte-for-byte the same checkpoint this function has always
+    produced. `load_model_from_checkpoint`/`resume_training_state` below
+    only ever read their own known keys, so old checkpoints (no `extra`)
+    and new ones (with it) both load through them unchanged either way -
+    an `extra` key is nothing either function looks for.
+    """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    torch.save(
-        {
-            "model_state_dict": model.state_dict(),
-            "optimizer_state_dict": optimizer.state_dict(),
-            "epoch": epoch,
-            "history": history,
-            "model_config": model_config,
-        },
-        path,
-    )
+    document = {
+        "model_state_dict": model.state_dict(),
+        "optimizer_state_dict": optimizer.state_dict(),
+        "epoch": epoch,
+        "history": history,
+        "model_config": model_config,
+    }
+    if extra is not None:
+        document["extra"] = extra
+    torch.save(document, path)
 
 
 def load_checkpoint(

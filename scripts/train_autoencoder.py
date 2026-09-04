@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 import time
 from pathlib import Path
@@ -46,10 +47,13 @@ from nvc.data.validation import DatasetValidationError
 from nvc.models import BaselineAutoencoder
 from nvc.training import (
     QuantizationNoise,
+    RateEstimator,
     resume_training_state,
     save_checkpoint,
     train_one_epoch,
+    train_one_epoch_with_rate,
     validate_one_epoch,
+    validate_one_epoch_with_rate,
 )
 from nvc.utils.config import load_default_config
 from nvc.utils.device import get_device
@@ -116,6 +120,28 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
              "from the TRAIN split, supplying the frozen training-time noise scale. "
              "Required when --qat-enabled is passed.",
     )
+    parser.add_argument(
+        "--rate-enabled", action="store_true", default=defaults.rate_enabled,
+        help=(
+            "Milestone 9A: add a differentiable rate proxy (nvc.training."
+            "RateEstimator) and train on distortion + lambda * rate instead of "
+            "distortion alone. Off by default - existing training behavior is "
+            "unchanged unless this is passed."
+        ),
+    )
+    parser.add_argument(
+        "--rate-lambda", type=float, default=defaults.rate_lambda,
+        help="Rate weight in D + lambda*R. Must be finite and >= 0; 0.0 (the "
+             "default) reproduces the distortion-only objective exactly.",
+    )
+    parser.add_argument(
+        "--rate-calibration", type=Path, default=defaults.rate_calibration_path,
+        help="Calibration file supplying the rate estimator's bin width. Required "
+             "when --rate-enabled is passed WITHOUT --qat-enabled. Must NOT be "
+             "passed together with --qat-enabled - in that case the rate "
+             "estimator reuses --qat-calibration's scale automatically, so there "
+             "is only ever one quantization scale in play for a given run.",
+    )
     return parser
 
 
@@ -140,6 +166,17 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     if args.qat_enabled and args.qat_calibration is None:
         parser.error("--qat-calibration is required when --qat-enabled is passed")
+    if args.rate_enabled:
+        if not math.isfinite(args.rate_lambda) or args.rate_lambda < 0:
+            parser.error("--rate-lambda must be finite and >= 0")
+        if args.qat_enabled and args.rate_calibration is not None:
+            parser.error(
+                "--rate-calibration must not be passed together with --qat-enabled - "
+                "the rate estimator reuses --qat-calibration's scale automatically, "
+                "so there is only ever one quantization scale for a given run."
+            )
+        if not args.qat_enabled and args.rate_calibration is None:
+            parser.error("--rate-calibration is required when --rate-enabled is passed without --qat-enabled")
 
     seed_everything(args.seed)
     device = _resolve_device(args.device)
@@ -157,6 +194,26 @@ def main(argv: list[str] | None = None) -> int:
             print(f"[ERROR] {exc}", file=sys.stderr)
             return 1
 
+    rate_estimator = None
+    if args.rate_enabled:
+        if args.qat_enabled:
+            # Reuse the SAME scale QuantizationNoise just loaded - never a
+            # second, independently loaded copy (see --rate-calibration's
+            # help text and rate_estimator.py's module docstring).
+            rate_estimator = RateEstimator(
+                quantization_noise.scale, bits=quantization_noise.bits, mode=quantization_noise.mode,
+            )
+        else:
+            if not args.rate_calibration.is_file():
+                print(f"[ERROR] --rate-calibration not found: {args.rate_calibration}", file=sys.stderr)
+                return 1
+            try:
+                rate_estimator = RateEstimator.from_calibration(args.rate_calibration)
+            except (ValueError, FileNotFoundError) as exc:
+                print(f"[ERROR] {exc}", file=sys.stderr)
+                return 1
+        rate_estimator = rate_estimator.to(device)
+
     try:
         train_loader = create_train_loader(
             args.manifest, batch_size=args.batch_size, num_workers=defaults.num_workers,
@@ -173,7 +230,13 @@ def main(argv: list[str] | None = None) -> int:
     model = BaselineAutoencoder(
         latent_channels=args.latent_channels, quantization_noise=quantization_noise,
     ).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
+    # The rate estimator's own loc/log_scale must be in the optimizer too -
+    # it is a real nn.Module with learnable parameters (see rate_estimator.py),
+    # unlike QuantizationNoise which has none.
+    optimizer_params = list(model.parameters())
+    if rate_estimator is not None:
+        optimizer_params += list(rate_estimator.parameters())
+    optimizer = torch.optim.Adam(optimizer_params, lr=args.learning_rate)
 
     history: list[dict] = []
     start_epoch = 1
@@ -225,10 +288,20 @@ def main(argv: list[str] | None = None) -> int:
         print(
             f"[QAT] Quantization-noise relaxation ENABLED - "
             f"{quantization_noise.bits}-bit / {quantization_noise.mode}, "
-            f"scale from {args.qat_calibration} (distortion-only: loss is plain MSE)."
+            f"scale from {args.qat_calibration}."
         )
     else:
         print("[QAT] Quantization-noise relaxation disabled (baseline training).")
+
+    if rate_estimator is not None:
+        scale_source = "--qat-calibration (shared with QAT)" if args.qat_enabled else str(args.rate_calibration)
+        print(
+            f"[RATE] Milestone 9A rate loss ENABLED - lambda={args.rate_lambda}, "
+            f"{rate_estimator.bits}-bit / {rate_estimator.mode} bin width from {scale_source}. "
+            f"Loss is distortion + {args.rate_lambda} * rate."
+        )
+    else:
+        print("[RATE] Rate loss disabled (loss is plain MSE, as before Milestone 9).")
 
     checkpoint_dir = args.checkpoint_dir
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
@@ -239,8 +312,18 @@ def main(argv: list[str] | None = None) -> int:
     end_epoch = start_epoch + args.epochs - 1
     for epoch in range(start_epoch, end_epoch + 1):
         t0 = time.time()
-        train_metrics = train_one_epoch(model, train_loader, optimizer, device, max_batches=args.max_batches)
-        val_metrics = validate_one_epoch(model, val_loader, device, max_batches=args.max_batches)
+        if rate_estimator is not None:
+            train_metrics = train_one_epoch_with_rate(
+                model, train_loader, optimizer, device,
+                rate_estimator=rate_estimator, lambda_rate=args.rate_lambda, max_batches=args.max_batches,
+            )
+            val_metrics = validate_one_epoch_with_rate(
+                model, val_loader, device,
+                rate_estimator=rate_estimator, lambda_rate=args.rate_lambda, max_batches=args.max_batches,
+            )
+        else:
+            train_metrics = train_one_epoch(model, train_loader, optimizer, device, max_batches=args.max_batches)
+            val_metrics = validate_one_epoch(model, val_loader, device, max_batches=args.max_batches)
         elapsed = time.time() - t0
 
         record = {
@@ -256,24 +339,46 @@ def main(argv: list[str] | None = None) -> int:
             "qat_enabled": quantization_noise is not None,
             "qat_bits": quantization_noise.bits if quantization_noise is not None else None,
             "qat_mode": quantization_noise.mode if quantization_noise is not None else None,
+            # Milestone 9A: same reasoning - always recorded, None/False when
+            # rate training wasn't used, so history.json is self-describing.
+            "rate_enabled": rate_estimator is not None,
+            "rate_lambda": args.rate_lambda if rate_estimator is not None else None,
+            "train_distortion": train_metrics.get("distortion"),
+            "train_rate_bpp": train_metrics.get("rate"),
+            "val_distortion": val_metrics.get("distortion"),
+            "val_rate_bpp": val_metrics.get("rate"),
         }
         history.append(record)
 
+        rate_suffix = (
+            f" train_rate={train_metrics['rate']:.4f}bpp val_rate={val_metrics['rate']:.4f}bpp"
+            if rate_estimator is not None else ""
+        )
         print(
             f"[EPOCH {epoch}] train_mse={train_metrics['loss']:.6f} "
             f"val_mse={val_metrics['loss']:.6f} val_psnr={val_metrics['psnr']:.2f} dB "
-            f"elapsed={elapsed:.1f}s"
+            f"elapsed={elapsed:.1f}s{rate_suffix}"
+        )
+
+        # Re-read fresh every epoch, not hoisted above the loop - the rate
+        # estimator's own parameters are updated by optimizer.step() each
+        # epoch just like the model's, so a stale state_dict captured once
+        # before the loop would silently checkpoint epoch-1's rate params
+        # forever after.
+        checkpoint_extra = (
+            {"rate_estimator_state_dict": rate_estimator.state_dict(), "rate_lambda": args.rate_lambda}
+            if rate_estimator is not None else None
         )
 
         save_checkpoint(
             checkpoint_dir / "latest.pt", model=model, optimizer=optimizer,
-            epoch=epoch, history=history, model_config=model_config,
+            epoch=epoch, history=history, model_config=model_config, extra=checkpoint_extra,
         )
         if val_metrics["loss"] < best_val_loss:
             best_val_loss = val_metrics["loss"]
             save_checkpoint(
                 checkpoint_dir / "best.pt", model=model, optimizer=optimizer,
-                epoch=epoch, history=history, model_config=model_config,
+                epoch=epoch, history=history, model_config=model_config, extra=checkpoint_extra,
             )
             print(f"  [BEST] New best validation MSE: {best_val_loss:.6f} -> {checkpoint_dir / 'best.pt'}")
 
