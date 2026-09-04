@@ -7,7 +7,9 @@ epoch loop or checkpoint format.
 - trainer:            train_one_epoch / validate_one_epoch, and their
                        Milestone 9A D+lambda*R counterparts
                        train_one_epoch_with_rate / validate_one_epoch_with_rate
-- checkpoint:          save_checkpoint / load_checkpoint / resume_training_state
+- checkpoint:          save_checkpoint / load_checkpoint / resume_training_state,
+                       plus resume_model_only for restarting from a
+                       checkpoint whose optimizer no longer matches
 - quantization_noise:  QuantizationNoise, the Milestone 8A QAT relaxation
                        (distortion-only; disabled unless explicitly attached
                        to a model - see BaselineAutoencoder)
@@ -19,6 +21,7 @@ epoch loop or checkpoint format.
 from .checkpoint import (
     load_checkpoint,
     load_model_from_checkpoint,
+    resume_model_only,
     resume_training_state,
     save_checkpoint,
 )
@@ -40,6 +43,7 @@ __all__ = [
     "load_checkpoint",
     "load_model_from_checkpoint",
     "resume_training_state",
+    "resume_model_only",
     "QuantizationNoise",
     "RateEstimator",
 ]

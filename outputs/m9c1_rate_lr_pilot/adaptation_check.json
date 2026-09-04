@@ -1,0 +1,90 @@
+{
+  "phase": "M9C.1 phase 2 (rate-estimator adaptation check)",
+  "rate_lambda": 0.0009075672,
+  "model_learning_rate": 0.0001,
+  "epochs": 5,
+  "max_batches": 100,
+  "steps_per_arm": 500,
+  "batch_size": 8,
+  "seed": 42,
+  "refit_steps": 600,
+  "refit_lr": 0.01,
+  "estimator_initialization": {
+    "loc_mean": 0.0,
+    "loc_std": 0.0,
+    "loc_min": 0.0,
+    "loc_max": 0.0,
+    "loc_abs_max": 0.0,
+    "scale_mean": 1.0,
+    "scale_std": 0.0,
+    "scale_min": 1.0,
+    "scale_max": 1.0
+  },
+  "arms": [
+    {
+      "val_distortion": 0.001491659095774528,
+      "val_psnr_db": 28.863503927207855,
+      "rate_own_estimator_bpp": 1.6235957935631993,
+      "rate_matched_refit_bpp": 1.1592141605285278,
+      "own_minus_refit_bpp": 0.4643816330346715,
+      "latent_std": 5.673033714294434,
+      "latent_abs_mean": 3.562065362930298,
+      "latent_abs_max": 47.58577346801758,
+      "estimator": {
+        "loc_mean": 0.0026668799109756947,
+        "loc_std": 0.03608241304755211,
+        "loc_min": -0.05525325611233711,
+        "loc_max": 0.056392110884189606,
+        "loc_abs_max": 0.056392110884189606,
+        "scale_mean": 1.0422213077545166,
+        "scale_std": 0.005972130689769983,
+        "scale_min": 1.0256303548812866,
+        "scale_max": 1.0554826259613037
+      },
+      "all_finite": true,
+      "rate_lr": 0.0001,
+      "checkpoint_dir": "outputs\\m9c1_rate_lr_pilot\\adaptation_ratelr_1e-04",
+      "loc_movement_abs_max": 0.056392110884189606,
+      "scale_movement_max": 0.05548262596130371
+    },
+    {
+      "val_distortion": 0.0013156204802792025,
+      "val_psnr_db": 29.50133268517184,
+      "rate_own_estimator_bpp": 1.3013697417385608,
+      "rate_matched_refit_bpp": 1.2985154562685863,
+      "own_minus_refit_bpp": 0.00285428546997446,
+      "latent_std": 8.15151309967041,
+      "latent_abs_mean": 5.454440593719482,
+      "latent_abs_max": 65.43154907226562,
+      "estimator": {
+        "loc_mean": 0.13713909685611725,
+        "loc_std": 1.659816861152649,
+        "loc_min": -2.9603488445281982,
+        "loc_max": 3.1041460037231445,
+        "loc_abs_max": 3.1041460037231445,
+        "scale_mean": 4.481188774108887,
+        "scale_std": 2.4169178009033203,
+        "scale_min": 1.899177074432373,
+        "scale_max": 12.39657974243164
+      },
+      "all_finite": true,
+      "rate_lr": 0.01,
+      "checkpoint_dir": "outputs\\m9c1_rate_lr_pilot\\adaptation_ratelr_1e-02",
+      "loc_movement_abs_max": 3.1041460037231445,
+      "scale_movement_max": 11.39657974243164
+    }
+  ],
+  "verdict": {
+    "old_rate_lr": 0.0001,
+    "new_rate_lr": 0.01,
+    "loc_movement_ratio": 55.04574939742927,
+    "scale_movement_ratio": 205.40808126818243,
+    "old_misfit_bpp": 0.4643816330346715,
+    "new_misfit_bpp": 0.00285428546997446,
+    "misfit_reduced": true,
+    "estimator_moved_order_one": true,
+    "all_finite": true,
+    "adapted": true
+  },
+  "note": "rate_own_estimator_bpp and rate_matched_refit_bpp are training-time Laplace estimates, not measured .nvc bitrate."
+}

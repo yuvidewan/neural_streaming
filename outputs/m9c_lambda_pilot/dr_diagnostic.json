@@ -1,0 +1,304 @@
+{
+  "phase": "M9C phases 2-3 (D/R scale + sanity checks)",
+  "checkpoint": "outputs\\qat_combined\\checkpoints_qat_noise\\best.pt",
+  "checkpoint_epoch": 40,
+  "model_config": {
+    "in_channels": 3,
+    "latent_channels": 64,
+    "base_channels": 32
+  },
+  "calibration": "outputs\\calibration\\vimeo_epoch17_4bit.json",
+  "qat_bits": 4,
+  "qat_mode": "per_channel",
+  "manifest": "C:\\Users\\Aditya\\OneDrive\\Desktop\\Github\\Real-Time Neural Video Compression\\data\\processed\\manifest.json",
+  "batch_size": 8,
+  "max_batches": 60,
+  "seed": 42,
+  "device": "cuda",
+  "train_split_at_init": {
+    "mode": "train (QAT noise on)",
+    "distortion": {
+      "mean": 0.0012777309166267514,
+      "median": 0.0012525833444669843,
+      "std": 0.0002424072577291234,
+      "min": 0.0008528195321559906,
+      "max": 0.002274611033499241,
+      "count": 60
+    },
+    "rate_bpp": {
+      "mean": 2.7943337122599283,
+      "median": 2.794537305831909,
+      "std": 0.09960253090719581,
+      "min": 2.5691676139831543,
+      "max": 3.0406341552734375,
+      "count": 60
+    },
+    "psnr_db": {
+      "mean": 29.006063747406007,
+      "median": 29.021964073181152,
+      "std": 0.7765440340053562,
+      "min": 26.43092918395996,
+      "max": 30.691431045532227,
+      "count": 60
+    },
+    "d_over_r_per_batch": {
+      "mean": 0.0004577297049358448,
+      "median": 0.00045394744777274896,
+      "std": 8.634506260265106e-05,
+      "min": 0.000301684190768474,
+      "max": 0.0007734413723608258,
+      "count": 60
+    },
+    "mean_d_over_mean_r": 0.000457257811055567,
+    "mean_r_over_mean_d": 2186.950065853501,
+    "all_finite": true,
+    "rate_non_negative": true
+  },
+  "rate_estimator_at_init": {
+    "loc": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "scale": {
+      "mean": 1.0,
+      "std": 0.0,
+      "min": 1.0,
+      "max": 1.0
+    },
+    "bin_width": {
+      "mean": 0.6799248456954956,
+      "min": 0.35900601744651794,
+      "max": 1.3799285888671875
+    },
+    "all_finite": true
+  },
+  "warm_fit": {
+    "steps": 600,
+    "learning_rate": 0.01,
+    "first_rate_bpp": 2.90512752532959,
+    "last_rate_bpp": 1.428619146347046,
+    "rate_trajectory_every_10": [
+      2.90512752532959,
+      2.535861015319824,
+      2.59486722946167,
+      2.405470848083496,
+      2.2989182472229004,
+      2.194176197052002,
+      2.032010555267334,
+      2.0535311698913574,
+      1.8429086208343506,
+      1.8449490070343018,
+      1.7541900873184204,
+      1.7639620304107666,
+      1.65290367603302,
+      1.5929592847824097,
+      1.7182265520095825,
+      1.6338090896606445,
+      1.4974949359893799,
+      1.4903323650360107,
+      1.5750633478164673,
+      1.4780759811401367,
+      1.545746088027954,
+      1.5140025615692139,
+      1.451517105102539,
+      1.5120654106140137,
+      1.4979431629180908,
+      1.4459102153778076,
+      1.499837875366211,
+      1.4089810848236084,
+      1.459885835647583,
+      1.4551602602005005,
+      1.4380966424942017,
+      1.4523036479949951,
+      1.4278409481048584,
+      1.4195505380630493,
+      1.3922028541564941,
+      1.4187880754470825,
+      1.403306484222412,
+      1.4335942268371582,
+      1.4064890146255493,
+      1.4070611000061035,
+      1.3899049758911133,
+      1.4155629873275757,
+      1.4099587202072144,
+      1.400569200515747,
+      1.3796848058700562,
+      1.4144821166992188,
+      1.4001750946044922,
+      1.4245076179504395,
+      1.432990550994873,
+      1.4165592193603516,
+      1.3936429023742676,
+      1.451951026916504,
+      1.4104137420654297,
+      1.4076480865478516,
+      1.3443670272827148,
+      1.4088311195373535,
+      1.413743495941162,
+      1.4268966913223267,
+      1.4282490015029907,
+      1.4187867641448975
+    ]
+  },
+  "train_split_fitted": {
+    "mode": "train (QAT noise on)",
+    "distortion": {
+      "mean": 0.0012777309049852193,
+      "median": 0.0012525831116363406,
+      "std": 0.00024240724250843183,
+      "min": 0.0008528195321559906,
+      "max": 0.0022746108006685972,
+      "count": 60
+    },
+    "rate_bpp": {
+      "mean": 1.4078637262185414,
+      "median": 1.408454179763794,
+      "std": 0.0220372813449765,
+      "min": 1.3571785688400269,
+      "max": 1.458693504333496,
+      "count": 60
+    },
+    "psnr_db": {
+      "mean": 29.006063810984294,
+      "median": 29.021964073181152,
+      "std": 0.7765441385420422,
+      "min": 26.430931091308594,
+      "max": 30.691431045532227,
+      "count": 60
+    },
+    "d_over_r_per_batch": {
+      "mean": 0.0009075415586321336,
+      "median": 0.0008921786973574903,
+      "std": 0.0001700159741962713,
+      "min": 0.0006026224171632736,
+      "max": 0.0015730469114222957,
+      "count": 60
+    },
+    "mean_d_over_mean_r": 0.0009075671751392778,
+    "mean_r_over_mean_d": 1101.846813539215,
+    "all_finite": true,
+    "rate_non_negative": true
+  },
+  "val_split_fitted": {
+    "mode": "eval (no noise)",
+    "distortion": {
+      "mean": 0.0012495560285363657,
+      "median": 0.001280502532608807,
+      "std": 0.0007035561860108762,
+      "min": 0.00030575122218579054,
+      "max": 0.00291433185338974,
+      "count": 60
+    },
+    "rate_bpp": {
+      "mean": 1.4387865682442984,
+      "median": 1.456243872642517,
+      "std": 0.064504689844719,
+      "min": 1.3018317222595215,
+      "max": 1.5163214206695557,
+      "count": 60
+    },
+    "psnr_db": {
+      "mean": 29.848595968882243,
+      "median": 28.938705444335938,
+      "std": 2.825448532831888,
+      "min": 25.354612350463867,
+      "max": 35.14632034301758,
+      "count": 60
+    },
+    "d_over_r_per_batch": {
+      "mean": 0.0008610671861971433,
+      "median": 0.0008882433980955185,
+      "std": 0.0004758976680455164,
+      "min": 0.00020322223222279888,
+      "max": 0.0019961492749266075,
+      "count": 60
+    },
+    "mean_d_over_mean_r": 0.0008684790754344864,
+    "mean_r_over_mean_d": 1151.4382191645964,
+    "all_finite": true,
+    "rate_non_negative": true
+  },
+  "rate_estimator_fitted": {
+    "loc": {
+      "mean": 0.16858357191085815,
+      "std": 1.5618526935577393,
+      "min": -2.9819436073303223,
+      "max": 3.2684803009033203
+    },
+    "scale": {
+      "mean": 6.448822021484375,
+      "std": 3.657336711883545,
+      "min": 2.334336757659912,
+      "max": 16.490015029907227
+    },
+    "bin_width": {
+      "mean": 0.6799248456954956,
+      "min": 0.35900601744651794,
+      "max": 1.3799285888671875
+    },
+    "all_finite": true
+  },
+  "lambda_balance": {
+    "definition": "lambda at which lambda*mean(R) == mean(D), i.e. mean(D)/mean(R)",
+    "from_fitted_rate": 0.0009075671751392778,
+    "from_initial_rate": 0.000457257811055567,
+    "recommended_basis": "from_fitted_rate",
+    "why": "The initialization-time R reflects an unfitted Laplace prior (loc=0, scale=1) and collapses within the first optimizer steps of any real run; the fitted R is the magnitude that actually persists through training, so it is the one a lambda must balance against."
+  },
+  "sanity_checks": {
+    "A_more_mass_less_rate": {
+      "rate_bits_at_mode": 4.181200981140137,
+      "rate_bits_in_tail": 29.89735221862793,
+      "mode_cheaper_than_tail": true,
+      "monotone_sweep_bits": [
+        4.181200981140137,
+        4.859007835388184,
+        5.580354690551758,
+        7.023049831390381,
+        9.908443450927734,
+        15.679014205932617
+      ],
+      "sweep_is_non_decreasing": true
+    },
+    "A2_cdf_form_matches_reference": {
+      "max_abs_probability_error_vs_torch_laplace": 1.1102230246251565e-16,
+      "agrees": true
+    },
+    "B_finite_non_negative": {
+      "all_finite": true,
+      "min_bits_per_element": 3.08243989944458,
+      "max_bits_per_element": 18.830074310302734,
+      "non_negative": true
+    },
+    "C_gradients_exist": {
+      "latent_grad_norm": 0.00021529212244786322,
+      "loc_grad_norm": 0.0022414952982217073,
+      "log_scale_grad_norm": 0.012897610664367676,
+      "all_nonzero": true
+    },
+    "D_lambda_zero_equals_distortion_only": {
+      "distortion_only_loss": 0.0013197865337133408,
+      "lambda_zero_loss": 0.0013197865337133408,
+      "loss_abs_diff": 0.0,
+      "max_abs_gradient_diff_over_all_model_params": 0.0,
+      "max_abs_param_diff_after_one_optimizer_step": 0.0,
+      "num_params_compared": 16,
+      "gradients_identical": true,
+      "params_identical_after_step": true
+    },
+    "E_lambda_positive_adds_rate_gradient": {
+      "lambda": 0.01,
+      "loss": 0.01562885008752346,
+      "max_encoder_gradient_change_vs_lambda_zero": 0.0012397749815136194,
+      "max_decoder_gradient_change_vs_lambda_zero": 0.0,
+      "encoder_receives_rate_contribution": true,
+      "decoder_unchanged_as_expected": true
+    }
+  },
+  "model_weights_unchanged": {
+    "max_abs_drift": 0.0,
+    "unchanged": true
+  }
+}

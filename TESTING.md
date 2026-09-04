@@ -5,7 +5,7 @@ and the rule this project follows going forward - **any change to code gets
 a matching change to tests in the same commit**, not a follow-up "add tests
 later" that never happens.
 
-464 tests under `tests/`, ~65s on a laptop CPU. No test needs a GPU, a real
+610 tests under `tests/`, ~50s on a laptop CPU. No test needs a GPU, a real
 Kaggle download, or an external dataset - everything runs on synthetic data
 generated in-process (`tests/helpers.py`), so the full suite runs
 identically in CI, on a fresh clone, or on a machine with no internet
@@ -17,7 +17,7 @@ failing - see "FFmpeg-dependent tests" below.
 the accelerator-architecture proof-of-concept - see `hardware/ARCHITECTURE.md`.
 It's exploratory design work, not `src/nvc/` or `scripts/*.py`, so it's
 outside this document's rule below, but a plain `pytest` from the project
-root still collects it (467 tests total) since nothing scopes discovery to
+root still collects it (613 tests total) since nothing scopes discovery to
 `tests/` only.
 
 ## The rule
@@ -82,6 +82,10 @@ modules under `src/nvc/`:
 | `test_perceptual_metrics.py` | `evaluation/basic_metrics.py`, `evaluation/perceptual_metrics.py` |
 | `test_ffmpeg_utils.py` | `evaluation/ffmpeg.py`, `evaluation/codecs.py` |
 | `test_rd_benchmark.py` | `evaluation/rd_benchmark.py`, `evaluation/sequences.py` |
+| `test_rate_estimator.py` | `training/rate_estimator.py`, `training/trainer.py`'s `*_with_rate` variants (Milestone 9A) |
+| `test_m9c_resume_model_only.py` | `training/checkpoint.py`'s `resume_model_only` (Milestone 9C) |
+| `test_m9c1_rate_lr.py` | `utils/config.py`'s `rate_lr` and `train_autoencoder.py`'s rate/model optimizer parameter-group split (Milestone 9C.1) |
+| `test_m9_checkpoint_selection.py` | `train_autoencoder.py`'s best-checkpoint selection across distortion-only and rate-aware objectives (Milestone 9) |
 
 If you add a new module under `src/nvc/` with no obvious home in this
 table, either extend the closest existing file or start a new
@@ -97,6 +101,9 @@ table, either extend the closest existing file or start a new
 | `test_scripts_rd_and_range_coder_benchmarks.py` | `benchmark_rd.py`, `plot_rate_distortion.py`, `benchmark_range_coder.py` |
 | `test_scripts_train_vimeo_qat_combined.py` | `train_vimeo_qat_combined.py` |
 | `test_scripts_compare_m8_models.py` | `compare_m8_models.py` |
+| `test_scripts_m9c_pilot.py` | `m9c_rd_diagnostic.py`, `m9c_lambda_pilot.py`, `m9c_failure_modes.py`, `m9c1_adaptation_check.py` |
+| `test_scripts_m9_final.py` | `m9_final_train.py` |
+| `test_scripts_m9_final_eval.py` | `m9_final_calibrate_benchmark.py` |
 
 **Script contract** every `scripts/*.py` file follows, which is what makes
 all of the above possible:

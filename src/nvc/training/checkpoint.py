@@ -96,6 +96,39 @@ def load_model_from_checkpoint(
     return model, checkpoint
 
 
+def resume_model_only(
+    path: str | Path,
+    *,
+    model: torch.nn.Module,
+    map_location: str | torch.device | None = None,
+) -> tuple[int, list[dict[str, Any]]]:
+    """Restore model weights + epoch/history, but NOT optimizer state.
+
+    Milestone 9C. `resume_training_state` below restores the optimizer too,
+    which is correct when continuing the *same* run but impossible when the
+    optimizer's parameter list has changed since the checkpoint was written.
+    That is exactly the case when starting rate training (`--rate-enabled`)
+    from any pre-M9 checkpoint: the optimizer then also owns the rate
+    estimator's `loc`/`log_scale`, so it holds 18 parameters where the
+    checkpoint's saved state has 16, and `optimizer.load_state_dict` raises
+    `ValueError: loaded state dict contains a parameter group that doesn't
+    match the size of optimizer's group`.
+
+    Restoring the weights and starting the optimizer fresh is also the
+    experimentally correct choice for a lambda sweep: every arm then begins
+    from byte-identical model weights AND an identical (empty) optimizer
+    state, so the only difference between runs is lambda itself. Carrying
+    over Adam moments accumulated under a pure-distortion objective would
+    make the first steps of each arm depend on a history none of them share
+    with their own loss function.
+
+    Returns (next_epoch, history), same as `resume_training_state`.
+    """
+    checkpoint = load_checkpoint(path, map_location=map_location)
+    model.load_state_dict(checkpoint["model_state_dict"])
+    return checkpoint["epoch"] + 1, checkpoint["history"]
+
+
 def resume_training_state(
     path: str | Path,
     *,
@@ -109,6 +142,10 @@ def resume_training_state(
     from where training left off rather than restarting at 1. Raises
     RuntimeError (from load_state_dict) with PyTorch's own shape-mismatch
     message if the checkpoint's architecture doesn't match model/optimizer.
+
+    Raises ValueError (from `optimizer.load_state_dict`) if the optimizer's
+    parameter list has changed since the checkpoint was written - see
+    `resume_model_only` above for when that happens and what to use instead.
     """
     checkpoint = load_checkpoint(path, map_location=map_location)
     model.load_state_dict(checkpoint["model_state_dict"])

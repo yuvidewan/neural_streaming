@@ -56,6 +56,17 @@ class Config:
     # D + lambda * R. Must be >= 0 (see trainer._check_lambda_rate); 0.0 is
     # valid and reproduces the distortion-only objective exactly.
     rate_lambda: float = 0.0
+    # Learning rate for the rate estimator's OWN parameters (loc/log_scale),
+    # kept separate from `learning_rate` above (Milestone 9C.1). M9C measured
+    # that these two need very different step sizes: fitting the latent needs
+    # loc/log_scale to move by O(1)-O(5), but at the model's 1e-4 a 500-step
+    # run can move a parameter by at most ~0.05, so the estimator stayed at
+    # its initialization (scale 1.00 -> 1.02-1.05) and the rate term degraded
+    # into an L1 penalty on latent magnitude instead of a fitted entropy
+    # model. See MILESTONE_9_PLAN.md's M9C.1 section. Used only when
+    # rate_enabled is True; must be finite and > 0.
+    rate_lr: float = 1e-2
+
     # Calibration file supplying the rate estimator's bin width, used ONLY
     # when rate_enabled is True and qat_enabled is False. When both QAT and
     # rate training are enabled, the rate estimator instead reuses

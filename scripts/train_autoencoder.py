@@ -48,6 +48,7 @@ from nvc.models import BaselineAutoencoder
 from nvc.training import (
     QuantizationNoise,
     RateEstimator,
+    resume_model_only,
     resume_training_state,
     save_checkpoint,
     train_one_epoch,
@@ -97,6 +98,17 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
         help="Checkpoint path to restore model/optimizer/epoch/history from before continuing.",
     )
     parser.add_argument(
+        "--resume-model-only", action="store_true",
+        help=(
+            "Milestone 9C: with --resume, restore model weights/epoch/history but "
+            "NOT optimizer state. Required when starting rate training from a "
+            "checkpoint written before --rate-enabled existed (M7/M8), whose saved "
+            "optimizer state has no entries for the rate estimator's parameters. "
+            "Also the right choice for a controlled lambda sweep, where every arm "
+            "should start from an identical, empty optimizer state."
+        ),
+    )
+    parser.add_argument(
         "--qat-enabled", action="store_true", default=defaults.qat_enabled,
         help=(
             "Milestone 8A: inject differentiable Uniform(-scale/2, scale/2) "
@@ -135,6 +147,17 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
              "default) reproduces the distortion-only objective exactly.",
     )
     parser.add_argument(
+        "--rate-lr", type=float, default=defaults.rate_lr,
+        help=(
+            "Milestone 9C.1: learning rate for the rate estimator's own loc/log_scale, "
+            "in a SEPARATE optimizer parameter group from the model's. The model keeps "
+            "--learning-rate; only the estimator uses this. Must be finite and > 0. "
+            "Defaults high relative to the model's LR on purpose - 128 scalars fitting a "
+            "density need O(1) movement, which the model's 1e-4 cannot deliver in a short "
+            "run (see MILESTONE_9_PLAN.md, M9C.1). Ignored unless --rate-enabled."
+        ),
+    )
+    parser.add_argument(
         "--rate-calibration", type=Path, default=defaults.rate_calibration_path,
         help="Calibration file supplying the rate estimator's bin width. Required "
              "when --rate-enabled is passed WITHOUT --qat-enabled. Must NOT be "
@@ -143,6 +166,54 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
              "is only ever one quantization scale in play for a given run.",
     )
     return parser
+
+
+def _describe_optimizer_mismatch(
+    checkpoint_path: Path, optimizer: torch.optim.Optimizer, rate_enabled: bool
+) -> str:
+    """Explain WHY optimizer state could not be restored, in this run's terms.
+
+    Two distinct checkpoint vintages both fail against a rate-enabled run, and
+    telling them apart matters because the remedy line is the same but the
+    reason a reader should accept it is not:
+
+      * pre-M9 (M7/M8): one parameter group holding only the model's
+        parameters - the rate estimator's loc/log_scale did not exist yet.
+      * M9A/M9C: one parameter group holding model + rate parameters together,
+        before M9C.1 split them so the estimator could take its own learning
+        rate (see --rate-lr).
+
+    Falls back to a structural description when the checkpoint is neither.
+    """
+    try:
+        saved = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+        groups = saved["optimizer_state_dict"]["param_groups"]
+        saved_shape = [len(group["params"]) for group in groups]
+    except Exception:  # noqa: BLE001 - diagnosis only, never worth masking the real error
+        return (
+            " Pass --resume-model-only to restore the weights and start the "
+            "optimizer fresh."
+        )
+
+    live_shape = [len(group["params"]) for group in optimizer.state_dict()["param_groups"]]
+    remedy = (
+        " Pass --resume-model-only to restore the weights and start the optimizer fresh."
+    )
+    if not rate_enabled:
+        return f" Checkpoint optimizer groups {saved_shape}, this run's {live_shape}.{remedy}"
+    if len(saved_shape) == 1 and len(live_shape) == 2 and saved_shape[0] == live_shape[0]:
+        return (
+            " This checkpoint predates --rate-enabled, so its saved optimizer state has "
+            f"no entries for the rate estimator's parameters (groups {saved_shape} vs "
+            f"{live_shape}).{remedy}"
+        )
+    if len(saved_shape) == 1 and len(live_shape) == 2 and saved_shape[0] == sum(live_shape):
+        return (
+            " This checkpoint is from M9A/M9C, which kept the model and rate-estimator "
+            "parameters in ONE optimizer group; M9C.1 splits them so the estimator can "
+            f"take its own --rate-lr (groups {saved_shape} vs {live_shape}).{remedy}"
+        )
+    return f" Checkpoint optimizer groups {saved_shape}, this run's {live_shape}.{remedy}"
 
 
 def _resolve_device(name: str) -> torch.device:
@@ -166,9 +237,16 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     if args.qat_enabled and args.qat_calibration is None:
         parser.error("--qat-calibration is required when --qat-enabled is passed")
+    if args.resume_model_only and args.resume is None:
+        parser.error("--resume-model-only only makes sense together with --resume")
     if args.rate_enabled:
         if not math.isfinite(args.rate_lambda) or args.rate_lambda < 0:
             parser.error("--rate-lambda must be finite and >= 0")
+        # Strictly positive, and never silently falling back to the model's LR:
+        # a zero or negative rate LR would freeze the estimator at its
+        # initialization, which is exactly the M9C failure this flag exists to fix.
+        if not math.isfinite(args.rate_lr) or args.rate_lr <= 0:
+            parser.error("--rate-lr must be finite and > 0")
         if args.qat_enabled and args.rate_calibration is not None:
             parser.error(
                 "--rate-calibration must not be passed together with --qat-enabled - "
@@ -232,11 +310,23 @@ def main(argv: list[str] | None = None) -> int:
     ).to(device)
     # The rate estimator's own loc/log_scale must be in the optimizer too -
     # it is a real nn.Module with learnable parameters (see rate_estimator.py),
-    # unlike QuantizationNoise which has none.
-    optimizer_params = list(model.parameters())
+    # unlike QuantizationNoise which has none. Milestone 9C.1: they go into
+    # their OWN parameter group at --rate-lr, because the two need very
+    # different step sizes (see that flag's help and the config field's
+    # comment). The model's own group keeps --learning-rate untouched.
+    #
+    # When rate training is off, this is a single unnamed group exactly as
+    # before, so non-rate runs and their checkpoints are bit-identical to
+    # every run this script has ever produced.
     if rate_estimator is not None:
-        optimizer_params += list(rate_estimator.parameters())
-    optimizer = torch.optim.Adam(optimizer_params, lr=args.learning_rate)
+        optimizer = torch.optim.Adam(
+            [
+                {"params": list(model.parameters()), "lr": args.learning_rate},
+                {"params": list(rate_estimator.parameters()), "lr": args.rate_lr},
+            ]
+        )
+    else:
+        optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
 
     history: list[dict] = []
     start_epoch = 1
@@ -245,9 +335,14 @@ def main(argv: list[str] | None = None) -> int:
             print(f"[ERROR] Checkpoint not found: {args.resume}", file=sys.stderr)
             return 1
         try:
-            start_epoch, history = resume_training_state(
-                args.resume, model=model, optimizer=optimizer, map_location=device,
-            )
+            if args.resume_model_only:
+                start_epoch, history = resume_model_only(
+                    args.resume, model=model, map_location=device,
+                )
+            else:
+                start_epoch, history = resume_training_state(
+                    args.resume, model=model, optimizer=optimizer, map_location=device,
+                )
         except RuntimeError as exc:
             print(
                 f"[ERROR] Could not resume from {args.resume} "
@@ -255,8 +350,21 @@ def main(argv: list[str] | None = None) -> int:
                 file=sys.stderr,
             )
             return 1
+        except ValueError as exc:
+            # Raised by optimizer.load_state_dict when this run's optimizer
+            # owns a different number of parameters than the checkpoint's did.
+            # The overwhelmingly common cause is starting rate training from a
+            # pre-M9 checkpoint: the rate estimator's loc/log_scale are in the
+            # optimizer here but have no saved state there. Say so, rather than
+            # surfacing PyTorch's bare "parameter group" message.
+            hint = _describe_optimizer_mismatch(
+                args.resume, optimizer, rate_enabled=rate_estimator is not None,
+            )
+            print(f"[ERROR] Could not resume from {args.resume}: {exc}.{hint}", file=sys.stderr)
+            return 1
+        restored = "model weights only (optimizer state started fresh)" if args.resume_model_only else "model + optimizer"
         print(
-            f"[RESUME] Resumed from {args.resume}: next epoch is {start_epoch}, "
+            f"[RESUME] Resumed from {args.resume} ({restored}): next epoch is {start_epoch}, "
             f"{len(history)} epoch(s) of prior history loaded."
         )
 
@@ -300,6 +408,13 @@ def main(argv: list[str] | None = None) -> int:
             f"{rate_estimator.bits}-bit / {rate_estimator.mode} bin width from {scale_source}. "
             f"Loss is distortion + {args.rate_lambda} * rate."
         )
+        # Milestone 9C.1: state both learning rates explicitly, since the whole
+        # point of the split is that they differ and a reader must be able to
+        # confirm from the log which one the estimator actually got.
+        print(
+            f"[RATE] Optimizer parameter groups: model lr={args.learning_rate}, "
+            f"rate estimator (loc/log_scale) lr={args.rate_lr}."
+        )
     else:
         print("[RATE] Rate loss disabled (loss is plain MSE, as before Milestone 9).")
 
@@ -307,7 +422,40 @@ def main(argv: list[str] | None = None) -> int:
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     history_path = checkpoint_dir / "history.json"
     model_config = model.config_dict()
-    best_val_loss = min((record["val_loss"] for record in history), default=float("inf"))
+    # Milestone 9: seed the best-so-far from history records produced under the
+    # SAME objective as this run, not blindly from every record present.
+    #
+    # `val_loss` means different things in different runs: plain MSE for a
+    # distortion-only run, `D + lambda*R` for a rate-aware one - and the two are
+    # not on a comparable scale. Resuming the M8 QAT checkpoint into an M9 run
+    # seeded best_val_loss with M8's pure-MSE minimum (4.55e-04, measured on
+    # Vimeo), which no `D + lambda*R` epoch can ever beat, so `best.pt` was
+    # silently never written for the entire run. Every M9C/M9C.1 pilot arm
+    # produced only `latest.pt` because of this.
+    #
+    # The comparison criterion itself needs no change: `val_metrics["loss"]` for
+    # a rate-enabled run already IS `D + lambda*R`, exactly the M9 objective.
+    # Only the starting value was wrong.
+    #
+    # Backward compatible by construction: for a distortion-only run every
+    # historical record matches (`rate_enabled` absent or False both sides), so
+    # M7/M8-style runs keep the exact behaviour they have always had.
+    rate_enabled = rate_estimator is not None
+
+    def _same_objective(record: dict) -> bool:
+        if bool(record.get("rate_enabled", False)) != rate_enabled:
+            return False
+        # Two rate runs at different lambdas are also different objectives.
+        return not rate_enabled or record.get("rate_lambda") == args.rate_lambda
+
+    comparable = [record["val_loss"] for record in history if _same_objective(record)]
+    best_val_loss = min(comparable, default=float("inf"))
+    if history and not comparable:
+        print(
+            f"[BEST] Prior history was produced under a different objective "
+            f"({len(history)} record(s) ignored); best-checkpoint tracking starts fresh "
+            f"for this run's own objective."
+        )
 
     end_epoch = start_epoch + args.epochs - 1
     for epoch in range(start_epoch, end_epoch + 1):
@@ -343,6 +491,9 @@ def main(argv: list[str] | None = None) -> int:
             # rate training wasn't used, so history.json is self-describing.
             "rate_enabled": rate_estimator is not None,
             "rate_lambda": args.rate_lambda if rate_estimator is not None else None,
+            # Milestone 9C.1: recorded per epoch like every other rate/qat field,
+            # so a history.json says which LR the estimator was trained at.
+            "rate_lr": args.rate_lr if rate_estimator is not None else None,
             "train_distortion": train_metrics.get("distortion"),
             "train_rate_bpp": train_metrics.get("rate"),
             "val_distortion": val_metrics.get("distortion"),
@@ -366,7 +517,11 @@ def main(argv: list[str] | None = None) -> int:
         # before the loop would silently checkpoint epoch-1's rate params
         # forever after.
         checkpoint_extra = (
-            {"rate_estimator_state_dict": rate_estimator.state_dict(), "rate_lambda": args.rate_lambda}
+            {
+                "rate_estimator_state_dict": rate_estimator.state_dict(),
+                "rate_lambda": args.rate_lambda,
+                "rate_lr": args.rate_lr,
+            }
             if rate_estimator is not None else None
         )
 
@@ -380,7 +535,8 @@ def main(argv: list[str] | None = None) -> int:
                 checkpoint_dir / "best.pt", model=model, optimizer=optimizer,
                 epoch=epoch, history=history, model_config=model_config, extra=checkpoint_extra,
             )
-            print(f"  [BEST] New best validation MSE: {best_val_loss:.6f} -> {checkpoint_dir / 'best.pt'}")
+            objective = "D + lambda*R" if rate_enabled else "MSE"
+            print(f"  [BEST] New best validation {objective}: {best_val_loss:.6e} -> {checkpoint_dir / 'best.pt'}")
 
         history_path.write_text(json.dumps(history, indent=2), encoding="utf-8")
 

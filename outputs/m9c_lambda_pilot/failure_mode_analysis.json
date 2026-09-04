@@ -1,0 +1,202 @@
+{
+  "phase": "M9C phase 7 (failure modes)",
+  "refit_steps": 600,
+  "refit_lr": 0.01,
+  "calibration": "outputs\\calibration\\vimeo_epoch17_4bit.json",
+  "max_batches": 40,
+  "batch_size": 8,
+  "seed": 42,
+  "note": "rate_matched_refit_bpp and symbol_entropy_bpp are latent-side diagnostics, not measured .nvc bitrate. No recalibration was performed and the deployed codec path was not modified or run.",
+  "arms": [
+    {
+      "lambda": 0.0,
+      "regime": "control (distortion-only)",
+      "val_distortion": 0.0012938368659472115,
+      "val_psnr_db": 29.582153642033955,
+      "rate_own_estimator_bpp": 2.984682370381183,
+      "rate_matched_refit_bpp": 1.4590846687555312,
+      "symbol_entropy_bpp": 0.7615961099047288,
+      "clipped_percent_on_frozen_grid": 50.570125579833984,
+      "latent_stats": {
+        "mean": 1.1126960515975952,
+        "std": 11.932807922363281,
+        "abs_mean": 8.178595542907715,
+        "min": -69.42686462402344,
+        "max": 88.3594970703125
+      },
+      "own_estimator_scale": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "checkpoint_epoch": 45,
+      "flags": {
+        "non_finite": false,
+        "rate_collapse": false,
+        "rate_explosion": false
+      }
+    },
+    {
+      "lambda": 9.075671751392779e-05,
+      "regime": "quality-oriented",
+      "val_distortion": 0.0012981085021172214,
+      "val_psnr_db": 29.56736013113734,
+      "rate_own_estimator_bpp": 2.676806484360293,
+      "rate_matched_refit_bpp": 1.4190987259149552,
+      "symbol_entropy_bpp": 0.7938451818625302,
+      "clipped_percent_on_frozen_grid": 46.14046096801758,
+      "latent_stats": {
+        "mean": 1.0038807392120361,
+        "std": 10.804883003234863,
+        "abs_mean": 7.306479454040527,
+        "min": -65.12576293945312,
+        "max": 83.2574462890625
+      },
+      "own_estimator_scale": {
+        "mean": 1.0497020483016968,
+        "std": 0.0018020105781033635,
+        "min": 1.044062852859497,
+        "max": 1.0580341815948486
+      },
+      "checkpoint_epoch": 45,
+      "flags": {
+        "non_finite": false,
+        "rate_collapse": false,
+        "rate_explosion": false
+      }
+    },
+    {
+      "lambda": 0.0002869979403045061,
+      "regime": "mildly rate-aware",
+      "val_distortion": 0.0013182138321438737,
+      "val_psnr_db": 29.493231348244542,
+      "rate_own_estimator_bpp": 2.3066125820918257,
+      "rate_matched_refit_bpp": 1.347131821513176,
+      "symbol_entropy_bpp": 0.8440922619633507,
+      "clipped_percent_on_frozen_grid": 38.31010818481445,
+      "latent_stats": {
+        "mean": 0.8291524052619934,
+        "std": 9.005447387695312,
+        "abs_mean": 5.97399377822876,
+        "min": -55.890228271484375,
+        "max": 73.17412567138672
+      },
+      "own_estimator_scale": {
+        "mean": 1.0481213331222534,
+        "std": 0.00333786872215569,
+        "min": 1.036863088607788,
+        "max": 1.056607723236084
+      },
+      "checkpoint_epoch": 45,
+      "flags": {
+        "non_finite": false,
+        "rate_collapse": false,
+        "rate_explosion": false
+      }
+    },
+    {
+      "lambda": 0.0009075671751392778,
+      "regime": "balanced",
+      "val_distortion": 0.0014917707678732876,
+      "val_psnr_db": 28.862850051328362,
+      "rate_own_estimator_bpp": 1.623711186719228,
+      "rate_matched_refit_bpp": 1.1789525657892228,
+      "symbol_entropy_bpp": 0.907438659404518,
+      "clipped_percent_on_frozen_grid": 21.261215209960938,
+      "latent_stats": {
+        "mean": 0.5322580933570862,
+        "std": 5.692584037780762,
+        "abs_mean": 3.682689666748047,
+        "min": -41.287235260009766,
+        "max": 47.594757080078125
+      },
+      "own_estimator_scale": {
+        "mean": 1.042222023010254,
+        "std": 0.005971968173980713,
+        "min": 1.0256314277648926,
+        "max": 1.0554839372634888
+      },
+      "checkpoint_epoch": 45,
+      "flags": {
+        "non_finite": false,
+        "rate_collapse": false,
+        "rate_explosion": false
+      }
+    },
+    {
+      "lambda": 0.0028699794030450612,
+      "regime": "strongly rate-aware",
+      "val_distortion": 0.0016925446938089353,
+      "val_psnr_db": 28.31378690880465,
+      "rate_own_estimator_bpp": 1.0375824857907123,
+      "rate_matched_refit_bpp": 0.9482360944151879,
+      "symbol_entropy_bpp": 0.8554247049076272,
+      "clipped_percent_on_frozen_grid": 6.811199188232422,
+      "latent_stats": {
+        "mean": 0.19534936547279358,
+        "std": 2.7095751762390137,
+        "abs_mean": 1.8588215112686157,
+        "min": -23.12734031677246,
+        "max": 22.535388946533203
+      },
+      "own_estimator_scale": {
+        "mean": 1.0293502807617188,
+        "std": 0.008324326016008854,
+        "min": 1.0134079456329346,
+        "max": 1.0571025609970093
+      },
+      "checkpoint_epoch": 45,
+      "flags": {
+        "non_finite": false,
+        "rate_collapse": false,
+        "rate_explosion": false
+      }
+    },
+    {
+      "lambda": 0.009075671751392778,
+      "regime": "rate-oriented",
+      "val_distortion": 0.002095848903991282,
+      "val_psnr_db": 27.3419814052352,
+      "rate_own_estimator_bpp": 0.7685193857514715,
+      "rate_matched_refit_bpp": 0.7541157484054566,
+      "symbol_entropy_bpp": 0.7223057047284437,
+      "clipped_percent_on_frozen_grid": 1.9372749328613281,
+      "latent_stats": {
+        "mean": 0.06808310002088547,
+        "std": 1.4860295057296753,
+        "abs_mean": 1.0495847463607788,
+        "min": -13.169450759887695,
+        "max": 14.034549713134766
+      },
+      "own_estimator_scale": {
+        "mean": 1.0155971050262451,
+        "std": 0.00844481959939003,
+        "min": 0.996340811252594,
+        "max": 1.0386565923690796
+      },
+      "checkpoint_epoch": 45,
+      "flags": {
+        "non_finite": false,
+        "rate_collapse": false,
+        "rate_explosion": false
+      }
+    }
+  ],
+  "verdict": {
+    "max_clipped_percent_on_frozen_grid": 50.570125579833984,
+    "frozen_grid_mismatched": true,
+    "symbol_entropy_comparable_across_arms": false,
+    "non_finite_any_arm": false,
+    "rate_collapse_any_arm": false,
+    "rate_explosion_any_arm": false,
+    "matched_refit_spread_bpp": 0.6649829775094986,
+    "symbol_entropy_spread_bpp": 0.18513295467607427,
+    "lambda_insensitivity": false,
+    "strongest_vs_control_own_rate_delta_bpp": 2.2161629846297113,
+    "strongest_vs_control_refit_delta_bpp": 0.7049689203500746,
+    "strongest_vs_control_symbol_entropy_delta_bpp": 0.039290405176285126,
+    "estimator_gaming": false,
+    "decoder_only_compensation": false
+  }
+}
