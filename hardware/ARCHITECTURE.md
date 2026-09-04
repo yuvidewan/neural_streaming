@@ -22,15 +22,29 @@ streams) was checked against real project code, a real trained checkpoint, and a
 - The codec's neural network is **small** — 593,411 parameters [MEASURED, from M7/M8 checkpoints],
   ~654M MACs per frame round-trip [DERIVED, §3] — comparable to one MobileNetV2-class inference,
   not a modern vision model. It does **not** need a big NPU.
-- The actual measured bottleneck is **not** the network. At 8-bit, the existing native-C-backed
-  software encodes in ~0.019 s/frame and decodes in ~0.05 s/frame [MEASURED, M8 benchmark
-  `encode_seconds_per_frame`/`decode_seconds_per_frame`] — and conv math alone is a fraction of a
-  millisecond at these sizes even on a modest embedded core (§3). The rest is Python/NumPy
-  overhead and, above all, the **arithmetic coder**, which is inherently serial in software: one
-  `(low, range)` state machine walks all 16,384 symbols in a frame one at a time. This project's
-  own commit history already identified this exact block as the place a straight C port produced
-  the biggest win ("Migrate the arithmetic coder to C") — hardware is the next step of the same
-  trend, not a new idea.
+- **Correction (post-publication):** an earlier version of this section argued the entropy coder
+  was the dominant cost, from a theoretical FLOP estimate (~654M MACs/frame ≈ 1.31 GFLOP "would
+  cost well under a millisecond"). Direct measurement contradicts that estimate: real PyTorch-on-CPU
+  execution for this small 4-layer network costs 5–8 ms per conv stage, not fractions of a
+  millisecond — kernel-launch/dispatch overhead dominates at this scale, not raw FLOPs. Measured
+  directly [MEASURED, component-level timing, 30-rep median]: **CNN encoder+decoder ≈ 62% of the
+  in-memory round trip, entropy coder (encode+decode) ≈ 21%** — consistent with this project's own
+  `OPTIMIZATION_ANALYSIS.md`, measured independently on different hardware (CNN 78%, entropy coder
+  20%). **The CNN engine (§6) is therefore at least as high-priority a target as the entropy
+  engine (§5), not secondary to it** — both sections below stand as designed, but the "entropy
+  coder is the primary target" framing that used to justify their relative priority did not.
+- The entropy coder is still a real, worthwhile target in its own right: it is inherently serial
+  in software (one `(low, range)` state machine walks all 16,384 symbols one at a time), and this
+  project's own commit history already identified it as the place a straight C port produced a
+  large win ("Migrate the arithmetic coder to C"). §5's design stands on that basis, independent
+  of the relative-priority correction above.
+- There remains an unexplained ~2.5–3× gap between this document's in-memory component timing
+  (~21 ms round trip) and the real full-pipeline `benchmark_rd.py` measurement this document also
+  cites below (~71 ms round trip at 8-bit) for the same model. Disk I/O for the `.nvc` payload
+  (~0.6 ms), MS-SSIM being counted in the timer (it isn't — verified by reading `codecs.py`), and
+  a missing `@torch.no_grad()` on `encode_frame()` (real, but only ~3% of encode time) were each
+  checked and ruled out as the explanation. Not yet resolved — flagged honestly rather than
+  papered over; see §10.
 - The software format already contains the two properties that make this codec unusually
   hardware-friendly, both **by construction**, not by luck:
   1. **`TOTAL_FREQUENCY = 1 << 16`** [MEASURED, `entropy_model.py:50`] — every per-symbol division
@@ -91,7 +105,7 @@ Total weights: 593,411 params [MEASURED, checkpoint files] — at INT8 (a hardwa
 see §9) that's **~580 KB**, comfortably resident in on-chip SRAM permanently. **No off-chip DRAM
 traffic for weights, ever** — this is a weight-stationary design by necessity, not preference.
 
-### 3.2 The entropy coder: the actual bottleneck
+### 3.2 The entropy coder: a real cost, not *the* dominant one (see correction, §1)
 
 Latent shape 64×16×16 = **16,384 symbols/frame** [MEASURED, every calibration file in
 `outputs/calibration/`]. `encode_symbols`/`decode_symbols` (native C, see
@@ -111,12 +125,13 @@ Decode is consistently 2.7–3.1× slower than encode. §5.2 explains why (decod
 cycle counts — a real, independently-arrived-at match between measured software behavior and the
 hardware design, not a coincidence engineered to look good.
 
-At 654M MACs/frame [DERIVED] and even a modest embedded core doing 1 GFLOP/s sustained, the *conv
-math itself* would cost well under a millisecond. The measured 19–52 ms/frame is therefore
-overwhelmingly Python/NumPy/ctypes call overhead and the serial entropy coder, not FLOPs — this
-single fact is what points the whole accelerator design at the entropy coder as the primary,
-highest-value block, with the CNN engine as a secondary (still worthwhile, for latency/power on an
-embedded target) block.
+A theoretical FLOP estimate (654M MACs/frame [DERIVED] at, say, 1 GFLOP/s sustained on a modest
+embedded core) would suggest the conv math costs well under a millisecond, making the remaining
+19–52 ms/frame overwhelmingly entropy-coder and overhead cost. **That estimate does not hold in
+practice** — see the correction in §1: direct component-level measurement puts the CNN forward
+pass at ~62% of an in-memory round trip, comfortably larger than the entropy coder's ~21%. Both
+blocks are real, worthwhile accelerator targets; neither should be read as secondary to the other
+purely on the strength of a FLOP count.
 
 ## 4. Top-level architecture
 
@@ -351,3 +366,10 @@ comparison of float32-software vs. INT8-simulated, the same rigor M8 applied to 
 determines whether §6's CNN engine design is even viable before any RTL gets written for it — the
 entropy-coder half (§5) is already validated at the bitstream level and can proceed to RTL
 independently in parallel.
+
+**Done, since this was written**: see [RESEARCH_NOTES_NEXT_STEPS.md](../RESEARCH_NOTES_NEXT_STEPS.md)
+and `hardware/int8_activation_validation.py`. Result: −0.997 dB PSNR / −0.0119 MS-SSIM vs. float32,
+full DAVIS test split — a real, non-trivial cost (per-tensor activation quantization is the likely
+fixable cause; per-channel or INT16 are the next things to try, not yet done). Given §1's priority
+correction (the CNN is at least as important a target as the entropy coder, not secondary), this
+result matters more than it would have read as at the time it was recommended.
