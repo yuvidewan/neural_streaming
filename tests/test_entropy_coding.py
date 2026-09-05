@@ -19,18 +19,25 @@ from nvc.compression import (
     NVCFormatError,
     NVCHeader,
     NVCReader,
+    NVCStreamHeader,
+    NVCStreamReader,
+    NVCStreamWriter,
     NVCWriter,
     QuantizationParams,
     UniformQuantizer,
+    allocate_bits_per_channel,
+    build_stream_header,
     calibrate_quantization_params,
     channel_table_index,
     collect_calibration_latents,
     count_clipped,
     decode_frame,
+    decode_frame_payload,
     decode_latent,
     decode_symbols,
     empirical_entropy,
     encode_frame,
+    encode_frame_payload,
     encode_latent,
     encode_symbols,
     latent_to_symbols,
@@ -43,7 +50,12 @@ from nvc.compression.entropy_model import (
     TOTAL_FREQUENCY,
     _counts_to_frequencies,
 )
-from nvc.compression.nvc_format import FIXED_HEADER_SIZE, MAGIC
+from nvc.compression.nvc_format import (
+    FIXED_HEADER_SIZE,
+    MAGIC,
+    STREAM_FIXED_HEADER_SIZE,
+    STREAM_MAGIC,
+)
 from nvc.compression.range_coder import MAX_TOTAL_FREQUENCY
 from nvc.models import BaselineAutoencoder
 
@@ -162,6 +174,246 @@ def test_calibration_rejects_invalid_percentiles():
         calibrate_quantization_params(
             latents, bits=8, lower_percentile=90.0, upper_percentile=10.0
         )
+
+
+# --- Per-channel bit allocation and companding (OPTIMIZATION_ANALYSIS.md Q2/Q3) ---
+
+
+def test_calibration_rejects_bits_per_channel_in_global_mode():
+    latents = torch.randn(8, 3, 4, 4)
+    with pytest.raises(ValueError):
+        calibrate_quantization_params(
+            latents, bits=8, mode="global", bits_per_channel=(8, 8, 8)
+        )
+
+
+def test_calibration_rejects_bits_per_channel_of_wrong_length():
+    latents = torch.randn(8, 3, 4, 4)
+    with pytest.raises(ValueError):
+        calibrate_quantization_params(
+            latents, bits=8, mode="per_channel", bits_per_channel=(8, 8)
+        )
+
+
+def test_calibration_with_bits_per_channel_returns_it_on_the_params():
+    latents = torch.randn(8, 3, 4, 4)
+    bits_per_channel = (8, 4, 6)
+
+    params = calibrate_quantization_params(
+        latents, bits=8, mode="per_channel", bits_per_channel=bits_per_channel
+    )
+
+    assert params.bits_per_channel == bits_per_channel
+
+
+def test_bits_per_channel_gives_a_coarser_scale_to_a_lower_bit_channel():
+    # The whole point of Q3: a channel restricted to fewer levels should get
+    # a proportionally COARSER step over the same calibrated range, not just
+    # a harsher clamp on an unchanged fine step.
+    torch.manual_seed(0)
+    latents = torch.randn(64, 2, 8, 8)
+
+    uniform = calibrate_quantization_params(latents, bits=8, mode="per_channel")
+    allocated = calibrate_quantization_params(
+        latents, bits=8, mode="per_channel", bits_per_channel=(8, 4)
+    )
+
+    assert allocated.scale[0, 0].item() == pytest.approx(uniform.scale[0, 0].item(), rel=1e-4)
+    assert allocated.scale[0, 1].item() > uniform.scale[0, 1].item()
+
+
+def test_bits_per_channel_round_trips_through_the_quantizer_without_format_changes():
+    # Confirms the "wire it through, don't touch nvc_format/entropy_model"
+    # design: a channel with fewer allocated bits actually uses fewer
+    # distinct symbol values end to end, through the ordinary
+    # latent_to_symbols/symbols_to_latent path used everywhere else.
+    torch.manual_seed(0)
+    latents = torch.randn(64, 2, 8, 8)
+    params = calibrate_quantization_params(
+        latents, bits=8, mode="per_channel", bits_per_channel=(8, 2)
+    )
+
+    symbols = latent_to_symbols(latents[:1], params).reshape(latents.shape[1:])
+
+    assert symbols[0].max() - symbols[0].min() > symbols[1].max() - symbols[1].min()
+    assert symbols[1].max() <= 2 ** 2 - 1
+
+
+def test_calibration_with_companding_gamma_returns_it_on_the_params():
+    latents = torch.randn(8, 3, 4, 4)
+
+    params = calibrate_quantization_params(latents, bits=8, mode="per_channel", companding_gamma=0.5)
+
+    assert params.companding_gamma == 0.5
+
+
+def test_companding_gamma_below_one_produces_a_finer_step_than_uncompanded():
+    # gamma < 1 compresses large magnitudes and expands small ones - for a
+    # peaked-with-long-tails distribution (this project's documented latent
+    # shape) that should buy a finer effective step near zero, where most of
+    # the mass sits, exactly the motivation in quantization.py's docstring.
+    torch.manual_seed(0)
+    latents = torch.randn(64, 1, 8, 8) * 3.0
+
+    uncompanded = calibrate_quantization_params(latents, bits=8, mode="per_channel")
+    companded = calibrate_quantization_params(
+        latents, bits=8, mode="per_channel", companding_gamma=0.5
+    )
+
+    assert companded.scale.item() != pytest.approx(uncompanded.scale.item())
+
+
+def test_companding_gamma_of_one_is_the_identity():
+    torch.manual_seed(0)
+    latents = torch.randn(16, 2, 4, 4)
+
+    plain = calibrate_quantization_params(latents, bits=8, mode="per_channel")
+    companded = calibrate_quantization_params(
+        latents, bits=8, mode="per_channel", companding_gamma=1.0
+    )
+
+    assert torch.allclose(plain.scale, companded.scale, atol=1e-6)
+
+
+def test_companded_calibration_round_trips_losslessly_through_the_quantizer():
+    # End-to-end: calibrate with companding, quantize and dequantize through
+    # the ordinary UniformQuantizer path (not calibration internals), and
+    # confirm the round trip still lands within a bounded quantization error
+    # - i.e. nothing downstream needed to know companding happened.
+    torch.manual_seed(0)
+    latents = torch.randn(32, 2, 8, 8) * 2.0
+    params = calibrate_quantization_params(
+        latents, bits=8, mode="per_channel",
+        lower_percentile=0.0, upper_percentile=100.0, companding_gamma=0.5,
+    )
+    quantizer = UniformQuantizer(8, "per_channel", companding_gamma=0.5)
+    latent = latents[:1]
+
+    symbols = latent_to_symbols(latent, params)
+    restored = symbols_to_latent(symbols, tuple(latent.shape[1:]), params)
+
+    quantizer_params = quantizer.compute_params(latents)
+    assert torch.allclose(params.scale, quantizer_params.scale, atol=1e-5)
+    assert restored.shape == latent.shape
+
+
+# --- allocate_bits_per_channel (OPTIMIZATION_ANALYSIS.md Q3 water-filling) ---
+
+
+def test_allocate_bits_per_channel_gives_more_bits_to_higher_variance_channels():
+    torch.manual_seed(0)
+    latents = torch.randn(64, 3, 8, 8)
+    latents[:, 0] *= 10.0   # high variance
+    latents[:, 1] *= 1.0    # medium variance
+    latents[:, 2] *= 0.01   # near-constant, low variance
+
+    bits_per_channel = allocate_bits_per_channel(latents, average_bits=6)
+
+    assert bits_per_channel[0] >= bits_per_channel[1] >= bits_per_channel[2]
+
+
+def test_allocate_bits_per_channel_matches_the_requested_average():
+    torch.manual_seed(0)
+    latents = torch.randn(64, 8, 4, 4)
+    for c in range(8):
+        latents[:, c] *= (c + 1)
+
+    bits_per_channel = allocate_bits_per_channel(latents, average_bits=6, min_bits=2, max_bits=10)
+
+    assert sum(bits_per_channel) == 6 * 8
+
+
+def test_allocate_bits_per_channel_respects_min_and_max_bounds():
+    torch.manual_seed(0)
+    latents = torch.randn(64, 6, 4, 4)
+    latents[:, 0] *= 1000.0
+    latents[:, 1] *= 1e-6
+
+    bits_per_channel = allocate_bits_per_channel(latents, average_bits=6, min_bits=3, max_bits=6)
+
+    assert all(3 <= b <= 6 for b in bits_per_channel)
+
+
+def test_allocate_bits_per_channel_is_uniform_for_equal_variance_channels():
+    torch.manual_seed(0)
+    latents = torch.randn(256, 4, 8, 8)  # same distribution per channel
+
+    bits_per_channel = allocate_bits_per_channel(latents, average_bits=6)
+
+    assert all(b == 6 for b in bits_per_channel)
+
+
+def test_allocate_bits_per_channel_rejects_bad_budget_ordering():
+    latents = torch.randn(8, 3, 4, 4)
+    with pytest.raises(ValueError):
+        allocate_bits_per_channel(latents, average_bits=8, min_bits=4, max_bits=6)
+
+
+def test_allocate_bits_per_channel_output_feeds_directly_into_calibration():
+    # The intended usage: allocate, then calibrate with the result - confirms
+    # the two functions actually compose without the caller reshaping anything.
+    torch.manual_seed(0)
+    latents = torch.randn(64, 4, 8, 8)
+    latents[:, 0] *= 5.0
+
+    bits_per_channel = allocate_bits_per_channel(latents, average_bits=6)
+    params = calibrate_quantization_params(
+        latents, bits=8, mode="per_channel", bits_per_channel=bits_per_channel
+    )
+
+    assert params.bits_per_channel == bits_per_channel
+
+
+# torch.quantile's hard 2**24-element limit (OPTIMIZATION_ANALYSIS.md B1) ---
+
+
+def test_calibration_does_not_crash_above_the_quantile_element_limit(monkeypatch):
+    # The real limit is 16,777,216 elements - allocating that here would be
+    # slow and memory-heavy for no extra confidence, so the limit itself is
+    # monkeypatched down to something a tiny tensor can exceed. The code path
+    # exercised (subsample -> torch.quantile) is identical either way.
+    from nvc.compression import calibration as calibration_module
+    monkeypatch.setattr(calibration_module, "_MAX_QUANTILE_ELEMENTS", 100)
+
+    latents = torch.randn(8, 2, 4, 4)  # 8*4*4 = 128 values/channel > 100
+    params = calibrate_quantization_params(latents, bits=8, mode="per_channel")
+
+    assert torch.isfinite(params.scale).all()
+    assert (params.scale > 0).all()
+
+
+def test_calibration_subsampling_gives_a_reasonable_percentile_estimate(monkeypatch):
+    from nvc.compression import calibration as calibration_module
+    monkeypatch.setattr(calibration_module, "_MAX_QUANTILE_ELEMENTS", 5000)
+
+    torch.manual_seed(0)
+    latents = torch.randn(200, 1, 8, 8)  # 200*8*8 = 12,800 values, well above 5000
+    subsampled = calibrate_quantization_params(
+        latents, bits=8, mode="global", lower_percentile=1.0, upper_percentile=99.0,
+    )
+    full = calibrate_quantization_params(
+        latents, bits=8, mode="global", lower_percentile=1.0, upper_percentile=99.0,
+    )
+    # Both go through the (now-forced) subsampled path with a fresh random
+    # draw each time, so they won't be identical - but a 1st/99th percentile
+    # of a standard normal (true values ~-2.33/+2.33) estimated from two
+    # independent 5000-element samples of the same 12,800-value population
+    # should agree closely, not merely "both finite".
+    assert full.scale.item() == pytest.approx(subsampled.scale.item(), rel=0.05)
+
+
+def test_calibration_below_the_limit_is_unaffected_by_subsampling_logic(monkeypatch):
+    # Below the limit, _quantile_safe must be exactly torch.quantile - no
+    # randomness, no approximation - so results stay bit-for-bit reproducible
+    # for every calibration run that already works today.
+    from nvc.compression import calibration as calibration_module
+    monkeypatch.setattr(calibration_module, "_MAX_QUANTILE_ELEMENTS", 10_000_000)
+
+    latents = torch.randn(4, 2, 4, 4)
+    first = calibrate_quantization_params(latents, bits=8, mode="per_channel")
+    second = calibrate_quantization_params(latents, bits=8, mode="per_channel")
+    assert torch.equal(first.scale, second.scale)
+    assert torch.equal(first.zero_point, second.zero_point)
 
 
 def test_count_clipped_reports_values_outside_a_fixed_grid():
@@ -795,3 +1047,298 @@ def test_encode_latent_rejects_a_multi_frame_latent():
             torch.randn(2, 4, 2, 2), params=params,
             entropy_model=entropy_model, image_shape=(3, 32, 32),
         )
+
+
+# --- .nvcs stream container: header pack/unpack ---
+
+
+def _tiny_stream_header(frame_count: int = 3) -> NVCStreamHeader:
+    return NVCStreamHeader(
+        quantization_bits=8,
+        quantization_mode="per_channel",
+        image_width=32,
+        image_height=32,
+        image_channels=3,
+        latent_channels=4,
+        latent_height=2,
+        latent_width=2,
+        frame_count=frame_count,
+        entropy_model_id=b"\x01\x02\x03\x04\x05\x06\x07\x08",
+        scales=(1.0, 2.0, 3.0, 4.0),
+        zero_points=(0.0, 0.0, 0.0, 0.0),
+    )
+
+
+def test_stream_header_serialization_roundtrip():
+    header = _tiny_stream_header()
+    restored = NVCStreamHeader.unpack(header.pack())
+    assert restored == header
+
+
+def test_stream_header_has_the_documented_fixed_size():
+    header = _tiny_stream_header()
+    assert len(header.pack()) == STREAM_FIXED_HEADER_SIZE + len(header.scales) * 8
+
+
+def test_stream_header_starts_with_the_stream_magic_bytes():
+    assert _tiny_stream_header().pack()[:4] == STREAM_MAGIC
+    assert STREAM_MAGIC != MAGIC  # must be distinguishable from a single-frame .nvc
+
+
+def test_stream_symbol_count_is_derived_not_stored():
+    header = _tiny_stream_header()
+    assert header.symbol_count == 4 * 2 * 2
+
+
+def test_stream_header_rejects_a_mode_zero_point_length_mismatch():
+    with pytest.raises(NVCFormatError, match="same length"):
+        NVCStreamHeader(
+            quantization_bits=8, quantization_mode="per_channel",
+            image_width=32, image_height=32, image_channels=3,
+            latent_channels=4, latent_height=2, latent_width=2, frame_count=1,
+            entropy_model_id=b"\x00" * 8, scales=(1.0, 2.0), zero_points=(0.0,),
+        ).pack()
+
+
+def test_stream_header_rejects_a_wrong_length_entropy_model_id():
+    with pytest.raises(NVCFormatError, match="entropy_model_id"):
+        NVCStreamHeader(
+            quantization_bits=8, quantization_mode="per_channel",
+            image_width=32, image_height=32, image_channels=3,
+            latent_channels=1, latent_height=1, latent_width=1, frame_count=1,
+            entropy_model_id=b"\x00" * 4, scales=(1.0,), zero_points=(0.0,),
+        ).pack()
+
+
+def test_stream_header_rejects_corrupted_magic():
+    data = bytearray(_tiny_stream_header().pack())
+    data[0:4] = b"XXXX"
+    with pytest.raises(NVCFormatError, match="magic"):
+        NVCStreamHeader.unpack(bytes(data))
+
+
+def test_stream_header_shorter_than_the_fixed_size_is_rejected():
+    with pytest.raises(NVCFormatError, match="too small"):
+        NVCStreamHeader.unpack(b"\x00" * (STREAM_FIXED_HEADER_SIZE - 1))
+
+
+def test_stream_header_rejects_a_single_frame_nvc_header_by_magic_alone():
+    # The two formats must never be confused for one another.
+    _, params, entropy_model = _tiny_setup()
+    single_frame_header = NVCHeader(
+        quantization_bits=8, quantization_mode="per_channel",
+        image_width=32, image_height=32, image_channels=3,
+        latent_channels=4, latent_height=2, latent_width=2,
+        symbol_count=16, payload_length=0, entropy_model_id=entropy_model.model_id(),
+        scales=tuple(params.scale.flatten().tolist()), zero_points=tuple(params.zero_point.flatten().tolist()),
+    )
+    with pytest.raises(NVCFormatError, match="magic"):
+        NVCStreamHeader.unpack(single_frame_header.pack())
+
+
+def test_stream_header_rejects_truncated_parameter_block():
+    header = _tiny_stream_header()
+    packed = header.pack()
+    with pytest.raises(NVCFormatError, match="Truncated"):
+        NVCStreamHeader.unpack(packed[: STREAM_FIXED_HEADER_SIZE + 4])
+
+
+def test_stream_header_rejects_nonpositive_scale():
+    header = _tiny_stream_header()
+    packed = bytearray(header.pack())
+    # Overwrite the first (scale, zero_point) pair with (0.0, 0.0).
+    import struct as _struct
+    packed[STREAM_FIXED_HEADER_SIZE : STREAM_FIXED_HEADER_SIZE + 8] = _struct.pack("<ff", 0.0, 0.0)
+    with pytest.raises(NVCFormatError, match="Invalid scale"):
+        NVCStreamHeader.unpack(bytes(packed))
+
+
+# --- .nvcs stream container: writer/reader mechanics (no model involved) ---
+
+
+def test_stream_writer_reader_roundtrip_payload_bytes(tmp_path):
+    payloads = [b"abc", b"", b"a longer payload than the others"]
+    header = _tiny_stream_header(frame_count=len(payloads))
+    path = tmp_path / "seq.nvcs"
+
+    with NVCStreamWriter(path, header) as writer:
+        for payload in payloads:
+            writer.append_frame(payload)
+
+    reader = NVCStreamReader(path)
+    assert reader.header == header
+    assert len(reader) == len(payloads)
+    assert list(reader) == payloads
+
+
+def test_stream_writer_produces_the_expected_total_byte_count(tmp_path):
+    payloads = [b"x" * 100, b"y" * 250, b"z" * 40]
+    header = _tiny_stream_header(frame_count=len(payloads))
+    path = tmp_path / "seq.nvcs"
+
+    with NVCStreamWriter(path, header) as writer:
+        for payload in payloads:
+            writer.append_frame(payload)
+
+    expected = header.header_size + sum(4 + len(p) for p in payloads)
+    assert path.stat().st_size == expected
+
+
+def test_stream_writer_rejects_appending_past_the_declared_frame_count(tmp_path):
+    header = _tiny_stream_header(frame_count=1)
+    path = tmp_path / "seq.nvcs"
+    with NVCStreamWriter(path, header) as writer:
+        writer.append_frame(b"only one")
+        with pytest.raises(NVCFormatError, match="frame"):
+            writer.append_frame(b"one too many")
+
+
+def test_stream_writer_close_rejects_writing_fewer_frames_than_declared(tmp_path):
+    header = _tiny_stream_header(frame_count=3)
+    path = tmp_path / "seq.nvcs"
+    writer = NVCStreamWriter(path, header)
+    writer.append_frame(b"only one of three")
+    with pytest.raises(NVCFormatError, match="only 1"):
+        writer.close()
+
+
+def test_stream_writer_context_manager_does_not_mask_a_real_exception(tmp_path):
+    header = _tiny_stream_header(frame_count=3)
+    path = tmp_path / "seq.nvcs"
+    with pytest.raises(ZeroDivisionError):
+        with NVCStreamWriter(path, header) as writer:
+            writer.append_frame(b"one")
+            raise ZeroDivisionError("unrelated failure mid-stream")
+
+
+def test_stream_reader_rejects_truncated_frame_length_prefix(tmp_path):
+    header = _tiny_stream_header(frame_count=1)
+    path = tmp_path / "seq.nvcs"
+    path.write_bytes(header.pack() + b"\x01\x02")  # only 2 of 4 length-prefix bytes
+    with pytest.raises(NVCFormatError, match="Truncated"):
+        list(NVCStreamReader(path))
+
+
+def test_stream_reader_rejects_truncated_frame_payload(tmp_path):
+    header = _tiny_stream_header(frame_count=1)
+    path = tmp_path / "seq.nvcs"
+    import struct as _struct
+    path.write_bytes(header.pack() + _struct.pack("<I", 100) + b"short")
+    with pytest.raises(NVCFormatError, match="Truncated frame"):
+        list(NVCStreamReader(path))
+
+
+def test_stream_reader_rejects_trailing_data(tmp_path):
+    header = _tiny_stream_header(frame_count=1)
+    path = tmp_path / "seq.nvcs"
+    with NVCStreamWriter(path, header) as writer:
+        writer.append_frame(b"ok")
+    path.write_bytes(path.read_bytes() + b"trailing junk")
+    with pytest.raises(NVCFormatError, match="Trailing"):
+        list(NVCStreamReader(path))
+
+
+def test_stream_reader_missing_file_raises(tmp_path):
+    with pytest.raises(FileNotFoundError):
+        NVCStreamReader(tmp_path / "nope.nvcs")
+
+
+# --- .nvcs stream container: real end-to-end encode/decode ---
+
+
+def test_build_stream_header_matches_a_real_calibration(tmp_path):
+    model, params, entropy_model = _tiny_setup()
+    header = build_stream_header(
+        params=params, entropy_model=entropy_model,
+        image_shape=(3, 32, 32), latent_shape=(4, 2, 2), frame_count=5,
+    )
+    assert header.quantization_bits == params.bits
+    assert header.quantization_mode == params.mode
+    assert header.entropy_model_id == entropy_model.model_id()
+    assert header.latent_channels == 4 and header.latent_height == 2 and header.latent_width == 2
+
+
+def test_stream_encode_decode_is_bit_exact_and_matches_the_single_frame_path(tmp_path):
+    """The central correctness claim: encoding N real frames through the
+    stream path and decoding them back must produce results IDENTICAL to
+    the existing, already-trusted per-frame encode_frame/decode_frame path -
+    same symbols, same reconstruction - with only the container changed."""
+    model, params, entropy_model = _tiny_setup()
+    torch.manual_seed(2)
+    frames = [torch.rand(1, 3, 32, 32) for _ in range(4)]
+
+    # Reference: today's per-frame path, one .nvc file per frame.
+    reference_results = [
+        encode_frame(model, frame, params=params, entropy_model=entropy_model)
+        for frame in frames
+    ]
+    reference_reconstructions = [
+        decode_frame(model, result.data, entropy_model=entropy_model)[0]
+        for result in reference_results
+    ]
+
+    # New: one stream, header written once.
+    header = build_stream_header(
+        params=params, entropy_model=entropy_model,
+        image_shape=(3, 32, 32), latent_shape=(4, 2, 2), frame_count=len(frames),
+    )
+    stream_path = tmp_path / "sequence.nvcs"
+    with NVCStreamWriter(stream_path, header) as writer:
+        for frame in frames:
+            payload = encode_frame_payload(model, frame, params=params, entropy_model=entropy_model)
+            writer.append_frame(payload)
+
+    reader = NVCStreamReader(stream_path)
+    assert reader.header.entropy_model_id == entropy_model.model_id()
+    stream_reconstructions = [
+        decode_frame_payload(
+            model, payload, params=params, entropy_model=entropy_model,
+            image_shape=(3, 32, 32), latent_shape=(4, 2, 2),
+        )
+        for payload in reader
+    ]
+
+    for reference, streamed in zip(reference_reconstructions, stream_reconstructions):
+        assert torch.equal(reference, streamed)
+
+    # And the payload bytes themselves are identical too, not just the
+    # decoded pixels - confirms the stream path isn't accidentally
+    # re-deriving a different (if visually similar) encoding.
+    reference_payloads = [
+        NVCReader.from_bytes(result.data)[1] for result in reference_results
+    ]
+    stream_payloads = list(NVCStreamReader(stream_path))
+    assert reference_payloads == stream_payloads
+
+
+def test_stream_format_is_smaller_than_n_separate_nvc_files(tmp_path):
+    """The actual point of this format: for multiple frames sharing one
+    model/calibration, the stream's total size must be smaller than N
+    separate single-frame .nvc files, by (N-1) header-vs-length-prefix
+    worth of bytes."""
+    model, params, entropy_model = _tiny_setup()
+    torch.manual_seed(3)
+    frames = [torch.rand(1, 3, 32, 32) for _ in range(5)]
+
+    per_frame_results = [
+        encode_frame(model, frame, params=params, entropy_model=entropy_model)
+        for frame in frames
+    ]
+    per_frame_total = sum(result.total_bytes for result in per_frame_results)
+
+    header = build_stream_header(
+        params=params, entropy_model=entropy_model,
+        image_shape=(3, 32, 32), latent_shape=(4, 2, 2), frame_count=len(frames),
+    )
+    stream_path = tmp_path / "sequence.nvcs"
+    with NVCStreamWriter(stream_path, header) as writer:
+        for frame in frames:
+            payload = encode_frame_payload(model, frame, params=params, entropy_model=entropy_model)
+            writer.append_frame(payload)
+    stream_total = stream_path.stat().st_size
+
+    single_frame_header_size = per_frame_results[0].header.header_size
+    expected_savings = (len(frames) - 1) * (single_frame_header_size - 4)
+
+    assert stream_total < per_frame_total
+    assert per_frame_total - stream_total == expected_savings

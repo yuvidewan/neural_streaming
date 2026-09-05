@@ -29,7 +29,13 @@ import numpy as np
 import torch
 
 from nvc.compression.entropy_model import EmpiricalEntropyModel
-from nvc.compression.nvc_format import NVCFormatError, NVCHeader, NVCReader, NVCWriter
+from nvc.compression.nvc_format import (
+    NVCFormatError,
+    NVCHeader,
+    NVCReader,
+    NVCStreamHeader,
+    NVCWriter,
+)
 from nvc.compression.quantization import QuantizationParams, UniformQuantizer
 from nvc.compression.range_coder import decode_symbols, encode_symbols
 
@@ -84,17 +90,18 @@ def symbols_to_latent(
     return quantizer.dequantize(quantized, params)
 
 
-def encode_latent(
-    latent: torch.Tensor,
-    *,
-    params: QuantizationParams,
-    entropy_model: EmpiricalEntropyModel,
-    image_shape: tuple[int, int, int],
-) -> EncodeResult:
-    """Quantize and entropy-code one latent into .nvc bytes.
+def encode_latent_to_payload(
+    latent: torch.Tensor, *, params: QuantizationParams, entropy_model: EmpiricalEntropyModel,
+) -> tuple[bytes, np.ndarray]:
+    """Quantize and entropy-code one latent into raw payload bytes - no
+    header. This is the core `encode_latent` and the `.nvcs` stream format
+    both share: a stream's per-frame payload is byte-for-byte identical to
+    a single-frame `.nvc`'s payload, only the header differs (once per
+    stream instead of once per frame - see nvc_format.py).
 
-    `image_shape` is the source frame's [C, H, W], recorded so the decoder
-    can report and validate the original dimensions.
+    Returns (payload, symbols): symbols are returned alongside the payload
+    so a caller building an `EncodeResult` (or verifying a lossless round
+    trip) never has to quantize the same latent a second time to get them.
     """
     if entropy_model.bits != params.bits:
         raise ValueError(
@@ -112,6 +119,23 @@ def encode_latent(
     symbols = latent_to_symbols(latent, params)
     table_index = channel_table_index(latent_channels, latent_height, latent_width)
     payload = encode_symbols(symbols, entropy_model.cumulative, table_index)
+    return payload, symbols
+
+
+def encode_latent(
+    latent: torch.Tensor,
+    *,
+    params: QuantizationParams,
+    entropy_model: EmpiricalEntropyModel,
+    image_shape: tuple[int, int, int],
+) -> EncodeResult:
+    """Quantize and entropy-code one latent into .nvc bytes.
+
+    `image_shape` is the source frame's [C, H, W], recorded so the decoder
+    can report and validate the original dimensions.
+    """
+    latent_channels, latent_height, latent_width = latent.shape[1:]
+    payload, symbols = encode_latent_to_payload(latent, params=params, entropy_model=entropy_model)
 
     header = NVCHeader(
         quantization_bits=params.bits,
@@ -139,6 +163,31 @@ def encode_latent(
     )
 
 
+def decode_payload_to_latent(
+    payload: bytes,
+    *,
+    entropy_model: EmpiricalEntropyModel,
+    params: QuantizationParams,
+    shape: tuple[int, int, int],
+) -> tuple[torch.Tensor, np.ndarray]:
+    """Inverse of `encode_latent_to_payload`: raw payload bytes -> (latent,
+    symbols), given the quantization params and latent shape out-of-band
+    (from a header - once-per-frame via `NVCHeader`, once-per-stream via
+    `NVCStreamHeader`). The core `decode_latent` and the `.nvcs` stream
+    format both share.
+    """
+    if entropy_model.bits != params.bits:
+        raise ValueError(
+            f"Entropy model is {entropy_model.bits}-bit but params are {params.bits}-bit"
+        )
+    latent_channels, latent_height, latent_width = shape
+    table_index = channel_table_index(latent_channels, latent_height, latent_width)
+    symbol_count = latent_channels * latent_height * latent_width
+    symbols = decode_symbols(payload, symbol_count, entropy_model.cumulative, table_index)
+    latent = symbols_to_latent(symbols, shape, params)
+    return latent, symbols
+
+
 def decode_latent(
     data: bytes, *, entropy_model: EmpiricalEntropyModel
 ) -> tuple[torch.Tensor, NVCHeader, np.ndarray]:
@@ -162,23 +211,17 @@ def decode_latent(
             f"{header.quantization_bits}-bit symbols"
         )
 
-    table_index = channel_table_index(
-        header.latent_channels, header.latent_height, header.latent_width
-    )
-    symbols = decode_symbols(
-        payload, header.symbol_count, entropy_model.cumulative, table_index
-    )
-
     params = QuantizationParams.from_dict({
         "bits": header.quantization_bits,
         "mode": header.quantization_mode,
         "scale": list(header.scales),
         "zero_point": list(header.zero_points),
     })
-    latent = symbols_to_latent(
-        symbols,
-        (header.latent_channels, header.latent_height, header.latent_width),
-        params,
+    latent, symbols = decode_payload_to_latent(
+        payload,
+        entropy_model=entropy_model,
+        params=params,
+        shape=(header.latent_channels, header.latent_height, header.latent_width),
     )
     return latent, header, symbols
 
@@ -228,6 +271,93 @@ def decode_frame(
             f"({header.image_channels}, {header.image_height}, {header.image_width})"
         )
     return reconstruction, header
+
+
+def build_stream_header(
+    *,
+    params: QuantizationParams,
+    entropy_model: EmpiricalEntropyModel,
+    image_shape: tuple[int, int, int],
+    latent_shape: tuple[int, int, int],
+    frame_count: int,
+) -> NVCStreamHeader:
+    """Build the once-per-stream header for `NVCStreamWriter` - the stream
+    analog of the header `encode_latent` builds internally for a single
+    frame. Every frame in the stream must share this exact
+    model/calibration/shape (see nvc_format.py's "STREAM CONTAINER").
+    """
+    return NVCStreamHeader(
+        quantization_bits=params.bits,
+        quantization_mode=params.mode,
+        image_width=image_shape[2],
+        image_height=image_shape[1],
+        image_channels=image_shape[0],
+        latent_channels=latent_shape[0],
+        latent_height=latent_shape[1],
+        latent_width=latent_shape[2],
+        frame_count=frame_count,
+        entropy_model_id=entropy_model.model_id(),
+        scales=tuple(params.scale.flatten().tolist()),
+        zero_points=tuple(params.zero_point.flatten().tolist()),
+    )
+
+
+@torch.no_grad()
+def encode_frame_payload(
+    model: torch.nn.Module,
+    frame: torch.Tensor,
+    *,
+    params: QuantizationParams,
+    entropy_model: EmpiricalEntropyModel,
+) -> bytes:
+    """Full encode, stream variant: a [3, H, W] or [1, 3, H, W] frame in
+    [0, 1] -> raw payload bytes, for `NVCStreamWriter.append_frame`. Shares
+    `encode_frame`'s exact model-forward + quantize + entropy-code steps
+    (via `encode_latent_to_payload`); only the header-per-frame step is
+    skipped, since a stream writes that once via `build_stream_header`.
+    """
+    if frame.dim() == 3:
+        frame = frame.unsqueeze(0)
+    if frame.dim() != 4 or frame.shape[0] != 1:
+        raise ValueError(
+            f"encode_frame_payload expects one [3, H, W] or [1, 3, H, W] frame, "
+            f"got {tuple(frame.shape)}"
+        )
+
+    model.eval()
+    latent = model.encode(frame)
+    payload, _ = encode_latent_to_payload(latent, params=params, entropy_model=entropy_model)
+    return payload
+
+
+@torch.no_grad()
+def decode_frame_payload(
+    model: torch.nn.Module,
+    payload: bytes,
+    *,
+    params: QuantizationParams,
+    entropy_model: EmpiricalEntropyModel,
+    image_shape: tuple[int, int, int],
+    latent_shape: tuple[int, int, int],
+) -> torch.Tensor:
+    """Inverse of `encode_frame_payload`: one stream frame's payload bytes
+    -> reconstructed [1, 3, H, W] frame in [0, 1]. `image_shape`/
+    `latent_shape` come from the stream's header (`NVCStreamReader.header`),
+    shared by every frame in the stream rather than re-read per frame.
+    """
+    model.eval()
+    device = next(model.parameters()).device
+    latent, _ = decode_payload_to_latent(
+        payload, entropy_model=entropy_model, params=params, shape=latent_shape,
+    )
+    reconstruction = model.decode(latent.to(device))
+
+    if tuple(reconstruction.shape[1:]) != image_shape:
+        raise NVCFormatError(
+            f"Decoded frame shape {tuple(reconstruction.shape[1:])} does not match the "
+            f"stream's declared dimensions {image_shape}"
+        )
+    return reconstruction
 
 
 def verify_lossless_roundtrip(encoded: EncodeResult, decoded_symbols: np.ndarray) -> None:

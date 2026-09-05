@@ -32,6 +32,7 @@ import torch
 from nvc.compression import (
     CALIBRATION_METHOD,
     EmpiricalEntropyModel,
+    allocate_bits_per_channel,
     calibrate_quantization_params,
     channel_table_index,
     collect_calibration_latents,
@@ -72,6 +73,44 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
     )
     parser.add_argument("--lower-percentile", type=float, default=DEFAULT_LOWER_PERCENTILE)
     parser.add_argument("--upper-percentile", type=float, default=DEFAULT_UPPER_PERCENTILE)
+    parser.add_argument(
+        "--allocate-bits-per-channel", action="store_true",
+        help=(
+            "Water-fill per-channel levels from calibration-latent variance "
+            "(OPTIMIZATION_ANALYSIS.md Q3), instead of every channel using the full "
+            "--bits depth. The entropy table stays sized for --bits regardless (a "
+            "channel only ever gets NARROWED, never widened past it) - "
+            "--allocate-average-bits sets the average actually spent, at or below "
+            "--bits. Only valid with --mode per_channel. Off by default (reproduces "
+            "today's exact uniform-depth calibration)."
+        ),
+    )
+    parser.add_argument(
+        "--allocate-average-bits", type=int, default=None,
+        help=(
+            "Average bits/channel target for --allocate-bits-per-channel; must be "
+            "<= --bits. Defaults to --bits (ignored otherwise)."
+        ),
+    )
+    parser.add_argument(
+        "--min-bits-per-channel", type=int, default=2,
+        help="Floor for --allocate-bits-per-channel (ignored otherwise).",
+    )
+    parser.add_argument(
+        "--max-bits-per-channel", type=int, default=None,
+        help="Ceiling for --allocate-bits-per-channel; defaults to --bits and can never "
+             "exceed it (ignored otherwise).",
+    )
+    parser.add_argument(
+        "--companding-gamma", type=float, default=None,
+        help=(
+            "Power-law companding exponent applied before calibration and quantization "
+            "(y = sign(x)*|x|^gamma; OPTIMIZATION_ANALYSIS.md Q2). gamma < 1 buys a "
+            "finer step near zero at the cost of a coarser one in the tails, matching "
+            "this project's documented peaked-with-long-tails latent shape. Omit "
+            "(default) to keep today's plain uniform grid."
+        ),
+    )
     parser.add_argument("--device", choices=["auto", "cpu", "cuda"], default="auto")
     parser.add_argument("--seed", type=int, default=defaults.random_seed)
     parser.add_argument(
@@ -126,6 +165,14 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     if not 1 <= args.bits <= 16:
         parser.error("--bits must be between 1 and 16")
+    if args.allocate_bits_per_channel and args.mode != "per_channel":
+        parser.error("--allocate-bits-per-channel requires --mode per_channel")
+    if args.max_bits_per_channel is not None and args.max_bits_per_channel > args.bits:
+        parser.error("--max-bits-per-channel cannot exceed --bits (the entropy table depth)")
+    if args.allocate_average_bits is not None and args.allocate_average_bits > args.bits:
+        parser.error("--allocate-average-bits cannot exceed --bits (the entropy table depth)")
+    if args.companding_gamma is not None and args.companding_gamma <= 0:
+        parser.error("--companding-gamma must be > 0")
 
     seed_everything(args.seed)
     device = get_device() if args.device == "auto" else torch.device(args.device)
@@ -145,9 +192,24 @@ def main(argv: list[str] | None = None) -> int:
     latents = collect_calibration_latents(model, train_loader, device, max_batches=args.max_batches)
     num_frames = latents.shape[0]
 
+    bits_per_channel = None
+    if args.allocate_bits_per_channel:
+        average_bits = args.allocate_average_bits
+        if average_bits is None:
+            average_bits = args.bits
+        max_bits_per_channel = args.max_bits_per_channel
+        if max_bits_per_channel is None:
+            max_bits_per_channel = args.bits
+        bits_per_channel = allocate_bits_per_channel(
+            latents, average_bits=average_bits,
+            min_bits=args.min_bits_per_channel, max_bits=max_bits_per_channel,
+        )
+        print(f"Allocated bits/channel (avg target {average_bits}): {bits_per_channel}")
+
     params = calibrate_quantization_params(
         latents, bits=args.bits, mode=args.mode,
         lower_percentile=args.lower_percentile, upper_percentile=args.upper_percentile,
+        bits_per_channel=bits_per_channel, companding_gamma=args.companding_gamma,
     )
 
     clipping = count_clipped(latents, params)
@@ -186,6 +248,9 @@ def main(argv: list[str] | None = None) -> int:
         "seed": args.seed,
         "clipping": clipping,
         "entropy_model_id": entropy_model.model_id().hex(),
+        "bits_per_channel": list(bits_per_channel) if bits_per_channel is not None else None,
+        "allocate_average_bits": args.allocate_average_bits if bits_per_channel is not None else None,
+        "companding_gamma": args.companding_gamma,
     }
 
     save_calibration(
@@ -218,6 +283,11 @@ def main(argv: list[str] | None = None) -> int:
           f"[{args.lower_percentile}, {args.upper_percentile}]")
     print(f"Bit depth / mode:      {args.bits}-bit / {args.mode}")
     print(f"Latent shape:          {tuple(latents.shape[1:])}")
+    if bits_per_channel is not None:
+        print(f"Per-channel bits:      {bits_per_channel} "
+              f"(avg target: {sum(bits_per_channel) / len(bits_per_channel):.2f})")
+    if args.companding_gamma is not None:
+        print(f"Companding gamma:      {args.companding_gamma}")
     print()
     print(f"Clipped by percentile: {clipping['clipped_total']:,} / {clipping['total_values']:,} "
           f"values ({clipping['clipped_percent']:.4f}%)")

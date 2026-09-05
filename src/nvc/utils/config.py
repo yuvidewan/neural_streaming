@@ -75,6 +75,18 @@ class Config:
     # rate_enabled is False, or when qat_enabled is also True.
     rate_calibration_path: Path | None = None
 
+    # Fix for MILESTONE_9_PLAN.md Section 9F.5 (the real deployed codec
+    # recalibrates to each model's own latent scale; a FROZEN rate-proxy bin
+    # width does not, letting the encoder "cheat" the proxy by uniformly
+    # shrinking the latent for no real bitrate benefit). See
+    # nvc.training.rate_estimator.RateEstimator, "SCALE TRACKING". Disabled
+    # by default - existing M9A/M9C/M9C.1 behavior is unchanged unless this
+    # is explicitly enabled.
+    rate_track_scale: bool = False
+    # EMA momentum for rate_track_scale; must be in [0, 1). Ignored unless
+    # both rate_enabled and rate_track_scale are True.
+    rate_scale_momentum: float = 0.99
+
     # --- Training parameters ---
     batch_size: int = 8
     learning_rate: float = 1e-4

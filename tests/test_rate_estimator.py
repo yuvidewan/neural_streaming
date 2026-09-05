@@ -89,6 +89,195 @@ def test_rate_estimator_is_not_in_baseline_autoencoder_state_dict():
     assert not any("rate" in key.lower() for key in model.state_dict())
 
 
+def test_rate_estimator_rejects_invalid_scale_momentum():
+    with pytest.raises(ValueError, match="scale_momentum"):
+        RateEstimator(_bin_width(), bits=8, mode="per_channel", track_scale=True, scale_momentum=1.0)
+    with pytest.raises(ValueError, match="scale_momentum"):
+        RateEstimator(_bin_width(), bits=8, mode="per_channel", track_scale=True, scale_momentum=-0.1)
+
+
+# --- Bin-width scale tracking (fix for MILESTONE_9_PLAN.md Section 9F.5) ---
+
+
+def test_update_bin_width_is_a_noop_when_track_scale_is_false():
+    # Default behavior - every existing M9A/M9C/M9C.1 test and run must be
+    # completely unaffected by this feature's mere existence.
+    estimator = RateEstimator(_bin_width(value=0.5), bits=8, mode="per_channel")
+    before = estimator.bin_width.clone()
+    estimator.update_bin_width(torch.randn(4, 4, 3, 3) * 100)
+    assert torch.equal(estimator.bin_width, before)
+
+
+def test_update_bin_width_moves_toward_the_batch_dynamic_range_when_enabled():
+    estimator = RateEstimator(
+        _bin_width(value=0.5), bits=8, mode="per_channel", track_scale=True, scale_momentum=0.0,
+    )
+    # momentum=0.0 -> bin_width becomes exactly this batch's instantaneous
+    # estimate, so the update is exactly checkable, not just "it moved".
+    z = torch.zeros(2, 4, 3, 3)
+    z[0, :, 0, 0] = 25.5   # per-channel max
+    z[0, :, 0, 1] = -25.5  # per-channel min -> range 51.0
+    estimator.update_bin_width(z)
+    expected = 51.0 / (2 ** 8 - 1)
+    assert torch.allclose(estimator.bin_width, torch.full_like(estimator.bin_width, expected), atol=1e-4)
+
+
+def test_update_bin_width_ema_smooths_across_steps():
+    estimator = RateEstimator(
+        _bin_width(num_channels=1, value=1.0), bits=8, mode="per_channel",
+        track_scale=True, scale_momentum=0.9,
+    )
+    z_wide = torch.tensor([[[[10.0]], [[-10.0]]]]).reshape(1, 1, 2, 1)  # range 20
+    estimator.update_bin_width(z_wide)
+    instantaneous = 20.0 / (2 ** 8 - 1)
+    expected_after_one_step = 0.9 * 1.0 + 0.1 * instantaneous
+    assert estimator.bin_width.item() == pytest.approx(expected_after_one_step, rel=1e-4)
+
+    # A second step with momentum < 1 must move further in the same
+    # direction, not jump straight to the new instantaneous value.
+    before_second = estimator.bin_width.item()
+    estimator.update_bin_width(z_wide)
+    assert estimator.bin_width.item() < before_second
+    assert estimator.bin_width.item() > instantaneous
+
+
+def test_update_bin_width_never_collapses_to_zero_for_a_degenerate_batch():
+    estimator = RateEstimator(
+        _bin_width(value=1.0), bits=8, mode="per_channel", track_scale=True, scale_momentum=0.0,
+    )
+    constant_latent = torch.full((2, 4, 3, 3), 5.0)  # zero range on every channel
+    estimator.update_bin_width(constant_latent)
+    assert torch.isfinite(estimator.bin_width).all()
+    assert (estimator.bin_width > 0).all()
+
+
+def test_update_bin_width_works_in_global_mode():
+    estimator = RateEstimator(
+        _bin_width(num_channels=4, value=1.0), bits=8, mode="global",
+        track_scale=True, scale_momentum=0.0,
+    )
+    z = torch.zeros(1, 4, 2, 2)
+    z.flatten()[0] = 40.0
+    z.flatten()[1] = -40.0
+    estimator.update_bin_width(z)
+    expected = 80.0 / (2 ** 8 - 1)
+    assert torch.allclose(estimator.bin_width, torch.full_like(estimator.bin_width, expected), atol=1e-4)
+    # Global mode must produce ONE shared value broadcast to every channel,
+    # not four independently-tracked ones.
+    assert torch.equal(estimator.bin_width, estimator.bin_width[:, :1].expand_as(estimator.bin_width))
+
+
+def test_update_bin_width_makes_rate_insensitive_to_pure_latent_shrinkage():
+    """The direct regression test for 9F.5: with tracking enabled, uniformly
+    shrinking the latent must NOT read as a large rate reduction, because
+    the bin width shrinks along with it - exactly like the real deployed
+    quantizer's per-model recalibration."""
+    torch.manual_seed(7)
+    z = torch.randn(4, 8, 4, 4) * 20.0
+
+    tracking = RateEstimator(
+        _bin_width(num_channels=8, value=1.0), bits=8, mode="per_channel",
+        track_scale=True, scale_momentum=0.0,
+    )
+    frozen = RateEstimator(_bin_width(num_channels=8, value=1.0), bits=8, mode="per_channel")
+
+    # "Train" both estimators' own loc/log_scale to fit z reasonably, via a
+    # few gradient steps against z itself (mirrors the diagnostic's own
+    # warm-fit method) - isolates the bin-width effect from "the density
+    # never adapted at all".
+    for estimator in (tracking, frozen):
+        optimizer = torch.optim.Adam(estimator.parameters(), lr=1e-1)
+        for _ in range(50):
+            optimizer.zero_grad()
+            estimator(z, image_pixels=256).backward()
+            optimizer.step()
+        if estimator is tracking:
+            estimator.update_bin_width(z)
+
+    rate_full = tracking(z, image_pixels=256).clone()
+    frozen_rate_full = frozen(z, image_pixels=256).clone()
+
+    shrunk = z * 0.1  # uniform shrinkage - the exact "cheat" 9F.5 diagnosed
+    tracking.update_bin_width(shrunk)  # the tracked estimator gets to adapt, as it would mid-training
+    rate_shrunk = tracking(shrunk, image_pixels=256)
+    frozen_rate_shrunk = frozen(shrunk, image_pixels=256)
+
+    tracked_drop = (rate_full - rate_shrunk).item()
+    frozen_drop = (frozen_rate_full - frozen_rate_shrunk).item()
+
+    # The frozen estimator must reward the shrink heavily (the exact bug);
+    # the tracked one, having re-centered its bin width on the new scale,
+    # must reward it far less.
+    assert frozen_drop > 0.5
+    assert tracked_drop < frozen_drop * 0.5
+
+
+# --- Trainer integration: update_bin_width is wired in correctly ---
+
+
+def test_train_one_epoch_with_rate_updates_bin_width_when_enabled(tmp_path):
+    manifest = make_tiny_manifest(tmp_path, num_sequences=2, frames_per_sequence=4, width=32, height=32)
+    from nvc.data.loaders import create_train_loader
+    loader = create_train_loader(manifest, batch_size=2, seed=0)
+
+    model = BaselineAutoencoder(**TINY_MODEL_KWARGS)
+    estimator = RateEstimator(
+        _bin_width(num_channels=TINY_MODEL_KWARGS["latent_channels"], value=0.5),
+        bits=8, mode="per_channel", track_scale=True, scale_momentum=0.5,
+    )
+    optimizer = torch.optim.Adam(list(model.parameters()) + list(estimator.parameters()), lr=1e-4)
+    before = estimator.bin_width.clone()
+
+    train_one_epoch_with_rate(
+        model, loader, optimizer, torch.device("cpu"),
+        rate_estimator=estimator, lambda_rate=0.1, max_batches=2,
+    )
+
+    assert not torch.equal(estimator.bin_width, before)
+    assert torch.isfinite(estimator.bin_width).all()
+    assert (estimator.bin_width > 0).all()
+
+
+def test_validate_one_epoch_with_rate_does_not_update_bin_width(tmp_path):
+    # Evaluating on validation data must never have the side effect of
+    # moving training-tracked state.
+    manifest = make_tiny_manifest(tmp_path, num_sequences=2, frames_per_sequence=4, width=32, height=32)
+    from nvc.data.loaders import create_train_loader
+    loader = create_train_loader(manifest, batch_size=2, seed=0)
+
+    model = BaselineAutoencoder(**TINY_MODEL_KWARGS)
+    estimator = RateEstimator(
+        _bin_width(num_channels=TINY_MODEL_KWARGS["latent_channels"], value=0.5),
+        bits=8, mode="per_channel", track_scale=True, scale_momentum=0.5,
+    )
+    before = estimator.bin_width.clone()
+
+    validate_one_epoch_with_rate(
+        model, loader, torch.device("cpu"), rate_estimator=estimator, lambda_rate=0.1, max_batches=2,
+    )
+
+    assert torch.equal(estimator.bin_width, before)
+
+
+def test_rate_estimator_bin_width_round_trips_through_a_checkpoint(tmp_path):
+    # bin_width is a buffer, so state_dict()/load_state_dict() must carry
+    # whatever it has drifted to via tracking - not just loc/log_scale.
+    estimator = RateEstimator(
+        _bin_width(num_channels=TINY_MODEL_KWARGS["latent_channels"], value=0.5),
+        bits=8, mode="per_channel", track_scale=True, scale_momentum=0.0,
+    )
+    estimator.update_bin_width(torch.randn(2, TINY_MODEL_KWARGS["latent_channels"], 3, 3) * 30)
+    drifted = estimator.bin_width.clone()
+    assert not torch.equal(drifted, torch.full_like(drifted, 0.5))
+
+    restored = RateEstimator(
+        _bin_width(num_channels=TINY_MODEL_KWARGS["latent_channels"], value=0.5),
+        bits=8, mode="per_channel", track_scale=True, scale_momentum=0.0,
+    )
+    restored.load_state_dict(estimator.state_dict())
+    assert torch.equal(restored.bin_width, drifted)
+
+
 # --- from_calibration --------------------------------------------------
 
 
@@ -710,3 +899,39 @@ def test_cli_end_to_end_qat_plus_rate_smoke(tmp_path):
     history = json.loads((checkpoint_dir / "history.json").read_text())
     assert history[-1]["qat_enabled"] is True
     assert history[-1]["rate_enabled"] is True
+
+
+def test_cli_end_to_end_rate_track_scale_smoke(tmp_path):
+    """Full CLI path for the 9F.5 fix: QAT + rate + --rate-track-scale
+    together, multiple epochs so the bin width has more than one chance to
+    move, then confirm via the saved checkpoint that it actually did."""
+    mod = _load_script("train_autoencoder")
+    manifest = make_tiny_manifest(tmp_path, num_sequences=6, frames_per_sequence=4, width=32, height=32)
+    checkpoint = make_tiny_checkpoint(tmp_path / "ckpt.pt")
+    calibration = make_tiny_calibration(tmp_path / "calib.json", checkpoint_path=checkpoint, bits=4, mode="per_channel")
+    checkpoint_dir = tmp_path / "track_scale_run"
+
+    exit_code = mod.main([
+        "--manifest", str(manifest), "--epochs", "3", "--max-batches", "2",
+        "--latent-channels", str(TINY_MODEL_KWARGS["latent_channels"]),
+        "--qat-enabled", "--qat-bits", "4", "--qat-mode", "per_channel", "--qat-calibration", str(calibration),
+        "--rate-enabled", "--rate-lambda", "0.01", "--rate-track-scale", "--rate-scale-momentum", "0.5",
+        "--checkpoint-dir", str(checkpoint_dir), "--device", "cpu",
+    ])
+    assert exit_code == 0
+
+    history = json.loads((checkpoint_dir / "history.json").read_text())
+    assert all(record["rate_track_scale"] is True for record in history)
+    assert all(record["rate_scale_momentum"] == 0.5 for record in history)
+
+    from nvc.training.checkpoint import load_checkpoint
+    saved = load_checkpoint(checkpoint_dir / "latest.pt")
+    restored_bin_width = saved["extra"]["rate_estimator_state_dict"]["bin_width"]
+    original_calibration = make_tiny_calibration(
+        tmp_path / "calib_reference.json", checkpoint_path=checkpoint, bits=4, mode="per_channel",
+    )
+    from nvc.compression.calibration import load_calibration
+    original_scale = torch.tensor(load_calibration(original_calibration)["quantization"]["scale"])
+    assert not torch.allclose(restored_bin_width.flatten(), original_scale.flatten())
+    assert torch.isfinite(restored_bin_width).all()
+    assert (restored_bin_width > 0).all()

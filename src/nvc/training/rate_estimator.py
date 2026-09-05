@@ -113,9 +113,43 @@ class RateEstimator(nn.Module):
     that model's `state_dict()` - inference never instantiates or requires
     this class (see `checkpoint.py`'s `extra` field for how a rate-trained
     checkpoint still loads through the ordinary inference path).
+
+    SCALE TRACKING (post-M9F fix for MILESTONE_9_PLAN.md Section 9F.5)
+    ---------------------------------------------------------------------
+    Section 9F.5 measured, on the real deployed codec, why a rate term can
+    stop improving anything past a certain lambda: the real quantizer
+    RECALIBRATES its grid to each model's own latent range
+    (`calibrate_quantization_params`), so a model that simply shrinks its
+    latent uniformly pays almost nothing extra on the real coded bitrate -
+    the grid shrinks right along with it. But this class's `bin_width` used
+    to be frozen once, at construction, from a calibration file computed
+    before training started. Against a FIXED bin width, that same uniform
+    shrinkage reads as a large rate reduction, so the training signal
+    rewarded exactly the one strategy the real codec does not reward.
+
+    `track_scale=True` closes that gap: `update_bin_width()` (called once
+    per training step, after scoring, from `train_one_epoch_with_rate`)
+    re-derives `bin_width` toward the CURRENT batch's own dynamic range -
+    using the same min/max-over-levels formula
+    `UniformQuantizer.compute_params` already implements for exactly this
+    ("dynamic" per-tensor calibration) - EMA-smoothed across steps for
+    stability. This makes the proxy scale-aware, matching the deployed
+    pipeline's own behavior, instead of scale-sensitive where the deployed
+    pipeline is scale-invariant.
+
+    Default is `track_scale=False`: every existing M9A/M9C/M9C.1 tested
+    behavior (a frozen bin width) is unchanged unless explicitly opted into.
     """
 
-    def __init__(self, bin_width: torch.Tensor, *, bits: int, mode: str) -> None:
+    def __init__(
+        self,
+        bin_width: torch.Tensor,
+        *,
+        bits: int,
+        mode: str,
+        track_scale: bool = False,
+        scale_momentum: float = 0.99,
+    ) -> None:
         super().__init__()
         if not torch.is_floating_point(bin_width):
             raise TypeError(f"bin_width must be a floating-point tensor, got dtype {bin_width.dtype}")
@@ -128,14 +162,18 @@ class RateEstimator(nn.Module):
             )
         if not 1 <= bits <= 16:
             raise ValueError(f"bits must be in [1, 16], got {bits}")
+        if not 0.0 <= scale_momentum < 1.0:
+            raise ValueError(f"scale_momentum must be in [0, 1), got {scale_momentum}")
 
-        # Frozen, like QuantizationNoise.scale: this is the SAME bin width
-        # used elsewhere (QAT noise / the real quantizer), not re-derived.
         # A buffer, not a Parameter - moves with .to(device) and is saved in
-        # this module's own state_dict, but is never touched by the optimizer.
+        # this module's own state_dict, but is never touched by the
+        # optimizer (it is either frozen, or updated in-place by
+        # update_bin_width's own EMA rule, never by a gradient step).
         self.register_buffer("bin_width", bin_width.detach().clone())
         self.bits = bits
         self.mode = mode
+        self.track_scale = track_scale
+        self.scale_momentum = scale_momentum
 
         num_channels = bin_width.shape[1]
         # log_scale, not scale directly: exp(log_scale) guarantees a
@@ -148,7 +186,13 @@ class RateEstimator(nn.Module):
 
     @classmethod
     def from_calibration(
-        cls, path: str | Path, *, bits: int | None = None, mode: str | None = None
+        cls,
+        path: str | Path,
+        *,
+        bits: int | None = None,
+        mode: str | None = None,
+        track_scale: bool = False,
+        scale_momentum: float = 0.99,
     ) -> "RateEstimator":
         """Build a STANDALONE rate estimator (rate training without QAT)
         from a calibration file - same validation as
@@ -182,7 +226,47 @@ class RateEstimator(nn.Module):
                 f"(calibration_split={document['calibration_metadata'].get('calibration_split')!r}). "
                 "The rate estimator's bin width must come from train-split calibration only."
             )
-        return cls(params.scale, bits=params.bits, mode=params.mode)
+        return cls(
+            params.scale, bits=params.bits, mode=params.mode,
+            track_scale=track_scale, scale_momentum=scale_momentum,
+        )
+
+    @torch.no_grad()
+    def update_bin_width(self, z: torch.Tensor) -> None:
+        """Nudge `bin_width` toward the CURRENT latent's own dynamic range,
+        EMA-smoothed. No-op unless `track_scale=True` was passed at
+        construction (see this class's docstring, "SCALE TRACKING").
+
+        Uses the same min/max-over-levels formula
+        `UniformQuantizer.compute_params` already implements for "dynamic"
+        (per-tensor, calibration-free) quantization - not a new estimation
+        method, a reuse of one this project already has, tested, and trusts.
+        `z` should be the same latent just scored by `rate_bits`/`forward`
+        (the noised latent, if QAT is active) - call this AFTER scoring, so
+        a step's own rate is measured against the bin width it was told
+        about, not one updated mid-step.
+        """
+        if not self.track_scale:
+            return
+        if z.dim() != 4:
+            raise ValueError(f"Expected a 4D [B, C, H, W] latent tensor, got shape {tuple(z.shape)}")
+
+        q_levels = 2 ** self.bits - 1
+        if self.mode == "global":
+            instantaneous = (z.amax() - z.amin()) / q_levels
+            instantaneous = instantaneous.reshape(1, 1, 1, 1).expand_as(self.bin_width)
+        else:
+            instantaneous = (z.amax(dim=(0, 2, 3)) - z.amin(dim=(0, 2, 3))) / q_levels
+            instantaneous = instantaneous.reshape(1, -1, 1, 1)
+        # A degenerate (zero-width) batch range would otherwise EMA the bin
+        # width toward 0 and eventually make rate_bits() rely entirely on
+        # the epsilon floor - clamped away, mirroring quantization.py's own
+        # degenerate-range handling in spirit (never let a grid collapse).
+        instantaneous = torch.clamp(instantaneous, min=1e-6).to(
+            device=self.bin_width.device, dtype=self.bin_width.dtype
+        )
+
+        self.bin_width.mul_(self.scale_momentum).add_(instantaneous, alpha=1.0 - self.scale_momentum)
 
     def rate_bits(self, z: torch.Tensor) -> torch.Tensor:
         """Per-element estimated code length in bits, same shape as `z`.
@@ -218,4 +302,10 @@ class RateEstimator(nn.Module):
 
     def to_dict(self) -> dict[str, Any]:
         """Summary for training-history logging - never used to rebuild state."""
-        return {"bits": self.bits, "mode": self.mode, "num_channels": int(self.bin_width.shape[1])}
+        return {
+            "bits": self.bits,
+            "mode": self.mode,
+            "num_channels": int(self.bin_width.shape[1]),
+            "track_scale": self.track_scale,
+            "scale_momentum": self.scale_momentum if self.track_scale else None,
+        }

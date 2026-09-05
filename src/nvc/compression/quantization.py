@@ -52,10 +52,52 @@ milestone is for. A real codec would have to transmit these parameters as
 side information, or derive them once from a calibration set and freeze
 them; neither is implemented yet, and the storage figures reported by
 `storage_analysis.py` explicitly exclude that metadata cost.
+
+PER-CHANNEL BIT ALLOCATION (optional, OPTIMIZATION_ANALYSIS.md Q3)
+--------------------------------------------------------------------
+`QuantizationParams.bits_per_channel`, when set, lets each channel use FEWER
+levels than the table's own `bits` (e.g. table bits=8 but a low-information
+channel allocated only 4) - a genuine distortion/rate trade at the SAME
+average bit budget, reallocating precision from flat channels (extra
+resolution buys them little) to high-variance ones (extra resolution buys
+them more), the classical water-filling bit-allocation result
+(`bits_c = bits_avg + 0.5*log2(var_c / geometric_mean(var))`; see
+`calibration.allocate_bits_per_channel`).
+
+Deliberately does NOT touch the entropy table, the arithmetic coder, or the
+`.nvc` format: the table stays sized at the ordinary `bits` (2**bits
+symbols) for every channel, and a channel allocated fewer bits simply never
+produces symbol values above its own smaller `2**bits_c - 1` - the EXISTING
+Laplace-smoothed entropy model already prices a symbol that never occurs
+correctly, with no format change needed. A decoder needs no extra
+information either: dequantization is `(q - zero_point) * scale`, exactly
+as today, regardless of how many levels the encoder chose to use.
+
+NON-UNIFORM QUANTIZATION / COMPANDING (optional, OPTIMIZATION_ANALYSIS.md Q2)
+--------------------------------------------------------------------------------
+`QuantizationParams.companding_gamma`, when set, applies a power-law
+transform `y = sign(x) * |x|^gamma` before the ordinary uniform grid (and
+its exact inverse `x = sign(y) * |y|^(1/gamma)` after dequantizing).
+`calibration.py`'s own docstring already documents this project's latent as
+"a sharply peaked distribution with long tails" - equal-width bins waste
+most of their resolution on the near-empty tails. A `gamma < 1` compresses
+large |x| together (coarser bins far from zero) while expanding small |x|
+apart (finer bins near zero, where almost all the density is) - the
+standard mu-law-style companding idea, chosen over an iterative Lloyd-Max
+fit for simplicity: one parameter, monotonic, and it targets exactly the
+peaked-with-long-tails shape already measured, not a distribution shape
+that would need iterative fitting to characterize.
+
+Like `bits_per_channel`, this needs no `.nvc` format change: `scale`/
+`zero_point` are computed IN THE COMPANDED DOMAIN and stored exactly as
+before; a decoder that has the calibration file (which now also carries
+`companding_gamma`) applies the same inverse transform, with the same
+per-channel `scale`/`zero_point` fields the format already carries.
 """
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 import torch
@@ -66,6 +108,17 @@ QUANTIZATION_MODES = ("global", "per_channel")
 _DEGENERATE_RANGE_HALF_WIDTH = 0.5
 
 
+def _compand(x: torch.Tensor, gamma: float) -> torch.Tensor:
+    """y = sign(x) * |x|^gamma - see this module's docstring, "NON-UNIFORM
+    QUANTIZATION". Exactly the identity when gamma == 1.0."""
+    return torch.sign(x) * x.abs().pow(gamma)
+
+
+def _expand(y: torch.Tensor, gamma: float) -> torch.Tensor:
+    """Exact inverse of `_compand`: x = sign(y) * |y|^(1/gamma)."""
+    return torch.sign(y) * y.abs().pow(1.0 / gamma)
+
+
 @dataclass(frozen=True)
 class QuantizationParams:
     """Affine quantization parameters plus the grid they describe.
@@ -73,12 +126,40 @@ class QuantizationParams:
     `scale` and `zero_point` are broadcastable against the tensor they were
     derived from: shape [1, 1, 1, 1] in global mode, [1, C, 1, 1] in
     per-channel mode.
+
+    `bits_per_channel` and `companding_gamma` are both optional and default
+    to `None` (today's exact behavior - a single uniform grid, no
+    transform). See this module's docstring for what each does and why
+    neither needs a `.nvc` format change.
     """
 
     scale: torch.Tensor
     zero_point: torch.Tensor
     bits: int
     mode: str
+    bits_per_channel: tuple[int, ...] | None = None
+    companding_gamma: float | None = None
+
+    def __post_init__(self) -> None:
+        if self.bits_per_channel is not None:
+            if self.mode != "per_channel":
+                raise ValueError("bits_per_channel is only valid in 'per_channel' mode")
+            if len(self.bits_per_channel) != self.scale.shape[1]:
+                raise ValueError(
+                    f"bits_per_channel has {len(self.bits_per_channel)} entries but scale "
+                    f"has {self.scale.shape[1]} channels"
+                )
+            for channel_bits in self.bits_per_channel:
+                if not 1 <= channel_bits <= self.bits:
+                    raise ValueError(
+                        f"each bits_per_channel value must be in [1, {self.bits}] "
+                        f"(the table's own bit depth), got {channel_bits}"
+                    )
+        if self.companding_gamma is not None:
+            if not math.isfinite(self.companding_gamma) or self.companding_gamma <= 0:
+                raise ValueError(
+                    f"companding_gamma must be finite and > 0, got {self.companding_gamma}"
+                )
 
     @property
     def q_min(self) -> int:
@@ -86,7 +167,23 @@ class QuantizationParams:
 
     @property
     def q_max(self) -> int:
+        """The TABLE's max code, i.e. the entropy model's alphabet ceiling -
+        always `2**bits - 1` regardless of `bits_per_channel`. Use
+        `effective_q_max` for the per-channel clamp bound actually applied
+        during quantization."""
         return 2 ** self.bits - 1
+
+    @property
+    def effective_q_max(self) -> "int | torch.Tensor":
+        """The clamp bound `quantize()` actually applies: `q_max` broadcast
+        as today, unless `bits_per_channel` narrows it per channel."""
+        if self.bits_per_channel is None:
+            return self.q_max
+        levels = torch.tensor(
+            [2 ** b - 1 for b in self.bits_per_channel],
+            dtype=self.scale.dtype, device=self.scale.device,
+        )
+        return levels.reshape(1, -1, 1, 1)
 
     @property
     def num_levels(self) -> int:
@@ -99,6 +196,8 @@ class QuantizationParams:
             zero_point=self.zero_point.to(device),
             bits=self.bits,
             mode=self.mode,
+            bits_per_channel=self.bits_per_channel,
+            companding_gamma=self.companding_gamma,
         )
 
     def to_dict(self) -> dict:
@@ -108,11 +207,21 @@ class QuantizationParams:
             "mode": self.mode,
             "scale": self.scale.flatten().tolist(),
             "zero_point": self.zero_point.flatten().tolist(),
+            "bits_per_channel": (
+                list(self.bits_per_channel) if self.bits_per_channel is not None else None
+            ),
+            "companding_gamma": self.companding_gamma,
         }
 
     @classmethod
     def from_dict(cls, data: dict) -> "QuantizationParams":
-        """Rebuild from `to_dict()` output (the decoder's entry point)."""
+        """Rebuild from `to_dict()` output (the decoder's entry point).
+
+        `bits_per_channel`/`companding_gamma` are read with `.get(..., None)`
+        so calibration files written before either feature existed (every
+        M7/M8/M9 calibration on disk) still load unchanged, with both
+        correctly defaulting to "off".
+        """
         mode = data["mode"]
         if mode not in QUANTIZATION_MODES:
             raise ValueError(f"mode must be one of {QUANTIZATION_MODES}, got {mode!r}")
@@ -126,7 +235,12 @@ class QuantizationParams:
         if (scale <= 0).any():
             raise ValueError("all scale values must be strictly positive")
 
-        return cls(scale=scale, zero_point=zero_point, bits=int(data["bits"]), mode=mode)
+        bits_per_channel = data.get("bits_per_channel")
+        return cls(
+            scale=scale, zero_point=zero_point, bits=int(data["bits"]), mode=mode,
+            bits_per_channel=tuple(bits_per_channel) if bits_per_channel is not None else None,
+            companding_gamma=data.get("companding_gamma"),
+        )
 
 
 class UniformQuantizer:
@@ -144,28 +258,32 @@ class UniformQuantizer:
                      cost of C times as many parameters to carry.
     """
 
-    def __init__(self, bits: int, mode: str = "global") -> None:
+    def __init__(self, bits: int, mode: str = "global", *, companding_gamma: float | None = None) -> None:
         if not isinstance(bits, int) or isinstance(bits, bool):
             raise TypeError(f"bits must be an int, got {type(bits).__name__}")
         if not 1 <= bits <= 16:
             raise ValueError(f"bits must be in [1, 16], got {bits}")
         if mode not in QUANTIZATION_MODES:
             raise ValueError(f"mode must be one of {QUANTIZATION_MODES}, got {mode!r}")
+        if companding_gamma is not None and (not math.isfinite(companding_gamma) or companding_gamma <= 0):
+            raise ValueError(f"companding_gamma must be finite and > 0, got {companding_gamma}")
 
         self.bits = bits
         self.mode = mode
+        self.companding_gamma = companding_gamma
 
     def compute_params(self, x: torch.Tensor) -> QuantizationParams:
         """Derive (scale, zero_point) from the observed range of `x`."""
         _validate_latent(x)
+        x_transformed = _compand(x, self.companding_gamma) if self.companding_gamma is not None else x
 
         if self.mode == "global":
-            x_min = x.min().reshape(1, 1, 1, 1)
-            x_max = x.max().reshape(1, 1, 1, 1)
+            x_min = x_transformed.min().reshape(1, 1, 1, 1)
+            x_max = x_transformed.max().reshape(1, 1, 1, 1)
         else:
             # amin/amax over batch, height, width -> one value per channel.
-            x_min = x.amin(dim=(0, 2, 3)).reshape(1, -1, 1, 1)
-            x_max = x.amax(dim=(0, 2, 3)).reshape(1, -1, 1, 1)
+            x_min = x_transformed.amin(dim=(0, 2, 3)).reshape(1, -1, 1, 1)
+            x_max = x_transformed.amax(dim=(0, 2, 3)).reshape(1, -1, 1, 1)
 
         # Widen any zero-width range so scale is strictly positive.
         degenerate = x_max == x_min
@@ -178,7 +296,8 @@ class UniformQuantizer:
         zero_point = q_min - torch.round(x_min / scale)
 
         return QuantizationParams(
-            scale=scale, zero_point=zero_point, bits=self.bits, mode=self.mode
+            scale=scale, zero_point=zero_point, bits=self.bits, mode=self.mode,
+            companding_gamma=self.companding_gamma,
         )
 
     def quantize(
@@ -188,18 +307,32 @@ class UniformQuantizer:
 
         Pass `params` to reuse a previously derived grid (e.g. to quantize
         several tensors identically); omit it to calibrate on `x` itself.
+        `params` (not `self`) is authoritative for companding/bit-allocation,
+        exactly like it already is for scale/zero_point/bits/mode - a
+        caller can quantize with parameters this instance did not compute.
         """
         _validate_latent(x)
         if params is None:
             params = self.compute_params(x)
 
-        q = torch.round(x / params.scale) + params.zero_point
-        q = torch.clamp(q, params.q_min, params.q_max)
+        x_transformed = (
+            _compand(x, params.companding_gamma) if params.companding_gamma is not None else x
+        )
+        q = torch.round(x_transformed / params.scale) + params.zero_point
+        q = torch.clamp(q, min=params.q_min)
+        q_max = params.effective_q_max
+        # torch.clamp refuses a scalar min mixed with a tensor max (only
+        # matching types are allowed) - q_min is always the scalar 0, so
+        # branch on q_max's type instead of forcing q_min into a tensor.
+        q = torch.clamp(q, max=q_max) if isinstance(q_max, int) else torch.minimum(q, q_max)
         return q.to(torch.int32), params
 
     def dequantize(self, q: torch.Tensor, params: QuantizationParams) -> torch.Tensor:
         """integer grid -> approximate float."""
-        return (q.to(params.scale.dtype) - params.zero_point) * params.scale
+        x_hat = (q.to(params.scale.dtype) - params.zero_point) * params.scale
+        if params.companding_gamma is not None:
+            x_hat = _expand(x_hat, params.companding_gamma)
+        return x_hat
 
     def quantize_dequantize(
         self, x: torch.Tensor, params: QuantizationParams | None = None
@@ -219,10 +352,16 @@ def count_clipped(x: torch.Tensor, params: QuantizationParams) -> dict[str, floa
     is derived from `x` itself nothing can fall outside it. With percentile
     calibration some clipping is expected and intentional - this quantifies
     it so the trade-off is measured rather than assumed.
+
+    Uses `effective_q_max` (not the table-wide `q_max`), so a channel given
+    fewer levels via `bits_per_channel` is correctly scored against its own
+    smaller ceiling, and companded `x` if `params.companding_gamma` is set -
+    both match exactly what `UniformQuantizer.quantize` actually applies.
     """
-    unclamped = torch.round(x / params.scale) + params.zero_point
+    x_transformed = _compand(x, params.companding_gamma) if params.companding_gamma is not None else x
+    unclamped = torch.round(x_transformed / params.scale) + params.zero_point
     below = (unclamped < params.q_min).sum().item()
-    above = (unclamped > params.q_max).sum().item()
+    above = (unclamped > params.effective_q_max).sum().item()
     total = x.numel()
     return {
         "clipped_low": below,

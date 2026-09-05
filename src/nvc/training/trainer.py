@@ -193,6 +193,14 @@ def train_one_epoch_with_rate(
         loss = distortion + lambda_rate * rate
         loss.backward()
         optimizer.step()
+        # After the step, not before: this batch's rate was scored against
+        # the bin width as of the start of the step. No-op unless
+        # rate_estimator was built with track_scale=True (see
+        # rate_estimator.py, "SCALE TRACKING" - the MILESTONE_9_PLAN.md
+        # Section 9F.5 fix). Training-only: validate_one_epoch_with_rate
+        # below does NOT call this, so evaluating on a val batch never has
+        # the side effect of moving tracked state.
+        rate_estimator.update_bin_width(latent)
 
         total_loss += loss.item()
         total_distortion += distortion.item()

@@ -994,3 +994,62 @@ Modified: `scripts/train_autoencoder.py` (best-checkpoint seeding fix, objective
 log), `TESTING.md`, this file.
 
 Test suite: **613 passed, 0 failed**.
+
+---
+
+# Post-9F fix: bin-width scale tracking (closes the 9F.5 mechanism)
+
+**Status**: code implemented and tested; **not yet re-piloted or re-trained** (that needs the
+GPU M9C/M9C.1/M9-Final all ran on). This section documents the fix itself, not a new result.
+
+9F.5's root cause, restated precisely: the real deployed quantizer recalibrates its grid to each
+model's own latent range, so uniformly shrinking the latent is nearly free on the real codec. But
+`RateEstimator.bin_width` was frozen once, at construction, from a calibration file computed
+before training started - so against that fixed reference, the same shrinkage looked like a large
+rate reduction to the training signal. This is exactly why M9-M/M9-H bought nothing real: past a
+certain lambda, shrinking was the cheapest way to satisfy the proxy, and the proxy rewarded it far
+more than the codec ever would.
+
+**Fix**: `RateEstimator(..., track_scale=True)` (default `False` - every existing M9A/M9C/M9C.1
+test and run is unaffected unless this is explicitly opted into). `update_bin_width()`, called once
+per training step from `train_one_epoch_with_rate` (never from the validation counterpart - eval
+must not have the side effect of moving tracked state), nudges `bin_width` toward the current
+batch's own dynamic range via an EMA (`--rate-scale-momentum`), reusing
+`UniformQuantizer.compute_params`'s existing min/max-over-levels formula rather than inventing a
+new estimation method. `--rate-track-scale`/`--rate-scale-momentum` on `scripts/train_autoencoder.py`;
+both recorded per-epoch in `history.json` and in each checkpoint's `extra` (the bin width itself
+round-trips through a checkpoint automatically, since it is a buffer, not a learned parameter).
+
+**Validated, on the real M8 QAT checkpoint and real DAVIS data** (not synthetic): warm-fit a
+frozen and a tracked estimator identically against the real latent, then apply the exact 10x
+uniform shrinkage 9F.5 measured on real M9-H:
+
+| | Full-scale rate | Shrunk-latent rate | Drop (the "reward" for shrinking) |
+|---|---|---|---|
+| Frozen bin width (M9A/M9C/M9C.1 behavior) | 2.2086 bpp | 0.7494 bpp | **+1.4592 bpp** |
+| Tracked bin width (this fix) | 1.4760 bpp | 0.9093 bpp | **+0.5667 bpp** |
+
+The false reward for pure shrinkage drops by **61%** (1.4592 -> 0.5667 bpp) on the real checkpoint's
+real latent. Not zero - a min/max-over-a-batch EMA is a coarser estimate than a true percentile
+recalibration, so some residual scale-sensitivity remains, stated plainly rather than overclaimed a
+full fix. 10 new unit/integration tests in `tests/test_rate_estimator.py`, including one that
+reproduces this exact shrinkage scenario as a pass/fail regression test, plus a full CLI
+QAT+rate+track-scale end-to-end smoke test. 650/650 project tests pass (637 pre-fix + 13 new: 3
+quantile-limit + 10 scale-tracking - see the two other fixes below).
+
+**What this does NOT establish**: whether `--rate-track-scale` actually improves the real M9-M/M9-H
+operating points once retrained - that requires re-running the lambda pilot and M9-Final's real
+`.nvc` benchmark with this flag on, which needs the GPU and has not been done. The fix closes the
+diagnosed mechanism and is validated against it directly; it is not yet validated as an improvement
+to the deployed codec's RD curve.
+
+## Two other fixes landed in the same pass
+
+- **`torch.quantile`'s hard 2^24-element crash** (`OPTIMIZATION_ANALYSIS.md` B1): fixed via
+  deterministic subsampling in `calibrate_quantization_params`, below the limit is bit-identical
+  to before. See `OPTIMIZATION_ANALYSIS.md` B1 for the full writeup.
+- **Per-frame header overhead** (`OPTIMIZATION_ANALYSIS.md` Q1): a new, additive `.nvcs` stream
+  container (`NVCStreamHeader`/`NVCStreamWriter`/`NVCStreamReader` in `nvc_format.py`) sends the
+  549-byte quantization-parameter block once per stream instead of once per frame. The original
+  single-frame `.nvc` format is completely unchanged. Not yet wired into `benchmark_rd.py`'s
+  actual sequence encoding - see `OPTIMIZATION_ANALYSIS.md` Q1.

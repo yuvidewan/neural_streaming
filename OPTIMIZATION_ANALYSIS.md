@@ -140,18 +140,68 @@ optimizations, and several trade *against* speed (see Part 4).
 - **Effort:** Low. Send quantization parameters once per stream instead of per frame; a format-version bump and a decoder branch.
 - **Payoff:** Direct and immediate. **[verified]** the header is 549 bytes, of which **512 are the per-channel scales and zero-points** (64 channels x 2 float32 x 4 bytes) - re-sent identically in every single frame despite being fixed at calibration time. On a 13 KB frame payload that is roughly a **4% total-size reduction** for no quality loss whatsoever.
 - **Why it ranks first:** it is pure waste, not a trade-off. Every other item here costs something.
-- **Status:** Already flagged in the README's Milestone 6 limitations and in the gap analysis; still open.
+- **Status: [done]** `NVCStreamHeader`/`NVCStreamWriter`/`NVCStreamReader`
+  (`src/nvc/compression/nvc_format.py`) plus `encode_frame_payload`/`decode_frame_payload`/
+  `build_stream_header` (`codec.py`) add an additive `.nvcs` stream container: one 33-byte
+  fixed header + the parameter block ONCE per stream, then a 4-byte length prefix per frame
+  instead of the full 549-byte header. The original single-frame `.nvc` format
+  (`NVCHeader`/`NVCWriter`/`NVCReader`/`encode_frame`/`decode_frame`) is completely
+  unchanged - both live side by side. 23 new tests in `tests/test_entropy_coding.py`
+  prove the stream path is bit-exact against the existing per-frame path (same payload
+  bytes, same decoded pixels) and measurably smaller for N>1 frames. Not yet wired into
+  `benchmark_rd.py`'s actual per-sequence encoding - the primitive is done and tested,
+  integrating it into the benchmark harness is the natural next step.
 
 ### Q2. Non-uniform quantization matched to the latent distribution
 
 - **Effort:** Moderate. The calibration file format already carries per-channel parameters; this changes what those parameters mean and requires re-calibration, but not retraining.
 - **Payoff:** Likely significant. **[verified]** `quantization.py` implements a strictly *uniform* affine grid: `scale = (x_max - x_min) / (q_max - q_min)`, equal-width bins everywhere. But the project's own calibration module documents the latent as *"sharply peaked with long tails (range about [-16.5, 13.7] while the standard deviation is only 2.24)"*. Equal-width bins on a peaked distribution spend most of their resolution on nearly-empty regions. Companding (or Lloyd-Max style bin placement) directly attacks that mismatch.
 - **Nuance worth knowing:** the 0.1/99.9 percentile clipping already recovers *part* of this gain by refusing to let outliers stretch the grid. Non-uniform bins are the next step past that, not a replacement for it.
+- **Status: [done, with an honest caveat]** `QuantizationParams.companding_gamma` (`src/nvc/compression/quantization.py`)
+  applies a power-law transform `y = sign(x)*|x|^gamma` before the existing uniform grid, and its
+  exact inverse after dequantizing - `calibrate_quantization_params` companies before computing
+  percentiles, `UniformQuantizer` companies/expands around the existing quantize/dequantize path.
+  No change to `nvc_format.py`, `entropy_model.py`, or the range coder: `scale`/`zero_point` are
+  computed *in the companded domain* and stored exactly as before; only the calibration file (which
+  now also carries `companding_gamma`) needs to record the one extra parameter. Wired into
+  `scripts/calibrate_quantizer.py` as `--companding-gamma`. 6 new tests in `tests/test_entropy_coding.py`.
+  **Real-data validation** (`vimeo_qat_noise_best.pt`, 32 calibration frames, 8-bit per-channel):
+  a mild `gamma=0.7` cut latent MAE from 0.0433 to 0.0387 (~11%) and MSE from 0.02316 to 0.02285
+  (~1.3%) versus no companding - a real, if modest, distortion win at the *same* bit depth. But the
+  effect is **not monotonic in gamma**: `gamma=0.5` was roughly a wash and `gamma=0.3` was measurably
+  *worse* (MAE 0.0532, worse than uncompanded). This project's latent is peaked but not peaked enough
+  to reward aggressive companding - the useful range is close to gamma=1 (mild), not the strong
+  compression the "sharply peaked with long tails" description might suggest. Any real use of this
+  flag needs a small per-checkpoint gamma sweep, not a fixed default.
 
 ### Q3. Per-channel bit allocation
 
 - **Effort:** Moderate. Bit depth is currently a single scalar for the whole tensor; making it per-channel touches the quantizer, the entropy model's table sizing, and the `.nvc` header.
 - **Payoff:** Real. **[verified]** `UniformQuantizer(bits, mode)` applies one `bits` value to every channel - even in `per_channel` mode, which varies *scale and zero-point* per channel but not the *number of levels*. This is precisely the axis JPEG's quantization matrix exploits: spend more levels on channels carrying more information, fewer on channels that barely vary. Half the infrastructure (per-channel calibration and statistics) already exists.
+- **Status: [done, but the real-data payoff did not show up]** `QuantizationParams.bits_per_channel`
+  plus the new `effective_q_max` property (`src/nvc/compression/quantization.py`) let a channel be
+  clamped to fewer levels than the shared entropy table's own alphabet depth, without touching
+  `nvc_format.py`/`entropy_model.py`/the range coder - `bits` stays the table's alphabet size
+  everywhere it always was; `bits_per_channel` only ever narrows individual channels below it, so
+  the Laplace-smoothed entropy model handles the resulting unused high symbol values for free.
+  `calibrate_quantization_params(bits_per_channel=...)` makes each restricted channel's *scale*
+  coarser too (not just its clamp), and the new `allocate_bits_per_channel()` implements the classical
+  water-filling formula (`bits_c = avg + 0.5*log2(var_c / geomean(var))`, integer-rounded and
+  rebalanced to hit the exact average budget) from calibration-latent variance. Wired into
+  `scripts/calibrate_quantizer.py` as `--allocate-bits-per-channel` / `--allocate-average-bits`.
+  9 new tests in `tests/test_entropy_coding.py`.
+  **Real-data validation** (`vimeo_qat_noise_best.pt`, 400 calibration frames, per-channel variance
+  ratio 26x across the 64 channels): allocating an average of 6 bits/channel (range 5-7 bits, within
+  an 8-bit table) against a **plain uniform 6-bit baseline at the same average** gave essentially no
+  win - MSE was a negligible 0.8% better (0.05591 vs 0.05635) but mean per-channel empirical entropy
+  was very slightly *worse* (5.249 vs 5.216 bits/symbol), both within noise. The likely reason: the
+  existing per-channel *percentile-range* calibration already adapts each channel's scale to its own
+  spread, so a high-variance channel's step is already coarser and a low-variance channel's already
+  finer before any bit reallocation happens - water-filling on top of that captures little marginal
+  signal the scale adaptation had not already captured. **The mechanism is implemented and correct**
+  (verified end to end: fewer allocated bits genuinely produces fewer distinct symbols and a
+  coarser step, not just a clamp), but on this codec's actual latent statistics it is not the
+  free win the classical formula promises - measure per checkpoint before relying on it.
 
 ### Q4. Colour-space transform + chroma subsampling
 
@@ -258,8 +308,14 @@ message that says nothing about calibration.
 subsampling before the quantile call. Low effort, and worth doing before it
 fires on someone mid-run rather than after.
 
-Not fixed in this pass - this document is an audit, and the fix is a code
-change that deserves its own review and test.
+**Status: [done]** `_quantile_safe()` in `src/nvc/compression/calibration.py`:
+below `_MAX_QUANTILE_ELEMENTS` (10,000,000, safely under the real 16,777,216
+limit) behavior is byte-for-byte identical to calling `torch.quantile`
+directly; above it, a deterministic random subsample of exactly that many
+values is used instead of crashing. 3 new tests in `tests/test_entropy_coding.py`,
+including one that reproduces the crash scenario (via a monkeypatched limit,
+so the test itself doesn't need to allocate 10M+ elements) and one confirming
+the below-limit path is unaffected.
 
 ---
 

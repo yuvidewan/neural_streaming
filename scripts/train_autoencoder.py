@@ -165,6 +165,26 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
              "estimator reuses --qat-calibration's scale automatically, so there "
              "is only ever one quantization scale in play for a given run.",
     )
+    parser.add_argument(
+        "--rate-track-scale", action="store_true", default=defaults.rate_track_scale,
+        help=(
+            "Fix for MILESTONE_9_PLAN.md Section 9F.5: with a FROZEN bin width, the "
+            "encoder can 'cheat' the rate proxy by uniformly shrinking the latent, "
+            "which the real deployed quantizer (which recalibrates to each model's "
+            "own latent range) does not reward - so past a certain lambda, a lower "
+            "proxy rate stopped meaning a smaller real .nvc file. With this flag, the "
+            "bin width is nudged every training step toward the CURRENT batch's own "
+            "dynamic range (EMA-smoothed via --rate-scale-momentum), matching what the "
+            "deployed codec actually does. Off by default - existing M9A/M9C/M9C.1 "
+            "behavior (a bin width frozen at the calibration file's own value) is "
+            "unchanged unless this is passed. Ignored unless --rate-enabled.",
+        ),
+    )
+    parser.add_argument(
+        "--rate-scale-momentum", type=float, default=defaults.rate_scale_momentum,
+        help="EMA momentum for --rate-track-scale (0 <= m < 1; higher = slower/steadier "
+             "tracking). Ignored unless both --rate-enabled and --rate-track-scale.",
+    )
     return parser
 
 
@@ -255,6 +275,8 @@ def main(argv: list[str] | None = None) -> int:
             )
         if not args.qat_enabled and args.rate_calibration is None:
             parser.error("--rate-calibration is required when --rate-enabled is passed without --qat-enabled")
+        if not 0.0 <= args.rate_scale_momentum < 1.0:
+            parser.error("--rate-scale-momentum must be in [0, 1)")
 
     seed_everything(args.seed)
     device = _resolve_device(args.device)
@@ -280,13 +302,17 @@ def main(argv: list[str] | None = None) -> int:
             # help text and rate_estimator.py's module docstring).
             rate_estimator = RateEstimator(
                 quantization_noise.scale, bits=quantization_noise.bits, mode=quantization_noise.mode,
+                track_scale=args.rate_track_scale, scale_momentum=args.rate_scale_momentum,
             )
         else:
             if not args.rate_calibration.is_file():
                 print(f"[ERROR] --rate-calibration not found: {args.rate_calibration}", file=sys.stderr)
                 return 1
             try:
-                rate_estimator = RateEstimator.from_calibration(args.rate_calibration)
+                rate_estimator = RateEstimator.from_calibration(
+                    args.rate_calibration,
+                    track_scale=args.rate_track_scale, scale_momentum=args.rate_scale_momentum,
+                )
             except (ValueError, FileNotFoundError) as exc:
                 print(f"[ERROR] {exc}", file=sys.stderr)
                 return 1
@@ -415,6 +441,18 @@ def main(argv: list[str] | None = None) -> int:
             f"[RATE] Optimizer parameter groups: model lr={args.learning_rate}, "
             f"rate estimator (loc/log_scale) lr={args.rate_lr}."
         )
+        if args.rate_track_scale:
+            print(
+                f"[RATE] Bin-width scale tracking ENABLED (fix for 9F.5) - "
+                f"EMA momentum={args.rate_scale_momentum}. Bin width will follow the "
+                f"latent's own dynamic range instead of staying frozen at the "
+                f"calibration file's value."
+            )
+        else:
+            print(
+                "[RATE] Bin-width scale tracking disabled - bin width stays frozen "
+                "at the calibration file's value (pre-9F.5-fix behavior, unchanged)."
+            )
     else:
         print("[RATE] Rate loss disabled (loss is plain MSE, as before Milestone 9).")
 
@@ -494,6 +532,11 @@ def main(argv: list[str] | None = None) -> int:
             # Milestone 9C.1: recorded per epoch like every other rate/qat field,
             # so a history.json says which LR the estimator was trained at.
             "rate_lr": args.rate_lr if rate_estimator is not None else None,
+            # Post-9F.5 fix: whether this epoch's bin width was frozen or tracked.
+            "rate_track_scale": args.rate_track_scale if rate_estimator is not None else None,
+            "rate_scale_momentum": (
+                args.rate_scale_momentum if rate_estimator is not None and args.rate_track_scale else None
+            ),
             "train_distortion": train_metrics.get("distortion"),
             "train_rate_bpp": train_metrics.get("rate"),
             "val_distortion": val_metrics.get("distortion"),
@@ -521,6 +564,8 @@ def main(argv: list[str] | None = None) -> int:
                 "rate_estimator_state_dict": rate_estimator.state_dict(),
                 "rate_lambda": args.rate_lambda,
                 "rate_lr": args.rate_lr,
+                "rate_track_scale": args.rate_track_scale,
+                "rate_scale_momentum": args.rate_scale_momentum if args.rate_track_scale else None,
             }
             if rate_estimator is not None else None
         )
