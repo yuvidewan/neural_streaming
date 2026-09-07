@@ -1,0 +1,65 @@
+{
+  "phase": "M10A Phase 3 (scale-shrink diagnostic)",
+  "checkpoint": "outputs\\qat_combined\\checkpoints_qat_noise\\best.pt",
+  "calibration": "outputs\\calibration\\vimeo_epoch17_4bit.json",
+  "adapt_steps": 200,
+  "scale_momentum": 0.99,
+  "batches": 20,
+  "seed": 42,
+  "note": "All rates are the differentiable Laplace training proxy in bits per input pixel. None of these figures is a measured .nvc bitrate.",
+  "rows": [
+    {
+      "factor": 1.0,
+      "frozen_rate_bpp": 2.930655062198639,
+      "frozen_reward_bpp": 0.0,
+      "tracked_rate_bpp": 2.285062646865845,
+      "tracked_reward_bpp": 0.0,
+      "tracked_and_fitted_rate_bpp": 0.8582455694675446,
+      "tracked_and_fitted_reward_bpp": 0.0,
+      "tracked_bin_width_mean": 3.3202285766601562,
+      "deployed_bin_width_mean": 3.683706760406494,
+      "latent_abs_mean": 7.567335605621338
+    },
+    {
+      "factor": 0.75,
+      "frozen_rate_bpp": 2.3969906091690065,
+      "frozen_reward_bpp": 0.5336644530296324,
+      "tracked_rate_bpp": 1.8689568519592286,
+      "tracked_reward_bpp": 0.41610579490661626,
+      "tracked_and_fitted_rate_bpp": 0.8509215176105499,
+      "tracked_and_fitted_reward_bpp": 0.0073240518569946955,
+      "tracked_bin_width_mean": 2.5129456520080566,
+      "deployed_bin_width_mean": 2.762779712677002,
+      "latent_abs_mean": 5.675502300262451
+    },
+    {
+      "factor": 0.5,
+      "frozen_rate_bpp": 1.7683412969112395,
+      "frozen_reward_bpp": 1.1623137652873994,
+      "tracked_rate_bpp": 1.4037594079971314,
+      "tracked_reward_bpp": 0.8813032388687134,
+      "tracked_and_fitted_rate_bpp": 0.8380028992891312,
+      "tracked_and_fitted_reward_bpp": 0.020242670178413413,
+      "tracked_bin_width_mean": 1.7056623697280884,
+      "deployed_bin_width_mean": 1.841853380203247,
+      "latent_abs_mean": 3.783667802810669
+    },
+    {
+      "factor": 0.25,
+      "frozen_rate_bpp": 1.0900662302970887,
+      "frozen_reward_bpp": 1.8405888319015502,
+      "tracked_rate_bpp": 0.9783672004938125,
+      "tracked_reward_bpp": 1.3066954463720322,
+      "tracked_and_fitted_rate_bpp": 0.8083340495824813,
+      "tracked_and_fitted_reward_bpp": 0.04991151988506326,
+      "tracked_bin_width_mean": 0.8983793258666992,
+      "deployed_bin_width_mean": 0.9209266901016235,
+      "latent_abs_mean": 1.8918339014053345
+    }
+  ],
+  "frozen_reward_at_quarter_bpp": 1.8405888319015502,
+  "tracked_reward_at_quarter_bpp": 1.3066954463720322,
+  "tracked_and_fitted_reward_at_quarter_bpp": 0.04991151988506326,
+  "exploit_reward_reduction_percent_tracked_only": 29.006662230909104,
+  "exploit_reward_reduction_percent_tracked_and_fitted": 97.28828519330422
+}

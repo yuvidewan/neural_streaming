@@ -5,7 +5,7 @@ and the rule this project follows going forward - **any change to code gets
 a matching change to tests in the same commit**, not a follow-up "add tests
 later" that never happens.
 
-610 tests under `tests/`, ~50s on a laptop CPU. No test needs a GPU, a real
+717 tests under `tests/`, ~150s on a laptop CPU. No test needs a GPU, a real
 Kaggle download, or an external dataset - everything runs on synthetic data
 generated in-process (`tests/helpers.py`), so the full suite runs
 identically in CI, on a fresh clone, or on a machine with no internet
@@ -17,7 +17,7 @@ failing - see "FFmpeg-dependent tests" below.
 the accelerator-architecture proof-of-concept - see `hardware/ARCHITECTURE.md`.
 It's exploratory design work, not `src/nvc/` or `scripts/*.py`, so it's
 outside this document's rule below, but a plain `pytest` from the project
-root still collects it (613 tests total) since nothing scopes discovery to
+root still collects it (738 tests total) since nothing scopes discovery to
 `tests/` only.
 
 ## The rule
@@ -104,6 +104,11 @@ table, either extend the closest existing file or start a new
 | `test_scripts_m9c_pilot.py` | `m9c_rd_diagnostic.py`, `m9c_lambda_pilot.py`, `m9c_failure_modes.py`, `m9c1_adaptation_check.py` |
 | `test_scripts_m9_final.py` | `m9_final_train.py` |
 | `test_scripts_m9_final_eval.py` | `m9_final_calibrate_benchmark.py` |
+| `test_scripts_m10a.py` | `m10a_shrink_diagnostic.py`, `m10a_pilot.py`, `m10a_evaluate.py`, plus the rate proxy's location-scale invariance property |
+| `test_scripts_m10b.py` | `m10a_pilot.py`'s parameterised lambda sweep (`arms_for_lambdas`) and `m10b_evaluate.py` |
+| `test_scripts_m10c.py` | `m10c_convergence.py`'s retained step snapshots (`make_snapshotting_save`) and `m10c_evaluate.py`'s budget-paired analysis |
+| `test_scripts_m10d.py` | `m10d_lambda_refinement.py`'s fairness preflight and lambda propagation, and `m10d_evaluate.py`'s calibration provenance and proxy/actual comparison |
+| `test_scripts_m10e.py` | `m10e_lambda_lock.py`'s lambda x seed grid construction, its fail-closed fairness preflight (design-level vs selection-level checks), lambda+seed propagation, and `m10e_evaluate.py`'s calibration provenance and paired-per-seed analysis |
 
 **Script contract** every `scripts/*.py` file follows, which is what makes
 all of the above possible:

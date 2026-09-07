@@ -1,0 +1,107 @@
+==============================================================================================================
+M10E - DEPLOYED .nvc BENCHMARK (18,120 steps, DAVIS test, 719 frames, 10 runs)
+==============================================================================================================
+lambda name          lambda  seed  bits       BPP   PSNR dB   MS-SSIM  bytes/frm   ratio
+CTRL             0.0000e+00    42     8    1.8444    29.998    0.9744    15109.3   13.01
+CTRL             0.0000e+00    42     6    1.3420    29.851    0.9722    10993.9   17.88
+CTRL             0.0000e+00    42     4    0.8310    28.020    0.9389     6807.5   28.88
+CTRL             0.0000e+00    43     8    1.8451    30.053    0.9743    15115.1   13.01
+CTRL             0.0000e+00    43     6    1.3428    29.906    0.9722    10999.9   17.87
+CTRL             0.0000e+00    43     4    0.8317    28.043    0.9386     6813.2   28.86
+LOWER            3.0000e-04    42     8    1.7690    30.098    0.9761    14491.5   13.57
+LOWER            3.0000e-04    42     6    1.2664    29.987    0.9746    10374.3   18.95
+LOWER            3.0000e-04    42     4    0.7594    28.647    0.9530     6220.8   31.61
+LOWER            3.0000e-04    43     8    1.7692    30.122    0.9761    14493.1   13.57
+LOWER            3.0000e-04    43     6    1.2665    30.008    0.9746    10375.5   18.95
+LOWER            3.0000e-04    43     4    0.7593    28.673    0.9535     6220.4   31.61
+MID_LOW          4.5000e-04    42     8    1.7592    30.080    0.9760    14411.4   13.64
+MID_LOW          4.5000e-04    42     6    1.2566    29.958    0.9744    10294.4   19.10
+MID_LOW          4.5000e-04    42     4    0.7500    28.596    0.9525     6144.4   32.00
+MID_LOW          4.5000e-04    43     8    1.7595    30.103    0.9762    14413.5   13.64
+MID_LOW          4.5000e-04    43     6    1.2570    29.993    0.9747    10296.9   19.09
+MID_LOW          4.5000e-04    43     4    0.7502    28.616    0.9528     6145.8   31.99
+CURRENT_BEST     6.0000e-04    42     8    1.7534    30.010    0.9758    14363.7   13.69
+CURRENT_BEST     6.0000e-04    42     6    1.2509    29.881    0.9742    10247.4   19.19
+CURRENT_BEST     6.0000e-04    42     4    0.7451    28.558    0.9523     6104.1   32.21
+CURRENT_BEST     6.0000e-04    43     8    1.7535    29.957    0.9760    14364.8   13.69
+CURRENT_BEST     6.0000e-04    43     6    1.2511    29.848    0.9744    10249.1   19.18
+CURRENT_BEST     6.0000e-04    43     4    0.7453    28.552    0.9526     6105.2   32.20
+UPPER_REFERENCE  7.5000e-04    42     8    1.7486    30.011    0.9757    14324.8   13.73
+UPPER_REFERENCE  7.5000e-04    42     6    1.2462    29.885    0.9742    10209.1   19.26
+UPPER_REFERENCE  7.5000e-04    42     4    0.7416    28.578    0.9523     6074.8   32.36
+UPPER_REFERENCE  7.5000e-04    43     8    1.7491    29.458    0.9753    14328.6   13.72
+UPPER_REFERENCE  7.5000e-04    43     6    1.2467    29.367    0.9739    10212.9   19.25
+UPPER_REFERENCE  7.5000e-04    43     4    0.7417    28.242    0.9521     6075.9   32.36
+
+==============================================================================================================
+PAIRED BD-RATE - each run vs the CONTROL OF ITS OWN SEED
+==============================================================================================================
+lambda name          lambda     s42 PSNR     s43 PSNR      mean      std   spread |    s42 MSSSIM    s43 MSSSIM      mean
+LOWER            3.0000e-04      -17.18%      -16.39%   -16.78%    0.56    0.79 |       -18.82%       -19.31%   -19.06%
+MID_LOW          4.5000e-04      -16.85%      -16.21%   -16.53%    0.45    0.64 |       -19.16%       -19.77%   -19.46%
+CURRENT_BEST     6.0000e-04      -14.81%      -12.24%   -13.52%    1.82    2.57 |       -19.28%       -19.86%   -19.57%
+UPPER_REFERENCE  7.5000e-04      -15.46%       -2.96%    -9.21%    8.83   12.49 |       -19.59%       -19.28%   -19.43%
+
+  n=2 seeds per lambda. 'std' over two points is a spread, not a confidence
+  interval - no significance is claimed from it.
+
+==============================================================================================================
+EMPIRICAL NOISE FLOOR - CTRL seed 42 vs CTRL seed 43 (identical but for the seed)
+==============================================================================================================
+ bits     s42 BPP     s43 BPP    dBPP%     s42 PSNR     s43 PSNR    dPSNR   dMS-SSIM
+    8      1.8444      1.8451   +0.04%       29.998       30.053   +0.054    -0.0001
+    6      1.3420      1.3428   +0.05%       29.851       29.906   +0.056    -0.0000
+    4      0.8310      0.8317   +0.08%       28.020       28.043   +0.023    -0.0002
+
+  CTRL-vs-CTRL BD-rate = -1.62%  ->  noise floor |1.62| percentage points
+  (M10D's independent estimate was 1.41 points.)
+
+lambda name        mean BD  seed spread   vs floor   classification
+LOWER              -16.78%        0.79      10.4x   clearly above noise
+MID_LOW            -16.53%        0.64      10.2x   clearly above noise
+CURRENT_BEST       -13.52%        2.57       8.3x   clearly above noise
+UPPER_REFERENCE     -9.21%       12.49       5.7x   clearly above noise
+
+  Convention: 'clearly above noise' means |mean BD-rate| > 2.0x the
+  measured control-to-control floor. This is a stated threshold, not a
+  significance test - n=2 cannot support one.
+
+==============================================================================================================
+CONVERGED lambda -> RD CURVE (seed-averaged)
+==============================================================================================================
+lambda name          lambda   proxy R     BPP 8     BPP 6     BPP 4   BD PSNR  BD MSSSIM   BD std
+CTRL             0.0000e+00    2.1786    1.8447    1.3424    0.8313    +0.00%     +0.00%    0.00
+LOWER            3.0000e-04    0.6580    1.7691    1.2665    0.7594   -16.78%    -19.06%    0.56
+MID_LOW          4.5000e-04    0.6479    1.7593    1.2568    0.7501   -16.53%    -19.46%    0.45
+CURRENT_BEST     6.0000e-04    0.6422    1.7535    1.2510    0.7452   -13.52%    -19.57%    1.82
+UPPER_REFERENCE  7.5000e-04    0.6386    1.7489    1.2465    0.7416    -9.21%    -19.43%    8.83
+
+==============================================================================================================
+PROXY vs ACTUAL - two questions, kept apart
+==============================================================================================================
+A. Does proxy R order actual .nvc bitrate?
+   8-bit: agreement=True  spearman=+1.000  pearson=+0.997
+   6-bit: agreement=True  spearman=+1.000  pearson=+0.997
+   4-bit: agreement=False  spearman=+0.976  pearson=+0.998
+
+B. Does the lambda minimising proxy R also minimise BD-rate?
+   lowest mean proxy R : UPPER_REFERENCE (lambda 7.5000e-04)
+   best mean BD-rate   : LOWER (lambda 3.0000e-04, -16.78%)
+   same lambda? False
+   -> the proxy estimates RATE. It does not by itself identify the best RD
+      operating point, and must not be used alone to choose lambda.
+
+==============================================================================================================
+M10D CROSS-CHECK - lambda=6.0e-4 seed 42, M10D vs M10E (reproducibility)
+==============================================================================================================
+ bits   M10D BPP   M10E BPP    dBPP%   M10D PSNR   M10E PSNR    dPSNR
+    8     1.7530     1.7534   +0.02%      29.998      30.010   +0.012
+    6     1.2506     1.2509   +0.02%      29.929      29.881   -0.049
+    4     0.7447     0.7451   +0.06%      28.561      28.558   -0.003
+
+==============================================================================================================
+PARETO FRONTIER (seed-averaged points)
+==============================================================================================================
+  8-bit non-dominated: CURRENT_BEST, LOWER, MID_LOW, UPPER_REFERENCE
+  6-bit non-dominated: CURRENT_BEST, LOWER, MID_LOW, UPPER_REFERENCE
+  4-bit non-dominated: CURRENT_BEST, LOWER, MID_LOW, UPPER_REFERENCE

@@ -1,0 +1,122 @@
+{
+  "method": "per_channel_percentile",
+  "lower_percentile": 0.1,
+  "upper_percentile": 99.9,
+  "calibration_batches": 50,
+  "calibration_frames": 400,
+  "batch_size": 8,
+  "calibration_split": "train",
+  "seed": 42,
+  "clip_guard_percent": 2.0,
+  "rows": [
+    {
+      "model": "M10B-1",
+      "label": "M10B-1 (lambda 3e-04)",
+      "bits": 8,
+      "calibration": "outputs\\m10b_pilot\\calibration\\m10b_1.json",
+      "clipped_percent": 0.1929779052734375,
+      "clipped_low": 6304,
+      "clipped_high": 6343,
+      "guard_percent": 2.0,
+      "within_guard": true,
+      "checkpoint": "outputs\\m10b_pilot\\lambda_3e-04\\best.pt"
+    },
+    {
+      "model": "M10B-1",
+      "label": "M10B-1 (lambda 3e-04)",
+      "bits": 6,
+      "calibration": "outputs\\m10b_pilot\\calibration\\m10b_1_6bit.json",
+      "clipped_percent": 0.1736297607421875,
+      "clipped_low": 5585,
+      "clipped_high": 5794,
+      "guard_percent": 2.0,
+      "within_guard": true,
+      "checkpoint": "outputs\\m10b_pilot\\lambda_3e-04\\best.pt"
+    },
+    {
+      "model": "M10B-1",
+      "label": "M10B-1 (lambda 3e-04)",
+      "bits": 4,
+      "calibration": "outputs\\m10b_pilot\\calibration\\m10b_1_4bit.json",
+      "clipped_percent": 0.1160888671875,
+      "clipped_low": 3700,
+      "clipped_high": 3908,
+      "guard_percent": 2.0,
+      "within_guard": true,
+      "checkpoint": "outputs\\m10b_pilot\\lambda_3e-04\\best.pt"
+    },
+    {
+      "model": "M10B-2",
+      "label": "M10B-2 (lambda 1e-04)",
+      "bits": 8,
+      "calibration": "outputs\\m10b_pilot\\calibration\\m10b_2.json",
+      "clipped_percent": 0.1930694580078125,
+      "clipped_low": 6298,
+      "clipped_high": 6355,
+      "guard_percent": 2.0,
+      "within_guard": true,
+      "checkpoint": "outputs\\m10b_pilot\\lambda_1e-04\\best.pt"
+    },
+    {
+      "model": "M10B-2",
+      "label": "M10B-2 (lambda 1e-04)",
+      "bits": 6,
+      "calibration": "outputs\\m10b_pilot\\calibration\\m10b_2_6bit.json",
+      "clipped_percent": 0.1736297607421875,
+      "clipped_low": 5601,
+      "clipped_high": 5778,
+      "guard_percent": 2.0,
+      "within_guard": true,
+      "checkpoint": "outputs\\m10b_pilot\\lambda_1e-04\\best.pt"
+    },
+    {
+      "model": "M10B-2",
+      "label": "M10B-2 (lambda 1e-04)",
+      "bits": 4,
+      "calibration": "outputs\\m10b_pilot\\calibration\\m10b_2_4bit.json",
+      "clipped_percent": 0.1164703369140625,
+      "clipped_low": 3363,
+      "clipped_high": 4270,
+      "guard_percent": 2.0,
+      "within_guard": true,
+      "checkpoint": "outputs\\m10b_pilot\\lambda_1e-04\\best.pt"
+    },
+    {
+      "model": "M10B-3",
+      "label": "M10B-3 (lambda 3e-05)",
+      "bits": 8,
+      "calibration": "outputs\\m10b_pilot\\calibration\\m10b_3.json",
+      "clipped_percent": 0.192901611328125,
+      "clipped_low": 6319,
+      "clipped_high": 6323,
+      "guard_percent": 2.0,
+      "within_guard": true,
+      "checkpoint": "outputs\\m10b_pilot\\lambda_3e-05\\best.pt"
+    },
+    {
+      "model": "M10B-3",
+      "label": "M10B-3 (lambda 3e-05)",
+      "bits": 6,
+      "calibration": "outputs\\m10b_pilot\\calibration\\m10b_3_6bit.json",
+      "clipped_percent": 0.1732635498046875,
+      "clipped_low": 5600,
+      "clipped_high": 5755,
+      "guard_percent": 2.0,
+      "within_guard": true,
+      "checkpoint": "outputs\\m10b_pilot\\lambda_3e-05\\best.pt"
+    },
+    {
+      "model": "M10B-3",
+      "label": "M10B-3 (lambda 3e-05)",
+      "bits": 4,
+      "calibration": "outputs\\m10b_pilot\\calibration\\m10b_3_4bit.json",
+      "clipped_percent": 0.1165618896484375,
+      "clipped_low": 3689,
+      "clipped_high": 3950,
+      "guard_percent": 2.0,
+      "within_guard": true,
+      "checkpoint": "outputs\\m10b_pilot\\lambda_3e-05\\best.pt"
+    }
+  ],
+  "failures": []
+}

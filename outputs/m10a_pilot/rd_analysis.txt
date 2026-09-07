@@ -1,0 +1,62 @@
+============================================================================================
+M10A - ACTUAL .nvc BENCHMARK (DAVIS test split)
+============================================================================================
+model        bits       BPP   PSNR dB   MS-SSIM  bytes/frame  enc s/fr  dec s/fr
+M10A-CTRL       8    1.8592    29.839    0.9732      15230.7    0.0047    0.0059
+M10A-CTRL       6    1.3571    29.710    0.9713      11117.5    0.0035    0.0042
+M10A-CTRL       4    0.8456    27.922    0.9373       6926.8    0.0030    0.0035
+M10A-L          8    1.8369    29.771    0.9738      15047.8    0.0046    0.0058
+M10A-L          6    1.3343    29.677    0.9723      10930.7    0.0035    0.0043
+M10A-L          4    0.8236    28.398    0.9481       6746.9    0.0031    0.0035
+M10A-M          8    1.8136    29.313    0.9715      14857.2    0.0047    0.0059
+M10A-M          6    1.3109    29.250    0.9704      10739.3    0.0035    0.0043
+M10A-M          4    0.8010    28.299    0.9516       6561.9    0.0031    0.0035
+M10A-H          8    1.7924    28.202    0.9624      14683.6    0.0046    0.0058
+M10A-H          6    1.2897    28.151    0.9613      10565.0    0.0036    0.0043
+M10A-H          4    0.7809    27.409    0.9427       6397.0    0.0031    0.0035
+
+============================================================================================
+PROXY vs ACTUAL
+============================================================================================
+model         proxy R |   BPP 8bit   BPP 6bit   BPP 4bit
+M10A-CTRL      2.2409 |     1.8592     1.3571     0.8456
+M10A-L         0.7345 |     1.8369     1.3343     0.8236
+M10A-M         0.6822 |     1.8136     1.3109     0.8010
+M10A-H         0.6190 |     1.7924     1.2897     0.7809
+
+  proxy R ranking (low->high): M10A-H < M10A-M < M10A-L < M10A-CTRL
+  8-bit actual ranking      : M10A-H < M10A-M < M10A-L < M10A-CTRL   agree=True   pearson=+0.814
+        spearman=+1.000   actual BPP spread=3.73%
+  6-bit actual ranking      : M10A-H < M10A-M < M10A-L < M10A-CTRL   agree=True   pearson=+0.816
+        spearman=+1.000   actual BPP spread=5.23%
+  4-bit actual ranking      : M10A-H < M10A-M < M10A-L < M10A-CTRL   agree=True   pearson=+0.818
+        spearman=+1.000   actual BPP spread=8.28%
+
+  n=4: correlations are indicative only, far too few points for a
+  statistically strong claim. Treat the rankings as the primary evidence.
+
+============================================================================================
+SCALE-NORMALISATION DIAGNOSTIC - how much did each quantity actually move?
+============================================================================================
+model        latent |.|  latent rng  bin width   proxy R   BPP 4bit
+M10A-CTRL        7.8031      137.86     4.1230    2.2409     0.8456
+M10A-L           5.2630       97.34     3.2101    0.7345     0.8236
+M10A-M           3.0101       58.68     2.1381    0.6822     0.8010
+M10A-H           1.6773       32.70     1.3208    0.6190     0.7809
+
+  max/min spread, latent_abs_mean   : 4.652x
+  max/min spread, bin_width         : 3.122x
+  max/min spread, proxy_R           : 3.620x
+  max/min spread, actual_bpp_4bit   : 1.083x
+
+============================================================================================
+G. M9 (frozen bin width) vs M10A (scale-tracked) - same lambdas
+============================================================================================
+lambda     M9 proxy   M9 BPP4 |  M10A proxy  M10A BPP4
+9.08e-4      0.6752    0.7365 |      0.7345     0.8236
+2.87e-3      0.4006    0.7337 |      0.6822     0.8010
+9.08e-3      0.1811    0.7416 |      0.6190     0.7809
+
+  proxy R spread across the three lambdas: M9 3.73x  ->  M10A 1.19x
+  A smaller proxy spread is the intended effect: under a frozen bin width
+  the proxy paid out for shrinkage the codec ignores; tracked, it does not.

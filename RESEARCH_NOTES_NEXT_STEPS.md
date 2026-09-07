@@ -6,6 +6,25 @@ validation of the accelerator's INT8 assumption. C is a completed measurement ag
 project's real checkpoint and full DAVIS test split; A and B are literature findings with a
 concrete, minimally-invasive proposal for this specific codebase, not just a survey.
 
+> **Status as of M10E (2026-09-07).** Thread **A (RD loss term) is done** — it became Milestones 9
+> and 10. The recommended order below is preserved as written, but item 2 is complete: the
+> differentiable rate objective shipped in M9A, its latent-shrinkage exploit was found in M9F and
+> fixed in M10A, and M10C/M10D/M10E established a durable deployed gain. M10E ran 5 λ × 2 seeds at
+> the full 18,120-step budget and confirmed the gain is large and reproducible — every rate-aware λ
+> beats a matched control by **−9% to −17% BD-rate**, 6–10× the measured 1.62-point noise floor, on
+> both seeds and on the real `.nvc` path.
+>
+> **λ is not yet locked.** The converged optimum is at or below **4.5e-4** (below M10D's 6e-4 and
+> well below M9's pilot-derived 9.0757e-4), but λ = 3e-4 and 4.5e-4 tie within noise (0.25 points
+> apart against a 1.62-point floor), MS-SSIM ranks the λ in nearly the reverse order with only a
+> 0.51-point spread, and the minimum still sits on the boundary of the tested range. The current
+> **working operating point is λ = 4.5e-4** — tied for best on PSNR, smallest seed spread of any arm,
+> and in the interior of the tested range rather than on an untested edge. Resolving it needs one
+> more experiment: λ ∈ {1.0e-4, 2.0e-4}, two seeds, same control.
+>
+> See [CHANGELOG.md](CHANGELOG.md) for the full sequence. Thread **B (temporal coding) is still
+> open** and is now the next architectural lever; thread C is closed.
+
 ## TL;DR — recommended order
 
 1. **Fix the INT8 activation scheme** (C found a real, non-trivial cost — cheap fix, do first).

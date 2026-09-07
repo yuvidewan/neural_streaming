@@ -94,6 +94,14 @@ outputs/benchmarks/*
 # Auto-created by scripts/train_vimeo_qat_combined.py - no .gitkeep needed.
 outputs/qat_combined/
 
+# Per-step training telemetry from the Milestone 10 experiments
+# (scripts/m10*.py). One record per optimizer step x 18,120 steps ~= 9 MB per
+# run, and 24 runs of it. Raw instrumentation, not an analysis product: every
+# conclusion in CHANGELOG.md's M10A-M10E entries comes from the committed
+# training_summary.json / rd_analysis.json / calibration + benchmark files
+# alongside them. Regenerable by re-running the driver.
+outputs/**/step_log.json
+
 # --- Model checkpoint / export formats ---
 *.pt
 *.pth
