@@ -6,24 +6,35 @@ validation of the accelerator's INT8 assumption. C is a completed measurement ag
 project's real checkpoint and full DAVIS test split; A and B are literature findings with a
 concrete, minimally-invasive proposal for this specific codebase, not just a survey.
 
-> **Status as of M10E (2026-09-07).** Thread **A (RD loss term) is done** — it became Milestones 9
-> and 10. The recommended order below is preserved as written, but item 2 is complete: the
-> differentiable rate objective shipped in M9A, its latent-shrinkage exploit was found in M9F and
-> fixed in M10A, and M10C/M10D/M10E established a durable deployed gain. M10E ran 5 λ × 2 seeds at
-> the full 18,120-step budget and confirmed the gain is large and reproducible — every rate-aware λ
-> beats a matched control by **−9% to −17% BD-rate**, 6–10× the measured 1.62-point noise floor, on
-> both seeds and on the real `.nvc` path.
+> **Status as of M10J (2026-09-09).** Thread **A (RD loss term) is closed**, λ frozen at
+> **3.0e-4**, and thread **B (temporal coding)** now has a motion-compensated codec plus a deployed
+> conditional entropy model.
 >
-> **λ is not yet locked.** The converged optimum is at or below **4.5e-4** (below M10D's 6e-4 and
-> well below M9's pilot-derived 9.0757e-4), but λ = 3e-4 and 4.5e-4 tie within noise (0.25 points
-> apart against a 1.62-point floor), MS-SSIM ranks the λ in nearly the reverse order with only a
-> 0.51-point spread, and the minimum still sits on the boundary of the tested range. The current
-> **working operating point is λ = 4.5e-4** — tied for best on PSNR, smallest seed spread of any arm,
-> and in the interior of the tested range rather than on an untested edge. Resolving it needs one
-> more experiment: λ ∈ {1.0e-4, 2.0e-4}, two seeds, same control.
+> **Where the codec stands (DAVIS test, 719 frames, all bytes counted, 4-bit):** intra 0.7012 BPP /
+> 28.560 dB — motion-compensated + conditional entropy **0.5584 BPP / 28.976 dB**. Over three rate
+> points (5/4/3-bit) that is **−33.65% PSNR BD-rate** and **−43.13% MS-SSIM BD-rate** against intra.
 >
-> See [CHANGELOG.md](CHANGELOG.md) for the full sequence. Thread **B (temporal coding) is still
-> open** and is now the next architectural lever; thread C is closed.
+> **M10J succeeded where M10I failed, and the contrast is the lesson.** M10I's learned 498k-parameter
+> conditional *transform* moved residual rate **+1.1%** (the wrong way) while improving distortion.
+> M10J's 256-entry conditional *entropy table*, conditioned on the same reference, moves it
+> **−2.1%** — with no training, no new weights, no format change, and reconstruction that is
+> bit-identical to M10H's. The predictive information was always there; M10I's distortion-dominated
+> objective simply had no reason to spend capacity on rate.
+>
+> **Method worth reusing.** The milestone opened with an offline gate: measure H(R|channel, C) vs
+> H(R|channel) on real coded symbols, against a random context of equal cardinality and scored on
+> held-out data. It predicted the deployed result to within ~0.4 points (2.01 vs 1.94 at 5-bit,
+> 3.11 vs 2.71 at 3-bit). The arithmetic coder realises **100%** of the modelling gain with +0.01%
+> overhead, so the coder is not a bottleneck for anything that comes next.
+>
+> **Next lever (not started): a learned conditional entropy model.** The gate has now justified it —
+> a 4-bucket lookup captures 2-3%, which is the crudest possible use of z_ref. Context cardinality
+> and the 1,000-sample fallback threshold are both untuned. Gains grow monotonically as rate falls
+> (1.75 → 2.09 → 2.67%), so low-rate operating points are where conditioning pays most.
+>
+> **Standing diagnostic:** bmx-bumps. Motion compensation moved it +2.48 dB; conditional entropy
+> coding buys only −0.93% there, the smallest gain of any sequence. See
+> [CHANGELOG.md](CHANGELOG.md). Thread C is closed.
 
 ## TL;DR — recommended order
 

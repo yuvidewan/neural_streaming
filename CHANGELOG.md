@@ -13,6 +13,824 @@ the time.
 
 ---
 
+## 2026-09-09 — M10J: conditioning the entropy model works (CONDITIONAL ENTROPY SUCCESS)
+
+**Source:** M10I conditioned the residual TRANSFORM and improved distortion rather than rate. M10J
+targets rate directly, where the entropy model controls it, and changes nothing else.
+**Tests:** 941 passing (full suite), zero regressions. 42 new tests.
+**Scope:** no `src/nvc/` change, no container change, no training, no new weights, no checkpoint
+selection, no λ sweep. `.nvc`, `.nvcs`, `.nvct` v1 and v2 all untouched; every M10A–M10I script
+byte-identical.
+
+### The one conceptual change
+
+    M10H:  residual symbol            ->  per-CHANNEL frequency table       (64 tables)
+    M10J:  residual symbol + context  ->  per-(CHANNEL, CONTEXT) table      (256 tables)
+
+Same motion estimator, same motion quantization, same warp, same `z_ref`, same residual, same
+residual quantization, same arithmetic coder, same container, same GOP. Only which probability table
+codes each symbol differs.
+
+### The gate: measure predictability before building anything
+
+Run first, deliberately, so a null result would have cost one script rather than a milestone. Two
+methodological points decided what "a gain" means:
+
+**The baseline is H(R | channel), not H(R).** The deployed coder already has one table per channel,
+so crediting the reference with that gain would manufacture a result out of nothing.
+
+**Adding contexts always lowers a plug-in entropy estimate**, even for a random context. So every
+scheme was measured against a RANDOM context of equal cardinality and re-scored on a held-out
+validation split. Test frames were never touched.
+
+| bits | H(R\|channel) held-out | best context | net held-out reduction | random control |
+|---|---|---|---|---|
+| 5 | 3.2170 | local_activity4 | **+1.94%** | −0.01% |
+| 4 | 2.2685 | local_activity4 | **+2.28%** | −0.01% |
+| 3 | 1.4108 | sign_x_magnitude4 | **+3.37%** | −0.01% |
+
+The random controls sit at ~0.00%, so the estimator is unbiased at this sample size (536 train
+P-frames, 8.8M symbols per rate point). The signal is real, and it grows as the rate falls.
+
+### What was deployed
+
+Two contexts survived to deployment, both cardinality 4, both deterministic and computable by the
+decoder from `z_ref` alone:
+
+    magnitude4        which per-channel |z_ref| quantile band the position falls in
+    local_activity4   how much z_ref varies in a 3x3 neighbourhood, bucketed
+
+Thresholds are per-channel quantiles fitted on TRAINING references only. Contexts with fewer than
+1,000 training samples fall back deterministically to that channel's marginal table, so a rare
+context never becomes an unstable tiny histogram. Tables use the project's existing Laplace
+smoothing.
+
+**No container change was needed.** `.nvct` v2 already stores an 8-byte residual entropy model id
+and the decoder verifies it; a 256-table conditional model hashes differently from a 64-table
+marginal one, so a marginal decoder handed a conditional stream fails loudly, and an M10H stream
+stays decodable with its own declared model. Both are tested.
+
+### The ablation is structural, not asserted
+
+All three arms are coded in ONE closed-loop pass per sequence: motion, warp, `z_ref`, the residual
+and its quantized symbols are computed once and shared, and each arm only re-codes those same
+symbols with its own tables. The arms *cannot* differ in anything but their probability model,
+because only the tables are computed more than once.
+
+Verified at every rate point: **symbols identical, reconstruction identical, motion identical.**
+
+### Results — DAVIS test, 719 frames, every byte counted
+
+| arm | bits | I bytes | P residual | motion | TOTAL | BPP | PSNR | MS-SSIM | Δresid |
+|---|---|---|---|---|---|---|---|---|---|
+| intra | 5 | 5,611,995 | 0 | 0 | 5,628,186 | 0.9555 | 29.376 | 0.9684 | |
+| marginal (M10H) | 5 | 584,917 | 3,928,402 | 181,199 | 4,710,709 | 0.7998 | 29.272 | 0.9737 | |
+| magnitude4 | 5 | 584,917 | 3,877,428 | 181,199 | 4,659,735 | 0.7911 | 29.272 | 0.9737 | **−1.13%** |
+| **local_activity4** | 5 | 584,917 | 3,849,496 | 181,199 | **4,631,803** | **0.7864** | 29.272 | 0.9737 | **−1.75%** |
+| marginal (M10H) | 4 | 428,654 | 2,725,590 | 184,255 | 3,354,690 | 0.5696 | 28.976 | 0.9676 | |
+| magnitude4 | 4 | 428,654 | 2,680,106 | 184,255 | 3,309,206 | 0.5618 | 28.976 | 0.9676 | **−1.44%** |
+| **local_activity4** | 4 | 428,654 | 2,659,732 | 184,255 | **3,288,832** | **0.5584** | 28.976 | 0.9676 | **−2.09%** |
+| marginal (M10H) | 3 | 273,015 | 1,668,788 | 188,891 | 2,146,885 | 0.3645 | 27.946 | 0.9473 | |
+| magnitude4 | 3 | 273,015 | 1,627,357 | 188,891 | 2,105,454 | 0.3575 | 27.946 | 0.9473 | **−2.13%** |
+| **local_activity4** | 3 | 273,015 | 1,616,961 | 188,891 | **2,095,058** | **0.3557** | 27.946 | 0.9473 | **−2.67%** |
+
+**PSNR and MS-SSIM are identical to every reported digit**, which is exactly the predicted signature:
+the reconstruction cannot change when only the probability model does. Motion bytes are identical.
+Total BPP falls 1.68% / 1.97% / 2.41%.
+
+### The coder is not the bottleneck
+
+| bits | arm | ideal P bits | vs marginal | P residual bytes | vs marginal | coder overhead | realised |
+|---|---|---|---|---|---|---|---|
+| 5 | local_activity4 | 30,793,025 | +2.01% | 3,849,496 | +2.01% | +0.01% | **100%** |
+| 4 | local_activity4 | 21,274,949 | +2.42% | 2,659,732 | +2.42% | +0.01% | **100%** |
+| 3 | local_activity4 | 12,932,781 | +3.11% | 1,616,961 | +3.11% | +0.02% | **100%** |
+
+"Ideal P bits" is the Shannon cost of the same coded symbols under each arm's own tables. The
+arithmetic coder lands within **0.02%** of it and the byte reduction realises **100%** of the
+modelling gain — so this is definitively not an entropy-coder bottleneck, and the deployed result
+tracks the offline prediction (2.01 vs 1.94, 2.42 vs 2.28, 3.11 vs 2.71) closely.
+
+### BD-rate over three rate points
+
+| comparison | PSNR | MS-SSIM |
+|---|---|---|
+| magnitude4 vs marginal | −1.55% | −1.55% |
+| **local_activity4 vs marginal** | **−2.11%** | **−2.10%** |
+| marginal (M10H) vs intra | −32.22% | −41.86% |
+| **local_activity4 vs intra** | **−33.65%** | **−43.13%** |
+
+### Per-sequence (4-bit, best of the two contexts)
+
+Every sequence improves. drift-chicane **−11.66%**, surf −7.52%, car-turn −5.11%, drone −2.40%,
+gold-fish −1.45%, cows −1.37%, schoolgirls −1.16%, cat-girl −1.06%, bmx-bumps −0.93%.
+
+Context choice is content-dependent: on bmx-bumps `magnitude4` beats `local_activity4`
+(446,011 vs 457,957 bytes), the only sequence where the stronger context loses. bmx-bumps remains
+the hardest sequence for every temporal method tried so far.
+
+### Verdict: CONDITIONAL ENTROPY SUCCESS
+
+Every success criterion is met: identical symbols, identical reconstruction, identical motion, lower
+residual entropy AND lower residual bytes, lower total BPP, improvement at all three rate points,
+train-only calibration, exact causal decoder symmetry.
+
+The honest scale: this is a **~2% bitrate reduction**, free at inference (a bucket lookup per symbol)
+and requiring no training, no new weights and no format change. Small, but clean, cheap, and it is
+the rate reduction M10I set out to find and did not get.
+
+Worth stating plainly against M10I: a learned 498k-parameter conditional transform trained for a
+milestone moved rate **+1.1%** (the wrong way); a 256-entry lookup table conditioned on the same
+reference moves it **−2.1%**. The information was there all along — M10I's objective simply had no
+reason to spend capacity on rate.
+
+### Next milestone — from the measured bottleneck
+
+The gate answered its question, so a NEURAL conditional entropy model is now warranted and is the
+natural next step: the discrete 4-bucket context captures 2-3% and is the crudest possible use of
+`z_ref`, so a learned per-symbol probability model conditioned on the full reference has clear
+headroom. Two things should go with it: context cardinality is currently untuned (4 buckets was the
+first thing tried), and the fallback threshold is a fixed 1,000 samples.
+
+Also worth noting for whoever picks this up: the gain grows monotonically as rate falls
+(1.75 → 2.09 → 2.67%), so the low-rate operating points are where conditioning pays most.
+
+### Reproducibility
+
+torch 2.13.0+cu130, RTX 5060 Laptop GPU, deterministic cuDNN. Frozen model: M10F λ=3e-4 seed 42
+`best.pt`. Tables fitted on 536 TRAIN P-frames per rate point; thresholds from the same references;
+zero fallbacks triggered at deployment scale. All commands require the project venv
+(`./.venv/Scripts/python.exe`).
+
+---
+
+## 2026-09-09 — M10I: conditioning improves distortion, not rate (MODEL CAPACITY BOTTLENECK)
+
+**Source:** M10H left the motion-compensated residual coded against its MARGINAL statistics — one
+per-channel grid and one frequency table for every residual, regardless of what the reference looked
+like. The hypothesis was that conditioning on the warped reference would make residuals cheaper to
+code.
+**Tests:** 899 passing (full suite), zero regressions. 34 new tests.
+**Scope:** no `src/nvc/` change. `.nvc`, `.nvcs`, M10G's `.nvct` v1 and M10H's v2 all untouched;
+`train_autoencoder.py` and every M10A–M10H script byte-identical. λ frozen at 3.0e-4; no sweep.
+
+### The mechanism (conditioning enters both transforms)
+
+    analysis    w     = r     + f_a([r,     z_ref])
+    synthesis   r_hat = w_hat + f_s([w_hat, z_ref])
+
+`f_a` and `f_s` are 3-layer convolutional networks taking the concatenation of the residual with the
+reference latent, so every output position can depend on the reference at that position. **`w`, not
+`r`, is what gets quantized and entropy-coded.** Tests pin that the conditioning is load-bearing:
+the same residual with a different reference produces a different coded tensor, gradients flow back
+through the reference path, and the effect is spatially local (a bounded receptive field), not a
+global summary.
+
+**Trainable: 498,176 (the conditional codec only). Frozen: 593,411 (encoder + decoder at λ=3e-4),
+plus the block-matching motion estimator.**
+
+The last convolution of each branch is **zero-initialised**, so at step 0 `w = r` and `r_hat = w_hat`
+— the codec is exactly M10H, bit for bit. A test asserts the two produce byte-identical streams at
+initialisation. That is what makes this an ablation of the conditioning mechanism rather than a
+comparison of two unrelated codecs.
+
+### Training
+
+`L = D + 3.0e-4·R`: D is pixel MSE after the frozen decoder, R is the project's differentiable
+Laplace proxy on `w` with QAT noise at 4-bit and scale tracking. 4,323 causal (z_t, z_ref) training
+pairs and 594 validation pairs, precomputed from the M10H closed loop over the DAVIS train/val
+splits — an open-loop approximation, exactly on-policy at step 0 and drifting only as training moves
+away from the baseline.
+
+Checkpoint selected by the M10G convention: **epoch 28 by `val_loss`, validation only, before any
+test evaluation**; final epoch 30, best-vs-final gap 0.20%. (An earlier run reported epoch 28 while
+saving epoch 30's weights — a real defect, since the convention exists precisely to deploy the
+selected checkpoint. Fixed by keeping the best state during training; the deployed weights are now
+verified distinct from the final ones.)
+
+### Three rate points, chosen from measurement
+
+A bit-depth probe of the M10H MC path found the RD curve is **vertical above 5-bit**: 8→5 bit halves
+the rate for 0.08 dB. 8/6/5 could not support a BD-rate integration. **5/4/3** spans 1.42 dB over a
+2.1× rate range.
+
+### Results — DAVIS test, 719 frames, every byte counted
+
+| arm | bits | I bytes | P residual | motion | TOTAL | BPP | PSNR | MS-SSIM | resid bits/P | motion bits/P |
+|---|---|---|---|---|---|---|---|---|---|---|
+| intra | 5 | 5,611,995 | 0 | 0 | 5,628,186 | 0.9555 | 29.376 | 0.9684 | 0 | 0 |
+| m10h | 5 | 584,917 | 3,933,408 | 181,150 | 4,715,666 | **0.8006** | 29.271 | 0.9737 | 48,862 | 2,250 |
+| m10i | 5 | 584,917 | 3,983,630 | 180,914 | 4,765,652 | 0.8091 | **29.336** | **0.9743** | 49,486 | 2,247 |
+| intra | 4 | 4,113,820 | 0 | 0 | 4,130,011 | 0.7012 | 28.560 | 0.9516 | 0 | 0 |
+| m10h | 4 | 428,654 | 2,737,122 | 184,282 | 3,366,249 | **0.5715** | 28.975 | 0.9676 | 34,002 | 2,289 |
+| m10i | 4 | 428,654 | 2,775,031 | 183,324 | 3,403,200 | 0.5778 | **29.051** | **0.9686** | 34,472 | 2,277 |
+| intra | 3 | 2,622,383 | 0 | 0 | 2,638,574 | 0.4480 | 26.190 | 0.8952 | 0 | 0 |
+| m10h | 3 | 273,015 | 1,695,452 | 188,952 | 2,173,610 | **0.3690** | 27.947 | 0.9473 | 21,062 | 2,347 |
+| m10i | 3 | 273,015 | 1,714,465 | 188,149 | 2,191,820 | 0.3721 | **28.033** | **0.9488** | 21,298 | 2,337 |
+
+### The ablation — the hypothesis failed
+
+| bits | Δmotion | Δresidual | Δtotal | ΔBPP | ΔPSNR | ΔMS-SSIM |
+|---|---|---|---|---|---|---|
+| 5 | −236 B | **+50,222 B** | +49,986 B | +1.06% | +0.066 dB | +0.0006 |
+| 4 | −958 B | **+37,909 B** | +36,951 B | +1.10% | +0.077 dB | +0.0009 |
+| 3 | −803 B | **+19,013 B** | +18,210 B | +0.84% | +0.086 dB | +0.0016 |
+
+The success signature was *motion unchanged, residual DOWN, quality held or improved*. **Residual
+bits went UP at every rate point**, and down on only **1 of 9** sequences (cat-girl, −0.25%). The
+conditioning hypothesis, as stated, fails — and the brief is explicit that this is decisive
+regardless of overall results.
+
+**On the flagged motion difference:** the evaluator marks the ablation confounded because Δmotion is
+not exactly zero. It is 0.13–0.52% of motion bytes, while the residual effect is **24–213× larger**.
+The cause is inherent rather than a bug: motion is estimated from the previous *reconstruction*, and
+a different residual model produces a different reconstruction. A controlled test confirms motion is
+byte-identical when the reconstructions match (the identity-initialised codec). The confound is real,
+quantified, and far too small to affect the conclusion — but it is reported rather than absorbed.
+
+### What training actually optimised
+
+| | D | R (proxy) | λ·R | rate share of objective |
+|---|---|---|---|---|
+| epoch 1 | 1.2246e-03 | 0.5038 bpp | 1.511e-04 | 11.0% |
+| epoch 28 (selected) | 1.1856e-03 | 0.5062 bpp | 1.519e-04 | 11.4% |
+
+**Distortion improved 3.18%; the rate proxy moved +0.47%** — i.e. the model spent its entire capacity
+on distortion and never reduced rate. At the frozen λ = 3e-4 the rate term is only ~11% of the
+objective in this residual setting, so that is where the gradient pointed. This is not the deployed
+entropy coder failing to capture a gain: **there was no rate gain in the differentiable proxy
+either**, which rules out an entropy-coding bottleneck directly.
+
+### RD: a modest improvement, in the opposite currency
+
+| comparison | PSNR BD-rate | MS-SSIM BD-rate |
+|---|---|---|
+| m10h vs intra | −31.75% | −41.40% |
+| **m10i vs intra** | **−32.70%** | **−42.14%** |
+| **m10i vs m10h** | **−3.43%** | **−2.08%** |
+
+So the conditional model does improve the RD operating point by ~3.4% BD-rate, consistently across
+all three rate points and with quality up at every one — it simply gets there by buying quality with
+bits rather than by making the residual cheaper. That is a real but small gain, and it is not the
+gain the milestone set out to test.
+
+### Per-sequence (4-bit)
+
+PSNR improved on 7 of 9 sequences (largest: surf +0.17, drift-chicane +0.16, car-turn +0.15);
+gold-fish (−0.13) and drone (−0.03) regressed slightly. Residual bytes rose almost everywhere,
+most on gold-fish (+3.83%) and drift-chicane (+3.10%).
+
+**bmx-bumps — the hard sequence — barely moved: 26.13 → 26.17 dB (+0.04) for +0.22% residual.** It
+remains ~2.75 dB below intra at this rate point. Conditioning did not touch the high-motion deficit
+that M10H left open.
+
+### Causal invariants — all verified
+
+Encoder/decoder reference symmetry bit-exact at every arm and rate point; decoder reproduces the
+encoder's reconstruction exactly; byte accounting closes everywhere (motion + residual + overhead =
+file size); motion estimated only against the reconstruction (verified by recording every call);
+no lookahead; I-frames carry no motion; sequence boundaries reset; truncated residual payloads and
+mismatched entropy models rejected.
+
+### Verdict: MODEL CAPACITY BOTTLENECK
+
+The conditioning mechanism is live, trainable and measurably load-bearing, and it produced a
+consistent −3.4% BD-rate gain. But it did **not** reduce residual rate at any rate point, which is
+the hypothesis this milestone existed to test.
+
+Not **C (entropy model)**: the differentiable proxy showed no rate reduction either, so there was no
+gain for the deployed coder to lose. Not **D (motion/reference)**: the reference is the same one that
+gave M10H a −19.5% BD-rate over intra. Not **E**: there is a small, consistent RD improvement. Not
+**A**: residual rate rose.
+
+The measured limitation is that a 498k-parameter, 3-layer conditional transform trained open-loop
+against an objective whose rate term is ~11% of the loss will improve distortion, because that is
+where the gradient is — and that is what it did.
+
+### Next milestone — from the measured bottleneck
+
+Two candidates, both pointed at directly by the evidence, neither started:
+
+1. **Make rate the thing being optimised.** The cleanest test of the original hypothesis is a
+   conditional ENTROPY model — per-symbol context selected from `z_ref` — rather than a conditional
+   transform. The project's arithmetic coder already accepts a per-symbol `table_index`, so context
+   modelling needs no new coder and no new container, and it targets rate directly instead of
+   competing with distortion inside a distortion-dominated loss.
+2. **If the transform route is kept**, it needs closed-loop training and materially more capacity,
+   and the residual objective's rate weight has to be revisited — which is a separate decision from
+   the frozen intra λ and should not be conflated with it.
+
+bmx-bumps remains the standing diagnostic: any future temporal work should be judged on whether it
+moves that sequence.
+
+### Reproducibility
+
+torch 2.13.0+cu130, RTX 5060 Laptop GPU, deterministic cuDNN, seed 42. Frozen model: M10F λ=3e-4
+seed 42 `best.pt`. 30 epochs, batch 8, model LR 1e-4, rate LR 1e-2. Calibration: TRAIN split only,
+400 frames, fitted per arm and per rate point — the conditional arm's grid fitted to `w`, the tensor
+it actually codes. All commands require the project venv (`./.venv/Scripts/python.exe`).
+
+---
+
+## 2026-09-08 — M10H: motion compensation works, and pays for itself (SUCCESS)
+
+**Source:** M10G's temporal baseline cut bitrate 9.2% but lost 0.95 dB, almost entirely on three
+high-motion sequences, and showed the loss was NOT error accumulation. The remaining suspect was that
+`x_hat_{t-1}` is simply misaligned with `x_t` when content moves.
+**Tests:** 865 passing (full suite), zero regressions. 46 new tests.
+**Scope:** no `src/nvc/` change at all. `.nvc`, `.nvcs` and M10G's `.nvct` v1 all untouched;
+`train_autoencoder.py` and every M10A–M10G script byte-identical. No lambda sweep; the intra
+operating point stays frozen at λ = 3.0e-4.
+
+### Design — and motion is paid for
+
+    x_warp = Warp(x_hat_{t-1}, mv_t)      pixel-space, integer-pel block warp
+    z_ref  = E(x_warp)
+    dz     = z_t - z_ref                  coded with the RESIDUAL grid
+    decoder: same warp from the DECODED motion, z_hat_t = z_ref + dz_hat
+
+Warping happens in pixel space (where motion means something); the residual stays in the latent
+domain, which M10G established as the only causal formulation available here (the decoder's Sigmoid
+cannot emit signed pixel residuals).
+
+**Every motion vector is quantized, entropy-coded, written into the stream and counted in the
+reported bitrate.** No ground-truth flow, no encoder-only side information. The encoder warps with
+the *decoded* motion, so the decoder's reference is bit-identical by construction. `.nvct` v2 carries
+explicit motion and residual lengths per frame, which is what makes motion bytes attributable rather
+than hidden inside the residual.
+
+| | |
+|---|---|
+| estimator | full-search block matching, SAD |
+| block size | 16×16 px — at 256×256 that is exactly one vector per latent position |
+| precision | **integer pixel**, no interpolation, so the warp is bit-exact |
+| range | ±16 px per component |
+| alphabet | 6 bits (33 values in a 64-symbol table) |
+| boundary | replicate |
+| entropy coding | project arithmetic coder, 2 tables (dy, dx) |
+| tie-break | min SAD, then min \|dy\|+\|dx\|, then min dy, then min dx — deterministic, biased to zero |
+
+### Results — DAVIS test, 719 frames, every byte counted
+
+| arm | bits | I bytes | P residual | motion | overhead | TOTAL | BPP | PSNR | MS-SSIM |
+|---|---|---|---|---|---|---|---|---|---|
+| intra | 8 | 10,061,586 | 0 | 0 | 16,191 | 10,077,777 | 1.7110 | 29.630 | 0.9739 |
+| prev | 8 | 1,049,055 | 8,218,907 | 0 | 16,191 | 9,284,153 | 1.5762 | 28.679 | 0.9726 |
+| **mc** | 8 | 1,049,055 | 7,842,324 | **179,509** | 16,191 | **9,087,079** | **1.5428** | **29.365** | **0.9759** |
+| intra | 4 | 4,113,820 | 0 | 0 | 16,191 | 4,130,011 | 0.7012 | 28.560 | 0.9516 |
+| prev | 4 | 428,654 | 3,111,332 | 0 | 16,191 | 3,556,177 | 0.6038 | 27.820 | 0.9523 |
+| **mc** | 4 | 428,654 | 2,737,258 | **184,219** | 16,191 | **3,366,322** | **0.5715** | **28.976** | **0.9676** |
+
+Byte accounting closes exactly for every rate-accounted arm (motion + residual + overhead = file
+size on disk), and encoder/decoder reference symmetry is bit-exact everywhere.
+
+### Motion pays for itself, roughly 2:1
+
+| | motion bytes | share of stream | per P-frame | residual saved vs prev | **net** |
+|---|---|---|---|---|---|
+| 8-bit | 179,509 | 1.98% | 279 B | +376,583 B | **+197,074 B** |
+| 4-bit | 184,219 | 5.47% | 286 B | +374,074 B | **+189,855 B** |
+
+Motion costs about 2% of the stream and buys back more than twice that in residual. This is the
+question M10H existed to answer, and the answer is unambiguous.
+
+### Motion compensation improves BOTH bitrate and quality over M10G
+
+At 8-bit, against M10G's previous-frame baseline: **BPP 1.5762 → 1.5428 (−2.1%)** *and* **PSNR
+28.679 → 29.365 (+0.686 dB)** *and* MS-SSIM 0.9726 → 0.9759. Not a trade — strictly better on all
+three.
+
+Against the intra baseline at 8-bit: −9.8% bitrate for −0.27 dB PSNR (M10G's prev-frame arm was
+−0.95 dB), and **MS-SSIM is now HIGHER than intra** (0.9759 vs 0.9739).
+
+BD-rate over the two rate points, versus intra:
+
+| arm | PSNR BD-rate | MS-SSIM BD-rate |
+|---|---|---|
+| prev (M10G) | **+100.15%** | −9.84% |
+| **mc (M10H)** | **−19.49%** | **−44.86%** |
+
+`mc vs prev` BD-rate reports `n/a`, and that is the strongest possible outcome rather than a gap:
+the two curves have **no overlapping quality range**. mc spans 28.976–29.365 dB, prev spans
+27.820–28.679 dB, so mc is better than prev at every measured point while also being cheaper. There
+is nothing to integrate over because one curve dominates the other outright. Concretely, **mc at
+4-bit (0.5715 BPP, 28.976 dB) beats prev at 8-bit (1.5762 BPP, 28.679 dB) — higher quality at a
+third of the bitrate.**
+
+Two rate points only, so the BD integration is directional rather than precise.
+
+### The high-motion failure is substantially repaired
+
+M10G's three failures, prev → mc at 8-bit:
+
+| sequence | prev PSNR | mc PSNR | change | mc BPP vs prev |
+|---|---|---|---|---|
+| bmx-bumps | 23.83 | 26.30 | **+2.48 dB** | −4.16% |
+| drone | 28.84 | 30.99 | **+2.15 dB** | −4.93% |
+| cat-girl | 28.17 | 29.33 | **+1.16 dB** | −6.72% |
+
+Seven of nine sequences improve against prev-frame; the two that do not (drift-chicane, gold-fish)
+are already at parity on quality and simply pay ~6% more bytes for motion they do not need, which is
+the expected cost of an unconditional per-block motion field on static content.
+
+bmx-bumps is repaired but not fixed: at 26.30 dB it is still 3.8 dB below intra's 30.09. That
+residual gap is the next bottleneck, and the oracle says where it is *not*.
+
+### Oracle diagnostic — this is NOT a motion-estimation bottleneck
+
+| | prev | mc (coded) | oracle (dense flow, NOT transmitted) |
+|---|---|---|---|
+| 8-bit PSNR | 28.679 | **29.365** | 29.110 |
+| 4-bit PSNR | 27.820 | **28.976** | 28.758 |
+
+The oracle warps with dense Farneback flow that is never coded, so its bitrate is not a compression
+result and it is excluded from every ranking (`is_rate_accounted("oracle")` is False, and an oracle
+stream refuses to decode). Its purpose is purely to bound what better motion could buy.
+
+**It does not beat block matching.** Dense flow produces a cheaper residual but slightly lower PSNR,
+so a free, dense, sub-pixel motion field would not recover the remaining gap to intra. Integer-pel
+16×16 block matching is already capturing essentially all the available motion gain at this
+resolution. The remaining deficit therefore lives in the **residual representation**, not in motion
+estimation or motion coding.
+
+### Determinism is a correctness requirement here, not a nicety
+
+Motion compensation puts the NETWORK in the reference path — both sides compute
+`z_ref = E(Warp(x_hat_{t-1}))`, and `x_hat_{t-1}` itself came from `model.decode(...)`. Measured on
+this machine: `encode()` is bit-exact on GPU by default but **`decode()` is not** (its transposed
+convolutions select nondeterministic algorithms), so encoder and decoder drifted apart along the
+P-chain and symmetry failed. The codec now forces `cudnn.deterministic=True, benchmark=False` for the
+duration of every encode and decode, after which symmetry is exact. M10G's default path never needed
+this because its reference was a pure dequantize with no network in it.
+
+### Verdict: MOTION COMPENSATION SUCCESS
+
+Motion compensation improves the RD operating point (−19.49% BD-rate vs intra on PSNR, −44.86% on
+MS-SSIM, and outright dominance over M10G's temporal baseline), pays for its own bitrate roughly
+2:1, and materially reduces the high-motion penalty that M10G identified.
+
+### Next milestone — chosen from the measured bottleneck
+
+**The residual codec, not motion.** The oracle rules out motion estimation and representation as the
+limiting factor, and motion already costs only 2% of the stream. What remains is that a
+motion-compensated latent residual is still coded by a grid and entropy model fitted to its marginal
+statistics, with no conditioning on the reference. bmx-bumps' remaining 3.8 dB deficit is the
+concrete target.
+
+That points at a **learned temporal residual model** — conditioning the residual's coding on the
+warped reference — rather than at optical flow, sub-pixel motion, variable block sizes, or GOP
+tuning. Adding a second and third rate point would also turn the directional BD-rate into a real one.
+
+### Reproducibility
+
+torch 2.13.0+cu130, RTX 5060 Laptop GPU, deterministic cuDNN. Model: M10F λ=3e-4 seed 42 `best.pt`
+(best-validation, per the M10G Part A convention). Calibration: TRAIN split only, 400 frames, 0.1/99.9
+per-channel percentiles, fitted separately per arm and per rate point; all three entropy model ids
+recorded in every stream header. All commands require the project venv (`./.venv/Scripts/python.exe`).
+
+---
+
+## 2026-09-08 — M10G: checkpoint convention fixed, and a causal temporal baseline that works
+
+**Source:** two things M10F left open — the final-snapshot evaluation convention that corrupted its
+own control, and the fact that NVC is still intra-only.
+**Tests:** 819 passing (full suite), zero regressions. 54 new tests.
+**Scope:** no `src/nvc/` change at all. `.nvc` and `.nvcs` remain bit-exact; `train_autoencoder.py`
+and every M10A–M10F script left byte-identical. Historical M10A–M10F results are untouched and are
+NOT restated.
+
+---
+
+### Part A — the checkpoint evaluation convention (declared for all future experiments)
+
+    PRIMARY   : best VALIDATION checkpoint under the experiment's declared training objective
+    SECONDARY : final training checkpoint, retained for convergence diagnostics
+
+Three properties make it safe, and all three are enforced in code rather than asserted in prose:
+
+1. **Deterministic** — minimum objective wins, exact ties go to the earliest epoch.
+2. **Declared before training** — the objective key is an input, not a post-hoc choice.
+3. **Structurally unable to see the test set** — `select_checkpoint` takes only validation history,
+   and every record is screened against a forbidden-key list. A test metric appearing in a history
+   file raises `TestMetricLeakError` rather than quietly influencing the choice. Selecting on
+   deployed BD-rate or test PSNR would be selection on the evaluation set.
+
+For rate-aware training the objective is `val_loss` = D + λ·R — the quantity actually optimised, not
+proxy bitrate, which would prefer a model that discards quality to save rate. Stale records from a
+different objective (carried in by `--resume-model-only`) are excluded, the same rule M9C.1
+established.
+
+### Part B — how often the old convention actually bit (non-destructive)
+
+Re-read the existing M10E and M10F artifacts. No retraining, no re-benchmarking, nothing overwritten:
+
+| experiment | runs | degraded final snapshot (>2%) | worst gap |
+|---|---|---|---|
+| M10F | 10 | 2 — `CTRL@s42` (3.04%), `UPPER_ANCHOR@s43` (2.64%) | 3.04% |
+| M10E | 10 | 1 — `UPPER_REFERENCE@s43` (4.08%) | 4.08% |
+| **total** | **20** | **3 (15%)** | |
+
+`best.pt` exists for all 20 runs, so the new convention is fully implementable — it needs only
+validation history, which every run already records. **Historical results remain valid under the
+final-snapshot convention they declared before running.**
+
+---
+
+### Part C — temporal coding: three design decisions, documented
+
+**1. Residuals live in the LATENT domain, not pixel space.** `Decoder` ends in `nn.Sigmoid()`, so a
+reconstruction is bounded to [0,1] while a pixel residual lies in [−1,+1] — the decoder cannot emit
+one. `Encoder` ends on a bare `Conv2d` whose latent is explicitly "an unconstrained real-valued
+tensor", so latent differences are naturally signed and the existing percentile calibration, uniform
+quantizer and arithmetic coder handle them unchanged. No new activation, no new head, no training.
+
+    I-frame:  z_t = E(x_t)        -> INTRA grid
+    P-frame:  dz  = z_t - z_ref   -> RESIDUAL grid
+
+Two grids, separately calibrated: intra latents and latent residuals have different distributions,
+and one shared grid would misallocate levels for both.
+
+**2. The reference is a decoded quantity.** `z_ref` is the previously *decoded* latent, never the
+original frame's. The encoder runs closed-loop — it dequantizes its own symbols and predicts from
+that — so encoder and decoder hold bit-identical reference state by construction. A `reencode` mode
+(`z_ref = E(D(ẑ))`) is also implemented; both are causal and symmetric.
+
+**3. A separate prototype container, `.nvct`.** `.nvcs` v1 carries exactly one quantization block for
+the whole file and has no per-frame type field, so it cannot express a stream needing two grids and
+I/P marking. Extending it in place would change shipped format semantics. `.nvct` deliberately
+follows `.nvcs`'s conventions — same magic+version prologue, same length-prefixed records, same
+truncation and trailing-data strictness — so it continues that direction rather than competing with
+it. 44-byte header, GOP=10, every sequence starts with an I-frame.
+
+### Causal invariants — verified, not assumed
+
+| invariant | status |
+|---|---|
+| decoder reaches exactly the encoder's reference latents | **exact equality** |
+| encoder's closed-loop reconstruction == decoder's output | **exact equality** |
+| decoding is deterministic (same latents twice) | **exact equality** |
+| same input encodes to identical bytes | **exact equality** |
+| every sequence starts with an I-frame; no reference crosses a boundary | verified |
+| P-frame without a reference | rejected (`CausalityViolationError`) |
+| truncated header / truncated payload / trailing data | rejected |
+| unknown frame-type byte, bad magic, unknown version | rejected |
+| mismatched entropy model | rejected |
+| decoder sees only the bitstream — no original or future frames | verified |
+
+### Benchmark — intra-only vs temporal, DAVIS test, 719 frames, all bytes counted
+
+Both arms use the same frozen model (λ = 3.0e-4, `best.pt` per Part A), the same intra grid, and the
+same container. Arm A is the identical coder at GOP=1, so the two differ *only* in whether P-frames
+exist and container overhead is accounted identically on both sides.
+
+| | A intra-only | B temporal | change |
+|---|---|---|---|
+| I-frames / P-frames | 719 / 0 | 75 / 644 | |
+| I-frame payload | 10,061,586 B | 1,049,055 B | −89.57% |
+| P-frame payload | 0 | 8,085,297 B | |
+| container overhead | 13,207 B | 13,207 B | +0.00% |
+| **TOTAL container bytes** | **10,074,793** | **9,147,559** | **−9.20%** |
+| **stream BPP** | **1.7105** | **1.5531** | **−9.20%** |
+| compression ratio | 14.03 | 15.45 | +10.14% |
+| mean PSNR | 29.630 dB | 28.676 dB | **−0.953 dB** |
+| mean MS-SSIM | 0.9739 | 0.9726 | −0.0013 |
+
+Per-frame: I = 13,987 B, P = 12,555 B — P-frames are ~10% cheaper than I-frames.
+
+**This is one operating point per arm, so it is NOT a BD-rate result and no RD superiority is
+claimed.** Rate falls 9.2% and PSNR falls 0.95 dB; whether that trade is favourable needs multiple
+rate points, which is future work.
+
+### The result is strongly motion-dependent
+
+| sequence | BPP change | PSNR change | helps? |
+|---|---|---|---|
+| schoolgirls | −29.22% | −0.04 dB | yes |
+| drift-chicane | −28.51% | 0.00 dB | yes |
+| gold-fish | −20.47% | **+2.96 dB** | yes |
+| surf | −12.53% | −0.19 dB | yes |
+| car-turn | −8.92% | −0.06 dB | yes |
+| cows | −7.48% | 0.00 dB | yes |
+| drone | +2.15% | −3.48 dB | no |
+| bmx-bumps | +2.90% | **−6.33 dB** | no |
+| cat-girl | +6.51% | −1.44 dB | no |
+
+Six of nine sequences improve, several dramatically and at no quality cost. The three failures are
+the high-motion ones, and they fail badly. **Frame differencing has no way to model motion**, so when
+content translates, the "residual" is not small — it is two misaligned copies of the scene, which is
+more expensive than coding the frame outright. The aggregate −0.95 dB is almost entirely those three
+sequences.
+
+### The drift diagnostic: no error accumulation
+
+| GOP position | 0 (I) | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| mean PSNR dB | 29.695 | 29.300 | 29.042 | 29.013 | 29.112 | 29.056 | 29.120 | 29.126 | 29.215 | 29.230 |
+
+PSNR steps down **0.40 dB once** at the first P-frame and is then flat — it actually recovers
+slightly (−0.07 dB across the entire chain, against 0.29 dB of wobble). **Error is not compounding.**
+That is the closed loop working as designed: the encoder forms every residual against the *true*
+current latent, so each frame re-targets `z_t` and the previous frame's error is corrected rather
+than carried.
+
+This matters for what to do next, because the two failure modes need opposite fixes. The analysis
+classifies the shape from the data rather than assuming one:
+
+- **Accumulation** (a falling chain) would be fixed by a shorter GOP or a refresh mechanism.
+- **A fixed per-P-frame penalty** (one step, then flat) is what we actually have, and **a shorter GOP
+  would not help it** — the cost is the residual representation itself.
+
+### Verdict
+
+The temporal pipeline is technically sound: causal, symmetric, deterministic, strict about malformed
+streams, and honest about bytes. It delivers a real **−9.2% bitrate** reduction with all I-frame
+overhead included, at −0.95 dB PSNR concentrated in three high-motion sequences.
+
+That is exactly the baseline M10G was meant to produce — and it identifies the next lever precisely.
+The gap is **motion**, not GOP length and not entropy coding.
+
+### Next milestone (proposed, not started)
+
+**Motion compensation, warping the reference before differencing.** The evidence points at it
+directly: frame differencing already wins on low-motion content, and its only failures are the
+sequences where content moves. Everything else about the pipeline is measured and passing, so a
+learned temporal model can be evaluated against a baseline that is known to be correct.
+
+A second rate point per arm would also let this become a real BD-rate comparison instead of a
+single-point one.
+
+### Reproducibility
+
+torch 2.13.0+cu130, RTX 5060 Laptop GPU. Model: M10F λ=3e-4 seed 42 `best.pt`. Calibration: TRAIN
+split only, 400 intra frames + 360 residual frames, 0.1/99.9 per-channel percentiles, both entropy
+model ids recorded in every stream header. All commands require the project venv
+(`./.venv/Scripts/python.exe`).
+
+---
+
+## 2026-09-08 — M10F: the lower λ boundary is closed — λ = 3e-4 (NO USEFUL REFINEMENT)
+
+**Source:** M10E left the converged optimum on the lower boundary for the second milestone running
+— its best arm (3e-4) was the smallest λ it tested. M10F asks one question: **does the RD basin
+keep improving below λ = 3e-4?** It does not.
+**Tests:** 765 passing (full suite), zero regressions. 27 new tests.
+**Scope:** no architecture, quantizer, entropy-coder or `.nvc` change; no `src/nvc/` change at all;
+`train_autoencoder.py`, `m10a_pilot.py`, `m10c_convergence.py`, `m10d_lambda_refinement.py` and
+`m10e_lambda_lock.py` all left byte-identical.
+
+### Design — a boundary-closing experiment, not another sweep
+
+Five λ × two seeds (42, 43) = **10 runs**, 18,120 steps each, all from M8-QAT `90d51157…`.
+Only λ and seed vary.
+
+| arm | λ | role |
+|---|---|---|
+| CTRL | 0 | matched control |
+| VERY_LOW | 1.0e-4 | new territory |
+| LOW | 2.0e-4 | new territory |
+| **BRIDGE** | 3.0e-4 | M10E's best, **repeated on purpose** |
+| UPPER_ANCHOR | 4.5e-4 | M10E's working-point candidate |
+
+24 fail-closed preflight checks passed, including two M10E could not make: the **manifest is
+hashed** (`b72b5317…`), so "identical split" is verified rather than asserted; and the calibration
+and benchmark constants are **read off M10E's own evaluator** and compared, because the bridge arm
+is meaningless if the two experiments evaluate differently.
+
+All 30 calibrations passed the 2% guard at **0.118–0.195%**. All 10 benchmarks completed with zero
+round-trip failures.
+
+### The methodology problem, stated first because it shapes everything below
+
+**The pre-registered primary metric was compromised by one run — and that run was a control.**
+
+Two of ten runs exceeded the 2% best-vs-final gap: `UPPER_ANCHOR@s43` (2.64%) and, critically,
+`CTRL@s42` (**3.04%**). CTRL@s42's final epoch 70 dipped ~0.17 dB below its epoch-68 best, and the
+fixed final-snapshot convention locked that in. Against M10E's control, which is configuration- and
+seed-identical:
+
+| bits | seed | M10E CTRL PSNR | M10F CTRL PSNR | Δ |
+|---|---|---|---|---|
+| 8 | 42 | 29.998 | 29.834 | **−0.164** |
+| 8 | 43 | 30.053 | 30.051 | −0.002 |
+
+Seed 43's control reproduces to **0.002 dB**. Seed 42's is 0.164 dB worse. Because BD-rate is paired
+per seed, a degraded control inflates *every* seed-42 candidate, and it widened the
+control-to-control gap from M10E's 0.054 dB to 0.216 dB — driving the measured noise floor from
+**1.62 to 4.86 points**.
+
+With a 4.86-point floor every pairwise λ comparison is "tied", and the automatic boundary verdict
+came back `D_FLAT_WITHIN_NOISE` (spread 4.18 ≤ floor 4.86). **That verdict is an artifact of the
+inflated floor, not a finding.** The convention was not changed after the fact — it is the same one
+M10D and M10E used, and the final-snapshot results are retained as primary throughout.
+
+### The boundary question, answered by an analysis the contamination cannot touch
+
+Within a seed the control is *shared by every arm*, so scoring each λ against **BRIDGE (3e-4) of its
+own seed** removes the control from the comparison entirely:
+
+| λ | vs 3e-4, seed 42 | vs 3e-4, seed 43 | mean | seeds agree? |
+|---|---|---|---|---|
+| **1.0e-4** | **+5.59%** | **+5.70%** | **+5.65%** | yes — to 0.11 points |
+| 2.0e-4 | −0.86% | +3.92% | +1.53% | no, sign differs |
+| 4.5e-4 | +0.70% | +13.71% (contaminated) | — | s42 only: +0.70% |
+
+And a floor that does not involve the control at all — the BRIDGE arm against M10E's
+configuration-identical 3e-4 run at the same seed — is **0.10–1.79 points**, consistent with M10D
+(1.41) and M10E (1.62). That is the trustworthy floor; 4.86 is the contaminated one.
+
+Against ~1.8 points:
+
+- **λ = 1e-4 is worse than 3e-4 by 5.65 points — 3.1× the clean floor, and the two seeds agree to
+  0.11 points.** This is the most reproducible single number in the experiment.
+- λ = 2e-4 (+1.53) and λ = 4.5e-4 (+0.70 on its clean seed) are **tied** with 3e-4.
+
+**The basin is bracketed below.** Combined with M10E (6e-4 and above are worse), the useful region is
+roughly **2e-4 – 4.5e-4**, flat inside itself, with clear degradation on both flanks.
+
+### Deployed `.nvc` (DAVIS test, 719 frames, fresh per-run calibration)
+
+| λ | 8-bit BPP / PSNR | 6-bit | 4-bit | BD PSNR | BD MS-SSIM |
+|---|---|---|---|---|---|
+| CTRL | 1.8447 / 29.943 | 1.3424 / 29.804 | 0.8314 / 27.978 | — | — |
+| 1.0e-4 | 1.7988 / 30.046 | 1.2964 / 29.951 | 0.7873 / 28.569 | −13.94% | −13.90% |
+| 2.0e-4 | 1.7797 / 30.081 | 1.2770 / 29.963 | 0.7688 / 28.655 | −16.72% | −17.89% |
+| **3.0e-4** | 1.7688 / 30.096 | 1.2663 / 29.980 | 0.7592 / 28.647 | **−18.12%** | −19.27% |
+| 4.5e-4 | 1.7593 / 29.885 | 1.2568 / 29.785 | 0.7501 / 28.497 | −14.11% | **−19.39%** |
+
+Every rate-aware λ beats the control at every depth. The CTRL and 4.5e-4 PSNR figures are depressed
+by the two contaminated runs.
+
+### Bridge: the pipeline itself is stable
+
+λ = 3e-4, M10E vs M10F — independently trained, independently calibrated, one milestone apart:
+
+| seed | ΔBPP | ΔPSNR |
+|---|---|---|
+| 42 | −0.01…−0.02% | +0.006…+0.000 dB |
+| 43 | −0.01…−0.03% | −0.027…−0.034 dB |
+
+Bitrate reproduces to **0.03%** and PSNR to **0.034 dB**. The 0.216 dB control gap is therefore not
+general run-to-run noise — it is one bad final epoch, and the rest of the pipeline is far tighter
+than that.
+
+### Proxy — four questions, kept apart
+
+1. **Lower λ → lower proxy R?** No, and correctly so: proxy R rises as λ falls (0.6479 → 0.6950 from
+   4.5e-4 to 1e-4), because weaker rate pressure means a more expensive latent.
+2. **Does proxy R order actual bitrate?** **Yes, at all three depths** — cross-λ ordering is
+   perfectly monotonic. The `rank_agreement=False` flag comes from 8 inversions that are *all*
+   between the two seeds of the same λ, magnitudes 0.0011–0.0417%, i.e. 3–100× below the
+   control-to-control BPP noise. Noise-level ties, not ordering failures.
+3. **Does the proxy-minimising λ minimise PSNR BD-rate?** **No** — lowest proxy R is 4.5e-4, best
+   PSNR BD-rate is 3e-4. Reproduces M10D and M10E.
+4. **Does it minimise MS-SSIM BD-rate?** Yes here (both 4.5e-4) — but 4.5e-4 and 3e-4 differ by only
+   0.12 MS-SSIM points, so this is a coin-flip, not corroboration.
+
+### Verdict: NO USEFUL REFINEMENT
+
+Nothing below 3e-4 improves on M10E's operating region, and 1e-4 is measurably worse. M10E's region
+stands; M10F's contribution is closing the flank that made it provisional.
+
+**This is not classified METHODOLOGICAL FAILURE**, despite the contaminated control, because
+fairness, calibration provenance, checkpoint identity and benchmark integrity all verified clean;
+the contamination's cause, direction and magnitude are all identified; and the central question was
+answered by a control-independent analysis that the contamination cannot affect, with the two seeds
+agreeing to 0.11 points.
+
+### Operating point: λ = 3.0e-4
+
+Chosen on deployed RD behaviour, reproducibility and noise — not on being the smallest λ, the
+highest PSNR, or the lowest proxy R:
+
+- **Interior to a now-bracketed basin**: 1e-4 is worse below (M10F), 6e-4 worse above (M10E). Unlike
+  M10E's recommendation, this is no longer a boundary point.
+- **Best PSNR BD-rate in both experiments** that measured it (M10E −16.78%, M10F −18.12%).
+- **The most stable arm in the experiment**: zero best-vs-final gap on *both* seeds, the only arm
+  besides LOW@s42 to achieve that, and the smallest MS-SSIM seed spread (0.14).
+- **Replicated across independent experiments** to 0.03% bitrate and 0.034 dB.
+
+It is not measurably better than 2e-4 or 4.5e-4 — the basin is genuinely flat between them — so this
+is a defensible choice within a flat region, not a measured optimum. That distinction should survive
+into any downstream work.
+
+### Methodology finding for future milestones
+
+Evaluating the **final** snapshot is now known to have bitten twice in two experiments (M10E: 1 of
+10 runs; M10F: 2 of 10, one a control). When it hits a control it corrupts the primary metric for
+that whole seed and inflates the noise floor ~3×. Future experiments should either evaluate
+`best.pt`, or average the last few epochs, **applied uniformly and decided before results are seen**.
+Changing it retroactively here was deliberately avoided. Recording `best_vs_final` per run at
+training time (new in M10F) is what made the problem visible immediately rather than by hand.
+
+### Reproducibility
+
+seeds 42/43, torch 2.13.0+cu130, RTX 5060 Laptop GPU, ~11.3 min/run, ~1.9 h for the grid.
+Per-snapshot SHA256 in `snapshots.csv`; snapshots retained at 604/1,812/4,832/10,268/18,120 for all
+10 runs. Best-checkpoint selection used only current-objective history in every run. All commands
+require the project venv (`./.venv/Scripts/python.exe`).
+
+---
+
 ## 2026-09-07 — M10E: final λ selection with two seeds — improvement durable, λ NOT resolved
 
 **Source:** M10D left the converged optimum unbounded below (its best arm, λ = 6.0e-4, was the

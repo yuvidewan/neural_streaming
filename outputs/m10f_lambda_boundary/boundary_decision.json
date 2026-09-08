@@ -1,0 +1,60 @@
+{
+  "purpose": "Control-independent boundary analysis. M10F's CTRL@s42 final snapshot was degraded (3.04% best-vs-final gap), which inflated the paired-BD-rate noise floor from ~1.6 to 4.86 points and lifted every seed-42 candidate. Within a seed the control is shared by all arms, so scoring each lambda against BRIDGE (3e-4) of its own seed removes the control entirely. The primary vs-CTRL results in rd_analysis.json are UNCHANGED and remain the pre-registered result.",
+  "bd_rate_vs_bridge_3e4_same_seed": {
+    "VERY_LOW": {
+      "42": 5.589883083137792,
+      "43": 5.703878453567102
+    },
+    "LOW": {
+      "42": -0.8563722495811832,
+      "43": 3.917900787136208
+    },
+    "UPPER_ANCHOR": {
+      "42": 0.7024890953850838,
+      "43": 13.708093523759835
+    }
+  },
+  "bd_rate_vs_bridge_mean": {
+    "VERY_LOW": 5.646880768352447,
+    "LOW": 1.5307642687775125,
+    "UPPER_ANCHOR": 7.205291309572459
+  },
+  "contaminated_runs_excluded_from_interpretation": [
+    "CTRL@s42",
+    "UPPER_ANCHOR@s43"
+  ],
+  "clean_noise_floor_from_config_identical_repeats": {
+    "description": "M10E lambda=3e-4 vs M10F lambda=3e-4, same seed, independently trained/calibrated",
+    "per_seed_points": {
+      "42": 0.09784485514358066,
+      "43": 1.7871283649480318
+    },
+    "range_points": [
+      0.09784485514358066,
+      1.7871283649480318
+    ],
+    "historical_reference": {
+      "m10d": 1.41,
+      "m10e": 1.62
+    },
+    "contaminated_ctrl_derived_floor": 4.863981185424427
+  },
+  "boundary_conclusion": {
+    "question": "Does the RD basin continue to improve below lambda = 3e-4?",
+    "answer": "NO",
+    "evidence": "lambda=1e-4 is worse than 3e-4 by 5.65 BD-rate points, 3.1x the clean floor, with the two seeds agreeing to 0.11 points (+5.59 / +5.70). lambda=2e-4 (+1.53) and lambda=4.5e-4 (+0.70 on its uncontaminated seed) are tied with 3e-4 inside the clean floor.",
+    "basin": "bracketed below at 1e-4 (M10F) and above at 6e-4 (M10E); flat across 2e-4 - 4.5e-4"
+  },
+  "final_lambda_decision": {
+    "selected": 0.0003,
+    "classification": "NO USEFUL REFINEMENT",
+    "justification": [
+      "interior to a now-bracketed basin, not a boundary point",
+      "best PSNR BD-rate in both experiments that measured it (M10E -16.78%, M10F -18.12%)",
+      "most stable arm in M10F: zero best-vs-final gap on both seeds",
+      "smallest MS-SSIM seed spread (0.14)",
+      "reproduces across independent experiments to 0.03% bitrate and 0.034 dB"
+    ],
+    "caveat": "Not measurably better than 2e-4 or 4.5e-4 - the basin is flat between them. This is a defensible choice inside a flat region, NOT a measured optimum."
+  }
+}

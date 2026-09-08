@@ -1,0 +1,361 @@
+{
+  "phase": "M10H smoke",
+  "mode": "mc",
+  "rate_accounted": true,
+  "calibration_provenance": {
+    "split": "train",
+    "bits": 8,
+    "mode": "per_channel",
+    "gop_size": 10,
+    "reference_mode": "mc",
+    "block_size": 16,
+    "search_range": 16,
+    "motion_bits": 6,
+    "lower_percentile": 0.1,
+    "upper_percentile": 99.9,
+    "intra_frames": 40,
+    "residual_frames": 36,
+    "motion_frames": 36,
+    "intra_entropy_model_id": "86cab676fc7a6b05",
+    "residual_entropy_model_id": "48fe3d961c732226",
+    "motion_entropy_model_id": "227766301ecca2b6"
+  },
+  "sequences": [
+    {
+      "sequence": "bmx-bumps",
+      "mean_psnr_db": 29.429590360427373,
+      "encoder_decoder_latents_identical": true,
+      "path": "outputs\\m10h_motion_compensation\\streams\\mc_bmx-bumps.nvct",
+      "frame_count": 20,
+      "gop_size": 10,
+      "mode": "mc",
+      "rate_accounted": true,
+      "block_size": 16,
+      "search_range": 16,
+      "frames": [
+        {
+          "index": 0,
+          "frame_type": "I",
+          "motion_bytes": 0,
+          "residual_bytes": 14196,
+          "total_bytes": 14196
+        },
+        {
+          "index": 1,
+          "frame_type": "P",
+          "motion_bytes": 501,
+          "residual_bytes": 12179,
+          "total_bytes": 12680
+        },
+        {
+          "index": 2,
+          "frame_type": "P",
+          "motion_bytes": 507,
+          "residual_bytes": 11687,
+          "total_bytes": 12194
+        },
+        {
+          "index": 3,
+          "frame_type": "P",
+          "motion_bytes": 521,
+          "residual_bytes": 11555,
+          "total_bytes": 12076
+        },
+        {
+          "index": 4,
+          "frame_type": "P",
+          "motion_bytes": 502,
+          "residual_bytes": 13224,
+          "total_bytes": 13726
+        },
+        {
+          "index": 5,
+          "frame_type": "P",
+          "motion_bytes": 447,
+          "residual_bytes": 12582,
+          "total_bytes": 13029
+        },
+        {
+          "index": 6,
+          "frame_type": "P",
+          "motion_bytes": 492,
+          "residual_bytes": 12206,
+          "total_bytes": 12698
+        },
+        {
+          "index": 7,
+          "frame_type": "P",
+          "motion_bytes": 554,
+          "residual_bytes": 12563,
+          "total_bytes": 13117
+        },
+        {
+          "index": 8,
+          "frame_type": "P",
+          "motion_bytes": 551,
+          "residual_bytes": 12764,
+          "total_bytes": 13315
+        },
+        {
+          "index": 9,
+          "frame_type": "P",
+          "motion_bytes": 535,
+          "residual_bytes": 12591,
+          "total_bytes": 13126
+        },
+        {
+          "index": 10,
+          "frame_type": "I",
+          "motion_bytes": 0,
+          "residual_bytes": 14746,
+          "total_bytes": 14746
+        },
+        {
+          "index": 11,
+          "frame_type": "P",
+          "motion_bytes": 532,
+          "residual_bytes": 12627,
+          "total_bytes": 13159
+        },
+        {
+          "index": 12,
+          "frame_type": "P",
+          "motion_bytes": 410,
+          "residual_bytes": 12645,
+          "total_bytes": 13055
+        },
+        {
+          "index": 13,
+          "frame_type": "P",
+          "motion_bytes": 510,
+          "residual_bytes": 12439,
+          "total_bytes": 12949
+        },
+        {
+          "index": 14,
+          "frame_type": "P",
+          "motion_bytes": 508,
+          "residual_bytes": 12653,
+          "total_bytes": 13161
+        },
+        {
+          "index": 15,
+          "frame_type": "P",
+          "motion_bytes": 425,
+          "residual_bytes": 12717,
+          "total_bytes": 13142
+        },
+        {
+          "index": 16,
+          "frame_type": "P",
+          "motion_bytes": 535,
+          "residual_bytes": 12661,
+          "total_bytes": 13196
+        },
+        {
+          "index": 17,
+          "frame_type": "P",
+          "motion_bytes": 531,
+          "residual_bytes": 12571,
+          "total_bytes": 13102
+        },
+        {
+          "index": 18,
+          "frame_type": "P",
+          "motion_bytes": 502,
+          "residual_bytes": 12498,
+          "total_bytes": 13000
+        },
+        {
+          "index": 19,
+          "frame_type": "P",
+          "motion_bytes": 484,
+          "residual_bytes": 12516,
+          "total_bytes": 13000
+        }
+      ],
+      "i_frames": 2,
+      "p_frames": 18,
+      "i_frame_residual_bytes": 28942,
+      "p_frame_residual_bytes": 224678,
+      "motion_bytes": 9047,
+      "residual_bytes": 253620,
+      "payload_bytes": 262667,
+      "container_bytes": 263927,
+      "container_overhead_bytes": 1260,
+      "latent_shape": [
+        64,
+        16,
+        16
+      ]
+    },
+    {
+      "sequence": "car-turn",
+      "mean_psnr_db": 31.259450013099052,
+      "encoder_decoder_latents_identical": true,
+      "path": "outputs\\m10h_motion_compensation\\streams\\mc_car-turn.nvct",
+      "frame_count": 20,
+      "gop_size": 10,
+      "mode": "mc",
+      "rate_accounted": true,
+      "block_size": 16,
+      "search_range": 16,
+      "frames": [
+        {
+          "index": 0,
+          "frame_type": "I",
+          "motion_bytes": 0,
+          "residual_bytes": 13566,
+          "total_bytes": 13566
+        },
+        {
+          "index": 1,
+          "frame_type": "P",
+          "motion_bytes": 86,
+          "residual_bytes": 9785,
+          "total_bytes": 9871
+        },
+        {
+          "index": 2,
+          "frame_type": "P",
+          "motion_bytes": 70,
+          "residual_bytes": 9508,
+          "total_bytes": 9578
+        },
+        {
+          "index": 3,
+          "frame_type": "P",
+          "motion_bytes": 74,
+          "residual_bytes": 9776,
+          "total_bytes": 9850
+        },
+        {
+          "index": 4,
+          "frame_type": "P",
+          "motion_bytes": 71,
+          "residual_bytes": 9539,
+          "total_bytes": 9610
+        },
+        {
+          "index": 5,
+          "frame_type": "P",
+          "motion_bytes": 72,
+          "residual_bytes": 9675,
+          "total_bytes": 9747
+        },
+        {
+          "index": 6,
+          "frame_type": "P",
+          "motion_bytes": 74,
+          "residual_bytes": 9886,
+          "total_bytes": 9960
+        },
+        {
+          "index": 7,
+          "frame_type": "P",
+          "motion_bytes": 73,
+          "residual_bytes": 9860,
+          "total_bytes": 9933
+        },
+        {
+          "index": 8,
+          "frame_type": "P",
+          "motion_bytes": 70,
+          "residual_bytes": 9542,
+          "total_bytes": 9612
+        },
+        {
+          "index": 9,
+          "frame_type": "P",
+          "motion_bytes": 75,
+          "residual_bytes": 9735,
+          "total_bytes": 9810
+        },
+        {
+          "index": 10,
+          "frame_type": "I",
+          "motion_bytes": 0,
+          "residual_bytes": 13582,
+          "total_bytes": 13582
+        },
+        {
+          "index": 11,
+          "frame_type": "P",
+          "motion_bytes": 83,
+          "residual_bytes": 9872,
+          "total_bytes": 9955
+        },
+        {
+          "index": 12,
+          "frame_type": "P",
+          "motion_bytes": 71,
+          "residual_bytes": 9609,
+          "total_bytes": 9680
+        },
+        {
+          "index": 13,
+          "frame_type": "P",
+          "motion_bytes": 76,
+          "residual_bytes": 9637,
+          "total_bytes": 9713
+        },
+        {
+          "index": 14,
+          "frame_type": "P",
+          "motion_bytes": 73,
+          "residual_bytes": 9764,
+          "total_bytes": 9837
+        },
+        {
+          "index": 15,
+          "frame_type": "P",
+          "motion_bytes": 77,
+          "residual_bytes": 9881,
+          "total_bytes": 9958
+        },
+        {
+          "index": 16,
+          "frame_type": "P",
+          "motion_bytes": 76,
+          "residual_bytes": 9893,
+          "total_bytes": 9969
+        },
+        {
+          "index": 17,
+          "frame_type": "P",
+          "motion_bytes": 82,
+          "residual_bytes": 10038,
+          "total_bytes": 10120
+        },
+        {
+          "index": 18,
+          "frame_type": "P",
+          "motion_bytes": 91,
+          "residual_bytes": 10416,
+          "total_bytes": 10507
+        },
+        {
+          "index": 19,
+          "frame_type": "P",
+          "motion_bytes": 103,
+          "residual_bytes": 10308,
+          "total_bytes": 10411
+        }
+      ],
+      "i_frames": 2,
+      "p_frames": 18,
+      "i_frame_residual_bytes": 27148,
+      "p_frame_residual_bytes": 176724,
+      "motion_bytes": 1397,
+      "residual_bytes": 203872,
+      "payload_bytes": 205269,
+      "container_bytes": 206529,
+      "container_overhead_bytes": 1260,
+      "latent_shape": [
+        64,
+        16,
+        16
+      ]
+    }
+  ]
+}

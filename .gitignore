@@ -110,6 +110,12 @@ outputs/**/step_log.json
 
 # --- Custom Neural Video Codec binary format ---
 *.nvc
+# .nvct is the M10G/M10H temporal prototype container (see
+# scripts/m10h_motion_compensation.py). Same kind of artifact as .nvc:
+# encoded bitstreams, regenerable from a checkpoint plus calibration, and
+# large in bulk (M10F-M10J produced ~143 MB of them). The analysis JSON/CSV
+# alongside them IS committed - every reported conclusion comes from those.
+*.nvct
 *.bin
 
 # --- Video / image artifacts (raw footage, reconstructed output, frame dumps) ---

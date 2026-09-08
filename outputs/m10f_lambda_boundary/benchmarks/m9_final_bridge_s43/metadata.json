@@ -1,0 +1,120 @@
+{
+  "timestamp_utc": "2026-09-08T13:41:49.869190+00:00",
+  "methodology_note": "NVC currently operates as an intra-only, frame-independent neural codec, while H.264 and H.265 exploit temporal redundancy through inter-frame prediction. Unless a configuration is marked intra_only, the classical codecs therefore benefit from a structural advantage that is unrelated to transform quality. Compression ratios are against raw uint8 RGB storage (frames x width x height x 3), which is not equivalent to uncompressed YUV video. H.264/H.265 additionally subsample chroma when pix_fmt is yuv420p, whereas NVC codes full-resolution RGB.",
+  "dataset": "davis",
+  "sequence_ids": [
+    "bmx-bumps",
+    "car-turn",
+    "cat-girl",
+    "cows",
+    "drift-chicane",
+    "drone",
+    "gold-fish",
+    "schoolgirls",
+    "surf"
+  ],
+  "frame_counts": {
+    "bmx-bumps": 90,
+    "car-turn": 80,
+    "cat-girl": 89,
+    "cows": 104,
+    "drift-chicane": 52,
+    "drone": 91,
+    "gold-fish": 78,
+    "schoolgirls": 80,
+    "surf": 55
+  },
+  "total_frames": 719,
+  "resolution": {
+    "width": 256,
+    "height": 256
+  },
+  "codecs": [
+    {
+      "codec": "nvc",
+      "codec_configuration": "8bit-per_channel"
+    },
+    {
+      "codec": "nvc",
+      "codec_configuration": "6bit-per_channel"
+    },
+    {
+      "codec": "nvc",
+      "codec_configuration": "4bit-per_channel"
+    }
+  ],
+  "seed": 42,
+  "device": "cuda",
+  "environment": {
+    "python_version": "3.11.9",
+    "torch_version": "2.13.0+cu130",
+    "torch_cuda_available": true,
+    "gpu_name": "NVIDIA GeForce RTX 5060 Laptop GPU",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "ffmpeg_version": null
+  },
+  "checkpoint": "outputs\\m10f_lambda_boundary\\lambda_3.0e-04_seed43\\snapshot_step018120.pt",
+  "checkpoint_sha256": "16aa3b10588595eebb99dabb61a1f70e293aad4f985759fef28d9f9312462a78",
+  "calibration": "outputs\\m10f_lambda_boundary\\calibration\\bridge_s43.json",
+  "calibration_sha256": "5c1e4681088d0a2ada9fcf26c35fd540baa23f6366933da0506cf4ebccfc3acc",
+  "project_version": "0.0.1",
+  "split": "test",
+  "crf_values": [],
+  "nvc_bit_depths": [
+    8,
+    6,
+    4
+  ],
+  "preset": null,
+  "pix_fmt": null,
+  "intra_only": false,
+  "max_sequences": null,
+  "max_frames_per_sequence": null,
+  "checkpoint_epoch": 70,
+  "calibration_fit": {
+    "8bit": {
+      "frames_probed": 16,
+      "clipped_percent": 0.2475738525390625,
+      "clipped_low_percent": 0.119781494140625,
+      "clipped_high_percent": 0.1277923583984375,
+      "clipped_total": 649,
+      "total_values": 262144,
+      "latent_min": -34.79397201538086,
+      "latent_max": 34.74595260620117,
+      "threshold_percent": 2.0,
+      "fits": true,
+      "calibration": "outputs\\m10f_lambda_boundary\\calibration\\bridge_s43.json",
+      "bits": 8
+    },
+    "6bit": {
+      "frames_probed": 16,
+      "clipped_percent": 0.23040771484375,
+      "clipped_low_percent": 0.10833740234375,
+      "clipped_high_percent": 0.1220703125,
+      "clipped_total": 604,
+      "total_values": 262144,
+      "latent_min": -34.79397201538086,
+      "latent_max": 34.74595260620117,
+      "threshold_percent": 2.0,
+      "fits": true,
+      "calibration": "outputs\\m10f_lambda_boundary\\calibration\\bridge_s43_6bit.json",
+      "bits": 6
+    },
+    "4bit": {
+      "frames_probed": 16,
+      "clipped_percent": 0.1766204833984375,
+      "clipped_low_percent": 0.0797271728515625,
+      "clipped_high_percent": 0.096893310546875,
+      "clipped_total": 463,
+      "total_values": 262144,
+      "latent_min": -34.79397201538086,
+      "latent_max": 34.74595260620117,
+      "threshold_percent": 2.0,
+      "fits": true,
+      "calibration": "outputs\\m10f_lambda_boundary\\calibration\\bridge_s43_4bit.json",
+      "bits": 4
+    }
+  },
+  "calibration_mismatch_allowed": false,
+  "failures": []
+}

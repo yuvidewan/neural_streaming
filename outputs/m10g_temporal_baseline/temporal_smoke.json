@@ -1,0 +1,289 @@
+{
+  "phase": "M10G Part C (temporal baseline smoke test)",
+  "container": ".nvct prototype v1",
+  "gop_size": 10,
+  "reference_mode": "latent",
+  "residual_domain": "latent",
+  "calibration_provenance": {
+    "split": "train",
+    "bits": 8,
+    "mode": "per_channel",
+    "gop_size": 10,
+    "lower_percentile": 0.1,
+    "upper_percentile": 99.9,
+    "intra_frames": 40,
+    "residual_frames": 36,
+    "intra_entropy_model_id": "86cab676fc7a6b05",
+    "residual_entropy_model_id": "9b4e3b4544701291",
+    "note": "Two separately fitted grids. Intra latents and latent residuals have different statistics, so one shared grid would misallocate levels for both."
+  },
+  "temporal_redundancy_diagnostic": {
+    "intra_entropy_bits_per_symbol": 6.96595209699028,
+    "residual_entropy_bits_per_symbol": 6.160570644378817,
+    "difference_bits_per_symbol": -0.8053814526114635,
+    "residual_is_cheaper": true,
+    "note": "Order-0 empirical entropy of the symbols each grid actually codes. This measures whether temporal redundancy is visible in THIS latent space under a per-channel percentile grid - not how well any particular codec exploits it."
+  },
+  "invariants": {
+    "encoder_decoder_reference_symmetry": true,
+    "deterministic_decode": true
+  },
+  "sequences": [
+    {
+      "sequence": "bmx-bumps",
+      "path": "outputs\\m10g_temporal_baseline\\streams\\bmx-bumps.nvct",
+      "frame_count": 20,
+      "gop_size": 10,
+      "reference_mode": "latent",
+      "frames": [
+        {
+          "index": 0,
+          "frame_type": "I",
+          "payload_bytes": 14196
+        },
+        {
+          "index": 1,
+          "frame_type": "P",
+          "payload_bytes": 14526
+        },
+        {
+          "index": 2,
+          "frame_type": "P",
+          "payload_bytes": 14329
+        },
+        {
+          "index": 3,
+          "frame_type": "P",
+          "payload_bytes": 14357
+        },
+        {
+          "index": 4,
+          "frame_type": "P",
+          "payload_bytes": 14653
+        },
+        {
+          "index": 5,
+          "frame_type": "P",
+          "payload_bytes": 14818
+        },
+        {
+          "index": 6,
+          "frame_type": "P",
+          "payload_bytes": 15018
+        },
+        {
+          "index": 7,
+          "frame_type": "P",
+          "payload_bytes": 15223
+        },
+        {
+          "index": 8,
+          "frame_type": "P",
+          "payload_bytes": 15350
+        },
+        {
+          "index": 9,
+          "frame_type": "P",
+          "payload_bytes": 15446
+        },
+        {
+          "index": 10,
+          "frame_type": "I",
+          "payload_bytes": 14746
+        },
+        {
+          "index": 11,
+          "frame_type": "P",
+          "payload_bytes": 15481
+        },
+        {
+          "index": 12,
+          "frame_type": "P",
+          "payload_bytes": 15328
+        },
+        {
+          "index": 13,
+          "frame_type": "P",
+          "payload_bytes": 15734
+        },
+        {
+          "index": 14,
+          "frame_type": "P",
+          "payload_bytes": 15683
+        },
+        {
+          "index": 15,
+          "frame_type": "P",
+          "payload_bytes": 15252
+        },
+        {
+          "index": 16,
+          "frame_type": "P",
+          "payload_bytes": 15357
+        },
+        {
+          "index": 17,
+          "frame_type": "P",
+          "payload_bytes": 15258
+        },
+        {
+          "index": 18,
+          "frame_type": "P",
+          "payload_bytes": 15183
+        },
+        {
+          "index": 19,
+          "frame_type": "P",
+          "payload_bytes": 15163
+        }
+      ],
+      "payload_bytes": 301101,
+      "container_bytes": 302269,
+      "i_frames": 2,
+      "p_frames": 18,
+      "i_frame_payload_bytes": 28942,
+      "p_frame_payload_bytes": 272159,
+      "latent_shape": [
+        64,
+        16,
+        16
+      ],
+      "encoder_decoder_latents_identical": true,
+      "deterministic_decode": true,
+      "mean_psnr_db": 28.64319355479922,
+      "stream_bpp": 1.844903564453125,
+      "total_pixels": 1310720,
+      "i_bytes_per_frame": 14471.0,
+      "p_bytes_per_frame": 15119.944444444445,
+      "container_overhead_bytes": 1168
+    },
+    {
+      "sequence": "car-turn",
+      "path": "outputs\\m10g_temporal_baseline\\streams\\car-turn.nvct",
+      "frame_count": 20,
+      "gop_size": 10,
+      "reference_mode": "latent",
+      "frames": [
+        {
+          "index": 0,
+          "frame_type": "I",
+          "payload_bytes": 13566
+        },
+        {
+          "index": 1,
+          "frame_type": "P",
+          "payload_bytes": 8691
+        },
+        {
+          "index": 2,
+          "frame_type": "P",
+          "payload_bytes": 8107
+        },
+        {
+          "index": 3,
+          "frame_type": "P",
+          "payload_bytes": 8888
+        },
+        {
+          "index": 4,
+          "frame_type": "P",
+          "payload_bytes": 8184
+        },
+        {
+          "index": 5,
+          "frame_type": "P",
+          "payload_bytes": 8595
+        },
+        {
+          "index": 6,
+          "frame_type": "P",
+          "payload_bytes": 9101
+        },
+        {
+          "index": 7,
+          "frame_type": "P",
+          "payload_bytes": 9094
+        },
+        {
+          "index": 8,
+          "frame_type": "P",
+          "payload_bytes": 8280
+        },
+        {
+          "index": 9,
+          "frame_type": "P",
+          "payload_bytes": 8894
+        },
+        {
+          "index": 10,
+          "frame_type": "I",
+          "payload_bytes": 13582
+        },
+        {
+          "index": 11,
+          "frame_type": "P",
+          "payload_bytes": 8910
+        },
+        {
+          "index": 12,
+          "frame_type": "P",
+          "payload_bytes": 8416
+        },
+        {
+          "index": 13,
+          "frame_type": "P",
+          "payload_bytes": 8471
+        },
+        {
+          "index": 14,
+          "frame_type": "P",
+          "payload_bytes": 8995
+        },
+        {
+          "index": 15,
+          "frame_type": "P",
+          "payload_bytes": 9175
+        },
+        {
+          "index": 16,
+          "frame_type": "P",
+          "payload_bytes": 9142
+        },
+        {
+          "index": 17,
+          "frame_type": "P",
+          "payload_bytes": 9402
+        },
+        {
+          "index": 18,
+          "frame_type": "P",
+          "payload_bytes": 10339
+        },
+        {
+          "index": 19,
+          "frame_type": "P",
+          "payload_bytes": 11234
+        }
+      ],
+      "payload_bytes": 189066,
+      "container_bytes": 190234,
+      "i_frames": 2,
+      "p_frames": 18,
+      "i_frame_payload_bytes": 27148,
+      "p_frame_payload_bytes": 161918,
+      "latent_shape": [
+        64,
+        16,
+        16
+      ],
+      "encoder_decoder_latents_identical": true,
+      "deterministic_decode": true,
+      "mean_psnr_db": 31.251367651855404,
+      "stream_bpp": 1.16109619140625,
+      "total_pixels": 1310720,
+      "i_bytes_per_frame": 13574.0,
+      "p_bytes_per_frame": 8995.444444444445,
+      "container_overhead_bytes": 1168
+    }
+  ]
+}

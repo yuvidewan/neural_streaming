@@ -1,0 +1,193 @@
+====================================================================================================================
+M10F - DEPLOYED .nvc BENCHMARK (18,120 steps, DAVIS test, 719 frames, 10 runs)
+====================================================================================================================
+lambda name        lambda  seed  bits       BPP   PSNR dB   MS-SSIM  bytes/frm   ratio
+CTRL           0.0000e+00    42     8    1.8443    29.834    0.9742    15108.9   13.01
+CTRL           0.0000e+00    42     6    1.3420    29.700    0.9720    10993.7   17.88
+CTRL           0.0000e+00    42     4    0.8309    27.931    0.9385     6806.7   28.88
+CTRL           0.0000e+00    43     8    1.8451    30.051    0.9742    15115.3   13.01
+CTRL           0.0000e+00    43     6    1.3427    29.907    0.9722    10999.5   17.87
+CTRL           0.0000e+00    43     4    0.8319    28.025    0.9386     6814.6   28.85
+VERY_LOW       1.0000e-04    42     8    1.7988    30.060    0.9751    14735.7   13.34
+VERY_LOW       1.0000e-04    42     6    1.2964    29.957    0.9736    10620.0   18.51
+VERY_LOW       1.0000e-04    42     4    0.7873    28.571    0.9505     6449.5   30.48
+VERY_LOW       1.0000e-04    43     8    1.7988    30.032    0.9748    14735.5   13.34
+VERY_LOW       1.0000e-04    43     6    1.2964    29.944    0.9735    10620.1   18.51
+VERY_LOW       1.0000e-04    43     4    0.7873    28.566    0.9507     6449.5   30.48
+LOW            2.0000e-04    42     8    1.7797    30.129    0.9759    14579.5   13.49
+LOW            2.0000e-04    42     6    1.2771    30.007    0.9744    10462.2   18.79
+LOW            2.0000e-04    42     4    0.7687    28.708    0.9534     6297.4   31.22
+LOW            2.0000e-04    43     8    1.7796    30.033    0.9758    14578.5   13.49
+LOW            2.0000e-04    43     6    1.2769    29.918    0.9742    10460.8   18.79
+LOW            2.0000e-04    43     4    0.7689    28.601    0.9524     6298.9   31.21
+BRIDGE         3.0000e-04    42     8    1.7687    30.104    0.9761    14489.6   13.57
+BRIDGE         3.0000e-04    42     6    1.2662    29.987    0.9746    10372.6   18.95
+BRIDGE         3.0000e-04    42     4    0.7592    28.647    0.9530     6219.4   31.61
+BRIDGE         3.0000e-04    43     8    1.7689    30.087    0.9761    14491.2   13.57
+BRIDGE         3.0000e-04    43     6    1.2663    29.973    0.9746    10373.8   18.95
+BRIDGE         3.0000e-04    43     4    0.7591    28.646    0.9535     6218.7   31.62
+UPPER_ANCHOR   4.5000e-04    42     8    1.7594    30.085    0.9760    14413.1   13.64
+UPPER_ANCHOR   4.5000e-04    42     6    1.2569    29.963    0.9744    10296.1   19.10
+UPPER_ANCHOR   4.5000e-04    42     4    0.7502    28.604    0.9526     6145.9   31.99
+UPPER_ANCHOR   4.5000e-04    43     8    1.7592    29.684    0.9757    14411.2   13.64
+UPPER_ANCHOR   4.5000e-04    43     6    1.2567    29.606    0.9743    10294.7   19.10
+UPPER_ANCHOR   4.5000e-04    43     4    0.7499    28.390    0.9525     6143.4   32.00
+
+====================================================================================================================
+PAIRED BD-RATE - each run vs the CONTROL OF ITS OWN SEED
+====================================================================================================================
+lambda name        lambda     s42 PSNR     s43 PSNR      mean     std  spread |    s42 MSSSIM    s43 MSSSIM      mean  spread
+VERY_LOW       1.0000e-04      -16.99%      -10.89%   -13.94%   4.31   6.09 |       -14.05%       -13.76%   -13.90%   0.29
+LOW            2.0000e-04      -21.15%      -12.29%   -16.72%   6.27   8.87 |       -18.40%       -17.37%   -17.89%   1.03
+BRIDGE         3.0000e-04      -20.91%      -15.33%   -18.12%   3.94   5.58 |       -19.20%       -19.34%   -19.27%   0.14
+UPPER_ANCHOR   4.5000e-04      -20.80%       -7.42%   -14.11%   9.46  13.37 |       -19.59%       -19.18%   -19.39%   0.42
+
+  n=2 seeds per lambda. 'std' over two points is a spread, not a confidence
+  interval - no significance is claimed from it.
+
+====================================================================================================================
+DELTAS vs MATCHED CONTROL (same seed, seed-averaged)
+====================================================================================================================
+lambda name     bits     dBPP%   dPSNR dB   dMS-SSIM
+VERY_LOW           8    -2.49%     +0.103    +0.0008
+VERY_LOW           6    -3.42%     +0.147    +0.0015
+VERY_LOW           4    -5.30%     +0.590    +0.0120
+LOW                8    -3.53%     +0.138    +0.0017
+LOW                6    -4.87%     +0.159    +0.0022
+LOW                4    -7.53%     +0.677    +0.0143
+BRIDGE             8    -4.11%     +0.153    +0.0019
+BRIDGE             6    -5.67%     +0.177    +0.0025
+BRIDGE             4    -8.69%     +0.669    +0.0147
+UPPER_ANCHOR       8    -4.63%     -0.058    +0.0017
+UPPER_ANCHOR       6    -6.38%     -0.019    +0.0023
+UPPER_ANCHOR       4    -9.78%     +0.519    +0.0140
+
+====================================================================================================================
+M10F NOISE FLOOR - CTRL seed 42 vs CTRL seed 43 (identical but for the seed)
+====================================================================================================================
+ bits     s42 BPP     s43 BPP    dBPP%     s42 PSNR     s43 PSNR    dPSNR   dMS-SSIM
+    8      1.8443      1.8451   +0.04%       29.834       30.051   +0.216    +0.0000
+    6      1.3420      1.3427   +0.05%       29.700       29.907   +0.207    +0.0002
+    4      0.8309      0.8319   +0.12%       27.931       28.025   +0.094    +0.0001
+
+  CTRL-vs-CTRL PSNR BD-rate    = -4.86%  ->  noise floor |4.86| percentage points
+  CTRL-vs-CTRL MS-SSIM BD-rate = -0.17%
+  This experiment's OWN floor is the primary estimate. M10D (1.41) and
+  M10E (1.62) are historical references only.
+
+lambda name      mean BD  seed spread   vs floor   classification
+VERY_LOW         -13.94%        6.09       2.9x   clearly above noise
+LOW              -16.72%        8.87       3.4x   clearly above noise
+BRIDGE           -18.12%        5.58       3.7x   clearly above noise
+UPPER_ANCHOR     -14.11%       13.37       2.9x   clearly above noise
+
+  Convention: 'clearly above noise' means |mean BD-rate| > 2.0x the
+  measured control-to-control floor. A stated threshold, not a significance
+  test - n=2 cannot support one.
+
+  NOTE: this classifies each lambda against the CONTROL. It does NOT say
+  whether two lambdas differ from each other - see the pairwise table below.
+
+====================================================================================================================
+CONVERGED lambda -> RD CURVE (seed-averaged)
+====================================================================================================================
+lambda name        lambda   proxy R     BPP 8     BPP 6     BPP 4   BD PSNR  BD MSSSIM  BD std  latent|.|
+CTRL           0.0000e+00    2.1723    1.8447    1.3424    0.8314    +0.00%     +0.00%   0.00     7.0585
+VERY_LOW       1.0000e-04    0.6950    1.7988    1.2964    0.7873   -13.94%    -13.90%   4.31     4.5782
+LOW            2.0000e-04    0.6705    1.7797    1.2770    0.7688   -16.72%    -17.89%   6.27     3.5517
+BRIDGE         3.0000e-04    0.6578    1.7688    1.2663    0.7592   -18.12%    -19.27%   3.94     2.9893
+UPPER_ANCHOR   4.5000e-04    0.6479    1.7593    1.2568    0.7501   -14.11%    -19.39%   9.46     2.5311
+
+====================================================================================================================
+PAIRWISE lambda SEPARATION - can these two lambdas be told apart?
+====================================================================================================================
+  VERY_LOW       vs LOW            gap= 2.78 pts ( 0.6x floor)  -> TIED within noise
+  VERY_LOW       vs BRIDGE         gap= 4.18 pts ( 0.9x floor)  -> TIED within noise
+  VERY_LOW       vs UPPER_ANCHOR   gap= 0.17 pts ( 0.0x floor)  -> TIED within noise
+  LOW            vs BRIDGE         gap= 1.40 pts ( 0.3x floor)  -> TIED within noise
+  LOW            vs UPPER_ANCHOR   gap= 2.61 pts ( 0.5x floor)  -> TIED within noise
+  BRIDGE         vs UPPER_ANCHOR   gap= 4.01 pts ( 0.8x floor)  -> TIED within noise
+
+====================================================================================================================
+BOUNDARY VERDICT - does the basin keep improving below 3e-4?
+====================================================================================================================
+  case  : D_FLAT_WITHIN_NOISE
+  reason: total spread 4.18 pts <= noise floor 4.86 pts
+
+====================================================================================================================
+BEST-vs-FINAL CHECKPOINT GAP (methodology - the FINAL snapshot remains primary)
+====================================================================================================================
+run                 best ep  final ep     best obj    final obj    gap %    dPSNR  flag
+CTRL@s42                 68        70 1.196330e-03 1.232749e-03    3.04%   -0.169  <-- FLAGGED
+CTRL@s43                 69        70 1.189263e-03 1.190025e-03    0.06%   -0.006  
+VERY_LOW@s42             68        70 1.259814e-03 1.263801e-03    0.32%   -0.030  
+VERY_LOW@s43             68        70 1.258544e-03 1.258798e-03    0.02%   -0.011  
+LOW@s42                  70        70 1.317591e-03 1.317591e-03    0.00%   +0.000  
+LOW@s43                  68        70 1.322800e-03 1.325202e-03    0.18%   -0.023  
+BRIDGE@s42               70        70 1.385684e-03 1.385684e-03    0.00%   +0.000  
+BRIDGE@s43               70        70 1.381042e-03 1.381042e-03    0.00%   +0.000  
+UPPER_ANCHOR@s42         70        70 1.480210e-03 1.480210e-03    0.00%   +0.000  
+UPPER_ANCHOR@s43         68        70 1.487470e-03 1.526720e-03    2.64%   -0.201  <-- FLAGGED
+
+  2 run(s) exceed the 2.0% gap threshold: CTRL@s42, UPPER_ANCHOR@s43
+  These are reported as a methodology caveat. The predefined final-snapshot
+  result is RETAINED - it is not replaced by best.pt after the fact.
+
+====================================================================================================================
+PROXY vs ACTUAL - four questions, kept apart
+====================================================================================================================
+1. Does LOWER lambda produce LOWER proxy R?
+   lambda ascending -> proxy R: 1.0e-04:0.6950, 2.0e-04:0.6705, 3.0e-04:0.6578, 4.5e-04:0.6479
+   proxy R decreases as lambda increases: True
+   -> lower lambda gives HIGHER proxy R (weaker rate pressure): as expected
+
+2. Does proxy R order actual .nvc bitrate?
+   8-bit: cross-lambda monotonic=True  per-run agreement=False  spearman=+0.929  pearson=+0.999
+   6-bit: cross-lambda monotonic=True  per-run agreement=False  spearman=+0.952  pearson=+0.999
+   4-bit: cross-lambda monotonic=True  per-run agreement=False  spearman=+0.929  pearson=+0.999
+
+3. Does the lambda minimising proxy R minimise PSNR BD-rate?
+   lowest proxy R      : UPPER_ANCHOR (lambda 4.5000e-04)
+   best PSNR BD-rate   : BRIDGE (lambda 3.0000e-04, -18.12%)
+   same lambda? False
+
+4. Does it minimise MS-SSIM BD-rate?
+   best MS-SSIM BD-rate: UPPER_ANCHOR (lambda 4.5000e-04, -19.39%)
+   same lambda? True
+
+   The proxy estimates RATE. Questions 3 and 4 are about the rate/QUALITY
+   tradeoff, which the proxy does not represent - it must not pick lambda alone.
+
+====================================================================================================================
+M10E -> M10F BRIDGE - the repeated 3e-4 and 4.5e-4 arms
+====================================================================================================================
+    lambda  seed  bits   M10E BPP   M10F BPP    dBPP%  M10E PSNR  M10F PSNR    dPSNR   dMS-SSIM
+   3.0e-04    42     8     1.7690     1.7687   -0.01%     30.098     30.104   +0.006    +0.0001
+   3.0e-04    42     6     1.2664     1.2662   -0.02%     29.987     29.987   +0.000    +0.0000
+   3.0e-04    42     4     0.7594     0.7592   -0.02%     28.647     28.647   +0.000    -0.0000
+   3.0e-04    43     8     1.7692     1.7689   -0.01%     30.122     30.087   -0.034    +0.0000
+   3.0e-04    43     6     1.2665     1.2663   -0.02%     30.008     29.973   -0.034    +0.0000
+   3.0e-04    43     4     0.7593     0.7591   -0.03%     28.673     28.646   -0.027    +0.0000
+   4.5e-04    42     8     1.7592     1.7594   +0.01%     30.080     30.085   +0.005    -0.0000
+   4.5e-04    42     6     1.2566     1.2569   +0.02%     29.958     29.963   +0.006    +0.0000
+   4.5e-04    42     4     0.7500     0.7502   +0.03%     28.596     28.604   +0.008    +0.0001
+   4.5e-04    43     8     1.7595     1.7592   -0.02%     30.103     29.684   -0.419    -0.0006
+   4.5e-04    43     6     1.2570     1.2567   -0.02%     29.993     29.606   -0.388    -0.0004
+   4.5e-04    43     4     0.7502     0.7499   -0.04%     28.616     28.390   -0.226    -0.0003
+
+    lambda    M10E BD    M10F BD   difference
+   3.0e-04    -16.78%    -18.12%       -1.34 pts
+   4.5e-04    -16.53%    -14.11%       +2.42 pts
+
+  Inter-experiment drift should be read against the 4.86-point
+  noise floor. Differences inside it are not evidence of anything.
+
+====================================================================================================================
+PARETO FRONTIER (seed-averaged points)
+====================================================================================================================
+  8-bit non-dominated: BRIDGE, UPPER_ANCHOR
+  6-bit non-dominated: BRIDGE, UPPER_ANCHOR
+  4-bit non-dominated: BRIDGE, LOW, UPPER_ANCHOR
+
+  A lambda sweep necessarily spreads points along a curve, so dominance
+  counting is weak evidence here - BD-rate is the discriminating metric.
