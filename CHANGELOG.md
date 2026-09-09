@@ -13,6 +13,95 @@ the time.
 
 ---
 
+## 2026-09-09 — Why NVC decode is slower than encode, and closing the gap where possible
+
+**Source:** NVC's own decode is measurably slower than its encode - real 719-frame DAVIS
+measurements (chroma-subsampling entry, below) put it at 36-43 ms/frame decode vs 14-20 ms/frame
+encode, all software, all CPU. Investigated why, then investigated fixes for each cause found -
+built and tested everything that does NOT need retraining; one real, no-retraining fix for the
+network side does not currently exist on this machine, and is documented as such rather than
+skipped silently.
+**Tests:** 962 passing (full suite), zero regressions. 12 new tests.
+**Scope:** lives on the unmerged `decode-speed` branch (`a050d41`) - see "Disposition" below.
+
+### Two independent causes, both confirmed by direct measurement
+
+**1. The decoder's `ConvTranspose2d` is 1.72x slower than `Conv2d` for the identical FLOP count.**
+Confirmed with a controlled A/B: `ConvTranspose2d(64→128, 16×16→32×32)` timed against its exact
+mathematical transpose, `Conv2d(128→64, 32×32→16×16)` - same weight shape, same MAC count by
+construction, only the op direction differs. 2.21 ms vs 1.28 ms. Not folklore; measured on this
+machine.
+
+**2. Arithmetic decoding has to search for the symbol; encoding never does.** From the actual C
+source (`range_coder.c`): `rc_encode` already knows which symbol to code, so it looks up
+`cum[symbol]`/`cum[symbol+1]` directly - O(1). `rc_decode` doesn't know the symbol yet - it finds
+it via `bisect_right_i64`, a binary search over the cumulative table (up to 8 comparisons at
+8-bit) that encoding skips entirely.
+
+### Fix attempted and shipped: table-based decode (entropy coder)
+
+Standard production-range-coder technique: since `TOTAL_FREQUENCY` is fixed at exactly 65536 for
+every table (`EmpiricalEntropyModel`'s own constructor invariant), a precomputed array mapping
+every possible interval position directly to its symbol turns the search into one array read.
+
+- New `rc_decode_lut` in `range_coder.c`, structurally identical to `rc_decode` except the bisect
+  call is replaced by a lookup; `rc_decode` itself is untouched.
+- `build_symbol_lut(cumulative)` in `range_coder.py`; `decode_symbols(..., lut=...)` is a new
+  optional keyword - omitting it (the default) is byte-for-byte the same as before.
+- `EmpiricalEntropyModel.symbol_lut`: lazily built, cached per model.
+- Verified bit-exact against the existing bisect path across bit depths, table counts, and random
+  data.
+
+**Real, measured speedup - NOT wired in as the default, because it is not a blanket win:**
+
+| bits | table width | speedup |
+|---|---|---|
+| 8 | 257 | **1.06x faster** |
+| 6 | 65 | ~1.00x (a wash) |
+| 4 | 17 | **0.81x - slower** |
+
+At low bit depths the tiny cumulative table already fits in L1 cache, so the search is nearly
+free; the 65536-entry LUT does not fit cache at any bit depth, so replacing a cheap cache-resident
+search with a cache-unfriendly lookup can lose. This project's own default bit depths (4/6/8) span
+exactly the range where the answer flips sign, so it ships as an explicit opt-in
+(`decode_symbols(lut=...)`, `EmpiricalEntropyModel.symbol_lut`), matching how
+`bits_per_channel`/`companding_gamma` were handled - not a change to the default decode path.
+
+### Fixes investigated for the network side: none usable without retraining
+
+**Architecture change that works, but needs retraining (out of scope here):** `Conv2d(k=1) +
+PixelShuffle` in place of `ConvTranspose2d`, verified 1.61x faster end-to-end in a decoder-stack
+timing test - at 4x fewer parameters (75K vs 297K), so it is cheaper because it is a smaller
+function, not a free win. Needs real retraining and an RD-quality check before it could be trusted;
+not attempted here since this pass was scoped to no-retraining fixes only.
+
+**No-retraining options tried, in order of theoretical upside - none usable on this machine today:**
+
+1. **`torch.compile`** - fails outright. Its Windows CPU (Inductor) backend emits MSVC-style
+   compiler flags (`/I`, `/DLL`, `/MD`) unconditionally, regardless of which compiler binary `CXX`
+   points at; this machine has MinGW g++, not real MSVC, so compilation fails immediately
+   (`CppCompileError`). Confirmed by actually pointing `CXX` at g++ and reading the resulting
+   command line - not a guess. Other registered backends (`tvm`, `openxla`) need large additional
+   installs (`apache-tvm`, `torch_xla`) not reasonable to add for this check.
+2. **ONNX Runtime** (the project's own OPTIMIZATION_ANALYSIS.md S5 lever) - exported cleanly and
+   verified numerically identical (max abs diff `1.5e-7` vs PyTorch eager on the real
+   `vimeo_qat_noise_best.pt` decoder). But measured **consistently slower** than PyTorch eager
+   across all four ONNX Runtime graph-optimization levels and both single- and multi-threaded
+   configurations (0.48x-0.96x - i.e. 4% to over 2x slower), not a tuning miss.
+3. **Thread-count tuning** - PyTorch's own default (4 threads, this machine has 8 logical cores)
+   is already at the empirical optimum; both fewer (1-2) and more (8) threads measured worse.
+
+### Disposition: entropy-coder fix built and tested; network side stays open
+
+The table-based decode is real, tested, working code - kept on the unmerged `decode-speed` branch
+(`a050d41`) rather than merged to `master`, per instruction to document only this pass. The
+network-side gap remains: the one real fix identified (`PixelShuffle`) needs retraining, and no
+no-retraining alternative tested here actually helps on this machine. Revisit `torch.compile` if
+Visual Studio Build Tools (real MSVC) are ever installed - the failure mode measured here is
+specifically the missing compiler, not a deeper incompatibility.
+
+---
+
 ## 2026-09-09 — Chroma subsampling investigated: no measured benefit (CLOSED)
 
 **Source:** OPTIMIZATION_ANALYSIS.md Q4 and `codecs.py`'s own docstring both flag that H.264/H.265
