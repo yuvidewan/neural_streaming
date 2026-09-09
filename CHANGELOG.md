@@ -13,6 +13,102 @@ the time.
 
 ---
 
+## 2026-09-09 — Chroma subsampling investigated: no measured benefit (CLOSED)
+
+**Source:** OPTIMIZATION_ANALYSIS.md Q4 and `codecs.py`'s own docstring both flag that H.264/H.265
+subsample chroma (`yuv420p`) while NVC codes full-resolution RGB - a documented asymmetry counting
+against NVC in every benchmark. Investigated as a candidate quick win before committing to any
+retraining.
+**Tests:** 964 passing (full suite), zero regressions. 46 new tests.
+**Scope:** no `src/nvc/compression/` or `src/nvc/models/` change, no retraining, no `.nvc`/`.nvcs`
+format change. Lives entirely on the unmerged `chroma-subsampling` branch (commit `a638e55`) - see
+"Disposition" below for why the code isn't on `master`.
+
+### What was built
+
+The cheapest possible version, usable with the EXISTING trained model and calibration, no
+retraining: `src/nvc/data/color.py` converts RGB → YCbCr, box-averages the two chroma planes 2×2,
+bilinear-upsamples them back to full resolution, and converts back to RGB - still a full-resolution
+`[3, H, W]` tensor, fed into the unmodified encoder. Wired as `NVCCodec(chroma_subsampled=True)`
+and a `--codecs nvc-chroma420` option in `benchmark_rd.py` (opt-in, not in the default codec set).
+Deliberately documented as a bounded, lesser version of the real thing: a true half-resolution
+chroma path would need a new dual-resolution architecture and retraining.
+
+### Result 1 - the cheap NVC version: no measurable win
+
+DAVIS test, 719 frames, frame-weighted, `vimeo_qat_noise_best.pt`:
+
+| bits | plain bpp | chroma420 bpp | Δ bitrate | PSNR | MS-SSIM |
+|---|---|---|---|---|---|
+| 8 | 1.8956 | 1.8952 | −0.020% | 28.705 → 28.690 dB | 0.9646 → 0.9644 |
+| 6 | 1.3933 | 1.3929 | −0.027% | 28.626 → 28.611 dB | 0.9630 → 0.9628 |
+| 4 | 0.8802 | 0.8798 | −0.044% | 27.381 → 27.371 dB | 0.9338 → 0.9336 |
+
+Real chroma detail was genuinely removed (verified in `test_color.py`), but the entropy coder
+essentially didn't reward it - bitrate barely moves and quality drops by about the same tiny
+amount, the signature of pure information loss with no compensating compression benefit. Consistent
+with the design caveat stated up front: this version doesn't reduce what the network actually
+processes (still 3×H×W in, 3×H×W out), only whatever detail-removal the entropy coder happens to
+exploit on its own.
+
+### Result 2 - the real-codec reference check: also no measured win, and initially backwards
+
+To calibrate what "the real thing" should be worth, H.264/H.265 were measured at `yuv420p` vs
+`yuv444p` (same 719 frames, same CRF values). Comparing at matched CRF is not matched quality
+though - CRF targets quality *within* one pixel format, and PSNR differed by up to 0.7 dB between
+the two at "the same" CRF. Redone properly as a piecewise-linear matched-quality comparison (the
+same method M10's own BD-rate analysis uses), interpolating each codec's 3-point RD curve:
+
+| codec | yuv420p bitrate vs yuv444p, at matched RGB quality |
+|---|---|
+| H.264 | **+9.05%** (yuv420p costs *more*) |
+| H.265 | **+5.32%** (yuv420p costs *more*) |
+
+The opposite of the textbook "4:2:0 saves bits" result. Investigated rather than accepted at face
+value: a targeted 170-frame Y-only-PSNR check (this project scores full RGB everywhere, including
+NVC; most codec literature scores luma only) found the RGB-PSNR quality gap between yuv420p/yuv444p
+at CRF28 is 0.359 dB, of which only 0.166 dB survives when scored on luma alone - so roughly half
+of the apparent penalty is specifically a chroma-domain scoring effect, real but only a partial
+explanation. Even Y-only PSNR still favours yuv444p slightly on this sample, so the honest
+conclusion is narrower than "it's just the metric": on this test set, at these quality levels,
+mature encoders are not clearly winning bits from chroma subsampling either way, whichever metric
+is used.
+
+### Result 3 - software-only speed (the fairness question from earlier this session)
+
+All CPU, all software (`libx264`/`libx265`, no hardware encode/decode path):
+
+| codec | encode/frame | decode/frame |
+|---|---|---|
+| NVC | 14-20 ms | **36-43 ms** |
+| H.264 | 4.5-5.2 ms | 8.7-11.4 ms |
+| H.265 | 11.8-18.5 ms | 8.8-10.8 ms |
+
+NVC's decode is clearly the slowest of the three on pure CPU - the real, measured version of the
+"H.265 gets a hardware decoder NVC doesn't have" concern, independent of the chroma question.
+
+### What this does not establish, and the one fact that still stands
+
+The reference number this investigation needed - "how much does chroma subsampling save in a
+mature codec" - came back near-zero-to-negative on this test set and this project's own RGB-based
+scoring convention, so no bounded retraining-upside estimate could honestly be given; inventing one
+without that anchor would have been exactly the kind of unaccounted-for number this investigation
+was trying to avoid. The one fact that isn't in question is arithmetic, not measurement: 4:2:0 has
+exactly 50% the raw sample count of 4:4:4 (1.5×H×W vs 3×H×W) - a true ceiling on how much data
+shrinks, but nothing measured here shows that translating into compressed bits saved for this
+codec, on this data.
+
+### Disposition: CLOSED, branch not merged
+
+The infrastructure (`color.py`, the `nvc-chroma420` arm, 46 tests) is correct, tested, and
+harmless - but the premise it exists to chase isn't supported by measurement, on either the cheap
+version or the real-codec reference. Per the plan agreed before starting ("if need be revert back
+to current"), the `chroma-subsampling` branch is left unmerged - nothing destroyed, fully
+recoverable (`git log chroma-subsampling`), just not part of the main line. A full retrained
+dual-resolution chroma architecture is not recommended on this evidence.
+
+---
+
 ## 2026-09-09 — M10J: conditioning the entropy model works (CONDITIONAL ENTROPY SUCCESS)
 
 **Source:** M10I conditioned the residual TRANSFORM and improved distortion rather than rate. M10J
