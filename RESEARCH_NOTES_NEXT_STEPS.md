@@ -6,35 +6,49 @@ validation of the accelerator's INT8 assumption. C is a completed measurement ag
 project's real checkpoint and full DAVIS test split; A and B are literature findings with a
 concrete, minimally-invasive proposal for this specific codebase, not just a survey.
 
-> **Status as of M10J (2026-09-09).** Thread **A (RD loss term) is closed**, λ frozen at
-> **3.0e-4**, and thread **B (temporal coding)** now has a motion-compensated codec plus a deployed
-> conditional entropy model.
+> **Status as of M10L (2026-09-10).** Thread **A (RD loss term) is closed**, λ frozen at
+> **3.0e-4**, and thread **B (temporal coding)** now has a motion-compensated codec with a learned
+> conditional entropy model that is also cheap enough to be worth deploying.
 >
 > **Where the codec stands (DAVIS test, 719 frames, all bytes counted, 4-bit):** intra 0.7012 BPP /
-> 28.560 dB — motion-compensated + conditional entropy **0.5584 BPP / 28.976 dB**. Over three rate
-> points (5/4/3-bit) that is **−33.65% PSNR BD-rate** and **−43.13% MS-SSIM BD-rate** against intra.
+> 28.560 dB — motion-compensated + shared-codebook learned entropy **0.5536 BPP / 28.975 dB**. Over
+> three rate points that is **−34.32% PSNR BD-rate** and **−43.74% MS-SSIM BD-rate** against intra.
 >
-> **M10J succeeded where M10I failed, and the contrast is the lesson.** M10I's learned 498k-parameter
-> conditional *transform* moved residual rate **+1.1%** (the wrong way) while improving distortion.
-> M10J's 256-entry conditional *entropy table*, conditioned on the same reference, moves it
-> **−2.1%** — with no training, no new weights, no format change, and reconstruction that is
-> bit-identical to M10H's. The predictive information was always there; M10I's distortion-dominated
-> objective simply had no reason to spend capacity on rate.
+> **M10K: a 12k-parameter learned entropy model beats the hand-designed lookup.** Held-out validation
+> improvement over M10J of +1.19 / +1.44 / +1.81% at 5/4/3-bit, realised as **−0.80 / −0.93 / −1.50%**
+> actual residual bytes (**−1.05% BD-rate**), with residual symbols, motion, reconstruction, PSNR and
+> MS-SSIM all bit-identical. The arithmetic coder realises **100%** of the modelling gain at +0.02%
+> overhead, so there is no discretization bottleneck.
 >
-> **Method worth reusing.** The milestone opened with an offline gate: measure H(R|channel, C) vs
-> H(R|channel) on real coded symbols, against a random context of equal cardinality and scored on
-> held-out data. It predicted the deployed result to within ~0.4 points (2.01 vs 1.94 at 5-bit,
-> 3.11 vs 2.71 at 3-bit). The arithmetic coder realises **100%** of the modelling gain with +0.01%
-> overhead, so the coder is not a bottleneck for anything that comes next.
+> **M10L: the same gain, at a tenth of the cost.** M10K's bottleneck was never the model — 0.28 ms of
+> network against 5–27 ms of building 16,384 integer frequency tables per P-frame. Replacing those
+> with **512 shared prototype tables**, fitted once offline on TRAIN and selected by expected code
+> length, costs **+0.01 / +0.04 / +0.03%** of held-out rate and **+0.01% BD-rate** — while removing
+> **70–88%** of residual-coding time and **91–95%** of table memory (8.52 MB → 266 KB at 5-bit).
+> Symbols, motion, reconstruction, PSNR and MS-SSIM stay bit-identical. M10K cost ~14× M10J's
+> residual-coding time; M10L costs **1.6–2.2×**.
 >
-> **Next lever (not started): a learned conditional entropy model.** The gate has now justified it —
-> a 4-bucket lookup captures 2-3%, which is the crudest possible use of z_ref. Context cardinality
-> and the 1,000-sample fallback threshold are both untuned. Gains grow monotonically as rate falls
-> (1.75 → 2.09 → 2.67%), so low-rate operating points are where conditioning pays most.
+> **The audit finding worth remembering:** the coder's `table_index` never constrained how many
+> tables exist, so a per-position learned distribution deploys as 16,384 tables — and a codebook as
+> 512 — through the existing coder. No new coder, no format change, no container version bump, at
+> either extreme.
 >
-> **Standing diagnostic:** bmx-bumps. Motion compensation moved it +2.48 dB; conditional entropy
-> coding buys only −0.93% there, the smallest gain of any sequence. See
-> [CHANGELOG.md](CHANGELOG.md). Thread C is closed.
+> **The parameter-count lesson across this thread:** hand-designed conditioning got 2–3%, a
+> **12-thousand**-parameter learned entropy model got another 1%, M10L kept that 1% while making it
+> affordable, and M10I's **498-thousand**-parameter conditional *transform* got −1.1% (the wrong
+> way). What is being optimised has mattered; model size has not.
+>
+> **Known, measured, unfixed:** `model.decode` is not bit-reproducible without
+> `deterministic_kernels()`, and `calibrate_grids` calls it outside that guard — so the quantization
+> grid, and through it the motion field, varies in the fifth significant figure between *processes*.
+> Within a run everything is exact, so no comparison in this thread is affected, but it means absolute
+> byte totals are not reproducible across runs. Worth closing.
+>
+> **Next lever (not started):** more context, now that cost is no longer the blocker. An
+> autoregressive dependence on already-decoded residual symbols is the obvious untested source and can
+> be evaluated by the same offline gate before any coder change — costed against the sequential
+> dependency it would add to the decoder. A larger entropy network is explicitly *not* recommended.
+> See [CHANGELOG.md](CHANGELOG.md). Thread C is closed.
 
 ## TL;DR — recommended order
 

@@ -1,0 +1,62 @@
+{
+  "phase": "M10K offline gate",
+  "frozen_lambda": 0.0003,
+  "checkpoint": "outputs\\m10f_lambda_boundary\\lambda_3.0e-04_seed42\\best.pt",
+  "rate_points": [
+    {
+      "bits": 4,
+      "alphabet": 16,
+      "channels": 64,
+      "train_p_frames": 36,
+      "val_p_frames": 18,
+      "parameters": 12144,
+      "m10h_marginal_val_bits": 3.3588160145767136,
+      "m10j_conditional_val_bits": 3.3021121278891394,
+      "m10k_learned_val_bits": 3.735240822281822,
+      "m10k_vs_m10h_percent": -11.207068385749203,
+      "m10k_vs_m10j_percent": -13.116716744248114,
+      "m10j_vs_m10h_percent": 1.6882105611468023,
+      "checkpoint_selection": {
+        "convention": "M10G: best validation checkpoint (primary), final checkpoint (secondary)",
+        "selection_metric": "val_loss",
+        "selection_domain": "validation",
+        "tie_break": "earliest epoch",
+        "objective_filter": "rate_enabled",
+        "stale_records_ignored": 0,
+        "epochs_considered": 2,
+        "selected_epoch": 2,
+        "selected_objective": 3.7352408832973905,
+        "selected_psnr_db": null,
+        "final_epoch": 2,
+        "final_objective": 3.7352408832973905,
+        "final_psnr_db": null,
+        "epoch_difference": 0,
+        "best_vs_final_absolute": 0.0,
+        "best_vs_final_percent": 0.0,
+        "psnr_difference_db": null,
+        "final_is_best": true
+      },
+      "history": [
+        {
+          "epoch": 1,
+          "train_nll_bits": 3.846917019950019,
+          "val_nll_bits": 3.7629363536834717,
+          "rate_enabled": true,
+          "val_loss": 3.7629363536834717,
+          "elapsed_seconds": 0.49548816680908203
+        },
+        {
+          "epoch": 2,
+          "train_nll_bits": 3.4689965777926974,
+          "val_nll_bits": 3.7352408832973905,
+          "rate_enabled": true,
+          "val_loss": 3.7352408832973905,
+          "elapsed_seconds": 0.023508548736572266
+        }
+      ]
+    }
+  ],
+  "note": "Held-out validation cross-entropy is the headline. Training NLL is diagnostic only - a more expressive model can always look better on the data it was fitted to.",
+  "best_vs_m10j_percent": -13.116716744248114,
+  "gate_passed": false
+}

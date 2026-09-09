@@ -13,6 +13,322 @@ the time.
 
 ---
 
+## 2026-09-10 — M10L: a 512-entry shared codebook keeps M10K's gain at a tenth of the cost (PRACTICAL SUCCESS)
+
+**Source:** M10K won ~1% of residual bytes over M10J with a 12k-parameter learned entropy model, but
+profiling put 97–99% of its cost in building 16,384 integer frequency tables per P-frame — a pure
+implementation problem, not a modelling one. M10L asks whether a small shared codebook of tables can
+carry the same gain.
+**Tests:** 1056 passing (full suite), zero regressions. 72 new tests.
+**Scope:** no `src/nvc/` change, no container change, no coder change. `.nvc`, `.nvcs`, `.nvct` v1/v2
+untouched; every M10A–M10K script byte-identical. λ frozen at 3.0e-4.
+
+### The measured bottleneck, before touching anything
+
+Stage-by-stage profile of the real M10K P-frame path (verified against `frame_entropy_model` on every
+frame — same frequencies, same `table_index`, same payload):
+
+| stage | 5-bit | 4-bit | 3-bit |
+|---|---|---|---|
+| network forward | 0.81 ms (2.5%) | 0.57 ms (4.8%) | 0.61 ms (8.0%) |
+| probability normalization | 0.15 | 0.12 | 0.14 |
+| **float → int frequencies** | **26.52 ms (80.7%)** | **8.78 ms (74.4%)** | **5.29 ms (69.3%)** |
+| table validation + alloc | 2.01 | 0.83 | 0.58 |
+| cumulative materialization | 0.008 | 0.007 | 0.007 |
+| arithmetic encoding | 0.97 (3.0%) | 0.62 (5.2%) | 0.48 (6.3%) |
+| device → host transfer | 2.39 (7.3%) | 0.86 (7.3%) | 0.51 (6.7%) |
+| **TOTAL (deployed)** | **32.88** | **11.79** | **7.63** |
+
+Table construction (float→int + validation + cumsum) is **86.8 / 81.5 / 77.0%** of the path. This is
+also a more complete accounting than M10K's own figure, which excluded the host transfer and the
+coder — and M10K's benchmark JSON predates its vectorisation fix, so those timings describe code that
+no longer exists. Separately timed here and found *not* to be deployment work: the ideal-bits
+diagnostic (1.2–3.1 ms), which sat inside M10K's timed region.
+
+### The idea
+
+Fit K prototype distributions on TRAIN once, quantize them into coder frequencies once, and at encode
+time replace the whole table build with a lookup:
+
+    z_ref -> network -> probabilities -> nearest prototype -> table_index
+
+A row is assigned to the prototype minimising its **expected code length**, `sum_s p(s) * -log2 q(s)`
+— the quantity that actually costs bits. Two consequences: minimising cross-entropy is identical to
+minimising KL (they differ by H(p), a per-row constant), and the whole assignment is one GEMM, so the
+cheap representation is also the fast one. Clustering is Lloyd's algorithm with the centroid each
+metric actually requires — the mean under KL, the component-wise median under L1.
+
+### The zero-loss reference (the STOP condition)
+
+Before measuring any K: a codebook holding each frame's own 16,384 distributions, mapped to itself,
+must reproduce M10K **byte for byte**. At all three rate points — frequencies identical, `table_index`
+identical, payload identical, round trip exact — and the real nearest-prototype *search* against that
+same codebook also reproduces M10K's payload, which validates the assignment code and not just the
+plumbing.
+
+### Offline gate — held-out validation, before any test data
+
+Every K at every rate point, fitted on TRAIN, scored on 179 validation P-frames:
+
+| K | 5-bit vs M10K | 4-bit vs M10K | 3-bit vs M10K | table time saved |
+|---|---|---|---|---|
+| 16 | +0.39% | +0.50% | +0.67% | 94–98% |
+| 32 | +0.20% | +0.31% | +0.30% | 93–97% |
+| 64 | +0.11% | +0.19% | +0.21% | 93–97% |
+| 128 | +0.07% | +0.12% | +0.13% | 93–97% |
+| 256 | +0.03% | +0.07% | +0.06% | 55–97% |
+| **512** | **+0.01%** | **+0.04%** | **+0.03%** | **82–95%** |
+
+K=512 selected at every rate point: the best held-out rate among candidates clearing the
+pre-registered runtime bar (≥50% table-time reduction, ≤0.5% rate penalty), ties to the smaller
+codebook. Deliberately not "smallest K that passes" — the runtime bar is a threshold already met, and
+the frontier shows the smallest passing K is not even the fastest.
+
+### Deployed — DAVIS test, 719 frames, every byte counted
+
+| arm | bits | P residual | motion | TOTAL | BPP | PSNR | MS-SSIM | vs M10J | vs M10K |
+|---|---|---|---|---|---|---|---|---|---|
+| learned (M10K) | 5 | 3,813,563 | 181,160 | 4,595,831 | 0.7803 | 29.271 | 0.9737 | −0.80% | |
+| **codebook (M10L)** | 5 | **3,813,242** | 181,160 | **4,595,510** | **0.7802** | 29.271 | 0.9737 | **−0.81%** | **−0.01%** |
+| learned (M10K) | 4 | 2,631,255 | 184,164 | 3,260,264 | 0.5535 | 28.975 | 0.9676 | −0.93% | |
+| **codebook (M10L)** | 4 | **2,632,000** | 184,164 | **3,261,009** | **0.5536** | 28.975 | 0.9676 | **−0.91%** | **+0.02%** |
+| learned (M10K) | 3 | 1,588,596 | 188,977 | 2,066,779 | 0.3509 | 27.945 | 0.9473 | −1.49% | |
+| **codebook (M10L)** | 3 | **1,588,650** | 188,977 | **2,066,833** | **0.3509** | 27.945 | 0.9473 | **−1.49%** | **+0.00%** |
+
+**PSNR and MS-SSIM identical to every digit across all four temporal arms**, motion bytes identical,
+residual symbols identical, reconstruction identical, byte accounting closes. BD-rate **codebook vs
+learned +0.01%** — the two are the same codec at different cost. Coder overhead stays at +0.01–0.02%
+of the ideal code length in both.
+
+### What it cost, and what it bought
+
+| bits | arm | tables | model ms/P | coder ms/P | total ms/P | vs M10K |
+|---|---|---|---|---|---|---|
+| 5 | learned | 16,384 | 23.34 | 0.82 | 24.16 | |
+| 5 | **codebook** | **512** | **2.30** | 0.72 | **3.02** | **−87.5%** |
+| 4 | learned | 16,384 | 13.40 | 0.74 | 14.14 | |
+| 4 | **codebook** | **512** | **2.91** | 0.68 | **3.58** | **−74.6%** |
+| 3 | learned | 16,384 | 7.86 | 0.57 | 8.43 | |
+| 3 | **codebook** | **512** | **2.02** | 0.53 | **2.55** | **−69.8%** |
+
+("model ms" is everything before the coder, and for both learned and codebook that includes the
+shared 0.3 ms network forward; the offline gate reports the split.)
+
+Coder-facing table memory drops **95.3 / 93.8 / 91.0%** — 8.52 MB → 266 KB at 5-bit, rebuilt every
+frame before, loaded once now. The codebook itself is 24–82 KB on disk. Fitting is a one-off 9–23 s,
+offline, on TRAIN.
+
+M10K was ~14× M10J's residual-coding time; **M10L is 1.6–2.2×**, for the same −1.03% BD-rate over
+M10J that M10K bought at −1.04%.
+
+### Per-sequence (all deltas vs M10K)
+
+Within ±0.15% everywhere, at every rate point — noise, not structure. M10L is marginally worse on 6–7
+of 9 sequences and better on the rest, but it wins on **bmx-bumps and gold-fish at all three rate
+points**: the two sequences M10K found hardest are the ones a shared, averaged prototype helps.
+M10J's bmx-bumps regression (458,343 vs marginal's 450,488) stays reversed, at 449,102.
+
+### A determinism finding, verified rather than assumed
+
+This run's absolute totals differ from M10K's published run in the fifth significant figure (motion
+181,160 vs 181,207, a 0.026% difference). Cause, measured directly: **`model.decode` is not
+bit-reproducible without `deterministic_kernels()`** (max abs difference 4.7e-4 on a fixed latent),
+and `calibrate_grids` calls it outside that guard — so the quantization grid differs slightly between
+*processes* and propagates into reconstruction → motion estimation → motion bytes. Nothing in M10L
+touches motion; within a single run all four arms share one calibration and one motion field, which
+the invariants confirm. Every M10K-vs-M10L comparison above is within one run and therefore exact.
+Worth fixing in `calibrate_grids` eventually — it is M10H code, frozen for this milestone.
+
+### Verdict: PRACTICAL SUCCESS
+
+M10L retains essentially all of M10K's entropy gain (BD-rate +0.01%, and at 5-bit marginally
+*better*) while removing 70–88% of the residual-coding time and 91–95% of the table memory, with
+symbols, motion, reconstruction and quality bit-identical and no change to the coder or container.
+
+The cumulative arithmetic is worth stating plainly: hand-designed conditioning (M10J) got 2–3%, a
+12k-parameter learned model (M10K) got another 1%, and M10L kept that 1% while making it affordable.
+None of it needed a bigger model — M10I's 498k-parameter conditional *transform* remains the only
+thing in this thread that moved rate the wrong way.
+
+### Reproducibility
+
+torch 2.13.0+cu130, RTX 5060 Laptop GPU, seed 42. Frozen model: M10F λ=3e-4 seed 42 `best.pt`.
+Codebooks fitted on 100,000 TRAIN-sampled distributions per rate point, 15 Lloyd iterations (the cap
+— they had not fully converged, so the ≤0.04% penalty is if anything an overestimate), selected on
+179 validation P-frames. All commands require the project venv (`./.venv/Scripts/python.exe`).
+
+---
+
+## 2026-09-09 — M10K: a 12k-parameter learned entropy model beats the lookup tables (LEARNED ENTROPY SUCCESS)
+
+**Source:** M10J showed the warped reference carries exploitable conditional information and captured
+2–3% of it with a hand-designed 4-bucket lookup. M10K asks whether a small learned model captures
+more.
+**Tests:** 984 passing (full suite), zero regressions. 43 new tests.
+**Scope:** no `src/nvc/` change, no container change, no coder change. `.nvc`, `.nvcs`, `.nvct` v1/v2
+untouched; every M10A–M10J script byte-identical. λ frozen at 3.0e-4.
+
+### The audit finding that made this deployable unchanged
+
+The arithmetic coder already picks a frequency table per symbol via `table_index`, and **nothing
+constrains how many tables there are.** A model predicting a different distribution at each of the
+64×16×16 = 16,384 positions is therefore expressible as 16,384 tables with `table_index = arange`.
+Measured before building anything: exact round trip, 4 ms encode / 2 ms decode, 4.1 MB of cumulative
+array. So M10K needed **no new coder, no format change and no container version bump** — the `.nvct`
+v2 residual entropy model id already distinguishes the arms.
+
+### The model
+
+    z_ref -> (each latent channel as its own sample)
+    conv 1->32 (3x3) -> ReLU -> conv 32->32 (3x3) -> ReLU
+      + learned per-channel embedding
+    -> conv 32->alphabet (1x1)  ->  logits at every position
+
+**11,880–12,672 trainable parameters** (alphabet-dependent), 54–57 KB checkpoints. The 3×3 stack
+gives each prediction a 5×5 receptive field on `z_ref` — the same locality M10J's `local_activity4`
+bucketed by hand, except the network learns what to extract. Channel identity enters through an
+embedding, matching the information M10H/M10J get from having one table per channel.
+
+Objective is **pure rate**: `L = -log2 P(R | z_ref, channel)` on the existing M10H symbols. No
+reconstruction loss, no λ — M10I already demonstrated what happens when a rate question is posed to a
+distortion-dominated objective. Fitted on TRAIN, selected on VALIDATION, measured on TEST once.
+
+**Causality:** the predictor's only input is `z_ref`, which the decoder rebuilds before touching the
+residual payload. No autoregressive dependence on decoded symbols, deliberately — that would add a
+sequential dependency to the coder and is not needed to answer this question.
+
+### Offline gate (held-out validation, before any benchmark)
+
+| bits | M10H marginal | M10J local_activity4 | M10K learned | K vs J |
+|---|---|---|---|---|
+| 5 | 3.21763 | 3.15588 | **3.11839** | **+1.19%** |
+| 4 | 2.26931 | 2.21796 | **2.18596** | **+1.44%** |
+| 3 | 1.41047 | 1.37238 | **1.34754** | **+1.81%** |
+
+bits/symbol. Gate threshold was >0.5% on held-out data; passed at all three rate points.
+
+### Deployed — DAVIS test, 719 frames, every byte counted
+
+| arm | bits | P residual | motion | TOTAL | BPP | PSNR | MS-SSIM | vs M10H | vs M10J |
+|---|---|---|---|---|---|---|---|---|---|
+| marginal | 5 | 3,928,075 | 181,207 | 4,710,390 | 0.7997 | 29.271 | 0.9737 | | |
+| local_activity4 | 5 | 3,848,919 | 181,207 | 4,631,234 | 0.7863 | 29.271 | 0.9737 | −1.75% | |
+| **learned** | 5 | 3,813,506 | 181,207 | **4,595,821** | **0.7803** | 29.271 | 0.9737 | **−2.54%** | **−0.80%** |
+| marginal | 4 | 2,725,811 | 184,254 | 3,354,910 | 0.5696 | 28.976 | 0.9676 | | |
+| local_activity4 | 4 | 2,659,788 | 184,254 | 3,288,887 | 0.5584 | 28.976 | 0.9676 | −2.09% | |
+| **learned** | 4 | 2,631,062 | 184,254 | **3,260,161** | **0.5535** | 28.976 | 0.9676 | **−3.00%** | **−0.93%** |
+| marginal | 3 | 1,669,303 | 188,912 | 2,147,421 | 0.3646 | 27.946 | 0.9473 | | |
+| local_activity4 | 3 | 1,617,619 | 188,912 | 2,095,737 | 0.3558 | 27.946 | 0.9473 | −2.66% | |
+| **learned** | 3 | 1,589,353 | 188,912 | **2,067,471** | **0.3510** | 27.946 | 0.9473 | **−4.12%** | **−1.50%** |
+
+**PSNR and MS-SSIM are identical to every digit across all three temporal arms**, and motion bytes
+are identical. Verified per rate point: residual symbols identical, reconstruction identical, motion
+identical, metrics identical, byte accounting closes.
+
+### The coder realises 100% of it
+
+| bits | arm | ideal P bits | vs M10H | P residual bytes | vs M10H | coder overhead | realised |
+|---|---|---|---|---|---|---|---|
+| 5 | learned | 30,505,210 | +2.92% | 3,813,506 | +2.92% | +0.01% | **100%** |
+| 4 | learned | 21,045,611 | +3.48% | 2,631,062 | +3.48% | +0.01% | **100%** |
+| 3 | learned | 12,711,762 | +4.79% | 1,589,353 | +4.79% | +0.02% | **100%** |
+
+No discretization bottleneck: the float→integer conversion loses nothing measurable, and the
+arithmetic coder stays within 0.02% of the ideal code length.
+
+### BD-rate over three rate points
+
+| comparison | PSNR | MS-SSIM |
+|---|---|---|
+| local_activity4 vs marginal | −2.11% | −2.10% |
+| **learned vs marginal** | **−3.13%** | **−3.13%** |
+| **learned vs local_activity4** | **−1.05%** | **−1.04%** |
+| marginal (M10H) vs intra | −32.21% | −41.84% |
+| local_activity4 (M10J) vs intra | −33.64% | −43.11% |
+| **learned (M10K) vs intra** | **−34.34%** | **−43.74%** |
+
+### Cost — and an implementation finding that changes the verdict
+
+The first measurement said M10K cost 38.7–129.5 ms per P-frame against M10J's 1.66–1.90 ms, i.e.
+23–68× slower. Profiling showed why, and it was not the model:
+
+| | 5-bit | 4-bit | 3-bit |
+|---|---|---|---|
+| network forward pass | 0.28 ms | 0.26 ms | 0.29 ms |
+| float→int table build | 72.88 ms | — | — |
+
+**The 12k-parameter network costs 0.28 ms. Essentially 100% of the cost was an un-vectorised Python
+loop distributing the rounding residual across 16,384 tables.** Vectorising it (verified
+bit-identical on real data plus uniform / peaked / random adversarial cases, so every byte count
+above is unchanged) gives:
+
+| bits | params | network | tables | total ms/P | M10J ms/P |
+|---|---|---|---|---|---|
+| 5 | 12,672 | 0.28 | 19.34 | **19.62** | 1.90 |
+| 4 | 12,144 | 0.26 | 8.50 | **8.76** | 1.82 |
+| 3 | 11,880 | 0.29 | 4.48 | **4.76** | 1.66 |
+
+So the honest cost is **2.9–10× M10J**, not 23–68×, and the remaining overhead is still table
+construction rather than inference. It scales with alphabet size, which is why 3-bit is cheapest.
+
+### Per-sequence (4-bit)
+
+M10K beats M10J on 7 of 9: surf −3.01%, cat-girl −2.27%, bmx-bumps −2.02%, drone −1.89%,
+car-turn −0.29%, cows −0.07%, drift-chicane −0.04%. It **loses on 2**: schoolgirls +1.33%,
+gold-fish +0.43%.
+
+Notably M10K reverses M10J's one regression: on bmx-bumps the hand-designed `local_activity4` was
+*worse* than the marginal model (458,090 vs 450,356 bytes), while the learned model recovers to
+448,848 — better than both. The losses are not obviously systematic at n=2.
+
+### One deployment property worth knowing
+
+The learned model is **coupled to the quantization calibration it was fitted under.** Scored against
+symbols from a different grid it silently costs bits rather than failing — an early trial run with a
+mismatched calibration made it look 14.8% *worse* than the marginal model. The deployment pins the
+calibration, and a test records the coupling so it cannot be forgotten. M10J's tables have the same
+dependency but degrade far more gently.
+
+### Verdict: LEARNED ENTROPY SUCCESS
+
+M10K beats M10J on held-out validation at all three rate points (+1.19 / +1.44 / +1.81%) and realises
+that as actual bytes (−0.80 / −0.93 / −1.50% residual), for **−1.05% BD-rate**, with symbols, motion,
+reconstruction and quality bit-identical.
+
+Whether it is *worth deploying over M10J* is a separate judgement the numbers support either way:
+−1.05% BD-rate for 2.9–10× the residual-coding time and a 12k-parameter model that must be shipped
+and version-matched, against M10J's essentially free lookup. For an offline encode the learned model
+is clearly better; for a real-time decoder the table-build cost still needs work before it is.
+
+The cumulative picture is worth stating plainly: hand-designed conditioning got 2–3%, a learned model
+of **12 thousand parameters** got another 1%, and M10I's **498 thousand-parameter** conditional
+transform got −1.1% (the wrong way). Parameter count has not been the binding constraint at any point
+in this thread; what is being optimised has.
+
+### Next milestone
+
+Two candidates, both pointed at by measurement rather than ambition:
+
+1. **Make the gain cheaper.** The table build is 97–99% of M10K's cost and is a pure implementation
+   problem — GPU-side construction, or quantising the predicted distributions to a modest codebook of
+   shared tables, which would also shrink the 4.1 MB cumulative array.
+2. **Then, and only then, more context.** The obvious untested source is an autoregressive dependence
+   on already-decoded residual symbols, which the gate methodology can evaluate offline before any
+   coder change. It would add a sequential dependency to the decoder, so it should be costed against
+   (1) before being built.
+
+Not recommended: a larger entropy network. 12k parameters already beat a hand-designed context, and
+the evidence says the constraint is elsewhere.
+
+### Reproducibility
+
+torch 2.13.0+cu130, RTX 5060 Laptop GPU, deterministic cuDNN, seed 42. Frozen model: M10F λ=3e-4
+seed 42 `best.pt`. Entropy models trained 40 epochs on 536 TRAIN P-frames per rate point, selected on
+179 validation P-frames by validation NLL, best-validation weights restored before any measurement.
+All commands require the project venv (`./.venv/Scripts/python.exe`).
+
+---
+
 ## 2026-09-09 — Why NVC decode is slower than encode, and closing the gap where possible
 
 **Source:** NVC's own decode is measurably slower than its encode - real 719-frame DAVIS

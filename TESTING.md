@@ -17,7 +17,7 @@ failing - see "FFmpeg-dependent tests" below.
 the accelerator-architecture proof-of-concept - see `hardware/ARCHITECTURE.md`.
 It's exploratory design work, not `src/nvc/` or `scripts/*.py`, so it's
 outside this document's rule below, but a plain `pytest` from the project
-root still collects it (941 tests total) since nothing scopes discovery to
+root still collects it (1056 tests total) since nothing scopes discovery to
 `tests/` only.
 
 ## The rule
@@ -118,6 +118,10 @@ table, either extend the closest existing file or start a new
 | `test_temporal_residual.py` | the conditional residual codec: that conditioning is load-bearing (same residual + different reference codes differently, gradients reach the reference path, the effect is spatially local), the zero-init identity property, and finite training losses with live gradients |
 | `test_scripts_m10j.py` | that M10J changes only the probability model - identical residual symbols, motion payloads and reconstruction across arms - plus encoder/decoder context equality, all three rate points, and `.nvct` backward compatibility (a marginal decoder refuses a conditional stream; a marginal stream still decodes) |
 | `test_conditional_entropy.py` | the reference context model: determinism, dependence on z_ref alone, deterministic fallback for sparse contexts, arithmetic-coder table validity (exact 65536 totals, strictly increasing CDFs), and that decoding with the wrong context does not silently succeed |
+| `test_m10k_learned_entropy.py` | the learned entropy model: per-position distributions, the sub-100k parameter budget, deterministic inference, and the float-to-integer conversion (exact 65536 totals, no zero frequency even for extremely peaked distributions, deterministic tie-breaking) plus a per-frame round trip through the real coder at all three rate points |
+| `test_m10k_deployment.py` | that only the probability model changes - identical motion, symbols, reconstruction and I-frame bytes across the marginal, lookup and learned arms - and that the learned model is coupled to the calibration it was fitted under (a mismatched grid silently costs bits rather than failing) |
+| `test_m10l_shared_codebook.py` | the shared entropy-table codebook: that a K=16,384 identity codebook reproduces M10K byte for byte (the milestone's stop condition), deterministic fitting and assignment, the lowest-index tie-break that keeps encoder and decoder in step, exact 65536 totals with no zero frequency, and the degenerate cases a clustering step meets in production - empty clusters, K larger than the number of distinct distributions, and uniform / sharply peaked / random inputs |
+| `test_m10l_deployment.py` | that a codebook arm changes only bytes - identical motion, symbols, reconstruction and I-frame bytes across the marginal, lookup, learned and codebook arms at every rate point and every K - that `table_index` is derived from `z_ref` rather than transmitted, and that the 8-byte stream identity binds the codebook to both the M10K weights and the quantization calibration, so a stale pairing is rejected instead of silently costing bits |
 
 **Script contract** every `scripts/*.py` file follows, which is what makes
 all of the above possible:

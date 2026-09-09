@@ -1,0 +1,230 @@
+{
+  "phase": "M10L M10K path profile",
+  "rate_points": [
+    {
+      "bits": 5,
+      "alphabet": 32,
+      "p_frames_timed": 30,
+      "matches_m10k_production_path": true,
+      "num_probability_tables": 16384,
+      "frequencies_per_table": 32,
+      "probability_tensor_shape": [
+        16384,
+        32
+      ],
+      "frequency_bytes": 4194304,
+      "cumulative_bytes": 4325376,
+      "python_peak_alloc_bytes": 21760120,
+      "total_deployed_ms_per_p_frame": 32.87625666707754,
+      "residual_bytes_per_frame": 5154.766666666666,
+      "stages": [
+        {
+          "stage": "1_network_forward",
+          "ms_per_p_frame": 0.811570001921306,
+          "percent_of_deployed": 2.468559636030633,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "2_probability_normalization",
+          "ms_per_p_frame": 0.14487666582378247,
+          "percent_of_deployed": 0.44067263280877944,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "3_float_to_int_frequencies",
+          "ms_per_p_frame": 26.517113333102316,
+          "percent_of_deployed": 80.65733760880597,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "4_table_validation_and_alloc",
+          "ms_per_p_frame": 2.0133833303892366,
+          "percent_of_deployed": 6.124125841873748,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "5_cumulative_materialization",
+          "ms_per_p_frame": 0.008390003737683097,
+          "percent_of_deployed": 0.02551994840119645,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "6_table_index",
+          "ms_per_p_frame": 0.02084999772099157,
+          "percent_of_deployed": 0.06341962204556843,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "7_arithmetic_encoding",
+          "ms_per_p_frame": 0.9710133366752416,
+          "percent_of_deployed": 2.953539834258623,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "8_device_to_host_transfer",
+          "ms_per_p_frame": 2.3890599977069846,
+          "percent_of_deployed": 7.266824875775477,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "d_ideal_bits_diagnostic",
+          "ms_per_p_frame": 3.051129998251175,
+          "percent_of_deployed": null,
+          "diagnostic_only": true
+        }
+      ],
+      "table_construction_percent": 86.80698339908092,
+      "table_construction_ms": 28.538886667229235
+    },
+    {
+      "bits": 4,
+      "alphabet": 16,
+      "p_frames_timed": 30,
+      "matches_m10k_production_path": true,
+      "num_probability_tables": 16384,
+      "frequencies_per_table": 16,
+      "probability_tensor_shape": [
+        16384,
+        16
+      ],
+      "frequency_bytes": 2097152,
+      "cumulative_bytes": 2228224,
+      "python_peak_alloc_bytes": 11012216,
+      "total_deployed_ms_per_p_frame": 11.793696668852741,
+      "residual_bytes_per_frame": 3429.633333333333,
+      "stages": [
+        {
+          "stage": "1_network_forward",
+          "ms_per_p_frame": 0.5655433361728986,
+          "percent_of_deployed": 4.795301694221996,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "2_probability_normalization",
+          "ms_per_p_frame": 0.12104666675440967,
+          "percent_of_deployed": 1.0263674753828036,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "3_float_to_int_frequencies",
+          "ms_per_p_frame": 8.779996670394514,
+          "percent_of_deployed": 74.44651933080969,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "4_table_validation_and_alloc",
+          "ms_per_p_frame": 0.8298766663453231,
+          "percent_of_deployed": 7.036611926242217,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "5_cumulative_materialization",
+          "ms_per_p_frame": 0.007209998633091648,
+          "percent_of_deployed": 0.06113434011011424,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "6_table_index",
+          "ms_per_p_frame": 0.014880004649360973,
+          "percent_of_deployed": 0.1261691314196608,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "7_arithmetic_encoding",
+          "ms_per_p_frame": 0.6165233343684424,
+          "percent_of_deployed": 5.227566484702682,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "8_device_to_host_transfer",
+          "ms_per_p_frame": 0.8586199915346999,
+          "percent_of_deployed": 7.280329617110834,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "d_ideal_bits_diagnostic",
+          "ms_per_p_frame": 1.166799998221298,
+          "percent_of_deployed": null,
+          "diagnostic_only": true
+        }
+      ],
+      "table_construction_percent": 81.54426559716202,
+      "table_construction_ms": 9.617083335372929
+    },
+    {
+      "bits": 3,
+      "alphabet": 8,
+      "p_frames_timed": 30,
+      "matches_m10k_production_path": true,
+      "num_probability_tables": 16384,
+      "frequencies_per_table": 8,
+      "probability_tensor_shape": [
+        16384,
+        8
+      ],
+      "frequency_bytes": 1048576,
+      "cumulative_bytes": 1179648,
+      "python_peak_alloc_bytes": 5638264,
+      "total_deployed_ms_per_p_frame": 7.628643334222336,
+      "residual_bytes_per_frame": 1992.4666666666667,
+      "stages": [
+        {
+          "stage": "1_network_forward",
+          "ms_per_p_frame": 0.613176665501669,
+          "percent_of_deployed": 8.037820601088256,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "2_probability_normalization",
+          "ms_per_p_frame": 0.13839000021107495,
+          "percent_of_deployed": 1.8140840271067988,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "3_float_to_int_frequencies",
+          "ms_per_p_frame": 5.286223340469102,
+          "percent_of_deployed": 69.2944093578859,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "4_table_validation_and_alloc",
+          "ms_per_p_frame": 0.5804466607514769,
+          "percent_of_deployed": 7.60877963906865,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "5_cumulative_materialization",
+          "ms_per_p_frame": 0.006720004603266716,
+          "percent_of_deployed": 0.08808911766946242,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "6_table_index",
+          "ms_per_p_frame": 0.014779994186634818,
+          "percent_of_deployed": 0.1937434159535457,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "7_arithmetic_encoding",
+          "ms_per_p_frame": 0.48089000435235596,
+          "percent_of_deployed": 6.303742137151283,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "8_device_to_host_transfer",
+          "ms_per_p_frame": 0.5080166641467562,
+          "percent_of_deployed": 6.6593317040761,
+          "diagnostic_only": false
+        },
+        {
+          "stage": "d_ideal_bits_diagnostic",
+          "ms_per_p_frame": 0.7550433336291462,
+          "percent_of_deployed": null,
+          "diagnostic_only": true
+        }
+      ],
+      "table_construction_percent": 76.99127811462401,
+      "table_construction_ms": 5.873390005823846
+    }
+  ]
+}

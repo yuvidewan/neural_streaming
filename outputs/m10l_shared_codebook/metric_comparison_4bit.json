@@ -1,0 +1,33 @@
+{
+  "phase": "M10L assignment metric comparison",
+  "bits": 4,
+  "codebook_size": 512,
+  "val_p_frames": 179,
+  "train_p_frames": 536,
+  "fit_rows": 100000,
+  "kl_matches_code_length": true,
+  "arms": [
+    {
+      "label": "A  code-length fit, code-length assignment  [deployed]",
+      "fitted_metric": "code_length",
+      "assignment_metric": "code_length",
+      "held_out_bits_per_symbol": 2.1861096682751144,
+      "vs_deployed_percent": 0.0
+    },
+    {
+      "label": "B  code-length fit, L1 assignment",
+      "fitted_metric": "code_length",
+      "assignment_metric": "l1",
+      "held_out_bits_per_symbol": 2.1879637387546165,
+      "vs_deployed_percent": 0.08481141209008669
+    },
+    {
+      "label": "C  L1 fit (median centroid), L1 assignment",
+      "fitted_metric": "l1",
+      "assignment_metric": "l1",
+      "held_out_bits_per_symbol": 2.1881529058952514,
+      "vs_deployed_percent": 0.09346455256972876
+    }
+  ],
+  "selected_metric": "code_length"
+}
