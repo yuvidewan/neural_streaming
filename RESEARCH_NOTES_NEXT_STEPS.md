@@ -95,6 +95,26 @@ only 0.134 dB; INT8 activation quantization alone costs **~7.4× that**, roughly
 Either is a bounded, well-understood change to `int8_activation_validation.py`'s calibration
 function, not a new experiment design.
 
+**Per-channel activation quantization: done, measured [MEASURED].** `--activation-quant
+per-channel` — one INT8 scale per input channel instead of one for the whole layer, mirroring
+`_fake_quantize_weights_per_output_channel`'s existing per-output-channel treatment of weights.
+Same real QAT checkpoint, same full 719-frame DAVIS test split as above:
+
+| activation quant | Mean PSNR | Δ vs. float32 | Mean MS-SSIM | Δ vs. float32 |
+|---|---|---|---|---|
+| per-tensor (original) | 28.750 dB | −0.998 dB | 0.9611 | −0.0119 |
+| **per-channel** | **28.941 dB** | **−0.807 dB** | **0.9674** | **−0.0056** |
+
+**Real, but partial.** Per-channel recovers ~19% of the PSNR cost and ~53% of the MS-SSIM cost -
+confirms the hypothesis directionally, at real measured scale, not just in principle. It does
+**not** make INT8 activations free: −0.807 dB is still roughly **6×** the 0.134 dB QAT-alone
+8-bit→6-bit drop this project already accepted as normal. Calibration fit stayed healthy throughout
+(0.1389% clipped, well under the 2% threshold) and entropy coding stayed lossless every frame,
+exactly as the per-tensor run.
+
+**Still open: INT16 activations**, the other proposed fix, not yet implemented or measured - the
+next thing to try if −0.807 dB is judged too large for V1, per `hardware/ARCHITECTURE.md` §10/§11.
+
 ---
 
 ## A. Rate-distortion loss term

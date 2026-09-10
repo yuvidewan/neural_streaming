@@ -343,10 +343,11 @@ Everything in §6–§7 that is **[ASSUMED]** (clock frequency, cycles/symbol, a
 engineering estimate for a design that has not been synthesized, floorplanned, or run on real
 FPGA fabric. Specifically still open:
 
-1. **INT8 activation quantization accuracy** — untested against this project's real models. Before
-   trusting the CNN engine's output quality, run the existing PSNR/MS-SSIM evaluation harness
-   (`benchmark_rd.py`, exactly as used in M8) against an INT8-simulated forward pass, the same way
-   M8 validated QAT — this project already has the measurement infrastructure to do this cheaply.
+1. **INT8 activation quantization accuracy** — measured (§11): a real −0.998 dB PSNR cost at the
+   original per-tensor granularity, reduced to −0.807 dB with per-channel activation scales
+   (`hardware/int8_activation_validation.py --activation-quant per-channel`). Per-channel is a real
+   improvement but does not close the gap to float32 - still open: is −0.807 dB acceptable for V1,
+   or does closing it further require INT16 activations (not yet implemented or measured)?
 2. **Real cycle counts for the entropy datapath** — §5.3/§5.4's cycle estimates are architectural
    reasoning from reading `range_coder.c`, not RTL simulation. First RTL pass should include a
    cycle-accurate testbench validated against `parallel_entropy_poc.py`'s bit-exact reference.
@@ -368,8 +369,21 @@ entropy-coder half (§5) is already validated at the bitstream level and can pro
 independently in parallel.
 
 **Done, since this was written**: see [RESEARCH_NOTES_NEXT_STEPS.md](../RESEARCH_NOTES_NEXT_STEPS.md)
-and `hardware/int8_activation_validation.py`. Result: −0.997 dB PSNR / −0.0119 MS-SSIM vs. float32,
-full DAVIS test split — a real, non-trivial cost (per-tensor activation quantization is the likely
-fixable cause; per-channel or INT16 are the next things to try, not yet done). Given §1's priority
-correction (the CNN is at least as important a target as the entropy coder, not secondary), this
-result matters more than it would have read as at the time it was recommended.
+and `hardware/int8_activation_validation.py`. Original result (per-tensor activations, one scale
+per layer): −0.997 dB PSNR / −0.0119 MS-SSIM vs. float32, full DAVIS test split — a real,
+non-trivial cost.
+
+**Also done: the proposed per-channel fix, measured, not just proposed.** `--activation-quant
+per-channel` (one INT8 scale per input channel, mirroring the per-output-channel treatment weights
+already got) — same real QAT checkpoint, same full 719-frame DAVIS test split:
+
+| activation quant | PSNR delta vs. float32 | MS-SSIM delta vs. float32 |
+|---|---|---|
+| per-tensor (original) | −0.998 dB | −0.0119 |
+| **per-channel** | **−0.807 dB** | **−0.0056** |
+
+Real improvement — recovers about 19% of the PSNR cost and 53% of the MS-SSIM cost — but **not a
+full fix**: −0.807 dB is still ~6× the 0.134 dB QAT-alone 8-bit→6-bit drop this project already
+accepted, so per-channel activation quantization alone does not make INT8 activations free. INT16
+activations (this section's other proposed fallback, not yet implemented or measured) remains the
+candidate for closing the rest of the gap if per-channel alone isn't judged good enough for V1.

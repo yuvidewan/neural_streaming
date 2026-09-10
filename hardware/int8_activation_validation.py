@@ -2,19 +2,35 @@
 weights/activations assumption actually viable, quality-wise?
 
 Simulates the accelerator's proposed precision (per-output-channel INT8
-weights, per-tensor INT8 activations, both fake-quantized in float so the
-numerics - not the speed - match real INT8 hardware) on the REAL QAT
-checkpoint, then runs the full real .nvc pipeline (existing calibration,
-real entropy coding via encode_symbols/decode_symbols) over the REAL DAVIS
-test split, and compares PSNR/MS-SSIM against the float32 numbers already
-measured in Milestone 8 (outputs/benchmarks/m8_qat_close_out/qat/).
+weights, INT8 activations, both fake-quantized in float so the numerics -
+not the speed - match real INT8 hardware) on the REAL QAT checkpoint, then
+runs the full real .nvc pipeline (existing calibration, real entropy coding
+via encode_symbols/decode_symbols) over the REAL DAVIS test split, and
+compares PSNR/MS-SSIM against the float32 numbers already measured in
+Milestone 8 (outputs/benchmarks/m8_qat_close_out/qat/).
 
 This is the same rigor M8 applied to QAT: measure actual reconstructed
 image quality after the real codec path, not a proxy.
 
+ACTIVATION QUANTIZATION GRANULARITY (--activation-quant)
+----------------------------------------------------------
+The first run of this script (per-tensor activations: one scale for an
+entire layer's input) measured a real ~1 dB PSNR cost - about 7.4x the
+QAT-alone 8-bit->6-bit drop this project already accepted. RESEARCH_NOTES_
+NEXT_STEPS.md's §C proposed per-channel activation quantization as the
+standard first fix, on direct precedent: this project's own latent
+quantizer is already per-channel (nvc.compression.quantization), because
+activation ranges vary far more across a layer's channels than across the
+whole tensor. `--activation-quant per-channel` implements exactly that -
+one INT8 scale per input channel instead of one for the whole layer,
+mirroring `_fake_quantize_weights_per_output_channel`'s existing per-
+output-channel treatment of weights. `per-tensor` (the original behavior)
+stays available and is still the default, so both are directly comparable
+from one script.
+
 Usage (from the project root, with .venv activated):
 
-    python hardware\\int8_activation_validation.py [--max-frames N]
+    python hardware\\int8_activation_validation.py [--max-frames N] [--activation-quant per-tensor|per-channel]
 """
 
 from __future__ import annotations
@@ -86,20 +102,39 @@ def _fake_quantize_weights_per_output_channel(module: nn.Module) -> None:
     module.weight.data.copy_(quantized)
 
 
-def _percentile_scale(values: np.ndarray) -> float:
+def _percentile_scale_per_tensor(values: np.ndarray) -> float:
+    """`values`: every collected element for one layer, flattened - the
+    original convention, one scale for the whole layer."""
     lower = np.percentile(values, ACT_LOWER_PERCENTILE)
     upper = np.percentile(values, ACT_UPPER_PERCENTILE)
     max_abs = max(abs(lower), abs(upper), 1e-8)
     return max_abs / _INT8_QMAX
 
 
+def _percentile_scale_per_channel(values: np.ndarray) -> np.ndarray:
+    """`values`: [C, N] - one row of collected activation values per input
+    channel, channel identity preserved by `_calibrate_activation_scales`'s
+    collection hook. Same percentile convention as the per-tensor path,
+    computed independently per row - mirrors
+    `_fake_quantize_weights_per_output_channel`'s per-output-channel
+    treatment of weights, applied here to activations instead."""
+    lower = np.percentile(values, ACT_LOWER_PERCENTILE, axis=1)
+    upper = np.percentile(values, ACT_UPPER_PERCENTILE, axis=1)
+    max_abs = np.maximum(np.maximum(np.abs(lower), np.abs(upper)), 1e-8)
+    return max_abs / _INT8_QMAX
+
+
 def _calibrate_activation_scales(
     model: nn.Module, calibration_params: QuantizationParams, device: torch.device,
-) -> dict[int, float]:
+    *, per_channel: bool,
+) -> dict[int, float | np.ndarray]:
     """One real forward pass per calibration frame - THROUGH THE REAL
     quantize/dequantize step for the decoder's input, so decoder layers see
     the same discretized latents they would at real inference time, not
     unquantized float latents. Encoder layers see raw calibration frames.
+
+    Returns one scale per layer: a Python float (per-tensor) or an
+    `[C]` numpy array, one entry per input channel (per-channel).
     """
     layers = _conv_layers(model)
     collected: dict[int, list[np.ndarray]] = {id(layer): [] for layer in layers}
@@ -107,7 +142,15 @@ def _calibrate_activation_scales(
     hooks = []
     for layer in layers:
         def _collect(module, inputs, _id=id(layer)):
-            collected[_id].append(inputs[0].detach().cpu().numpy().reshape(-1))
+            x = inputs[0].detach().cpu().numpy()
+            if per_channel:
+                # [B, C, H, W] -> [C, B*H*W]: channel axis kept separate so
+                # each channel's own percentile can be taken at the end,
+                # instead of one percentile over every element regardless
+                # of which channel it came from.
+                collected[_id].append(np.moveaxis(x, 1, 0).reshape(x.shape[1], -1))
+            else:
+                collected[_id].append(x.reshape(-1))
         hooks.append(layer.register_forward_pre_hook(_collect))
 
     loader = create_train_loader(
@@ -135,17 +178,21 @@ def _calibrate_activation_scales(
 
     scales = {}
     for layer in layers:
-        values = np.concatenate(collected[id(layer)])
-        scales[id(layer)] = _percentile_scale(values)
+        if per_channel:
+            values = np.concatenate(collected[id(layer)], axis=1)  # [C, N_total]
+            scales[id(layer)] = _percentile_scale_per_channel(values)
+        else:
+            values = np.concatenate(collected[id(layer)])  # [N_total]
+            scales[id(layer)] = _percentile_scale_per_tensor(values)
     return scales
 
 
 def _build_int8_simulated_model(
-    float_model: nn.Module, activation_scales: dict[int, float],
+    float_model: nn.Module, activation_scales: dict[int, float | np.ndarray], *, per_channel: bool,
 ) -> nn.Module:
     """Deep-copies the model (the real checkpoint's weights are never
     mutated) and applies fake-quant: weights once, in place; activations via
-    a forward-pre-hook using the fixed calibrated scale per layer."""
+    a forward-pre-hook using the fixed calibrated scale(s) per layer."""
     int8_model = copy.deepcopy(float_model)
     layers = _conv_layers(int8_model)
     float_layers = _conv_layers(float_model)
@@ -156,10 +203,21 @@ def _build_int8_simulated_model(
     for float_layer, layer in zip(float_layers, layers):
         scale = activation_scales[id(float_layer)]
 
-        def _fake_quant_activation(module, inputs, _scale=scale):
-            x = inputs[0]
-            q = torch.clamp(torch.round(x / _scale), -_INT8_QMAX, _INT8_QMAX) * _scale
-            return (q,)
+        if per_channel:
+            # [C] -> [1, C, 1, 1] once, up front, rather than reshaping
+            # inside the hook on every call.
+            scale_tensor = torch.from_numpy(np.asarray(scale, dtype=np.float32)).reshape(1, -1, 1, 1)
+
+            def _fake_quant_activation(module, inputs, _scale=scale_tensor):
+                x = inputs[0]
+                s = _scale.to(device=x.device, dtype=x.dtype)
+                q = torch.clamp(torch.round(x / s), -_INT8_QMAX, _INT8_QMAX) * s
+                return (q,)
+        else:
+            def _fake_quant_activation(module, inputs, _scale=scale):
+                x = inputs[0]
+                q = torch.clamp(torch.round(x / _scale), -_INT8_QMAX, _INT8_QMAX) * _scale
+                return (q,)
 
         layer.register_forward_pre_hook(_fake_quant_activation)
 
@@ -172,7 +230,13 @@ def main(argv: list[str] | None = None) -> int:
         "--max-frames", type=int, default=None,
         help="Cap on DAVIS test frames evaluated (default: the full test split, matching M8).",
     )
+    parser.add_argument(
+        "--activation-quant", choices=["per-tensor", "per-channel"], default="per-tensor",
+        help="Granularity of the simulated INT8 activation scale - one per layer (the "
+             "original measurement) or one per input channel (the proposed fix).",
+    )
     args = parser.parse_args(argv)
+    per_channel = args.activation_quant == "per-channel"
 
     device = torch.device("cpu")
     float_model, _ = load_model_from_checkpoint(CHECKPOINT, device=device)
@@ -184,12 +248,17 @@ def main(argv: list[str] | None = None) -> int:
     bits = calib_doc["quantization"]["bits"]
 
     print(f"Calibrating INT8 activation ranges ({ACT_CALIBRATION_BATCHES * ACT_CALIBRATION_BATCH_SIZE} "
-          f"train frames, {ACT_LOWER_PERCENTILE}/{ACT_UPPER_PERCENTILE} percentile, per-layer)...")
-    activation_scales = _calibrate_activation_scales(float_model, params, device)
+          f"train frames, {ACT_LOWER_PERCENTILE}/{ACT_UPPER_PERCENTILE} percentile, "
+          f"{args.activation_quant})...")
+    activation_scales = _calibrate_activation_scales(float_model, params, device, per_channel=per_channel)
+    if per_channel:
+        all_scales = np.concatenate([np.atleast_1d(s) for s in activation_scales.values()])
+    else:
+        all_scales = np.array(list(activation_scales.values()))
     print(f"  {len(activation_scales)} conv layers calibrated "
-          f"(scale range: {min(activation_scales.values()):.5f} - {max(activation_scales.values()):.5f})")
+          f"(scale range: {all_scales.min():.5f} - {all_scales.max():.5f})")
 
-    int8_model = _build_int8_simulated_model(float_model, activation_scales)
+    int8_model = _build_int8_simulated_model(float_model, activation_scales, per_channel=per_channel)
     int8_model.eval()
 
     sequences = discover_sequences(MANIFEST, split="test")
@@ -238,7 +307,8 @@ def main(argv: list[str] | None = None) -> int:
     mean_psnr = statistics.mean(psnr_values)
     mean_msssim = statistics.mean(msssim_values) if msssim_values else None
 
-    print(f"\n=== INT8-simulated vs. float32 (M8, same checkpoint+calibration, {bits}-bit) ===")
+    print(f"\n=== INT8-simulated ({args.activation_quant} activations) vs. float32 "
+          f"(M8, same checkpoint+calibration, {bits}-bit) ===")
     print(f"{'Metric':<12s} {'float32 (M8)':>14s} {'INT8-simulated':>16s} {'delta':>10s}")
     print(f"{'PSNR (dB)':<12s} {M8_FLOAT32_QAT_8BIT_MEAN_PSNR:>14.3f} {mean_psnr:>16.3f} "
           f"{mean_psnr - M8_FLOAT32_QAT_8BIT_MEAN_PSNR:>+10.3f}")

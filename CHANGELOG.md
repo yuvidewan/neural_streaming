@@ -13,6 +13,57 @@ the time.
 
 ---
 
+## 2026-09-10 — Per-channel INT8 activation quantization for NVC-ACCEL: real improvement, not a full fix
+
+**Source:** `hardware/ARCHITECTURE.md`'s own open risk #1 and RESEARCH_NOTES_NEXT_STEPS.md §C measured a
+real ~1 dB PSNR cost from per-tensor INT8 activation quantization (one scale for a whole layer) and
+named the standard fix - per-channel activation scales, on direct precedent from this project's own
+latent quantizer, which is already per-channel - but never implemented it. Isolated entirely to the
+hardware-accelerator validation track; cannot touch the real running codec (no `src/nvc/` change).
+**Tests:** no dedicated test file (`hardware/` sits outside TESTING.md's rule, matching
+`test_parallel_entropy_poc.py`'s existing precedent); correctness verified instead by re-running the
+original per-tensor path after the refactor and confirming it reproduces the prior measurement
+(−0.998 dB here vs. −0.997 dB originally - noise-level, confirms the refactor changed nothing about
+the existing path).
+
+### What changed
+
+`hardware/int8_activation_validation.py` gets a new `--activation-quant per-tensor|per-channel` flag.
+`per-tensor` (the original behavior) stays the default; `per-channel` computes one percentile-calibrated
+INT8 scale per input channel instead of one for the whole layer, mirroring
+`_fake_quantize_weights_per_output_channel`'s existing per-output-channel treatment of weights. Both
+paths share one calibration/evaluation loop so they're directly comparable from one script.
+
+### Result — real QAT checkpoint, full 719-frame DAVIS test split, both modes measured
+
+| activation quant | Mean PSNR | Δ vs. float32 | Mean MS-SSIM | Δ vs. float32 |
+|---|---|---|---|---|
+| per-tensor (original) | 28.750 dB | −0.998 dB | 0.9611 | −0.0119 |
+| **per-channel** | **28.941 dB** | **−0.807 dB** | **0.9674** | **−0.0056** |
+
+Per-channel recovers ~19% of the PSNR cost and ~53% of the MS-SSIM cost versus per-tensor - a real,
+measured improvement, not asserted from the general principle alone. **But it does not close the
+gap**: −0.807 dB is still roughly 6x the 0.134 dB QAT-alone 8-bit→6-bit drop this project already
+treats as an acceptable cost, so per-channel activation quantization alone does not make INT8
+activations free for this design. Calibration fit stayed healthy (0.1389% clipped, threshold 2%) and
+entropy coding stayed lossless every frame, exactly as the original per-tensor run.
+
+### What's still open
+
+INT16 activations - the other fix RESEARCH_NOTES_NEXT_STEPS.md §C already named - remain unimplemented
+and unmeasured. Whether −0.807 dB is an acceptable V1 cost, or whether closing the rest of the gap is
+worth INT16's larger SRAM budget, is a real engineering call this measurement informs but doesn't
+settle by itself.
+
+### Disposition
+
+Documentation updated in `hardware/ARCHITECTURE.md` (§10 risk #1, §11) and `RESEARCH_NOTES_NEXT_STEPS.md`
+§C with the same numbers. Code lives on `master` directly (not a throwaway branch) - unlike the
+speculative chroma-subsampling/decode-speed investigations, this is a straightforward, correct,
+isolated improvement to validation tooling with no downside and zero risk to the real codec.
+
+---
+
 ## 2026-09-10 — M10L: a 512-entry shared codebook keeps M10K's gain at a tenth of the cost (PRACTICAL SUCCESS)
 
 **Source:** M10K won ~1% of residual bytes over M10J with a 12k-parameter learned entropy model, but
