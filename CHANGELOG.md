@@ -13,6 +13,155 @@ the time.
 
 ---
 
+## 2026-09-10 — M11: decoded residuals know where motion compensation failed (AUTOREGRESSIVE ENTROPY SUCCESS)
+
+**Source:** M10K/M10L model P(R | z_ref, channel). M11 asks whether residual symbols the decoder has
+*already decoded* add enough information to justify a sequential dependency in the entropy model.
+**Tests:** 1168 passing (full suite), zero regressions. 110 new tests.
+**Scope:** no `src/nvc/` change, no coder change, no container change. `.nvc`, `.nvcs`, `.nvct` v1/v2
+untouched; every M10A–M10L script byte-identical. λ frozen at 3.0e-4.
+
+### Phase 0 — the calibration determinism fix, measured on a GPU
+
+The `calibrate_grids` guard landed in `61dd8434` on a CPU-only machine, which could only confirm the
+guard was *active*. Measured here on the GPU, with the real checkpoint and a DAVIS validation clip,
+two independent processes:
+
+| | pre-fix (`8d22f419`) | fixed |
+|---|---|---|
+| fingerprinted fields that differ | **9 / 19** | **0 / 19** |
+| residual grid, max \|diff\| | 2.6e-5 (7.7e-5 relative) | 0 |
+| stream bytes (container / residual / motion) | +29 / +39 / −10 | 0 / 0 / 0 |
+
+Worth knowing: the fix does not just remove noise around the old value. Deterministic cuDNN
+kernels round differently from the default ones (7.0e-4 per pixel on decode), so calibration moves
+to a new, *stable* point — median residual-scale shift 0.05%, max 1.0% on one channel, zero-points
+unchanged, stream bytes ~+0.05%. **Absolute byte counts after the fix therefore differ from the
+published M10H–M10L figures by about that much**; within-run comparisons were never affected. The
+benchmark re-verified the fix at full scale: its fresh 400-frame calibration matched the cached one
+from a different process, byte for byte, at every rate point. `scripts/m11_reproducibility.py` and
+`tests/test_m11_reproducibility.py` make the two-process check permanent — calibration, z_ref,
+residual symbols, stream bytes, reconstruction, and M11's own probabilities, tables and payload.
+
+### The audit findings that shaped everything
+
+- **Coding order is C-major raster**, `i = c·H·W + y·W + x` (pinned against the codec by test).
+  When symbol (c, y, x) is decoded the decoder holds *every* position of channels 0…c−1 — including
+  positions spatially ahead of the current one — plus rows above and pixels to the left in channel c.
+- **`rc_decode` is stateless and batch-only.** Decoding a prefix is exact, so a model conditioned
+  only on earlier *channels* can decode one channel per step through the unmodified coder with zero
+  rate overhead. A spatially conditioned model needs a table per symbol: ~16,384 prefix decodes,
+  O(N²), seconds per frame. Measured: 64 channel-prefix decodes cost 28.3 ms vs 0.9 ms for one full
+  decode (31.6×), bit-exact; 64 separate per-channel streams would instead cost +0.64% in
+  terminations before any length table.
+
+### Offline gate — baselined on M10L, not on the marginal
+
+Count tables conditioned on M10L's 512-prototype index, so z_ref's information is already in the
+baseline and any gain is information z_ref did **not** provide. Tuned on VAL-A, reported on VAL-B
+(disjoint validation sequences — all 9 validation sequences used, where M10K/M10L's gates used 3).
+
+Three findings along the way, each of which would have misled if taken at face value:
+
+1. **Recalibration is not context.** Refitting P(R | prototype) on TRAIN symbols alone gains
+   +0.06 / +0.75 / +1.91% at 5/4/3-bit with no residual context at all. Reported separately.
+2. **My first random control was wrong.** Shuffling contexts *within a frame* keeps each frame's
+   histogram — a "how busy is this frame" statistic built partly from future positions — and showed
+   a spurious +0.147% for a skewed context. A whole-split shuffle and M10J's uniform labels agreed at
+   −0.08%, the honest price of a useless context. Fixed; a regression test pins it.
+3. **The smoothing grid was too small** and its optimum sat on the edge; extended, the controls
+   tightened to +0.000–0.009% and 5-bit recalibration shrank from an apparent +0.40% to +0.06%.
+
+| context (family) | 5-bit | 4-bit | 3-bit |
+|---|---|---|---|
+| left + up (spatial) | +2.94% | +3.58% | +4.59% |
+| prev_channel (channel) | +3.21% | +4.28% | +5.41% |
+| channel_activity (channel) | +2.43% | +6.46% | +12.13% |
+| neighbourhood × channel (both) | +3.79% | +7.87% | +12.53% |
+
+(held-out VAL-B vs deployed M10L; every permuted control within +0.01%)
+
+**Why it works:** the residual is `latent − E(warp(prev))`. Where motion compensation fails, the
+residual is large in every channel at once — and z_ref, which describes the reference, cannot know
+where the warp failed. Once a few channels are decoded, their activity at a position says exactly
+that. It dominates at 3-bit, where coding is mostly a zero/non-zero decision.
+
+### The model
+
+M10K's network plus three causal input planes per channel — previous-group magnitude, running
+activity over every earlier group, and an availability flag — **12,744–13,536 parameters**, 56–60 KB.
+Warm-started from M10K with the new weights at zero, so step 0 *is* M10K; a no-context ablation
+trained identically separates what context contributes (it contributes all of it: the ablation
+moves −0.01 / +0.06 / +0.14%). Channels are decoded in **groups of G**: decode time is set by the
+number of sequential steps (a step costs ~0.7 ms whether it handles 1 channel or 64 — launch-bound),
+so G trades context for steps. Operating point chosen by a rule fixed before any G was measured:
+the largest G keeping ≥ 50% of the G = 1 VAL-A gain at every rate point → **G = 16, four steps**, with
+its own 512-entry codebook (which costs nothing — at 5-bit it is marginally better than per-position
+tables).
+
+### Deployed — DAVIS test, 719 frames, every byte counted
+
+| arm | bits | P residual | TOTAL | BPP | vs M10L (P resid) | decode ms/P |
+|---|---|---|---|---|---|---|
+| M10L | 5 | 3,813,564 | 4,595,790 | 0.7803 | | 3.8 |
+| **M11-op (G16)** | 5 | **3,578,734** | **4,360,960** | **0.7404** | **−6.16%** | **7.0** |
+| M11 (G1) | 5 | 3,508,074 | 4,290,300 | 0.7284 | −8.01% | 102.9 |
+| M10L | 4 | 2,631,880 | 3,261,023 | 0.5536 | | 4.7 |
+| **M11-op (G16)** | 4 | **2,463,204** | **3,092,347** | **0.5250** | **−6.41%** | **8.8** |
+| M11 (G1) | 4 | 2,410,267 | 3,039,410 | 0.5160 | −8.42% | 119.9 |
+| M10L | 3 | 1,588,393 | 2,066,495 | 0.3508 | | 5.4 |
+| **M11-op (G16)** | 3 | **1,500,471** | **1,978,573** | **0.3359** | **−5.54%** | **8.5** |
+| M11 (G1) | 3 | 1,476,433 | 1,954,535 | 0.3318 | −7.05% | 99.3 |
+
+**PSNR and MS-SSIM identical to every digit across all six arms**; symbols, motion and
+reconstruction identical; byte accounting closes; coder realises 100% of every modelling gain
+(overhead ≤ 0.026%).
+
+| BD-rate | PSNR | MS-SSIM |
+|---|---|---|
+| **M11-op vs M10L** | **−4.81%** | **−4.81%** |
+| M11 (G1) vs M10L | −6.25% | −6.25% |
+| M11 (G1) vs intra | −38.44% | −47.19% |
+
+M11-op beats M10L on **all 9 test sequences** (−2.40% to −7.80% at 4-bit), most on the
+motion-sensitive ones — schoolgirls −7.80%, bmx-bumps −6.69%, drone −6.68% — which is the mechanism
+above showing up per sequence. Test tracked validation closely: 5.5–6.4% on test against 6.4–7.1%
+on VAL-B.
+
+### What it costs
+
+M11-op decodes in 7.0–8.8 ms/P against M10L's 3.8–5.4 — **1.6–1.9×**, for −4.81% BD-rate. Four
+sequential steps; per step the full network runs once (parallel over every channel and position),
+a prototype assignment, and a prefix decode. Encode is a single parallel pass (3.5–6.8 ms/P). Full
+channel autoregression (G = 1) buys another 1.4 points for 18–27× M10L's decode time — not a
+practical trade with this coder.
+
+### Two things this does not claim
+
+- **The learned model is not this family's ceiling.** At 3-bit a count table
+  P(R | M10L prototype, channel-activity bucket) beat it on the same validation frames (+12.1% vs
+  +8.9%): the learned no-context arm recovered only +0.14% of the +1.9% recalibration the tables
+  found, and every context arm selected its final or penultimate epoch — training had not converged
+  within M10K's matched 20-epoch budget.
+- **Spatial context is measured, not deployed.** It adds 0.4–1.4 points on top of channel context
+  in the gate, and needs a resumable decoder to deploy.
+
+### Verdict: AUTOREGRESSIVE ENTROPY SUCCESS
+
+Held-out gain far past the 1% "meaningful" line at every rate point, realised as actual bytes on the
+test set (−4.81% BD-rate over M10L at the practical operating point), with symbols, motion,
+reconstruction and quality bit-identical, provenance enforced, and decode latency within 2× of M10L.
+
+### Reproducibility
+
+torch 2.13.0+cu130, RTX 5060 Laptop GPU, seed 42. Frozen model: M10F λ=3e-4 seed 42 `best.pt`.
+Entropy models warm-started from M10K, trained 20 epochs on 536 TRAIN P-frames per rate point,
+selected on VAL-A, reported on VAL-B; test read once. Closed-loop symbols cached in the system temp
+directory under a key covering the checkpoint bytes, the M10H source, every codec setting and the
+sequence lists. All commands need the project venv (`./.venv/Scripts/python.exe`).
+
+---
+
 ## 2026-09-10 — Per-channel INT8 activation quantization for NVC-ACCEL: real improvement, not a full fix
 
 **Source:** `hardware/ARCHITECTURE.md`'s own open risk #1 and RESEARCH_NOTES_NEXT_STEPS.md §C measured a

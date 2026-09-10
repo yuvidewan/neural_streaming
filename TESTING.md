@@ -5,7 +5,7 @@ and the rule this project follows going forward - **any change to code gets
 a matching change to tests in the same commit**, not a follow-up "add tests
 later" that never happens.
 
-1055 tests under `tests/`, ~260s on a laptop CPU. No test needs a GPU, a real
+1165 tests under `tests/`, ~260s on a laptop CPU. No test needs a GPU, a real
 Kaggle download, or an external dataset - everything runs on synthetic data
 generated in-process (`tests/helpers.py`), so the full suite runs
 identically in CI, on a fresh clone, or on a machine with no internet
@@ -17,7 +17,7 @@ failing - see "FFmpeg-dependent tests" below.
 the accelerator-architecture proof-of-concept - see `hardware/ARCHITECTURE.md`.
 It's exploratory design work, not `src/nvc/` or `scripts/*.py`, so it's
 outside this document's rule below, but a plain `pytest` from the project
-root still collects it (1058 tests total) since nothing scopes discovery to
+root still collects it (1168 tests total) since nothing scopes discovery to
 `tests/` only.
 
 ## The rule
@@ -122,6 +122,10 @@ table, either extend the closest existing file or start a new
 | `test_m10k_deployment.py` | that only the probability model changes - identical motion, symbols, reconstruction and I-frame bytes across the marginal, lookup and learned arms - and that the learned model is coupled to the calibration it was fitted under (a mismatched grid silently costs bits rather than failing) |
 | `test_m10l_shared_codebook.py` | the shared entropy-table codebook: that a K=16,384 identity codebook reproduces M10K byte for byte (the milestone's stop condition), deterministic fitting and assignment, the lowest-index tie-break that keeps encoder and decoder in step, exact 65536 totals with no zero frequency, and the degenerate cases a clustering step meets in production - empty clusters, K larger than the number of distinct distributions, and uniform / sharply peaked / random inputs |
 | `test_m10l_deployment.py` | that a codebook arm changes only bytes - identical motion, symbols, reconstruction and I-frame bytes across the marginal, lookup, learned and codebook arms at every rate point and every K - that `table_index` is derived from `z_ref` rather than transmitted, and that the 8-byte stream identity binds the codebook to both the M10K weights and the quantization calibration, so a stale pairing is rejected instead of silently costing bits |
+| `test_m11_reproducibility.py` | the permanent cross-process regression: two independent Python processes must produce identical calibration, z_ref, residual symbols, stream bytes, reconstruction and M11 probabilities / frequency tables / payload; plus a check that the fingerprint is not vacuous (a different seed must change every output field) |
+| `test_m11_causal_context.py` | M11's causal contexts: that the coder's order is C-major raster (pinned against the codec), that every candidate context depends only on symbols before it - and that the checker catches planted leaks (right, down, self, next channel) - explicit not-available levels at frame and channel edges, and that a per-frame shuffle is NOT a valid random control (it leaks frame activity) while a whole-split shuffle is |
+| `test_m11_ar_entropy.py` | the channel-autoregressive model: warm start reproduces M10K exactly, planes and outputs are causal for every group size, encoder and decoder derive identical tables group by group, a sample is independent of the others in its batch, bit-exact round trips (per-position and codebook, every G, every rate point, adversarial symbols), and an identity that binds weights, context definition, calibration, bit depth, base model and codebook |
+| `test_m11_deployment.py` | that the M11 arms change only bytes on real `.nvct` v2 streams - identical motion, symbols and reconstruction alongside M10H/M10J/M10K/M10L, short sequences and GOP boundaries included - and that a wrong model, calibration, bit depth, group size, context definition or base model is rejected rather than silently decoded |
 
 **Script contract** every `scripts/*.py` file follows, which is what makes
 all of the above possible:

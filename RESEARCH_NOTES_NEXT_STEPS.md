@@ -6,48 +6,44 @@ validation of the accelerator's INT8 assumption. C is a completed measurement ag
 project's real checkpoint and full DAVIS test split; A and B are literature findings with a
 concrete, minimally-invasive proposal for this specific codebase, not just a survey.
 
-> **Status as of M10L (2026-09-10).** Thread **A (RD loss term) is closed**, λ frozen at
-> **3.0e-4**, and thread **B (temporal coding)** now has a motion-compensated codec with a learned
-> conditional entropy model that is also cheap enough to be worth deploying.
+> **Status as of M11 (2026-09-10).** Thread **A (RD loss term) is closed**, λ frozen at
+> **3.0e-4**, and thread **B (temporal coding)** now has a motion-compensated codec whose residual
+> entropy model is conditioned on the reference AND on residual symbols already decoded.
 >
 > **Where the codec stands (DAVIS test, 719 frames, all bytes counted, 4-bit):** intra 0.7012 BPP /
-> 28.560 dB — motion-compensated + shared-codebook learned entropy **0.5536 BPP / 28.975 dB**. Over
-> three rate points that is **−34.32% PSNR BD-rate** and **−43.74% MS-SSIM BD-rate** against intra.
+> 28.560 dB — motion-compensated + M11 channel-autoregressive entropy **0.5250 BPP / 28.976 dB**.
+> Over three rate points: **−37.50% PSNR BD-rate** and **−46.40% MS-SSIM BD-rate** against intra
+> at the practical operating point (−38.44% / −47.19% with full channel autoregression).
 >
-> **M10K: a 12k-parameter learned entropy model beats the hand-designed lookup.** Held-out validation
-> improvement over M10J of +1.19 / +1.44 / +1.81% at 5/4/3-bit, realised as **−0.80 / −0.93 / −1.50%**
-> actual residual bytes (**−1.05% BD-rate**), with residual symbols, motion, reconstruction, PSNR and
-> MS-SSIM all bit-identical. The arithmetic coder realises **100%** of the modelling gain at +0.02%
-> overhead, so there is no discretization bottleneck.
+> **M11: decoded residuals know where motion compensation failed.** The residual is
+> `latent − E(warp(prev))`, so where the warp fails it is large in every channel at once; z_ref
+> describes the reference and cannot see that, but the channels already decoded can. A 13k-parameter
+> model warm-started from M10K, decoding channels in 4 groups, cuts P-frame residual bytes
+> **−6.16 / −6.41 / −5.54%** vs M10L (**−4.81% BD-rate**) at **1.6–1.9× M10L's decode time**, with
+> symbols, motion, reconstruction and quality bit-identical. Full per-channel autoregression reaches
+> −6.25% BD-rate but costs 18–27× decode time with this coder.
 >
-> **M10L: the same gain, at a tenth of the cost.** M10K's bottleneck was never the model — 0.28 ms of
-> network against 5–27 ms of building 16,384 integer frequency tables per P-frame. Replacing those
-> with **512 shared prototype tables**, fitted once offline on TRAIN and selected by expected code
-> length, costs **+0.01 / +0.04 / +0.03%** of held-out rate and **+0.01% BD-rate** — while removing
-> **70–88%** of residual-coding time and **91–95%** of table memory (8.52 MB → 266 KB at 5-bit).
-> Symbols, motion, reconstruction, PSNR and MS-SSIM stay bit-identical. M10K cost ~14× M10J's
-> residual-coding time; M10L costs **1.6–2.2×**.
+> **M10L: M10K's gain, at a tenth of the cost** — 512 shared prototype tables, +0.01% BD-rate vs M10K,
+> 70–88% less residual-coding time. **M10K:** a 12k-parameter learned model beat M10J's lookup by
+> −1.05% BD-rate. The coder has realised 100% of every modelling gain since.
 >
-> **The audit finding worth remembering:** the coder's `table_index` never constrained how many
-> tables exist, so a per-position learned distribution deploys as 16,384 tables — and a codebook as
-> 512 — through the existing coder. No new coder, no format change, no container version bump, at
-> either extreme.
+> **Reproducibility is now a tested property.** `calibrate_grids` called `model.decode` outside
+> `deterministic_kernels()` (fixed in `61dd8434`); measured on a GPU, two processes used to disagree
+> on 9 of 19 fingerprinted fields and now agree on all of them, at full calibration scale too.
+> Deterministic kernels round differently, so absolute byte counts moved ~0.05% from the published
+> M10H–M10L figures. `tests/test_m11_reproducibility.py` keeps it that way.
 >
-> **The parameter-count lesson across this thread:** hand-designed conditioning got 2–3%, a
-> **12-thousand**-parameter learned entropy model got another 1%, M10L kept that 1% while making it
-> affordable, and M10I's **498-thousand**-parameter conditional *transform* got −1.1% (the wrong
-> way). What is being optimised has mattered; model size has not.
+> **The parameter-count lesson across this thread still holds:** hand-designed conditioning 2–3%,
+> a 12k-parameter learned model +1%, the same model given the right *information* (decoded
+> residuals) +6%, and M10I's 498k-parameter conditional transform −1.1%. What the model can see has
+> mattered; how big it is has not.
 >
-> **Known, measured, unfixed:** `model.decode` is not bit-reproducible without
-> `deterministic_kernels()`, and `calibrate_grids` calls it outside that guard — so the quantization
-> grid, and through it the motion field, varies in the fifth significant figure between *processes*.
-> Within a run everything is exact, so no comparison in this thread is affected, but it means absolute
-> byte totals are not reproducible across runs. Worth closing.
->
-> **Next lever (not started):** more context, now that cost is no longer the blocker. An
-> autoregressive dependence on already-decoded residual symbols is the obvious untested source and can
-> be evaluated by the same offline gate before any coder change — costed against the sequential
-> dependency it would add to the decoder. A larger entropy network is explicitly *not* recommended.
+> **Next levers (not started), in order of evidence:** (1) a **resumable arithmetic decoder** — the
+> coder's stateless `rc_decode` is why channel steps re-decode everything before them, and why
+> spatial context (+0.4–1.4 points more in the gate) cannot deploy at all; (2) **close the gap to
+> the count tables** — at 3-bit P(R | prototype, channel activity) beat the learned model by ~3
+> points on validation, and training had not converged within the 20-epoch budget; (3) refit the
+> 512 prototype tables on actual symbols, a zero-latency +0.75–1.9% at 4/3-bit on its own.
 > See [CHANGELOG.md](CHANGELOG.md). Thread C is closed.
 
 ## TL;DR — recommended order
