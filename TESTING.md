@@ -5,7 +5,7 @@ and the rule this project follows going forward - **any change to code gets
 a matching change to tests in the same commit**, not a follow-up "add tests
 later" that never happens.
 
-717 tests under `tests/`, ~150s on a laptop CPU. No test needs a GPU, a real
+1055 tests under `tests/`, ~260s on a laptop CPU. No test needs a GPU, a real
 Kaggle download, or an external dataset - everything runs on synthetic data
 generated in-process (`tests/helpers.py`), so the full suite runs
 identically in CI, on a fresh clone, or on a machine with no internet
@@ -17,7 +17,7 @@ failing - see "FFmpeg-dependent tests" below.
 the accelerator-architecture proof-of-concept - see `hardware/ARCHITECTURE.md`.
 It's exploratory design work, not `src/nvc/` or `scripts/*.py`, so it's
 outside this document's rule below, but a plain `pytest` from the project
-root still collects it (1056 tests total) since nothing scopes discovery to
+root still collects it (1058 tests total) since nothing scopes discovery to
 `tests/` only.
 
 ## The rule
@@ -113,7 +113,7 @@ table, either extend the closest existing file or start a new
 | `test_scripts_m10g.py` | `m10g_evaluation_convention.py`'s deterministic best-validation checkpoint rule - including that selection structurally cannot reach a test metric - its non-destructive Part B re-reading of M10E/M10F, and `m10g_evaluate.py`'s drift classification |
 | `test_temporal_codec.py` | the `.nvct` temporal prototype: GOP structure, causal reference propagation, encoder/decoder reference symmetry, sequence-boundary isolation, deterministic encode/decode, frame ordering, and container rejection of truncated/corrupt/mistyped streams |
 | `test_scripts_m10h.py` | the `.nvct` v2 container: separately-addressable motion and residual payloads, independent truncation detection for each, corrupt reference-mode rejection, and that M10G's v1 reader correctly refuses a v2 stream |
-| `test_motion_compensation.py` | block-matching motion estimation and integer-pel warping, exact motion-payload round-trip, and the causal invariants: motion estimated only against the reconstruction, no lookahead, and encoder/decoder building an identical warped reference |
+| `test_motion_compensation.py` | block-matching motion estimation and integer-pel warping, exact motion-payload round-trip, the causal invariants: motion estimated only against the reconstruction, no lookahead, and encoder/decoder building an identical warped reference, and `calibrate_grids`'s `deterministic_kernels()` guard around its `decode()` calls |
 | `test_scripts_m10i.py` | that the M10H and M10I paths differ ONLY in the residual model - byte-identical motion payloads and an identical stream at initialisation - plus the conditional coding path's causal invariants and its rejection of truncated or mismatched residual payloads |
 | `test_temporal_residual.py` | the conditional residual codec: that conditioning is load-bearing (same residual + different reference codes differently, gradients reach the reference path, the effect is spatially local), the zero-init identity property, and finite training losses with live gradients |
 | `test_scripts_m10j.py` | that M10J changes only the probability model - identical residual symbols, motion payloads and reconstruction across arms - plus encoder/decoder context equality, all three rate points, and `.nvct` backward compatibility (a marginal decoder refuses a conditional stream; a marginal stream still decodes) |

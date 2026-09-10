@@ -906,42 +906,50 @@ def calibrate_grids(model, sequences, *, bits: int, mode: str = "per_channel",
     motion_symbol_frames: list[np.ndarray] = []
     seen = 0
 
-    for sequence in sequences:
-        frames = sequence.load_frames()
-        types = gop_frame_types(frames.shape[0], gop_size)
-        previous_reconstruction = None
-        for index in range(frames.shape[0]):
+    # decode() is not bit-reproducible without this guard (see
+    # deterministic_kernels' docstring) - without it, the residual/motion
+    # statistics collected here drift slightly between processes, which
+    # showed up as 5th-significant-figure differences in M10L's real run
+    # (see CHANGELOG.md, "A determinism finding, verified rather than
+    # assumed"). The intra-only loop above never calls decode(), so it
+    # does not need this guard.
+    with deterministic_kernels():
+        for sequence in sequences:
+            frames = sequence.load_frames()
+            types = gop_frame_types(frames.shape[0], gop_size)
+            previous_reconstruction = None
+            for index in range(frames.shape[0]):
+                if seen >= max_frames:
+                    break
+                frame = frames[index:index + 1].to(device)
+                latent = model.encode(frame)
+                if types[index] == FRAME_TYPE_I:
+                    payload, _ = encode_latent_to_payload(
+                        latent, params=intra_params, entropy_model=intra_entropy_model)
+                    decoded, _ = decode_payload_to_latent(
+                        payload, entropy_model=intra_entropy_model, params=intra_params,
+                        shape=latent_shape)
+                    previous_reconstruction = model.decode(decoded.to(device))
+                elif previous_reconstruction is not None:
+                    if reference_mode == "prev":
+                        warped = previous_reconstruction
+                    else:
+                        motion = estimate_block_motion(
+                            previous_reconstruction, frame,
+                            block_size=block_size, search_range=search_range)
+                        motion_symbol_frames.append(
+                            motion_to_symbols(motion, search_range=search_range).reshape(2, -1))
+                        warped = warp_blocks(previous_reconstruction, motion, block_size=block_size)
+                    residuals.append((latent - model.encode(warped)).cpu())
+                    # Calibration advances the reference from the TRUE latent, because
+                    # the residual grid being fitted here does not exist yet and cannot
+                    # be used to close the loop. The CODER is always closed-loop; this
+                    # makes calibration-time residuals very slightly optimistic relative
+                    # to coding-time ones, which is noted rather than hidden.
+                    previous_reconstruction = model.decode(latent)
+                seen += 1
             if seen >= max_frames:
                 break
-            frame = frames[index:index + 1].to(device)
-            latent = model.encode(frame)
-            if types[index] == FRAME_TYPE_I:
-                payload, _ = encode_latent_to_payload(
-                    latent, params=intra_params, entropy_model=intra_entropy_model)
-                decoded, _ = decode_payload_to_latent(
-                    payload, entropy_model=intra_entropy_model, params=intra_params,
-                    shape=latent_shape)
-                previous_reconstruction = model.decode(decoded.to(device))
-            elif previous_reconstruction is not None:
-                if reference_mode == "prev":
-                    warped = previous_reconstruction
-                else:
-                    motion = estimate_block_motion(
-                        previous_reconstruction, frame,
-                        block_size=block_size, search_range=search_range)
-                    motion_symbol_frames.append(
-                        motion_to_symbols(motion, search_range=search_range).reshape(2, -1))
-                    warped = warp_blocks(previous_reconstruction, motion, block_size=block_size)
-                residuals.append((latent - model.encode(warped)).cpu())
-                # Calibration advances the reference from the TRUE latent, because
-                # the residual grid being fitted here does not exist yet and cannot
-                # be used to close the loop. The CODER is always closed-loop; this
-                # makes calibration-time residuals very slightly optimistic relative
-                # to coding-time ones, which is noted rather than hidden.
-                previous_reconstruction = model.decode(latent)
-            seen += 1
-        if seen >= max_frames:
-            break
 
     if not residuals:
         raise ValueError("No residual frames collected (is gop_size larger than every sequence?)")

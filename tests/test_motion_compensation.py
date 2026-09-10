@@ -23,7 +23,10 @@ import torch
 from nvc.compression.calibration import calibrate_quantization_params
 from nvc.compression.codec import latent_to_symbols
 from nvc.compression.entropy_model import EmpiricalEntropyModel
+from nvc.evaluation.sequences import BenchmarkSequence
 from nvc.models.autoencoder import BaselineAutoencoder
+
+from helpers import make_sequence
 
 
 def _load_script(name: str):
@@ -442,3 +445,70 @@ def test_gop_pattern_and_intra_only_at_gop_one():
     assert mc.gop_frame_types(7, 1) == [mc.FRAME_TYPE_I] * 7
     with pytest.raises(ValueError):
         mc.gop_frame_types(5, 0)
+
+
+# --- calibrate_grids: deterministic_kernels guard -----------------------
+#
+# model.decode() is not bit-reproducible without deterministic_kernels()
+# (its transposed convolutions can select nondeterministic cuDNN
+# algorithms on GPU - see that function's own docstring). encode_sequence/
+# decode_sequence already wrap their decode calls in it; calibrate_grids's
+# own two decode() call sites (fitting the residual grid against a warped
+# reference) did not, which is real: on GPU the residual/motion statistics
+# collected here could drift slightly between processes, exactly the
+# category of bug CHANGELOG.md's M10L entry measured (a 5th-significant-
+# figure difference traced to this same missing guard, in a sibling
+# function). These tests can only verify the GUARD is active - the actual
+# numerical drift is a cuDNN/GPU-specific effect this CPU suite cannot
+# reproduce - so they check torch.backends.cudnn state directly rather
+# than asserting bit-exact output.
+
+
+def _calibration_sequences(tmp_path, *, count=2, frames_per_sequence=4, size=64):
+    sequences = []
+    for index in range(count):
+        directory = make_sequence(
+            tmp_path / f"seq{index}", num_frames=frames_per_sequence, width=size, height=size)
+        frame_paths = tuple(sorted(directory.iterdir()))
+        sequences.append(BenchmarkSequence(
+            dataset="synthetic", sequence_id=f"seq{index}", split="train",
+            frame_paths=frame_paths, width=size, height=size))
+    return sequences
+
+
+def test_calibrate_grids_enables_deterministic_kernels_around_decode(tmp_path, monkeypatch):
+    mc = _load_script("m10h_motion_compensation")
+    model = _model()
+    sequences = _calibration_sequences(tmp_path)
+
+    observed = []
+    original_decode = BaselineAutoencoder.decode
+
+    def spying_decode(self, z):
+        observed.append((torch.backends.cudnn.deterministic, torch.backends.cudnn.benchmark))
+        return original_decode(self, z)
+
+    monkeypatch.setattr(BaselineAutoencoder, "decode", spying_decode)
+
+    mc.calibrate_grids(model, sequences, bits=4, block_size=16, search_range=4, gop_size=2)
+
+    assert observed, "decode() was never called - this test would pass vacuously without it"
+    assert all(flags == (True, False) for flags in observed), (
+        "calibrate_grids called decode() without deterministic_kernels() active"
+    )
+
+
+def test_calibrate_grids_restores_cudnn_settings_afterward(tmp_path):
+    mc = _load_script("m10h_motion_compensation")
+    model = _model()
+    sequences = _calibration_sequences(tmp_path)
+
+    # Start from a deliberately non-default state, so "restored" is a real
+    # assertion and not coincidentally matching torch's own defaults.
+    torch.backends.cudnn.deterministic = False
+    torch.backends.cudnn.benchmark = True
+
+    mc.calibrate_grids(model, sequences, bits=4, block_size=16, search_range=4, gop_size=2)
+
+    assert torch.backends.cudnn.deterministic is False
+    assert torch.backends.cudnn.benchmark is True
