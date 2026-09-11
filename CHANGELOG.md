@@ -13,6 +13,92 @@ the time.
 
 ---
 
+## 2026-09-11 — M14: entropy-table calibration audit across the codec (MOTION TABLE RECALIBRATED, INTRA CORRECTLY REJECTED)
+
+**Source:** M13 recalibrated one static entropy table (the deployed M11-G16 residual codebook) and
+shipped a real coded-byte gain. M14 asks the obvious follow-up: where else does this calibration gap
+exist? Audit every static table in the deployed codec before recalibrating any of them.
+**Tests:** 1251 passing (full suite), zero regressions. 19 new tests (`test_m14_recalibration.py`:
+13, `test_m14_closed_loop.py`: 6).
+**Scope:** λ=3.0e-4, M13's recalibrated residual table, checkpoints, quantizer, codebook
+prototypes/assignments, motion estimator, GOP, `.nvct` v2 all frozen. One correctness fix to the
+decoder's caller (below) — no format or bitstream change.
+
+### Phase A — the audit
+
+Of the `.nvct` v2 header's three entropy-model identity slots, two were still live and never
+recalibrated: `intra_entropy_model_id` and `motion_entropy_model_id`. A third table —
+`calibrate_grids`'s plain per-channel residual grid — turned out to be dead weight: computed every
+run, never read by the deployed M13 closed loop (residual coding goes through M11-G16 + M13's
+codebook instead). Excluded from candidacy — recalibrating a table nothing reads can't change a
+deployed byte.
+
+**The root cause differs from M13's.** Intra and motion were already direct empirical fits, never
+neural-predicted, so M13's "predicted vs actual" story doesn't apply. Instead: TRAIN has 72
+sequences / 4,826 frames, but `calibrate_grids`'s `max_frames=400` budget is spent *sequentially*
+(walk sequences in manifest order, stop at N frames) — so the deployed tables are fitted from ~6 of
+72 sequences, about 8% of TRAIN. A coverage gap, not a bias gap.
+
+### Phase B — offline gate (held-out VAL-A; pre-registered thresholds: <0.5% weak, 0.5–1.0%
+marginal, ≥1.0% meaningful)
+
+- **intra**: +0.37% to +0.41% across 5/4/3-bit — weak, rejected before any further compute was spent.
+- **motion**: +10.55% to +11.89% across 5/4/3-bit — meaningful, proceeds to coded validation.
+
+(Caught a real bug first: an early draft fed the broadly-sampled TRAIN list into the
+*deployed-baseline* calibration too, making both sides draw from the same narrow sample and
+producing nonsensical negative "gains." Fixed by separating the full, untruncated sequence list used
+to reproduce the deployed baseline from the per-sequence-capped list used to fit the recalibrated
+candidate.)
+
+### Phase D — actual arithmetic-coded validation (90 VAL frames, 3 sequences)
+
+| bits | total bytes, baseline → motion | total container gain |
+|---|---|---|
+| 5 | 587,939 → 582,935 | +0.8511% |
+| 4 | 418,691 → 413,773 | +1.1746% |
+| 3 | 268,449 → 263,903 | +1.6934% |
+
+All invariants (symbols, reconstruction, motion, PSNR, MS-SSIM) identical baseline vs motion at
+every rate point.
+
+### Phase E — full DAVIS TEST (719 frames, 9 sequences)
+
+| bits | motion-channel bytes | motion gain | TOTAL container bytes | TOTAL gain |
+|---|---|---|---|---|
+| 5 | 181,118 → 164,010 | +9.446% | 4,309,995 → 4,292,887 | +0.3969% |
+| 4 | 184,298 → 166,842 | +9.472% | 3,027,347 → 3,009,891 | +0.5766% |
+| 3 | 188,896 → 171,612 | +9.150% | 1,918,028 → 1,900,744 | +0.9011% |
+
+Motion is only 4–6% of total stream bytes, so the two numbers answer different questions and both
+are reported — the channel-level gain is the honest measure of the fix itself; the total-stream gain
+is the honest measure of its deployed impact. BD-rate: **−0.683%** (PSNR), **−0.681%** (MS-SSIM).
+PSNR/MS-SSIM bit-identical baseline vs motion at every rate point. Motion's table carries no neural
+network, so recalibration structurally cannot move latency — confirmed, not just expected, by
+per-stage timing at every rate point.
+
+### A correctness gap found and fixed along the way
+
+`m13_closed_loop.decode_sequence` checked only `residual_entropy_model_id` against the stream
+header — never `intra_/motion_entropy_model_id`. Invisible in M13 (which never varied those tables
+across a call), directly exploitable once M14 started shipping two different motion tables: decoding
+a recalibrated-motion stream against the wrong table would have silently produced corrupted motion
+vectors with no error, only a wrong reconstruction. Fixed: all three `.nvct` v2 identities are now
+checked before a symbol is decoded. Zero regressions across the full 1251-test suite.
+
+### Verdict: CALIBRATION GAP CLOSED (MOTION), CORRECTLY REJECTED (INTRA)
+
+Audit-first discipline paid for itself: intra was rejected at the cheapest possible stage (the
+offline gate) instead of being chased through coded validation and a full DAVIS run first. Motion
+cleared every gate through to a full-DAVIS, byte-accounted, invariant-checked confirmation.
+
+**M15 candidate (from the report):** don't chase more tables one at a time —
+`calibrate_grids`'s own sequential (not per-sequence) frame-selection strategy under-samples TRAIN
+for *any* table it fits. Fixing that directly addresses the shared root cause behind this gap and
+any others like it.
+
+---
+
 ## 2026-09-11 — M13: deployed M11-G16 table recalibration (REAL, MEANINGFUL, DEPLOYED COMPRESSION GAIN)
 
 **Source:** M12's spatial-context offline gate incidentally measured that recalibrating M11-G16's

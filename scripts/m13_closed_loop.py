@@ -184,6 +184,19 @@ def encode_multi(mc, ma, m13, model, frames, arms, paths, *, intra_params, intra
 @torch.no_grad()
 def decode_sequence(mc, ma, m13, model, path, arm, spec, *, intra_entropy_model,
                     motion_entropy_model, bits):
+    """Checks all THREE .nvct v2 entropy-model identities against the
+    stream header before decoding a single symbol - not just the residual
+    one. M11/M13 only ever checked `residual_entropy_model_id` because
+    `intra_entropy_model`/`motion_entropy_model` were always the SAME object
+    across every call site, so a mismatch there was structurally impossible
+    to trigger. M14 is the first milestone to actually vary
+    `motion_entropy_model` across configurations (recalibrated vs deployed)
+    - which means a caller could now silently decode a recalibrated-motion
+    stream with the deployed table (or vice versa) and get wrong motion
+    vectors with no error, only a corrupted reconstruction. Found and fixed
+    here (M14), the same way M13 found and fixed the missing
+    check_provenance() call in its own Phase D/E scripts - a real gap,
+    closed before it could bite."""
     model.eval()
     device = next(model.parameters()).device
     reader = mc.TemporalStreamReader(path)
@@ -192,6 +205,16 @@ def decode_sequence(mc, ma, m13, model, path, arm, spec, *, intra_entropy_model,
         raise mc.TemporalFormatError(
             f"residual entropy model mismatch: stream declares "
             f"{header.residual_entropy_model_id.hex()}, supplied is {spec['identity'].hex()}")
+    if intra_entropy_model.model_id() != header.intra_entropy_model_id:
+        raise mc.TemporalFormatError(
+            f"intra entropy model mismatch: stream declares "
+            f"{header.intra_entropy_model_id.hex()}, supplied is "
+            f"{intra_entropy_model.model_id().hex()}")
+    if motion_entropy_model.model_id() != header.motion_entropy_model_id:
+        raise mc.TemporalFormatError(
+            f"motion entropy model mismatch: stream declares "
+            f"{header.motion_entropy_model_id.hex()}, supplied is "
+            f"{motion_entropy_model.model_id().hex()}")
     reconstructions, symbol_log, previous = [], [], None
     timings: dict[str, float] = {}
     with mc.deterministic_kernels():

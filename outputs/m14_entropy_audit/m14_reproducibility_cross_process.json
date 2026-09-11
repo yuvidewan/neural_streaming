@@ -1,0 +1,2 @@
+[DEVICE] GPU available: NVIDIA GeForce RTX 5060 Laptop GPU (8.0 GB VRAM)
+{"torch": "2.13.0+cu130", "device": "cuda", "train_p_frames": 216, "h_new": 4.634754523426427, "new_identity": "1e6227b75da9ac9e", "combined_digest": "7726cd77cd3a9035b63edd72bf1ea4b0e1bc8e2b5da258adf9ee14c4d8d0fd25"}

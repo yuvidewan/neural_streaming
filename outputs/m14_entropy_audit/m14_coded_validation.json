@@ -1,0 +1,220 @@
+{
+  "phase": "M14 Phase D coded validation",
+  "combinations_requested": [
+    "motion"
+  ],
+  "val_sequence_ids": [
+    "bmx-trees",
+    "car-roundabout",
+    "dogs-scale"
+  ],
+  "rate_points": [
+    {
+      "bits": 5,
+      "combinations": {
+        "baseline": {
+          "invariants": {
+            "symbols": true,
+            "reconstruction": true,
+            "motion": true,
+            "metrics": true
+          },
+          "stats": {
+            "arm": "m13_recal",
+            "bits": 5,
+            "total_motion_bytes": 29451,
+            "total_residual_bytes": 554438,
+            "total_i_frame_residual_bytes": 72748,
+            "total_p_frame_residual_bytes": 481690,
+            "total_container_overhead_bytes": 4050,
+            "total_container_bytes": 587939,
+            "total_pixels": 5898240,
+            "stream_bpp": 0.7974433051215277,
+            "compression_ratio": 30.096183447602556,
+            "mean_psnr_db": 29.853700321052703,
+            "mean_msssim": 0.9812396566073099,
+            "p_frame_ideal_bits": 3853143.7080923114,
+            "p_frames": 81,
+            "encode_seconds": {
+              "network": 0.11758010010817088,
+              "tables": 0.21044169980450533,
+              "coder": 0.05847259986330755
+            },
+            "byte_accounting_closes": true
+          },
+          "byte_gain_vs_baseline_percent": null
+        },
+        "motion": {
+          "invariants": {
+            "symbols": true,
+            "reconstruction": true,
+            "motion": true,
+            "metrics": true
+          },
+          "stats": {
+            "arm": "m13_recal",
+            "bits": 5,
+            "total_motion_bytes": 24447,
+            "total_residual_bytes": 554438,
+            "total_i_frame_residual_bytes": 72748,
+            "total_p_frame_residual_bytes": 481690,
+            "total_container_overhead_bytes": 4050,
+            "total_container_bytes": 582935,
+            "total_pixels": 5898240,
+            "stream_bpp": 0.7906561957465278,
+            "compression_ratio": 30.354533524320892,
+            "mean_psnr_db": 29.853700321052703,
+            "mean_msssim": 0.9812396566073099,
+            "p_frame_ideal_bits": 3853143.7080923114,
+            "p_frames": 81,
+            "encode_seconds": {
+              "network": 0.09873049997258931,
+              "tables": 0.09209829990868457,
+              "coder": 0.049278599879471585
+            },
+            "byte_accounting_closes": true
+          },
+          "byte_gain_vs_baseline_percent": 0.8511087034539297
+        }
+      }
+    },
+    {
+      "bits": 4,
+      "combinations": {
+        "baseline": {
+          "invariants": {
+            "symbols": true,
+            "reconstruction": true,
+            "motion": true,
+            "metrics": true
+          },
+          "stats": {
+            "arm": "m13_recal",
+            "bits": 4,
+            "total_motion_bytes": 29532,
+            "total_residual_bytes": 385109,
+            "total_i_frame_residual_bytes": 53832,
+            "total_p_frame_residual_bytes": 331277,
+            "total_container_overhead_bytes": 4050,
+            "total_container_bytes": 418691,
+            "total_pixels": 5898240,
+            "stream_bpp": 0.5678860134548611,
+            "compression_ratio": 42.26200228808357,
+            "mean_psnr_db": 29.54061204090885,
+            "mean_msssim": 0.9771404266357422,
+            "p_frame_ideal_bits": 2649803.6845556023,
+            "p_frames": 81,
+            "encode_seconds": {
+              "network": 0.09380850003799424,
+              "tables": 0.08900659997016191,
+              "coder": 0.0405993000313174
+            },
+            "byte_accounting_closes": true
+          },
+          "byte_gain_vs_baseline_percent": null
+        },
+        "motion": {
+          "invariants": {
+            "symbols": true,
+            "reconstruction": true,
+            "motion": true,
+            "metrics": true
+          },
+          "stats": {
+            "arm": "m13_recal",
+            "bits": 4,
+            "total_motion_bytes": 24614,
+            "total_residual_bytes": 385109,
+            "total_i_frame_residual_bytes": 53832,
+            "total_p_frame_residual_bytes": 331277,
+            "total_container_overhead_bytes": 4050,
+            "total_container_bytes": 413773,
+            "total_pixels": 5898240,
+            "stream_bpp": 0.5612155490451389,
+            "compression_ratio": 42.764317633098344,
+            "mean_psnr_db": 29.54061204090885,
+            "mean_msssim": 0.9771404266357422,
+            "p_frame_ideal_bits": 2649803.6845556023,
+            "p_frames": 81,
+            "encode_seconds": {
+              "network": 0.09320569998817518,
+              "tables": 0.08878370010643266,
+              "coder": 0.03982859992538579
+            },
+            "byte_accounting_closes": true
+          },
+          "byte_gain_vs_baseline_percent": 1.1746132589427525
+        }
+      }
+    },
+    {
+      "bits": 3,
+      "combinations": {
+        "baseline": {
+          "invariants": {
+            "symbols": true,
+            "reconstruction": true,
+            "motion": true,
+            "metrics": true
+          },
+          "stats": {
+            "arm": "m13_recal",
+            "bits": 3,
+            "total_motion_bytes": 29509,
+            "total_residual_bytes": 234890,
+            "total_i_frame_residual_bytes": 34884,
+            "total_p_frame_residual_bytes": 200006,
+            "total_container_overhead_bytes": 4050,
+            "total_container_bytes": 268449,
+            "total_pixels": 5898240,
+            "stream_bpp": 0.36410725911458336,
+            "compression_ratio": 65.91464300481655,
+            "mean_psnr_db": 28.462938975470973,
+            "mean_msssim": 0.9621098637580872,
+            "p_frame_ideal_bits": 1599671.2048242462,
+            "p_frames": 81,
+            "encode_seconds": {
+              "network": 0.09276799994404428,
+              "tables": 0.09879400031059049,
+              "coder": 0.03335819998756051
+            },
+            "byte_accounting_closes": true
+          },
+          "byte_gain_vs_baseline_percent": null
+        },
+        "motion": {
+          "invariants": {
+            "symbols": true,
+            "reconstruction": true,
+            "motion": true,
+            "metrics": true
+          },
+          "stats": {
+            "arm": "m13_recal",
+            "bits": 3,
+            "total_motion_bytes": 24963,
+            "total_residual_bytes": 234890,
+            "total_i_frame_residual_bytes": 34884,
+            "total_p_frame_residual_bytes": 200006,
+            "total_container_overhead_bytes": 4050,
+            "total_container_bytes": 263903,
+            "total_pixels": 5898240,
+            "stream_bpp": 0.35794135199652777,
+            "compression_ratio": 67.05009037411473,
+            "mean_psnr_db": 28.462938975470973,
+            "mean_msssim": 0.9621098637580872,
+            "p_frame_ideal_bits": 1599671.2048242462,
+            "p_frames": 81,
+            "encode_seconds": {
+              "network": 0.0906054999504704,
+              "tables": 0.0871641002886463,
+              "coder": 0.03378969998448156
+            },
+            "byte_accounting_closes": true
+          },
+          "byte_gain_vs_baseline_percent": 1.6934315270312053
+        }
+      }
+    }
+  ]
+}
