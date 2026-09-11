@@ -13,6 +13,55 @@ the time.
 
 ---
 
+## 2026-09-11 — M13: deployed M11-G16 table recalibration (REAL, MEANINGFUL, DEPLOYED COMPRESSION GAIN)
+
+**Source:** M12's spatial-context offline gate incidentally measured that recalibrating M11-G16's
+512-entry codebook frequencies — fitting them from TRAIN's actual symbol histogram instead of the
+network's predicted distribution — gained +1.6% to +5.1% offline, with zero spatial context at all.
+M13 asks whether that survives to real, deployed, arithmetic-coded bytes.
+**Tests:** 27 new (`test_m13_recalibration.py`: 14, `test_m13_closed_loop.py`: 13); full suite green,
+zero regressions.
+**Scope:** codebook prototypes, symbol-to-prototype assignment, quantizer, motion estimator, model,
+arithmetic coder, GOP, λ=3.0e-4, `.nvct` v2 all frozen. Only the residual entropy *frequency table*
+changes.
+
+### The split that makes this safe
+
+A `SharedCodebook`'s assignment (which prototype a position routes to) must never be computed from a
+recalibrated table — only the original, deployed codebook may decide assignment. A separate codebook
+object carries the recalibrated frequencies, used only for coding. Two tests pin this:
+`test_assignment_never_uses_the_recalibrated_codebook`,
+`test_recalibration_does_not_mutate_the_original_codebook`. Because assignment is untouched, symbols
+and reconstruction are provably identical old vs new — recalibration can only change which frequency
+table *encodes* an already-decided symbol, never which symbol gets chosen. Provenance comes for
+free: `model_identity()`/`codebook_id()` hash weights, calibration *and* frequencies, so the
+recalibrated table gets its own distinct 8-byte `.nvct` identity automatically.
+
+### Offline gate (Phase C, independent reproduction through the real integer-quantized tables)
+
++1.609% / +2.927% / +5.110% at 5/4/3-bit.
+
+### Deployed — DAVIS TEST, 719 frames, every byte counted
+
+Byte gain **+1.42% / +2.64% / +4.04%** at 5/4/3-bit, realized gain 99.97–100.02% of the offline
+estimate — the coder captures essentially all of the modelled gain. BD-rate **−2.372%** (PSNR),
+**−2.366%** (MS-SSIM). PSNR and MS-SSIM bit-identical old vs new at every rate point; symbols,
+motion and reconstruction identical; byte accounting closes.
+
+### A correctness gap found and fixed along the way
+
+Phase D/E's first draft loaded the M11-G16 checkpoint without calling M11's own `check_provenance()`
+guard against fresh calibration — a real silent-stale-model risk. Fixed; the guard passes cleanly
+(confirms provenance was valid all along, just previously unverified).
+
+### Verdict: REAL, MEANINGFUL, DEPLOYED COMPRESSION GAIN
+
+Not just an offline estimate — confirmed on real, arithmetic-coded bytes at three independent scales
+(VAL-A tuning, VAL-B/Phase C offline reproduction, full DAVIS TEST), with quality and every
+non-frequency invariant untouched.
+
+---
+
 ## 2026-09-10 — M12: a resumable arithmetic decoder, and a spatial-context ceiling check (RESUMABLE DECODER SUCCESS, WEAK SPATIAL SIGNAL)
 
 **Source:** M11's channel-autoregressive entropy model (G16) decodes each group via a prefix

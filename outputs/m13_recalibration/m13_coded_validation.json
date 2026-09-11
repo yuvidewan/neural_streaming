@@ -1,0 +1,297 @@
+{
+  "phase": "M13 Phase D coded validation",
+  "val_sequence_ids": [
+    "bmx-trees",
+    "car-roundabout",
+    "dogs-scale"
+  ],
+  "rate_points": [
+    {
+      "bits": 5,
+      "smoothing_strength": 1024.0,
+      "invariants": {
+        "symbols": true,
+        "reconstruction": true,
+        "motion": true,
+        "metrics": true
+      },
+      "old": {
+        "arm": "m11_op",
+        "bits": 5,
+        "total_motion_bytes": 29451,
+        "total_residual_bytes": 559075,
+        "total_i_frame_residual_bytes": 72748,
+        "total_p_frame_residual_bytes": 486327,
+        "total_container_overhead_bytes": 4050,
+        "total_container_bytes": 592576,
+        "total_pixels": 5898240,
+        "stream_bpp": 0.8037326388888889,
+        "compression_ratio": 29.86067609893077,
+        "mean_psnr_db": 29.853700321052703,
+        "mean_msssim": 0.9812396566073099,
+        "p_frame_ideal_bits": 3890239.2541900445,
+        "p_frames": 81,
+        "encode_seconds": {
+          "network": 0.13329199989675544,
+          "tables": 0.15025450015673414,
+          "coder": 0.055673399998340756
+        },
+        "byte_accounting_closes": true
+      },
+      "new": {
+        "arm": "m13_recal",
+        "bits": 5,
+        "total_motion_bytes": 29451,
+        "total_residual_bytes": 554438,
+        "total_i_frame_residual_bytes": 72748,
+        "total_p_frame_residual_bytes": 481690,
+        "total_container_overhead_bytes": 4050,
+        "total_container_bytes": 587939,
+        "total_pixels": 5898240,
+        "stream_bpp": 0.7974433051215277,
+        "compression_ratio": 30.096183447602556,
+        "mean_psnr_db": 29.853700321052703,
+        "mean_msssim": 0.9812396566073099,
+        "p_frame_ideal_bits": 3853143.7080923114,
+        "p_frames": 81,
+        "encode_seconds": {
+          "network": 0.12936709995847195,
+          "tables": 0.14821329989354126,
+          "coder": 0.056539400247856975
+        },
+        "byte_accounting_closes": true
+      },
+      "decode_seconds": {
+        "m11_op": {
+          "network": 0.7315557000110857,
+          "tables": 0.40251990011893213,
+          "coder": 0.25133770002867095
+        },
+        "m13_recal": {
+          "network": 0.690913200029172,
+          "tables": 0.341690899891546,
+          "coder": 0.1039474000572227
+        }
+      },
+      "ideal_gain_percent": 0.9535543619271933,
+      "byte_gain_percent": 0.953473691569664,
+      "old_coder_overhead_percent": 0.00968438662351531,
+      "new_coder_overhead_percent": 0.009765841510097857,
+      "realized_gain_percent": 100.00122360314019,
+      "old_identity": "c4f1373f63ffbdfe",
+      "new_identity": "ec858dee10f8a955",
+      "per_sequence": [
+        {
+          "sequence": "bmx-trees",
+          "bits": 5,
+          "m11_op_residual_bytes": 182443,
+          "m13_recal_residual_bytes": 181368
+        },
+        {
+          "sequence": "car-roundabout",
+          "bits": 5,
+          "m11_op_residual_bytes": 185768,
+          "m13_recal_residual_bytes": 183595
+        },
+        {
+          "sequence": "dogs-scale",
+          "bits": 5,
+          "m11_op_residual_bytes": 190864,
+          "m13_recal_residual_bytes": 189475
+        }
+      ]
+    },
+    {
+      "bits": 4,
+      "smoothing_strength": 1024.0,
+      "invariants": {
+        "symbols": true,
+        "reconstruction": true,
+        "motion": true,
+        "metrics": true
+      },
+      "old": {
+        "arm": "m11_op",
+        "bits": 4,
+        "total_motion_bytes": 29532,
+        "total_residual_bytes": 391807,
+        "total_i_frame_residual_bytes": 53832,
+        "total_p_frame_residual_bytes": 337975,
+        "total_container_overhead_bytes": 4050,
+        "total_container_bytes": 425389,
+        "total_pixels": 5898240,
+        "stream_bpp": 0.5769707573784723,
+        "compression_ratio": 41.59656220541669,
+        "mean_psnr_db": 29.54061204090885,
+        "mean_msssim": 0.9771404266357422,
+        "p_frame_ideal_bits": 2703438.5911031766,
+        "p_frames": 81,
+        "encode_seconds": {
+          "network": 0.14179770008195192,
+          "tables": 0.1210199999040924,
+          "coder": 0.05253449999145232
+        },
+        "byte_accounting_closes": true
+      },
+      "new": {
+        "arm": "m13_recal",
+        "bits": 4,
+        "total_motion_bytes": 29532,
+        "total_residual_bytes": 385109,
+        "total_i_frame_residual_bytes": 53832,
+        "total_p_frame_residual_bytes": 331277,
+        "total_container_overhead_bytes": 4050,
+        "total_container_bytes": 418691,
+        "total_pixels": 5898240,
+        "stream_bpp": 0.5678860134548611,
+        "compression_ratio": 42.26200228808357,
+        "mean_psnr_db": 29.54061204090885,
+        "mean_msssim": 0.9771404266357422,
+        "p_frame_ideal_bits": 2649803.6845556023,
+        "p_frames": 81,
+        "encode_seconds": {
+          "network": 0.1434386998298578,
+          "tables": 0.11965369994868524,
+          "coder": 0.05733090013382025
+        },
+        "byte_accounting_closes": true
+      },
+      "decode_seconds": {
+        "m11_op": {
+          "network": 0.5627916999219451,
+          "tables": 0.25186679989565164,
+          "coder": 0.22727999984635971
+        },
+        "m13_recal": {
+          "network": 0.5121539000538178,
+          "tables": 0.230298200272955,
+          "coder": 0.10294349998002872
+        }
+      },
+      "ideal_gain_percent": 1.983951354548351,
+      "byte_gain_percent": 1.9818033878245433,
+      "old_coder_overhead_percent": 0.01336848922748919,
+      "new_coder_overhead_percent": 0.015560226095273522,
+      "realized_gain_percent": 99.90508690915836,
+      "old_identity": "1687b85e55d12934",
+      "new_identity": "be872c2beebd2f9b",
+      "per_sequence": [
+        {
+          "sequence": "bmx-trees",
+          "bits": 4,
+          "m11_op_residual_bytes": 126966,
+          "m13_recal_residual_bytes": 125355
+        },
+        {
+          "sequence": "car-roundabout",
+          "bits": 4,
+          "m11_op_residual_bytes": 130626,
+          "m13_recal_residual_bytes": 127697
+        },
+        {
+          "sequence": "dogs-scale",
+          "bits": 4,
+          "m11_op_residual_bytes": 134215,
+          "m13_recal_residual_bytes": 132057
+        }
+      ]
+    },
+    {
+      "bits": 3,
+      "smoothing_strength": 256.0,
+      "invariants": {
+        "symbols": true,
+        "reconstruction": true,
+        "motion": true,
+        "metrics": true
+      },
+      "old": {
+        "arm": "m11_op",
+        "bits": 3,
+        "total_motion_bytes": 29509,
+        "total_residual_bytes": 242630,
+        "total_i_frame_residual_bytes": 34884,
+        "total_p_frame_residual_bytes": 207746,
+        "total_container_overhead_bytes": 4050,
+        "total_container_bytes": 276189,
+        "total_pixels": 5898240,
+        "stream_bpp": 0.37460530598958336,
+        "compression_ratio": 64.0674320845508,
+        "mean_psnr_db": 28.462938975470973,
+        "mean_msssim": 0.9621098637580872,
+        "p_frame_ideal_bits": 1661597.1259676174,
+        "p_frames": 81,
+        "encode_seconds": {
+          "network": 0.1252323000517208,
+          "tables": 0.10074940003687516,
+          "coder": 0.041709400044055656
+        },
+        "byte_accounting_closes": true
+      },
+      "new": {
+        "arm": "m13_recal",
+        "bits": 3,
+        "total_motion_bytes": 29509,
+        "total_residual_bytes": 234890,
+        "total_i_frame_residual_bytes": 34884,
+        "total_p_frame_residual_bytes": 200006,
+        "total_container_overhead_bytes": 4050,
+        "total_container_bytes": 268449,
+        "total_pixels": 5898240,
+        "stream_bpp": 0.36410725911458336,
+        "compression_ratio": 65.91464300481655,
+        "mean_psnr_db": 28.462938975470973,
+        "mean_msssim": 0.9621098637580872,
+        "p_frame_ideal_bits": 1599671.2048242462,
+        "p_frames": 81,
+        "encode_seconds": {
+          "network": 0.11725139993359335,
+          "tables": 0.09398890004376881,
+          "coder": 0.035442099935607985
+        },
+        "byte_accounting_closes": true
+      },
+      "decode_seconds": {
+        "m11_op": {
+          "network": 0.4293525996909011,
+          "tables": 0.19430290019954555,
+          "coder": 0.13556320016505197
+        },
+        "m13_recal": {
+          "network": 0.41577509994385764,
+          "tables": 0.1849706999200862,
+          "coder": 0.06567049966542982
+        }
+      },
+      "ideal_gain_percent": 3.7268914453200623,
+      "byte_gain_percent": 3.72570350331655,
+      "old_coder_overhead_percent": 0.022320334248691304,
+      "new_coder_overhead_percent": 0.023554538871327916,
+      "realized_gain_percent": 99.99043834429618,
+      "old_identity": "a72c9dbdb00f7eee",
+      "new_identity": "d2d61d66a50cad8a",
+      "per_sequence": [
+        {
+          "sequence": "bmx-trees",
+          "bits": 3,
+          "m11_op_residual_bytes": 78116,
+          "m13_recal_residual_bytes": 76206
+        },
+        {
+          "sequence": "car-roundabout",
+          "bits": 3,
+          "m11_op_residual_bytes": 81649,
+          "m13_recal_residual_bytes": 78416
+        },
+        {
+          "sequence": "dogs-scale",
+          "bits": 3,
+          "m11_op_residual_bytes": 82865,
+          "m13_recal_residual_bytes": 80268
+        }
+      ]
+    }
+  ],
+  "phase_d_passed": true,
+  "realized_gain_high": true
+}

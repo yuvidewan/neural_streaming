@@ -1,0 +1,513 @@
+{
+  "phase": "M13 Phase E DAVIS benchmark",
+  "checkpoint": "outputs\\m10f_lambda_boundary\\lambda_3.0e-04_seed42\\best.pt",
+  "rate_points_bits": [
+    5,
+    4,
+    3
+  ],
+  "arms": {
+    "m11_op@5bit": {
+      "arm": "m11_op",
+      "bits": 5,
+      "total_motion_bytes": 181118,
+      "total_residual_bytes": 4163651,
+      "total_i_frame_residual_bytes": 584917,
+      "total_p_frame_residual_bytes": 3578734,
+      "total_container_overhead_bytes": 16191,
+      "total_container_bytes": 4360960,
+      "total_pixels": 47120384,
+      "stream_bpp": 0.7403946453407511,
+      "compression_ratio": 32.415145289110654,
+      "mean_psnr_db": 29.27115579185924,
+      "mean_msssim": 0.9737309548589919,
+      "p_frame_ideal_bits": 28626993.042438213,
+      "p_frames": 644,
+      "encode_seconds": {
+        "network": 0.9569303996686358,
+        "tables": 1.0041896002367139,
+        "coder": 0.40575330014689825
+      },
+      "byte_accounting_closes": true
+    },
+    "m13_recal@5bit": {
+      "arm": "m13_recal",
+      "bits": 5,
+      "total_motion_bytes": 181118,
+      "total_residual_bytes": 4112686,
+      "total_i_frame_residual_bytes": 584917,
+      "total_p_frame_residual_bytes": 3527769,
+      "total_container_overhead_bytes": 16191,
+      "total_container_bytes": 4309995,
+      "total_pixels": 47120384,
+      "stream_bpp": 0.7317419144971314,
+      "compression_ratio": 32.79844918613595,
+      "mean_psnr_db": 29.27115579185924,
+      "mean_msssim": 0.9737309548589919,
+      "p_frame_ideal_bits": 28219194.334012516,
+      "p_frames": 644,
+      "encode_seconds": {
+        "network": 0.9216971998102963,
+        "tables": 1.0003976998268627,
+        "coder": 0.3962504994706251
+      },
+      "byte_accounting_closes": true
+    },
+    "m11_op@4bit": {
+      "arm": "m11_op",
+      "bits": 4,
+      "total_motion_bytes": 184298,
+      "total_residual_bytes": 2891858,
+      "total_i_frame_residual_bytes": 428654,
+      "total_p_frame_residual_bytes": 2463204,
+      "total_container_overhead_bytes": 16191,
+      "total_container_bytes": 3092347,
+      "total_pixels": 47120384,
+      "stream_bpp": 0.5250121900534597,
+      "compression_ratio": 45.71322429209917,
+      "mean_psnr_db": 28.975823210025826,
+      "mean_msssim": 0.9676500558853149,
+      "p_frame_ideal_bits": 19702650.039688006,
+      "p_frames": 644,
+      "encode_seconds": {
+        "network": 1.0353457998717204,
+        "tables": 1.0355278003553394,
+        "coder": 0.3730027995770797
+      },
+      "byte_accounting_closes": true
+    },
+    "m13_recal@4bit": {
+      "arm": "m13_recal",
+      "bits": 4,
+      "total_motion_bytes": 184298,
+      "total_residual_bytes": 2826858,
+      "total_i_frame_residual_bytes": 428654,
+      "total_p_frame_residual_bytes": 2398204,
+      "total_container_overhead_bytes": 16191,
+      "total_container_bytes": 3027347,
+      "total_pixels": 47120384,
+      "stream_bpp": 0.5139766263364917,
+      "compression_ratio": 46.694730402560396,
+      "mean_psnr_db": 28.975823210025826,
+      "mean_msssim": 0.9676500558853149,
+      "p_frame_ideal_bits": 19182749.01101444,
+      "p_frames": 644,
+      "encode_seconds": {
+        "network": 1.0213197998527903,
+        "tables": 0.9900080000807066,
+        "coder": 0.3708877002063673
+      },
+      "byte_accounting_closes": true
+    },
+    "m11_op@3bit": {
+      "arm": "m11_op",
+      "bits": 3,
+      "total_motion_bytes": 188896,
+      "total_residual_bytes": 1773486,
+      "total_i_frame_residual_bytes": 273015,
+      "total_p_frame_residual_bytes": 1500471,
+      "total_container_overhead_bytes": 16191,
+      "total_container_bytes": 1978573,
+      "total_pixels": 47120384,
+      "stream_bpp": 0.33591797554111613,
+      "compression_ratio": 71.44601285876234,
+      "mean_psnr_db": 27.94585245763195,
+      "mean_msssim": 0.9472528960969713,
+      "p_frame_ideal_bits": 12000891.981848527,
+      "p_frames": 644,
+      "encode_seconds": {
+        "network": 0.6990848005225416,
+        "tables": 0.623283899971284,
+        "coder": 0.25256520029506646
+      },
+      "byte_accounting_closes": true
+    },
+    "m13_recal@3bit": {
+      "arm": "m13_recal",
+      "bits": 3,
+      "total_motion_bytes": 188896,
+      "total_residual_bytes": 1712941,
+      "total_i_frame_residual_bytes": 273015,
+      "total_p_frame_residual_bytes": 1439926,
+      "total_container_overhead_bytes": 16191,
+      "total_container_bytes": 1918028,
+      "total_pixels": 47120384,
+      "stream_bpp": 0.3256387723835188,
+      "compression_ratio": 73.70129737417807,
+      "mean_psnr_db": 27.94585245763195,
+      "mean_msssim": 0.9472528960969713,
+      "p_frame_ideal_bits": 11516390.987485312,
+      "p_frames": 644,
+      "encode_seconds": {
+        "network": 0.6708893999166321,
+        "tables": 0.6102942996076308,
+        "coder": 0.235794099397026
+      },
+      "byte_accounting_closes": true
+    }
+  },
+  "per_sequence": [
+    {
+      "sequence": "bmx-bumps",
+      "bits": 5,
+      "m11_op_residual_bytes": 592191,
+      "m13_recal_residual_bytes": 589126,
+      "m13_vs_m11_op_percent": -0.5175695003807893
+    },
+    {
+      "sequence": "car-turn",
+      "bits": 5,
+      "m11_op_residual_bytes": 395776,
+      "m13_recal_residual_bytes": 388667,
+      "m13_vs_m11_op_percent": -1.7962180627425617
+    },
+    {
+      "sequence": "cat-girl",
+      "bits": 5,
+      "m11_op_residual_bytes": 630174,
+      "m13_recal_residual_bytes": 625901,
+      "m13_vs_m11_op_percent": -0.678066692691225
+    },
+    {
+      "sequence": "cows",
+      "bits": 5,
+      "m11_op_residual_bytes": 634992,
+      "m13_recal_residual_bytes": 630199,
+      "m13_vs_m11_op_percent": -0.754812659057122
+    },
+    {
+      "sequence": "drift-chicane",
+      "bits": 5,
+      "m11_op_residual_bytes": 196284,
+      "m13_recal_residual_bytes": 188553,
+      "m13_vs_m11_op_percent": -3.9386806871675737
+    },
+    {
+      "sequence": "drone",
+      "bits": 5,
+      "m11_op_residual_bytes": 549950,
+      "m13_recal_residual_bytes": 544114,
+      "m13_vs_m11_op_percent": -1.0611873806709702
+    },
+    {
+      "sequence": "gold-fish",
+      "bits": 5,
+      "m11_op_residual_bytes": 464319,
+      "m13_recal_residual_bytes": 462919,
+      "m13_vs_m11_op_percent": -0.30151684510002824
+    },
+    {
+      "sequence": "schoolgirls",
+      "bits": 5,
+      "m11_op_residual_bytes": 463518,
+      "m13_recal_residual_bytes": 459171,
+      "m13_vs_m11_op_percent": -0.937827657178362
+    },
+    {
+      "sequence": "surf",
+      "bits": 5,
+      "m11_op_residual_bytes": 236447,
+      "m13_recal_residual_bytes": 224036,
+      "m13_vs_m11_op_percent": -5.248956425752917
+    },
+    {
+      "sequence": "bmx-bumps",
+      "bits": 4,
+      "m11_op_residual_bytes": 418733,
+      "m13_recal_residual_bytes": 413784,
+      "m13_vs_m11_op_percent": -1.1818987278289508
+    },
+    {
+      "sequence": "car-turn",
+      "bits": 4,
+      "m11_op_residual_bytes": 265038,
+      "m13_recal_residual_bytes": 255847,
+      "m13_vs_m11_op_percent": -3.4678046166964736
+    },
+    {
+      "sequence": "cat-girl",
+      "bits": 4,
+      "m11_op_residual_bytes": 455042,
+      "m13_recal_residual_bytes": 448428,
+      "m13_vs_m11_op_percent": -1.4534922051151322
+    },
+    {
+      "sequence": "cows",
+      "bits": 4,
+      "m11_op_residual_bytes": 442615,
+      "m13_recal_residual_bytes": 436362,
+      "m13_vs_m11_op_percent": -1.4127401918145566
+    },
+    {
+      "sequence": "drift-chicane",
+      "bits": 4,
+      "m11_op_residual_bytes": 125421,
+      "m13_recal_residual_bytes": 117168,
+      "m13_vs_m11_op_percent": -6.580237759226924
+    },
+    {
+      "sequence": "drone",
+      "bits": 4,
+      "m11_op_residual_bytes": 383244,
+      "m13_recal_residual_bytes": 374583,
+      "m13_vs_m11_op_percent": -2.259917963490622
+    },
+    {
+      "sequence": "gold-fish",
+      "bits": 4,
+      "m11_op_residual_bytes": 316490,
+      "m13_recal_residual_bytes": 313972,
+      "m13_vs_m11_op_percent": -0.7956017567695662
+    },
+    {
+      "sequence": "schoolgirls",
+      "bits": 4,
+      "m11_op_residual_bytes": 328141,
+      "m13_recal_residual_bytes": 322014,
+      "m13_vs_m11_op_percent": -1.8671851429720758
+    },
+    {
+      "sequence": "surf",
+      "bits": 4,
+      "m11_op_residual_bytes": 157134,
+      "m13_recal_residual_bytes": 144700,
+      "m13_vs_m11_op_percent": -7.9129914595186275
+    },
+    {
+      "sequence": "bmx-bumps",
+      "bits": 3,
+      "m11_op_residual_bytes": 257348,
+      "m13_recal_residual_bytes": 251907,
+      "m13_vs_m11_op_percent": -2.1142577366056856
+    },
+    {
+      "sequence": "car-turn",
+      "bits": 3,
+      "m11_op_residual_bytes": 156453,
+      "m13_recal_residual_bytes": 147800,
+      "m13_vs_m11_op_percent": -5.530734469776865
+    },
+    {
+      "sequence": "cat-girl",
+      "bits": 3,
+      "m11_op_residual_bytes": 293285,
+      "m13_recal_residual_bytes": 284921,
+      "m13_vs_m11_op_percent": -2.851833540753874
+    },
+    {
+      "sequence": "cows",
+      "bits": 3,
+      "m11_op_residual_bytes": 274595,
+      "m13_recal_residual_bytes": 269347,
+      "m13_vs_m11_op_percent": -1.9111782807407274
+    },
+    {
+      "sequence": "drift-chicane",
+      "bits": 3,
+      "m11_op_residual_bytes": 68281,
+      "m13_recal_residual_bytes": 61352,
+      "m13_vs_m11_op_percent": -10.147771708088634
+    },
+    {
+      "sequence": "drone",
+      "bits": 3,
+      "m11_op_residual_bytes": 235188,
+      "m13_recal_residual_bytes": 225854,
+      "m13_vs_m11_op_percent": -3.968739901695665
+    },
+    {
+      "sequence": "gold-fish",
+      "bits": 3,
+      "m11_op_residual_bytes": 183985,
+      "m13_recal_residual_bytes": 181572,
+      "m13_vs_m11_op_percent": -1.311519960866375
+    },
+    {
+      "sequence": "schoolgirls",
+      "bits": 3,
+      "m11_op_residual_bytes": 213193,
+      "m13_recal_residual_bytes": 206808,
+      "m13_vs_m11_op_percent": -2.9949388582176715
+    },
+    {
+      "sequence": "surf",
+      "bits": 3,
+      "m11_op_residual_bytes": 91158,
+      "m13_recal_residual_bytes": 83380,
+      "m13_vs_m11_op_percent": -8.532438184251518
+    }
+  ],
+  "ideal_vs_deployed": [
+    {
+      "bits": 5,
+      "old_ideal_bits": 28626993.042438213,
+      "new_ideal_bits": 28219194.334012516,
+      "ideal_gain_percent": 1.4245251250145412,
+      "byte_gain_percent": 1.4241069607296881,
+      "old_coder_overhead_percent": 0.01005679345196785,
+      "new_coder_overhead_percent": 0.010481043336943502,
+      "realized_gain_percent": 99.98069919691487
+    },
+    {
+      "bits": 4,
+      "old_ideal_bits": 19702650.039688006,
+      "new_ideal_bits": 19182749.01101444,
+      "ideal_gain_percent": 2.6387365538458276,
+      "byte_gain_percent": 2.6388394952265424,
+      "old_coder_overhead_percent": 0.015134818443139622,
+      "new_coder_overhead_percent": 0.015029071088327678,
+      "realized_gain_percent": 100.01903657061146
+    },
+    {
+      "bits": 3,
+      "old_ideal_bits": 12000891.981848527,
+      "new_ideal_bits": 11516390.987485312,
+      "ideal_gain_percent": 4.037208193324526,
+      "byte_gain_percent": 4.035066322508066,
+      "old_coder_overhead_percent": 0.023965036564142575,
+      "new_coder_overhead_percent": 0.0261975519758457,
+      "realized_gain_percent": 99.97089905596579
+    }
+  ],
+  "bd_rate": {
+    "m13_recal_vs_m11_op_psnr": -2.3720866739273094,
+    "m13_recal_vs_m11_op_msssim": -2.365660220579513
+  },
+  "latency": [
+    {
+      "bits": 5,
+      "arm": "m11_op",
+      "encode_ms": {
+        "network": 1.4859167696717948,
+        "tables": 1.5593006214855807,
+        "coder": 0.630051708302637
+      },
+      "decode_ms": {
+        "network": 5.240789908367666,
+        "tables": 2.7363739141913115,
+        "coder": 2.41739611844214
+      },
+      "encode_total_ms": 3.6752690994600123,
+      "decode_total_ms": 10.394559941001118
+    },
+    {
+      "bits": 5,
+      "arm": "m13_recal",
+      "encode_ms": {
+        "network": 1.4312068320035656,
+        "tables": 1.5534125773709047,
+        "coder": 0.6152958066314054
+      },
+      "decode_ms": {
+        "network": 4.949162735966011,
+        "tables": 2.071010402037895,
+        "coder": 1.0927000000508162
+      },
+      "encode_total_ms": 3.5999152160058756,
+      "decode_total_ms": 8.112873138054724
+    },
+    {
+      "bits": 4,
+      "arm": "m11_op",
+      "encode_ms": {
+        "network": 1.6076798134654042,
+        "tables": 1.6079624229120177,
+        "coder": 0.5791968937532294
+      },
+      "decode_ms": {
+        "network": 5.799402949734307,
+        "tables": 3.082725776784969,
+        "coder": 2.043282762744684
+      },
+      "encode_total_ms": 3.794839130130651,
+      "decode_total_ms": 10.925411489263961
+    },
+    {
+      "bits": 4,
+      "arm": "m13_recal",
+      "encode_ms": {
+        "network": 1.5859003103304197,
+        "tables": 1.5372795032309108,
+        "coder": 0.5759125779601977
+      },
+      "decode_ms": {
+        "network": 5.391443012090998,
+        "tables": 2.494368789710686,
+        "coder": 0.9434694089487149
+      },
+      "encode_total_ms": 3.6990923915215284,
+      "decode_total_ms": 8.829281210750398
+    },
+    {
+      "bits": 3,
+      "arm": "m11_op",
+      "encode_ms": {
+        "network": 1.0855354045381083,
+        "tables": 0.9678321428125528,
+        "coder": 0.39218198803581744
+      },
+      "decode_ms": {
+        "network": 3.669838820230172,
+        "tables": 1.9222357157062484,
+        "coder": 1.1706319867173407
+      },
+      "encode_total_ms": 2.4455495353864785,
+      "decode_total_ms": 6.762706522653762
+    },
+    {
+      "bits": 3,
+      "arm": "m13_recal",
+      "encode_ms": {
+        "network": 1.0417537265786214,
+        "tables": 0.9476619559124702,
+        "coder": 0.3661399058960031
+      },
+      "decode_ms": {
+        "network": 3.5765338504704305,
+        "tables": 1.38340714329388,
+        "coder": 0.5736052806479047
+      },
+      "encode_total_ms": 2.3555555883870944,
+      "decode_total_ms": 5.533546274412215
+    }
+  ],
+  "provenance": {
+    "5bit": {
+      "old_identity": "c4f1373f63ffbdfe",
+      "new_identity": "ec858dee10f8a955",
+      "calibration_signature": "928411732c587518",
+      "m10k_identity": "70fbfc21465d2a2f",
+      "old_codebook_id": "6f6ae53715c81031",
+      "new_codebook_id": "0125c60628d33154",
+      "smoothing_strength": 1024.0,
+      "m11_g16_checkpoint_selected_epoch": 19
+    },
+    "4bit": {
+      "old_identity": "1687b85e55d12934",
+      "new_identity": "be872c2beebd2f9b",
+      "calibration_signature": "eab9082596c6f980",
+      "m10k_identity": "00ac53e03a70fdc7",
+      "old_codebook_id": "15da16516904ae72",
+      "new_codebook_id": "2aebc9cc7fb5f8b7",
+      "smoothing_strength": 1024.0,
+      "m11_g16_checkpoint_selected_epoch": 19
+    },
+    "3bit": {
+      "old_identity": "a72c9dbdb00f7eee",
+      "new_identity": "d2d61d66a50cad8a",
+      "calibration_signature": "95a513136a72daf0",
+      "m10k_identity": "c52cb42b2b390a8b",
+      "old_codebook_id": "21c1f8a0a91a241b",
+      "new_codebook_id": "cdec309e1ab8a211",
+      "smoothing_strength": 256.0,
+      "m11_g16_checkpoint_selected_epoch": 19
+    }
+  },
+  "invariants": {
+    "symbols_identical": true,
+    "reconstruction_identical": true,
+    "motion_identical": true,
+    "metrics_identical": true,
+    "byte_accounting_closes": true
+  }
+}
