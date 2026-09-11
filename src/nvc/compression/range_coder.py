@@ -419,3 +419,129 @@ def decode_symbols(
 
     ensure_native_backend()
     return _decode_symbols_c(payload, num_symbols_to_decode, cumulative, table_index)
+
+
+# --- Resumable decoder (Milestone 12) -----------------------------------
+
+
+class ResumableDecoder:
+    """Decode a payload's symbols in successive GROUPS, resuming exactly
+    where the previous group left off, instead of re-decoding from byte 0.
+
+    `decode_symbols` above is stateless: every call walks the payload from
+    its first bit. M11's channel-autoregressive decoder needed each channel
+    GROUP's probability tables to depend on the groups decoded so far in the
+    SAME frame, and the only way to get that through a stateless decoder was
+    to call `decode_symbols(payload, count, ...)` again with a longer prefix
+    for every group - re-walking every bit already consumed each time. For
+    G groups covering N symbols that is O(N*G) bit-level work instead of
+    O(N), and it is what made a context needing many groups (one per
+    channel, let alone one per spatial position) impractically slow.
+
+    This class exposes the decoder's state - the bit position and the
+    interval integers low/high/value - as a handle that persists between
+    calls:
+
+        decoder = ResumableDecoder(payload)
+        first_group  = decoder.decode_group(cumulative_1, table_index_1)
+        second_group = decoder.decode_group(cumulative_2, table_index_2)
+        decoder.close()
+
+    or as a context manager:
+
+        with ResumableDecoder(payload) as decoder:
+            symbols = decoder.decode_group(cumulative, table_index)
+
+    Each `decode_group` call decodes exactly `len(table_index)` symbols
+    starting immediately after the previous call's last symbol (or the
+    start of the payload, for the first call) - group boundaries may be any
+    size, including 1. `decode_symbols(payload, n, cumulative, table_index)`
+    in one call is exactly equivalent to
+    `ResumableDecoder(payload).decode_group(cumulative, table_index)` in
+    one call decoding all n symbols: `decode_symbols`'s C implementation
+    (`rc_decode`) is now itself a thin wrapper over the same
+    open/decode/close primitives this class calls, so the two paths are
+    identical by construction, not merely by agreement in testing.
+
+    Always uses the native C backend - see this module's docstring. Raises
+    RuntimeError (via `ensure_native_backend()`) if it isn't available.
+    """
+
+    def __init__(self, payload: bytes) -> None:
+        ensure_native_backend()
+        self._lib = _native.load()
+        # The C reader holds a raw pointer into this buffer for the handle's
+        # whole lifetime - keep both the bytes and the numpy view over them
+        # alive on the Python side so nothing is garbage-collected under it.
+        self._payload = bytes(payload)
+        self._payload_array = np.frombuffer(self._payload, dtype=np.uint8)
+        payload_ptr = (
+            self._payload_array.ctypes.data_as(ctypes.POINTER(ctypes.c_uint8))
+            if self._payload_array.size else None
+        )
+        handle = self._lib.rc_decoder_open(payload_ptr, ctypes.c_int64(len(self._payload)))
+        if not handle:
+            raise MemoryError(
+                "Native range coder failed to allocate a resumable decoder state "
+                "(rc_decoder_open returned NULL) - the process is likely out of memory."
+            )
+        self._handle = handle
+        self._closed = False
+        self.symbols_decoded = 0
+
+    def decode_group(self, cumulative: np.ndarray, table_index: np.ndarray) -> np.ndarray:
+        """Decode the next `len(table_index)` symbols and advance the state.
+
+        `cumulative`/`table_index` follow the same convention as
+        `decode_symbols`: `cumulative[t]` is table t's cumulative frequency
+        row, and `table_index[i]` selects the table for the i-th symbol OF
+        THIS GROUP (not of the whole stream).
+        """
+        if self._closed:
+            raise RuntimeError("decode_group called on a closed ResumableDecoder")
+        table_index = np.asarray(table_index, dtype=np.int64)
+        cumulative = np.asarray(cumulative, dtype=np.int64)
+        n = len(table_index)
+        if n == 0:
+            raise ValueError("decode_group: refusing to decode an empty group")
+        _validate_inputs(np.zeros(n, dtype=np.int64), cumulative, table_index)
+
+        cumulative_arr = np.ascontiguousarray(cumulative, dtype=np.int64)
+        table_index_arr = np.ascontiguousarray(table_index, dtype=np.int64)
+        table_width = cumulative_arr.shape[1]
+        out = np.empty(n, dtype=np.int64)
+
+        status = self._lib.rc_decoder_decode(
+            self._handle, ctypes.c_int64(n),
+            cumulative_arr.ctypes.data_as(ctypes.POINTER(ctypes.c_int64)), ctypes.c_int64(table_width),
+            table_index_arr.ctypes.data_as(ctypes.POINTER(ctypes.c_int64)),
+            out.ctypes.data_as(ctypes.POINTER(ctypes.c_int64)),
+        )
+        if status != 0:
+            raise RuntimeError(
+                f"Native resumable range coder rejected its inputs (status {status}) - "
+                "this indicates a bug in the calling code, not bad input data."
+            )
+        self.symbols_decoded += n
+        return out
+
+    def close(self) -> None:
+        """Free the native decoder state. Safe to call more than once."""
+        if not self._closed:
+            self._lib.rc_decoder_close(self._handle)
+            self._closed = True
+
+    def __enter__(self) -> "ResumableDecoder":
+        return self
+
+    def __exit__(self, *exc_info) -> None:
+        self.close()
+
+    def __del__(self) -> None:
+        # Best-effort: __init__ can raise before self._closed is set (e.g.
+        # ensure_native_backend() failing), so this must not assume any
+        # attribute exists.
+        try:
+            self.close()
+        except Exception:
+            pass

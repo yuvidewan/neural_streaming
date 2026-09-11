@@ -13,6 +13,45 @@ the time.
 
 ---
 
+## 2026-09-10 — M12: a resumable arithmetic decoder, and a spatial-context ceiling check (RESUMABLE DECODER SUCCESS, WEAK SPATIAL SIGNAL)
+
+**Source:** M11's channel-autoregressive entropy model (G16) decodes each group via a prefix
+redecode — correct, but the coder re-walks every already-consumed bit from the start on each call.
+M12 asks two independent questions: (1) can the decoder be made resumable — stateful across calls —
+without touching the bitstream; and (2) once resumable, does spatially-causal context (left / up /
+neighbourhood) add anything beyond M11-G16's channel context?
+**Tests:** 40 new (`test_m12_resumable_decoder.py`: 31, `test_m12_spatial_offline_gate.py`: 9); full
+suite green, zero regressions.
+**Scope:** M10H motion estimator, quantization, M10K/M10L entropy models, M11-G16 operating point,
+GOP, λ=3.0e-4, calibration, `.nvct` v2 all frozen. No bitstream change — the resumable decoder is
+byte-exact to the existing one by construction, not by comparison.
+
+### Part 1 — resumable decoding
+
+Split the decoder's state (`low`/`high`/`value`, bit-reader position) from its loop:
+`rc_decoder_open` / `rc_decoder_decode` / `rc_decoder_close` in the native range coder, wrapped by a
+Python `ResumableDecoder`. The legacy `rc_decode` becomes a thin wrapper over the same three calls,
+so equivalence to the old path holds by construction. Coder-step speedup: **2.0–2.2×** at G=16
+(M11's deployed group size), **5.0–7.1×** at G=1.
+
+### Part 2 — is there anything left for spatial context to find?
+
+Reused M11's own causal-context offline-gate machinery, parent distribution swapped from M10L to
+M11-G16's own codebook, with a strategic rule fixed before measuring: M11-G16 already ships and
+works, so a new context needs to clear a higher, pre-registered bar (≥1.0% = "meaningful") to be
+worth the resumable-decoder cost of deploying it. Net gain (whole-split, permutation-controlled):
+**0.31–0.91%** at 5/4/3-bit — real, but never crosses 1.0% at any rate point.
+
+### Verdict: RESUMABLE DECODER SUCCESS, WEAK SPATIAL SIGNAL
+
+The resumable decoder ships as infrastructure — a strict win (byte-exact, faster, no format change)
+independent of what ends up conditioning on it. Spatial context is measured, not deployed: below its
+own pre-registered bar, reported as a negative result rather than force-fit into a deployment. (M13
+found a better lever on the same codebook: recalibrating its *frequency table*, not its context,
+gained +1.6–5.1% offline with zero spatial context at all.)
+
+---
+
 ## 2026-09-10 — M11: decoded residuals know where motion compensation failed (AUTOREGRESSIVE ENTROPY SUCCESS)
 
 **Source:** M10K/M10L model P(R | z_ref, channel). M11 asks whether residual symbols the decoder has

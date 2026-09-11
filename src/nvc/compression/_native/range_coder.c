@@ -1,4 +1,7 @@
-/* C port of nvc/compression/range_coder.py's encode_symbols/decode_symbols.
+/* C port of nvc/compression/range_coder.py's encode_symbols/decode_symbols,
+ * plus (Milestone 12) a resumable decoder: rc_decoder_open/_decode/_close,
+ * used by ResumableDecoder in range_coder.py. See that class's docstring
+ * and this file's "Resumable decoder" section below for why it exists.
  *
  * Kept structurally identical to the Python reference on purpose - same
  * variable names, same control flow, same order of operations - so the two
@@ -232,13 +235,138 @@ void rc_free(uint8_t *ptr) {
     free(ptr);
 }
 
+/* ---- Resumable decoder (Milestone 12) --------------------------------
+ *
+ * The decoder's full state between symbols is exactly: the BitReader
+ * (payload pointer + bit position) and the three interval integers
+ * low/high/value. rc_decode below used to hold these as locals inside one
+ * function that ran the whole stream in a single call. That is why the
+ * only way M11 could decode a GROUP of symbols using tables built from
+ * symbols decoded earlier in the SAME frame was to call rc_decode again
+ * from byte 0 with a longer prefix each time - there was nowhere to keep
+ * the state between calls, so the decoder had to re-derive it from
+ * scratch every time, re-walking every bit already consumed. For G
+ * sequential groups covering N symbols total that is O(N*G/2) bit-level
+ * work instead of O(N).
+ *
+ * The fix: pull that state out into RCDecoderState, malloc'd by
+ * rc_decoder_open and freed by rc_decoder_close, and give
+ * rc_decoder_decode the SAME loop body as the old rc_decode but reading
+ * from and writing back to that struct instead of locals. Decoding N
+ * symbols in one rc_decoder_decode call, or across several calls with
+ * arbitrary group boundaries, now visits each bit of the payload exactly
+ * once in total, matching a single-call decode bit-for-bit.
+ *
+ * rc_decode is kept as the existing entry point and is now a thin wrapper
+ * over open/decode/close - so its output is identical to the resumable
+ * path by construction, not merely by a separate implementation that
+ * happens to agree. Nothing about its signature, its return codes or its
+ * behavior on any existing caller changes.
+ */
+typedef struct {
+    BitReader reader;
+    int64_t low;
+    int64_t high;
+    int64_t value;
+} RCDecoderState;
+
+/* Returns NULL on OOM or on a NULL payload with nonzero payload_len -
+ * the same input this family already rejects everywhere else. The
+ * returned handle owns no reference to `payload`; the caller must keep
+ * that buffer alive for as long as the handle is used, exactly as
+ * `BitReader` has always required. */
+NVC_EXPORT
+void *rc_decoder_open(const uint8_t *payload, int64_t payload_len) {
+    if (payload == NULL && payload_len != 0) {
+        return NULL;
+    }
+    RCDecoderState *dec = (RCDecoderState *)malloc(sizeof(RCDecoderState));
+    if (dec == NULL) {
+        return NULL;
+    }
+    br_init(&dec->reader, payload, payload_len);
+    dec->low = 0;
+    dec->high = WHOLE - 1;
+    dec->value = 0;
+    for (int i = 0; i < PRECISION; i++) {
+        dec->value = (dec->value << 1) | br_read(&dec->reader);
+    }
+    return (void *)dec;
+}
+
+/* Decodes the NEXT `n` symbols starting from wherever `handle` last left
+ * off (the beginning of the stream, on the first call), writing them to
+ * out_symbols[0..n) and advancing `handle`'s state in place so the next
+ * call picks up exactly where this one stopped. Returns 0 on success, -1
+ * on invalid input (same conditions rc_decode has always rejected, plus a
+ * NULL handle) - never allocates, so there is no OOM path here. */
+NVC_EXPORT
+int32_t rc_decoder_decode(
+    void *handle, int64_t n,
+    const int64_t *cumulative, int64_t table_width,
+    const int64_t *table_index,
+    int64_t *out_symbols
+) {
+    if (handle == NULL || cumulative == NULL || table_index == NULL || out_symbols == NULL
+        || n <= 0 || table_width <= 0) {
+        return -1;
+    }
+    RCDecoderState *dec = (RCDecoderState *)handle;
+
+    for (int64_t pos = 0; pos < n; pos++) {
+        int64_t table = table_index[pos];
+        const int64_t *cum = cumulative + table * table_width;
+        int64_t total = cum[table_width - 1];
+        int64_t span = dec->high - dec->low + 1;
+
+        int64_t scaled = ((dec->value - dec->low + 1) * total - 1) / span;
+        int64_t symbol = bisect_right_i64(cum, table_width, scaled) - 1;
+        out_symbols[pos] = symbol;
+
+        dec->high = dec->low + (span * cum[symbol + 1]) / total - 1;
+        dec->low = dec->low + (span * cum[symbol]) / total;
+
+        for (;;) {
+            if (dec->high < HALF) {
+                /* leading bit settled at 0; nothing to undo here */
+            } else if (dec->low >= HALF) {
+                dec->value -= HALF;
+                dec->low -= HALF;
+                dec->high -= HALF;
+            } else if (dec->low >= QUARTER && dec->high < THREE_QUARTERS) {
+                dec->value -= QUARTER;
+                dec->low -= QUARTER;
+                dec->high -= QUARTER;
+            } else {
+                break;
+            }
+            dec->low <<= 1;
+            dec->high = (dec->high << 1) | 1;
+            dec->value = (dec->value << 1) | br_read(&dec->reader);
+        }
+    }
+    return 0;
+}
+
+NVC_EXPORT
+void rc_decoder_close(void *handle) {
+    free(handle);
+}
+
 /* Inverse of rc_encode. out_symbols must already be allocated by the
  * caller, sized for n int64_t values. Returns 0 on success, -1 if any
  * required pointer is NULL (defensive - should never happen from the
  * Python wrapper, which always supplies real buffers; guards against a
  * ctypes-level misuse bug rather than a normal runtime condition) or if
- * n/table_width are non-positive. Never allocates, so there is no OOM
- * path here the way there is in rc_encode. */
+ * n/table_width are non-positive. Never allocates on its own account, but
+ * now delegates to rc_decoder_open, which can OOM - reported the same
+ * way, as a -1 return with out_symbols untouched.
+ *
+ * This is now exactly rc_decoder_open + one rc_decoder_decode call for
+ * the whole stream + rc_decoder_close: a thin wrapper over the resumable
+ * primitives above, so its output is identical to
+ * ResumableDecoder(payload).decode_group(...) called once for all n
+ * symbols BY CONSTRUCTION - both run this same code. */
 NVC_EXPORT
 int32_t rc_decode(
     const uint8_t *payload, int64_t payload_len,
@@ -251,48 +379,12 @@ int32_t rc_decode(
         || n <= 0 || table_width <= 0 || (payload == NULL && payload_len != 0)) {
         return -1;
     }
-
-    BitReader r;
-    br_init(&r, payload, payload_len);
-
-    int64_t low = 0;
-    int64_t high = WHOLE - 1;
-    int64_t value = 0;
-    for (int i = 0; i < PRECISION; i++) {
-        value = (value << 1) | br_read(&r);
+    void *handle = rc_decoder_open(payload, payload_len);
+    if (handle == NULL) {
+        return -1;
     }
-
-    for (int64_t pos = 0; pos < n; pos++) {
-        int64_t table = table_index[pos];
-        const int64_t *cum = cumulative + table * table_width;
-        int64_t total = cum[table_width - 1];
-        int64_t span = high - low + 1;
-
-        int64_t scaled = ((value - low + 1) * total - 1) / span;
-        int64_t symbol = bisect_right_i64(cum, table_width, scaled) - 1;
-        out_symbols[pos] = symbol;
-
-        high = low + (span * cum[symbol + 1]) / total - 1;
-        low = low + (span * cum[symbol]) / total;
-
-        for (;;) {
-            if (high < HALF) {
-                /* leading bit settled at 0; nothing to undo here */
-            } else if (low >= HALF) {
-                value -= HALF;
-                low -= HALF;
-                high -= HALF;
-            } else if (low >= QUARTER && high < THREE_QUARTERS) {
-                value -= QUARTER;
-                low -= QUARTER;
-                high -= QUARTER;
-            } else {
-                break;
-            }
-            low <<= 1;
-            high = (high << 1) | 1;
-            value = (value << 1) | br_read(&r);
-        }
-    }
-    return 0;
+    int32_t status = rc_decoder_decode(handle, n, cumulative, table_width, table_index,
+                                        out_symbols);
+    rc_decoder_close(handle);
+    return status;
 }

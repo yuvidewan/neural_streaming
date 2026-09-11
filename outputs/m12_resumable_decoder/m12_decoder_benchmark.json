@@ -1,0 +1,149 @@
+{
+  "phase": "M12 Phase A4",
+  "rate_points": [
+    {
+      "bits": 5,
+      "correctness_g16": {
+        "frames_checked": 10,
+        "mismatches": 0,
+        "all_identical": true
+      },
+      "group_size_benchmarks": [
+        {
+          "group_size": 16,
+          "frames": 40,
+          "symbols_identical": true,
+          "legacy_decode_ms": {
+            "network": 3.391650003322866,
+            "tables": 1.2644650065340102,
+            "coder": 1.8278699986694846,
+            "total": 6.483985008526361
+          },
+          "resumable_decode_ms": {
+            "network": 3.353134998178575,
+            "tables": 1.2432074967364315,
+            "coder": 0.8322175039211288,
+            "total": 5.4285599988361355
+          },
+          "coder_speedup": 2.196384947513332,
+          "total_speedup": 1.1944208058705263
+        },
+        {
+          "group_size": 1,
+          "frames": 40,
+          "symbols_identical": true,
+          "legacy_decode_ms": {
+            "network": 51.366982499166625,
+            "tables": 19.835045003856067,
+            "coder": 23.756345023139147,
+            "total": 94.95837252616184
+          },
+          "resumable_decode_ms": {
+            "network": 47.66740248451242,
+            "tables": 18.974720012192847,
+            "coder": 3.3226824714802206,
+            "total": 69.96480496818549
+          },
+          "coder_speedup": 7.149748802977235,
+          "total_speedup": 1.357230575706478
+        }
+      ]
+    },
+    {
+      "bits": 4,
+      "correctness_g16": {
+        "frames_checked": 10,
+        "mismatches": 0,
+        "all_identical": true
+      },
+      "group_size_benchmarks": [
+        {
+          "group_size": 16,
+          "frames": 40,
+          "symbols_identical": true,
+          "legacy_decode_ms": {
+            "network": 3.1341924906882923,
+            "tables": 1.2291700048081111,
+            "coder": 1.4274124980147462,
+            "total": 5.79077499351115
+          },
+          "resumable_decode_ms": {
+            "network": 3.1615475039870944,
+            "tables": 1.2419475067872554,
+            "coder": 0.6859800036181696,
+            "total": 5.089475014392519
+          },
+          "coder_speedup": 2.0808368909967134,
+          "total_speedup": 1.1377941687768238
+        },
+        {
+          "group_size": 1,
+          "frames": 40,
+          "symbols_identical": true,
+          "legacy_decode_ms": {
+            "network": 49.17736999996123,
+            "tables": 19.228637533524306,
+            "coder": 19.09591248986544,
+            "total": 87.50192002335098
+          },
+          "resumable_decode_ms": {
+            "network": 49.0057649964001,
+            "tables": 19.31617250229465,
+            "coder": 3.1914925115415826,
+            "total": 71.51343001023633
+          },
+          "coder_speedup": 5.983380008196092,
+          "total_speedup": 1.223573250658318
+        }
+      ]
+    },
+    {
+      "bits": 3,
+      "correctness_g16": {
+        "frames_checked": 10,
+        "mismatches": 0,
+        "all_identical": true
+      },
+      "group_size_benchmarks": [
+        {
+          "group_size": 16,
+          "frames": 40,
+          "symbols_identical": true,
+          "legacy_decode_ms": {
+            "network": 3.1235650036251172,
+            "tables": 1.2022000060824212,
+            "coder": 1.129700002638856,
+            "total": 5.455465012346394
+          },
+          "resumable_decode_ms": {
+            "network": 3.1561499999952503,
+            "tables": 1.1993975029326975,
+            "coder": 0.5520624996279366,
+            "total": 4.907610002555884
+          },
+          "coder_speedup": 2.0463262826223825,
+          "total_speedup": 1.1116337707163337
+        },
+        {
+          "group_size": 1,
+          "frames": 40,
+          "symbols_identical": true,
+          "legacy_decode_ms": {
+            "network": 49.254657477285946,
+            "tables": 19.514422486099647,
+            "coder": 15.258637495571747,
+            "total": 84.02771745895734
+          },
+          "resumable_decode_ms": {
+            "network": 49.75908497654018,
+            "tables": 19.52790499344701,
+            "coder": 3.0537550199369434,
+            "total": 72.34074498992413
+          },
+          "coder_speedup": 4.9966802824565875,
+          "total_speedup": 1.1615544942295108
+        }
+      ]
+    }
+  ]
+}

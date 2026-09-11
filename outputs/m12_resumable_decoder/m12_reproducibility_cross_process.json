@@ -1,0 +1,3 @@
+[DEVICE] GPU available: NVIDIA GeForce RTX 5060 Laptop GPU (8.0 GB VRAM)
+    4-bit data: cache hit m11_data_4bit_68be6bb957032ff8e715.pt
+{"torch": "2.13.0+cu130", "device": "cuda", "combined_digest": "5fa8f40e2c68bca00c42b06436cb02b450fbf63dd44a0798dfcc756ef758bd5e", "calibration_signature": "0faff18bf8d578f20b8d0bc99ed91958c16d01a44cdee1a98328ec7b081bdca1"}

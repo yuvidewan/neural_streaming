@@ -20,18 +20,37 @@ Deliberately plain ctypes + a `gcc -shared` call, not a CPython C-API
 extension built via setuptools: the compiled library doesn't link against
 Python at all, so the same .dll/.so works unchanged across Python versions
 and doesn't need to match a specific build's ABI.
+
+COMPILER SELECTION
+------------------
+A machine can have more than one compiler on PATH, and `shutil.which` only
+ever returns the first match by name - on Windows in particular, a 32-bit-
+only MinGW install earlier on PATH than a working 64-bit one is a real
+configuration (observed in the wild, not hypothetical), and it fails
+silently: the build succeeds, but the resulting DLL is architecture-
+mismatched against a 64-bit Python and `ctypes.CDLL` raises a cryptic
+`WinError 193 ("%1 is not a valid Win32 application")` at LOAD time, not at
+build time. `_select_compiler` below scans every PATH directory (not just
+the first hit) and prefers whichever candidate's own `-dumpmachine` output
+confirms matches the running Python's bitness, falling back to the old
+first-found-by-name behavior only when no candidate's target architecture
+can be determined at all.
 """
 
 from __future__ import annotations
 
 import ctypes
+import os
 import platform
 import shutil
+import struct
 import subprocess
 from pathlib import Path
 
 _NATIVE_DIR = Path(__file__).resolve().parent
 _SOURCE = _NATIVE_DIR / "range_coder.c"
+
+_COMPILER_NAMES = ("gcc", "cc", "clang")
 
 _lib = None
 _load_attempted = False
@@ -58,6 +77,72 @@ def last_error() -> str | None:
     return _last_error
 
 
+def _candidate_compilers() -> list[str]:
+    """Every `gcc`/`cc`/`clang` found on PATH, in PATH order, deduplicated.
+
+    `shutil.which(name)` alone only reports the first directory that has a
+    match for ONE name - it can't tell you there was a second, later `gcc`
+    that might be the one you actually want. This walks PATH directory by
+    directory and checks each candidate name in each, so every compiler on
+    PATH is considered, not just the first name/directory combination.
+    """
+    seen: set[str] = set()
+    candidates: list[str] = []
+    for directory in os.environ.get("PATH", "").split(os.pathsep):
+        if not directory:
+            continue
+        for name in _COMPILER_NAMES:
+            found = shutil.which(name, path=directory)
+            if found and found not in seen:
+                seen.add(found)
+                candidates.append(found)
+    return candidates
+
+
+def _compiler_matches_python_bitness(compiler: str) -> bool | None:
+    """Does `compiler`'s target architecture match the running Python's
+    (32-bit vs 64-bit)? Returns None when that can't be determined (no
+    `-dumpmachine` support, an unrecognized triple, or the subprocess call
+    itself failing) - callers must treat None as "unknown", not "no"."""
+    try:
+        result = subprocess.run([compiler, "-dumpmachine"], capture_output=True,
+                                 timeout=5, text=True)
+    except (subprocess.TimeoutExpired, OSError):
+        return None
+    if result.returncode != 0:
+        return None
+
+    triple = result.stdout.strip().lower()
+    is_64bit_triple = any(tag in triple for tag in
+                          ("x86_64", "amd64", "win64", "aarch64", "arm64",
+                           "powerpc64", "mips64", "riscv64"))
+    # Classic mingw.org's `gcc -dumpmachine` prints the bare word "mingw32"
+    # (not a full target triple) and that toolchain only ever targets
+    # 32-bit x86 - handled explicitly since it won't match the general
+    # "32" triple tags below.
+    is_32bit_triple = triple == "mingw32" or any(
+        tag in triple for tag in ("i386", "i486", "i586", "i686", "win32", "arm-"))
+    if is_64bit_triple and not is_32bit_triple:
+        return struct.calcsize("P") * 8 == 64
+    if is_32bit_triple and not is_64bit_triple:
+        return struct.calcsize("P") * 8 == 32
+    return None  # ambiguous or unrecognized triple - can't tell
+
+
+def _select_compiler() -> str | None:
+    """Pick a C compiler from PATH, preferring one confirmed to match the
+    running Python's bitness (see the module docstring's "COMPILER
+    SELECTION" section) over merely being first on PATH by name."""
+    candidates = _candidate_compilers()
+    for candidate in candidates:
+        if _compiler_matches_python_bitness(candidate) is True:
+            return candidate
+    # No candidate could be CONFIRMED to match (every -dumpmachine call
+    # failed, or every triple was unrecognized) - fall back to the simple
+    # first-found-by-name choice rather than refusing to build at all.
+    return candidates[0] if candidates else None
+
+
 def _build() -> bool:
     """Try to compile the shared library. Returns True on success, never
     raises. Records a specific reason via `_set_error` on failure."""
@@ -65,7 +150,7 @@ def _build() -> bool:
         _set_error(f"native source file missing: {_SOURCE}")
         return False
 
-    compiler = shutil.which("gcc") or shutil.which("cc") or shutil.which("clang")
+    compiler = _select_compiler()
     if compiler is None:
         _set_error(
             "no C compiler (gcc/cc/clang) found on PATH - install one (e.g. "
@@ -145,6 +230,22 @@ def load():
 
         lib.rc_free.argtypes = [c_u8_p]
         lib.rc_free.restype = None
+
+        # Milestone 12: resumable decoder - see range_coder.py's
+        # ResumableDecoder and range_coder.c's "Resumable decoder" section.
+        lib.rc_decoder_open.argtypes = [c_u8_p, ctypes.c_int64]
+        lib.rc_decoder_open.restype = ctypes.c_void_p
+
+        lib.rc_decoder_decode.argtypes = [
+            ctypes.c_void_p, ctypes.c_int64,   # handle, n
+            c_i64_p, ctypes.c_int64,           # cumulative, table_width
+            c_i64_p,                           # table_index
+            c_i64_p,                           # out_symbols
+        ]
+        lib.rc_decoder_decode.restype = ctypes.c_int32
+
+        lib.rc_decoder_close.argtypes = [ctypes.c_void_p]
+        lib.rc_decoder_close.restype = None
     except AttributeError as exc:
         _set_error(f"{binary} loaded but is missing an expected symbol: {exc}")
         return None

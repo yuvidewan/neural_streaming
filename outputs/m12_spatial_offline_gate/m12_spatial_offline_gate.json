@@ -1,0 +1,756 @@
+{
+  "phase": "M12 Phase B1-B3 offline gate",
+  "checkpoint": "outputs\\m10f_lambda_boundary\\lambda_3.0e-04_seed42\\best.pt",
+  "parent_model": "m11_G16 (group_size=16, K=512 codebook)",
+  "weak_below_percent": 0.5,
+  "meaningful_above_percent": 1.0,
+  "control_tolerance_percent": 0.1,
+  "scan_order": "C-major raster: i = c*H*W + y*W + x",
+  "contexts": {
+    "left": {
+      "family": "spatial",
+      "description": "magnitude of (c, y, x-1)",
+      "definition_id": "b051ef5779438ee5"
+    },
+    "up": {
+      "family": "spatial",
+      "description": "magnitude of (c, y-1, x)",
+      "definition_id": "02461ed65557bfeb"
+    },
+    "left_up": {
+      "family": "spatial",
+      "description": "left x up",
+      "definition_id": "e0fd63549b3e249f"
+    },
+    "left_up_upleft": {
+      "family": "spatial",
+      "description": "left x up x up-left",
+      "definition_id": "aa75b50f8dbf6783"
+    },
+    "neighbourhood": {
+      "family": "spatial",
+      "description": "bucketed sum over left, up, up-left, up-right",
+      "definition_id": "f9f06f0730859ef8"
+    }
+  },
+  "rate_points": [
+    {
+      "bits": 5,
+      "alphabet": 32,
+      "channels": 64,
+      "height": 16,
+      "width": 16,
+      "train_p_frames": 536,
+      "val_a_p_frames": 180,
+      "val_b_p_frames": 144,
+      "val_sequence_ids": [
+        "bmx-trees",
+        "car-roundabout",
+        "dogs-scale",
+        "drift-straight",
+        "mallard-water",
+        "pigs",
+        "skate-park",
+        "stunt",
+        "upside-down"
+      ],
+      "data_from_cache": true,
+      "baselines_val_b_bits": {
+        "m11_g16_deployed": 2.805255386345526,
+        "m11_g16_recalibrated": 2.7602648205638323
+      },
+      "recalibration_gain_percent": 1.6037957185888911,
+      "recalibration_strength": 1024.0,
+      "zero_symbols": [
+        16,
+        16,
+        15,
+        16,
+        15,
+        15,
+        15,
+        15,
+        17,
+        16,
+        15,
+        15,
+        15,
+        14,
+        15,
+        16,
+        15,
+        15,
+        15,
+        15,
+        16,
+        15,
+        16,
+        15,
+        15,
+        15,
+        15,
+        16,
+        16,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        17,
+        16,
+        14,
+        15,
+        15,
+        15,
+        15,
+        16,
+        16,
+        15,
+        16,
+        15,
+        15,
+        16,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        16,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        16
+      ],
+      "candidates": [
+        {
+          "context": "left",
+          "family": "spatial",
+          "cardinality": 5,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 2560,
+          "real": {
+            "strength": 1024.0,
+            "val_b_bits": 2.7473349614421534,
+            "val_a_bits": 3.0976398737915796
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 2.7602643280097197,
+            "val_a_bits": 3.109167124026101
+          },
+          "context_gain_percent": 0.4684282111394561,
+          "control_gain_percent": 1.7844451334460078e-05,
+          "net_gain_percent": 0.46841036668812164,
+          "vs_m11_g16_deployed_percent": 2.06471129813343,
+          "selection_net_percent": 0.37070283036670065
+        },
+        {
+          "context": "up",
+          "family": "spatial",
+          "cardinality": 5,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 2560,
+          "real": {
+            "strength": 1024.0,
+            "val_b_bits": 2.750326944951196,
+            "val_a_bits": 3.0970037033298135
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 2.7602647428648512,
+            "val_a_bits": 3.109167991409317
+          },
+          "context_gain_percent": 0.3600334119610486,
+          "control_gain_percent": 2.8149103828041368e-06,
+          "net_gain_percent": 0.3600305970506658,
+          "vs_m11_g16_deployed_percent": 1.958054930103419,
+          "selection_net_percent": 0.39116396160474204
+        },
+        {
+          "context": "left_up",
+          "family": "spatial",
+          "cardinality": 25,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 12800,
+          "real": {
+            "strength": 1024.0,
+            "val_b_bits": 2.746540649531524,
+            "val_a_bits": 3.095305717386749
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 2.76026478011733,
+            "val_a_bits": 3.1091662488282874
+          },
+          "context_gain_percent": 0.49720486708607775,
+          "control_gain_percent": 1.4653123803989085e-06,
+          "net_gain_percent": 0.4972034017736974,
+          "vs_m11_g16_deployed_percent": 2.0930264353040267,
+          "selection_net_percent": 0.445776231915033
+        },
+        {
+          "context": "left_up_upleft",
+          "family": "spatial",
+          "cardinality": 125,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 64000,
+          "real": {
+            "strength": 1024.0,
+            "val_b_bits": 2.7505045645607873,
+            "val_a_bits": 3.100371077544681
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 2.760264872448111,
+            "val_a_bits": 3.1091658272889604
+          },
+          "context_gain_percent": 0.35359853628288,
+          "control_gain_percent": -1.8796848137425085e-06,
+          "net_gain_percent": 0.35359853628288,
+          "vs_m11_g16_deployed_percent": 1.9517232566858733,
+          "selection_net_percent": 0.28285920701629386
+        },
+        {
+          "context": "neighbourhood",
+          "family": "spatial",
+          "cardinality": 4,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 2048,
+          "real": {
+            "strength": 1024.0,
+            "val_b_bits": 2.745355374329631,
+            "val_a_bits": 3.0907198952516572
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 2.7602641814975195,
+            "val_a_bits": 3.1091680115659743
+          },
+          "context_gain_percent": 0.5401455006464168,
+          "control_gain_percent": 2.3152355092763276e-05,
+          "net_gain_percent": 0.540122348291324,
+          "vs_m11_g16_deployed_percent": 2.1352783888217903,
+          "selection_net_percent": 0.5932698899511725
+        }
+      ],
+      "best_by_val_a": "neighbourhood"
+    },
+    {
+      "bits": 4,
+      "alphabet": 16,
+      "channels": 64,
+      "height": 16,
+      "width": 16,
+      "train_p_frames": 536,
+      "val_a_p_frames": 180,
+      "val_b_p_frames": 144,
+      "val_sequence_ids": [
+        "bmx-trees",
+        "car-roundabout",
+        "dogs-scale",
+        "drift-straight",
+        "mallard-water",
+        "pigs",
+        "skate-park",
+        "stunt",
+        "upside-down"
+      ],
+      "data_from_cache": true,
+      "baselines_val_b_bits": {
+        "m11_g16_deployed": 1.959684551086585,
+        "m11_g16_recalibrated": 1.902548925074754
+      },
+      "recalibration_gain_percent": 2.9155521984469908,
+      "recalibration_strength": 1024.0,
+      "zero_symbols": [
+        8,
+        8,
+        7,
+        8,
+        7,
+        7,
+        7,
+        7,
+        8,
+        8,
+        7,
+        7,
+        7,
+        7,
+        7,
+        8,
+        8,
+        7,
+        7,
+        7,
+        8,
+        7,
+        8,
+        7,
+        7,
+        7,
+        7,
+        8,
+        8,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        8,
+        8,
+        7,
+        7,
+        7,
+        7,
+        7,
+        8,
+        8,
+        7,
+        8,
+        7,
+        7,
+        8,
+        7,
+        7,
+        7,
+        7,
+        8,
+        7,
+        8,
+        7,
+        7,
+        7,
+        7,
+        7,
+        8,
+        7,
+        8
+      ],
+      "candidates": [
+        {
+          "context": "left",
+          "family": "spatial",
+          "cardinality": 5,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 2560,
+          "real": {
+            "strength": 256.0,
+            "val_b_bits": 1.8920038389704956,
+            "val_a_bits": 2.171799992956335
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 1.9025473073435204,
+            "val_a_bits": 2.18086332725941
+          },
+          "context_gain_percent": 0.5542609688128826,
+          "control_gain_percent": 8.50296784654274e-05,
+          "net_gain_percent": 0.5541759391344171,
+          "vs_m11_g16_deployed_percent": 3.453653399398516,
+          "selection_net_percent": 0.4155277397289893
+        },
+        {
+          "context": "up",
+          "family": "spatial",
+          "cardinality": 5,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 2560,
+          "real": {
+            "strength": 256.0,
+            "val_b_bits": 1.8938246241243388,
+            "val_a_bits": 2.170845889074681
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 1.9025481484207372,
+            "val_a_bits": 2.1808644497963283
+          },
+          "context_gain_percent": 0.45855855980536314,
+          "control_gain_percent": 4.08217631956984e-05,
+          "net_gain_percent": 0.45851773804216744,
+          "vs_m11_g16_deployed_percent": 3.360741244080782,
+          "selection_net_percent": 0.4592766723397957
+        },
+        {
+          "context": "left_up",
+          "family": "spatial",
+          "cardinality": 25,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 12800,
+          "real": {
+            "strength": 256.0,
+            "val_b_bits": 1.8918279564964289,
+            "val_a_bits": 2.170501405372239
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 1.9025485043660995,
+            "val_a_bits": 2.1808626120588506
+          },
+          "context_gain_percent": 0.5635055391757623,
+          "control_gain_percent": 2.2112895444405298e-05,
+          "net_gain_percent": 0.5634834262803179,
+          "vs_m11_g16_deployed_percent": 3.4626284394869438,
+          "selection_net_percent": 0.47507243061458565
+        },
+        {
+          "context": "left_up_upleft",
+          "family": "spatial",
+          "cardinality": 125,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 64000,
+          "real": {
+            "strength": 256.0,
+            "val_b_bits": 1.8961498822521792,
+            "val_a_bits": 2.175907914464489
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 1.9025484018236645,
+            "val_a_bits": 2.180862219690862
+          },
+          "context_gain_percent": 0.3363405134153612,
+          "control_gain_percent": 2.7502635158121792e-05,
+          "net_gain_percent": 0.3363130107802031,
+          "vs_m11_g16_deployed_percent": 3.2420865286292027,
+          "selection_net_percent": 0.22716546106479274
+        },
+        {
+          "context": "neighbourhood",
+          "family": "spatial",
+          "cardinality": 4,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 2048,
+          "real": {
+            "strength": 256.0,
+            "val_b_bits": 1.885327381377675,
+            "val_a_bits": 2.161252240173641
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 1.9025476663561862,
+            "val_a_bits": 2.1808638719683158
+          },
+          "context_gain_percent": 0.9051826983320499,
+          "control_gain_percent": 6.615958997064326e-05,
+          "net_gain_percent": 0.9051165387420792,
+          "vs_m11_g16_deployed_percent": 3.794343822717859,
+          "selection_net_percent": 0.8991783511126537
+        }
+      ],
+      "best_by_val_a": "neighbourhood"
+    },
+    {
+      "bits": 3,
+      "alphabet": 8,
+      "channels": 64,
+      "height": 16,
+      "width": 16,
+      "train_p_frames": 536,
+      "val_a_p_frames": 180,
+      "val_b_p_frames": 144,
+      "val_sequence_ids": [
+        "bmx-trees",
+        "car-roundabout",
+        "dogs-scale",
+        "drift-straight",
+        "mallard-water",
+        "pigs",
+        "skate-park",
+        "stunt",
+        "upside-down"
+      ],
+      "data_from_cache": true,
+      "baselines_val_b_bits": {
+        "m11_g16_deployed": 1.2285216929210148,
+        "m11_g16_recalibrated": 1.166143721217506
+      },
+      "recalibration_gain_percent": 5.0774823157737385,
+      "recalibration_strength": 256.0,
+      "zero_symbols": [
+        4,
+        4,
+        4,
+        4,
+        3,
+        3,
+        3,
+        3,
+        4,
+        4,
+        3,
+        3,
+        3,
+        3,
+        3,
+        4,
+        3,
+        3,
+        3,
+        3,
+        4,
+        4,
+        4,
+        3,
+        4,
+        3,
+        3,
+        4,
+        4,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        4,
+        4,
+        3,
+        3,
+        3,
+        4,
+        4,
+        4,
+        4,
+        3,
+        4,
+        3,
+        3,
+        4,
+        3,
+        3,
+        3,
+        3,
+        4,
+        3,
+        4,
+        4,
+        3,
+        4,
+        3,
+        3,
+        4,
+        3,
+        4
+      ],
+      "candidates": [
+        {
+          "context": "left",
+          "family": "spatial",
+          "cardinality": 5,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 2560,
+          "real": {
+            "strength": 256.0,
+            "val_b_bits": 1.1607340862244853,
+            "val_a_bits": 1.3504040188920015
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 1.1661450850756891,
+            "val_a_bits": 1.3544512161979554
+          },
+          "context_gain_percent": 0.46389093338966214,
+          "control_gain_percent": -0.00011695455356331998,
+          "net_gain_percent": 0.46389093338966214,
+          "vs_m11_g16_deployed_percent": 5.517819269056062,
+          "selection_net_percent": 0.29854526092828887
+        },
+        {
+          "context": "up",
+          "family": "spatial",
+          "cardinality": 5,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 2560,
+          "real": {
+            "strength": 256.0,
+            "val_b_bits": 1.1618718064819593,
+            "val_a_bits": 1.3496622664701994
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 1.1661455055624417,
+            "val_a_bits": 1.354450951825957
+          },
+          "context_gain_percent": 0.36632832281485067,
+          "control_gain_percent": -0.00015301243775697165,
+          "net_gain_percent": 0.36632832281485067,
+          "vs_m11_g16_deployed_percent": 5.425210382779994,
+          "selection_net_percent": 0.3533094607346367
+        },
+        {
+          "context": "left_up",
+          "family": "spatial",
+          "cardinality": 25,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 12800,
+          "real": {
+            "strength": 256.0,
+            "val_b_bits": 1.160702321142114,
+            "val_a_bits": 1.3488708225727337
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 1.1661449307235292,
+            "val_a_bits": 1.354449473121085
+          },
+          "context_gain_percent": 0.4666148757128421,
+          "control_gain_percent": -0.00010371843548165203,
+          "net_gain_percent": 0.4666148757128421,
+          "vs_m11_g16_deployed_percent": 5.52040490368949,
+          "selection_net_percent": 0.4117424236240915
+        },
+        {
+          "context": "left_up_upleft",
+          "family": "spatial",
+          "cardinality": 125,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 64000,
+          "real": {
+            "strength": 256.0,
+            "val_b_bits": 1.162517857562926,
+            "val_a_bits": 1.3511742873085135
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 1.1661443836343117,
+            "val_a_bits": 1.3544491046676548
+          },
+          "context_gain_percent": 0.310927683149938,
+          "control_gain_percent": -5.680404512563683e-05,
+          "net_gain_percent": 0.310927683149938,
+          "vs_m11_g16_deployed_percent": 5.372622700796893,
+          "selection_net_percent": 0.24167570145465406
+        },
+        {
+          "context": "neighbourhood",
+          "family": "spatial",
+          "cardinality": 4,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 2048,
+          "real": {
+            "strength": 64.0,
+            "val_b_bits": 1.1555260074987612,
+            "val_a_bits": 1.3434228309362284
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 1.166144578399476,
+            "val_a_bits": 1.3544504384811558
+          },
+          "context_gain_percent": 0.9104978679351379,
+          "control_gain_percent": -7.350568838581203e-05,
+          "net_gain_percent": 0.9104978679351379,
+          "vs_m11_g16_deployed_percent": 5.941749815478972,
+          "selection_net_percent": 0.8139721889142955
+        }
+      ],
+      "best_by_val_a": "neighbourhood"
+    }
+  ],
+  "chosen_context": "neighbourhood",
+  "chosen_family": "spatial",
+  "mean_selection_net_percent": {
+    "left": 0.3615919436746596,
+    "up": 0.4012500315597248,
+    "left_up": 0.4441970287179034,
+    "left_up_upleft": 0.2505667898452469,
+    "neighbourhood": 0.7688068099927072
+  },
+  "all_controls_within_tolerance": true,
+  "gate_passed": true,
+  "verdicts": [
+    {
+      "bits": 5,
+      "net_percent": 0.540122348291324,
+      "control_percent": 2.3152355092763276e-05,
+      "control_ok": true,
+      "verdict": "marginal",
+      "vs_m11_g16_deployed_percent": 2.1352783888217903
+    },
+    {
+      "bits": 4,
+      "net_percent": 0.9051165387420792,
+      "control_percent": 6.615958997064326e-05,
+      "control_ok": true,
+      "verdict": "marginal",
+      "vs_m11_g16_deployed_percent": 3.794343822717859
+    },
+    {
+      "bits": 3,
+      "net_percent": 0.9104978679351379,
+      "control_percent": -7.350568838581203e-05,
+      "control_ok": true,
+      "verdict": "marginal",
+      "vs_m11_g16_deployed_percent": 5.941749815478972
+    }
+  ]
+}
