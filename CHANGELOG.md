@@ -13,6 +13,81 @@ the time.
 
 ---
 
+## 2026-09-12 — M15: broad-TRAIN calibration policy, a root-cause experiment (COVERAGE CONFIRMED, NO PRODUCTION CHANGE)
+
+**Source:** M14 found and fixed a motion-table calibration gap and named a suspected general
+mechanism: `calibrate_grids`'s sequential, first-N-frames TRAIN sampling under-covers the
+72-sequence TRAIN population. M15 tests that mechanism directly as a controlled,
+same-budget experiment, instead of shipping another one-off recalibration.
+**Tests:** 1277 passing (full suite), zero regressions. 23 new tests.
+**Scope:** every M13/M14 identity, checkpoint, quantizer, codebook, motion estimator, GOP,
+`.nvct` v2 frozen. Zero modifications to any existing tracked file — every M15 change is
+new, untracked infrastructure (confirmed via `git status`).
+
+### Four policies, one shared abstraction
+
+`scripts/m15_calibration_policy.py` — entirely separate from `calibrate_grids` — returns,
+for any of four named policies, a list of `BenchmarkSequence`s truncated to an unmodified
+**prefix** of each sequence's own frames, so the *existing*, unmodified M14 collectors can
+fit a table from any of them identically to how they fit one from `calibrate_grids`'s own
+list:
+
+- **A — current**: sequential, manifest order, stop at 400 total (the deployed policy, made explicit).
+- **B — uniform**: flat allocation across all 72 sequences, same 400-frame budget as A.
+- **C — M14 broad**: 8 frames/sequence, 576 total (M14's own shipped recipe).
+- **D — shuffled uniform**: seed-42 shuffled sequence order, then B's allocation rule.
+
+At the same 400-frame budget, A's per-sequence-count stdev (17.71, touching 6/72
+sequences) is **35× B/D's** (0.50, touching 72/72) — the coverage gap this milestone set
+out to test, measured directly rather than assumed.
+
+### The central result
+
+Held-out VAL-B bits/symbol for motion (bit-depth-independent, one table per policy):
+
+| policy | gain vs A (root cause) | gain vs deployed C (Phase G) |
+|---|---|---|
+| B — uniform, 400 | **+11.91% (meaningful)** | −0.38% (weak) |
+| C — M14 deployed, 576 | +12.24% (meaningful) | — |
+| D — shuffled, 400 | +12.04% (meaningful) | −0.22% (weak) |
+
+400 uniform (B) recovers 97.3% of 576 broad's (C) entire gain over sequential (A) despite
+31% fewer frames; shuffling order (D) changes almost nothing. **Coverage, not sample
+count or manifest order, explains essentially all of M14's motion gain** — the strong-
+evidence pattern the milestone was designed to distinguish from the weaker alternatives.
+Intra stayed weak (+0.35–0.43%) under every policy at every rate point, generalizing
+M14's original rejection beyond its one tested recipe.
+
+Confirmed on real arithmetic-coded bytes (3 validation sequences, frozen M13 residual
+arm): current (A-intra + C-motion, M14's exact deployed state) vs broad_motion (A-intra +
+B-motion) differ by **+0.0033% to +0.0083%** total-container bytes - negligible, and in
+the opposite direction from the offline VAL-B comparison (expected sample noise at ~90
+P-frames). Every invariant held: symbols, motion, reconstruction, PSNR/MS-SSIM
+bit-identical between combos at every rate point.
+
+### Why nothing ships
+
+M14's own deployed recipe (8 frames/sequence, exactly 576/72 = 8, zero remainder) is
+*itself* already a perfectly flat, fully-covering allocation - a degenerate special case
+of "uniform." M15 confirms the *general principle* (coverage) is what made M14 work, but
+the *specific instance* already in production was already a good one - there was no gap
+left for a more "principled" same-family policy to close. The full 719-frame DAVIS
+benchmark was deliberately skipped: the milestone's own gate promotes a candidate to that
+compute only if it beats the *current deployed baseline* meaningfully, which none did.
+
+Per-sequence diagnostic (VAL-B): 3 of 4 sequences improve substantially and consistently
+under every broad policy; `pigs` regresses under B, C, *and* D alike - a real,
+consistent exception, reported rather than smoothed over.
+
+### Verdict: ROOT-CAUSE CONFIRMED (COVERAGE), NO PRODUCTION CHANGE WARRANTED
+
+A clean, reusable, deterministic, TRAIN-only, provenance-compatible calibration-policy
+abstraction now exists for any future milestone that needs it. Nothing in the deployed
+codec changes, and the report says so plainly rather than manufacturing a win from a
+well-run negative result.
+
+---
+
 ## 2026-09-11 — M14: entropy-table calibration audit across the codec (MOTION TABLE RECALIBRATED, INTRA CORRECTLY REJECTED)
 
 **Source:** M13 recalibrated one static entropy table (the deployed M11-G16 residual codebook) and

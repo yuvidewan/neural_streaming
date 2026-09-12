@@ -1,0 +1,107 @@
+{
+  "phase": "M15 Phase 0 baseline confirmation",
+  "checkpoint": "outputs\\m10f_lambda_boundary\\lambda_3.0e-04_seed42\\best.pt",
+  "manifest": "C:\\Users\\Aditya\\OneDrive\\Desktop\\Github\\Real-Time Neural Video Compression\\data\\processed\\manifest.json",
+  "train_sequences": 72,
+  "train_total_frames": 4826,
+  "rate_points": [
+    {
+      "bits": 5,
+      "fresh": {
+        "calibration_signature": "928411732c587518",
+        "intra_entropy_model_id": "8fadd1ca200c033b",
+        "motion_entropy_model_id": "ee605dd44277b878",
+        "residual_entropy_model_id": "fcf966d2cf211c92"
+      },
+      "recorded": {
+        "calibration_signature": "928411732c587518",
+        "intra_entropy_model_id": "8fadd1ca200c033b",
+        "motion_entropy_model_id": "ee605dd44277b878",
+        "residual_entropy_model_id": "fcf966d2cf211c92"
+      },
+      "matches": {
+        "calibration_signature": true,
+        "intra_entropy_model_id": true,
+        "motion_entropy_model_id": true,
+        "residual_entropy_model_id": true
+      },
+      "all_match": true
+    },
+    {
+      "bits": 4,
+      "fresh": {
+        "calibration_signature": "eab9082596c6f980",
+        "intra_entropy_model_id": "14c4b8bf40056ca1",
+        "motion_entropy_model_id": "e1bbc6643d038eee",
+        "residual_entropy_model_id": "8a64b259c6c9b389"
+      },
+      "recorded": {
+        "calibration_signature": "eab9082596c6f980",
+        "intra_entropy_model_id": "14c4b8bf40056ca1",
+        "motion_entropy_model_id": "e1bbc6643d038eee",
+        "residual_entropy_model_id": "8a64b259c6c9b389"
+      },
+      "matches": {
+        "calibration_signature": true,
+        "intra_entropy_model_id": true,
+        "motion_entropy_model_id": true,
+        "residual_entropy_model_id": true
+      },
+      "all_match": true
+    },
+    {
+      "bits": 3,
+      "fresh": {
+        "calibration_signature": "95a513136a72daf0",
+        "intra_entropy_model_id": "b523711d2e982057",
+        "motion_entropy_model_id": "90eeac872bfa2f97",
+        "residual_entropy_model_id": "13fe5bdc4ebb1ef9"
+      },
+      "recorded": {
+        "calibration_signature": "95a513136a72daf0",
+        "intra_entropy_model_id": "b523711d2e982057",
+        "motion_entropy_model_id": "90eeac872bfa2f97",
+        "residual_entropy_model_id": "13fe5bdc4ebb1ef9"
+      },
+      "matches": {
+        "calibration_signature": true,
+        "intra_entropy_model_id": true,
+        "motion_entropy_model_id": true,
+        "residual_entropy_model_id": true
+      },
+      "all_match": true
+    }
+  ],
+  "all_identities_match_recorded": true,
+  "recorded_full_davis_bd_rate": {
+    "motion_vs_baseline_psnr": -0.6828450155935584,
+    "motion_vs_baseline_msssim": -0.6811280137343778
+  },
+  "recorded_full_davis_motion_byte_gain": [
+    {
+      "bits": 5,
+      "old_motion_bytes": 181118,
+      "new_motion_bytes": 164010,
+      "motion_byte_gain_percent": 9.445775682151968
+    },
+    {
+      "bits": 4,
+      "old_motion_bytes": 184298,
+      "new_motion_bytes": 166842,
+      "motion_byte_gain_percent": 9.471616620907444
+    },
+    {
+      "bits": 3,
+      "old_motion_bytes": 188896,
+      "new_motion_bytes": 171612,
+      "motion_byte_gain_percent": 9.150008470269356
+    }
+  ],
+  "recorded_full_davis_invariants": {
+    "symbols_identical": true,
+    "reconstruction_identical": true,
+    "motion_identical": true,
+    "metrics_identical": true,
+    "byte_accounting_closes": true
+  }
+}
