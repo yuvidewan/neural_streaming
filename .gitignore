@@ -102,6 +102,16 @@ outputs/qat_combined/
 # alongside them. Regenerable by re-running the driver.
 outputs/**/step_log.json
 
+# Milestone 19's raw per-P-frame, per-latent-position diagnostic dump
+# (scripts/m19_reference_error_diagnostic.py) - six large arrays per frame
+# (error magnitude, assignment/symbol-changed flags, code lengths) stored as
+# JSON text, ~140-150 MB per bit depth. Same category as step_log.json above:
+# raw instrumentation, not an analysis product - every M19_REPORT.md
+# conclusion comes from the committed m19_analysis.json/m19_baseline.json,
+# which are pure reductions of this data. Regenerable by re-running the
+# diagnostic against the same frozen checkpoint/calibration.
+outputs/**/m19_raw_*bit.json
+
 # --- Model checkpoint / export formats ---
 *.pt
 *.pth

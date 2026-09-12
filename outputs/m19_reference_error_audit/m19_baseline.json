@@ -1,0 +1,39 @@
+{
+  "phase": "M19 Phase 0",
+  "rate_points": [
+    {
+      "bits": 5,
+      "residual_identity": "ec858dee10f8a955",
+      "fresh_real_bytes": 1333275,
+      "fresh_oracle_bytes": 1300318,
+      "fresh_gain_percent": 2.4718831448875886,
+      "recorded_real_bytes": 1333275,
+      "recorded_oracle_bytes": 1300318,
+      "recorded_gain_percent": 2.4718831448875886,
+      "match": true
+    },
+    {
+      "bits": 4,
+      "residual_identity": "be872c2beebd2f9b",
+      "fresh_real_bytes": 908404,
+      "fresh_oracle_bytes": 831497,
+      "fresh_gain_percent": 8.46616703581226,
+      "recorded_real_bytes": 908404,
+      "recorded_oracle_bytes": 831497,
+      "recorded_gain_percent": 8.46616703581226,
+      "match": true
+    },
+    {
+      "bits": 3,
+      "residual_identity": "d2d61d66a50cad8a",
+      "fresh_real_bytes": 549083,
+      "fresh_oracle_bytes": 441390,
+      "fresh_gain_percent": 19.61324608483599,
+      "recorded_real_bytes": 549083,
+      "recorded_oracle_bytes": 441390,
+      "recorded_gain_percent": 19.61324608483599,
+      "match": true
+    }
+  ],
+  "all_match": true
+}

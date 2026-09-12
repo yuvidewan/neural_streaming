@@ -1,0 +1,17 @@
+{
+  "5": {
+    "residual_identity": "ec858dee10f8a955",
+    "assign_codebook_id": "c4bb904fe6f88a5f",
+    "coding_codebook_id": "474d54d3673ade9f"
+  },
+  "4": {
+    "residual_identity": "be872c2beebd2f9b",
+    "assign_codebook_id": "624682536c203a54",
+    "coding_codebook_id": "2d319551c6d8bec1"
+  },
+  "3": {
+    "residual_identity": "d2d61d66a50cad8a",
+    "assign_codebook_id": "666c05b46e355317",
+    "coding_codebook_id": "50cd2a7277d8fa97"
+  }
+}

@@ -13,6 +13,48 @@ the time.
 
 ---
 
+## 2026-09-12 — M19: reference error shape diagnostic (MULTI-PART MECHANISM, PRECISELY QUANTIFIED)
+
+**Source:** M18 showed shrinking the reference error's aggregate magnitude doesn't reliably recover
+M17's bytes. M19 asks what KIND of error actually matters - spatial structure, channel structure,
+codebook routing, or G16 prediction - by decomposing the SAME real-vs-oracle gap at the position
+level, never assuming an answer.
+**Tests:** 1323 passing (full suite), zero regressions. 13 new tests.
+**Scope:** diagnostic only - every M13/M14/M15/M17/M18 identity, checkpoint, quantizer, codebook,
+motion estimator, GOP, `.nvct` v2 frozen; DAVIS TEST untouched; no learned model, no production
+change.
+
+### The finding does not fit a single pre-registered category, and says so
+
+Spatial structure is real (autocorrelation ~0.83-0.88 at every bit depth, growing edge-concentration
+1.36->1.55) but a magnitude-preserving spatial shuffle recovers 46%/60%/65% of M17's gap at
+5/4/3-bit on its own - so magnitude is the larger factor, more so at coarser quantization. Channel
+concentration is weak and actually SHRINKS toward uniform at coarser bit depths (top-10% channels
+hold only 11-15% of error/churn against a 10% uniform baseline) - ruling out "a few bad channels."
+The 512-entry codebook's assignment is surprisingly brittle - it flips 35-55% of the time even for
+the SMALLEST error decile - but a precise 2x2 decomposition (symbol changed? x assignment changed?)
+shows this routing-only effect contributes only ~9-12% of TOTAL excess bits, consistently across
+all three bit depths. The dominant driver (88-91% of excess bits, every bit depth) is the reference
+error changing the coded RESIDUAL SYMBOL itself - upstream of both codebook routing and G16's
+conditional prediction, a mechanism the milestone's own A-E taxonomy has no clean label for.
+
+### Verdict: F - no single mechanism dominates as pre-registered, but the actual mechanism is precisely quantified
+
+Classified F not for lack of evidence but because forcing A-E would misrepresent a real, consistent,
+cross-bit-depth-robust finding. Reproduced byte-for-byte (including the seeded shuffle control)
+across two independent processes.
+
+### M20 recommendation
+
+Exactly one experiment: a stability margin (hysteresis) on `SharedCodebook.assign_tensor`, so a
+position only reassigns to a different prototype when the alternative's advantage exceeds a fixed
+threshold. Causal, decoder-compatible (a fixed rule both sides can compute), minimal (no retraining,
+no new model), and targeted precisely at the ~9-12%-of-excess-bits mechanism this report isolated -
+with an explicit, pre-stated ceiling: it cannot touch the larger 88-91% mechanism, which would
+require addressing the reference itself (M18 already showed the quantizer angle on that fails).
+
+---
+
 ## 2026-09-12 — M18: intra quantizer precision audit (DOES NOT EXPLAIN THE M17 GAP)
 
 **Source:** M17 confirmed a large, real, deployed-pipeline residual-rate bottleneck (+2.0% to
