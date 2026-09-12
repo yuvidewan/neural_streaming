@@ -13,6 +13,65 @@ the time.
 
 ---
 
+## 2026-09-12 — M17: residual oracle audit through the deployed M11-G16 + M13 pipeline (MEANINGFUL BOTTLENECK CONFIRMED)
+
+**Source:** M16's simplified per-channel proxy estimated a residual-side reference-quality gap of
++1.3% to +12.7% and explicitly flagged it as *not decision-grade* - a lead, not a finding, since
+the real deployed residual coder (M11-G16 causal context + 512-entry codebook + M13's recalibrated
+frequencies) is far more sophisticated than a per-channel model. M17 redoes the same real-vs-oracle
+comparison through the actual deployed pipeline, never a proxy.
+**Tests:** 1300 passing (full suite), zero regressions. 11 new tests.
+**Scope:** every M13/M14/M15/M16 identity, checkpoint, quantizer, codebook, motion estimator, GOP,
+`.nvct` v2 frozen; DAVIS TEST untouched. Zero modifications to any existing tracked file.
+
+### The result reverses the expected direction
+
+Contrary to the natural assumption that a sophisticated, context-conditioned model would already
+capture what a crude proxy misses (making the proxy an *overestimate*), the real pipeline shows an
+even LARGER gain than M16's proxy: +2.47% / +8.47% / +19.61% channel-level at 5/4/3-bit (vs the
+proxy's +1.29% / +4.52% / +12.69%). The mechanism: G16's assignment to one of 512 codebook
+prototypes depends on the model's context-conditioned prediction, which itself depends on the
+reference latent - so a degraded reference doesn't just shift the residual's marginal distribution
+(what a per-channel model would catch), it also misroutes positions to badly-matched prototypes.
+At 3-bit, up to 73% of all codebook assignments differ between the real and oracle reference.
+
+### Decomposition and GOP-position shape
+
+~85% of the effect at every bit depth is reference PIXEL quality alone (motion vectors held fixed);
+only ~15% comes from additionally re-selecting motion vectors against the oracle reference - the
+same decomposition M16 established matters little for motion's own channel matters a great deal
+here, because residual is 76-82% of total stream bytes where motion is only 4-9%. The effect is
+boundary-dominated (M16's own GOP-position shape, confirmed again): position 1 shows a 2-3x larger
+gap than any other position (38.7% at 3-bit vs 13.9-18.2% elsewhere), never boundary-only or
+monotonically accumulating.
+
+### Total-stream upper bound, and the coded-validation gate
+
+Translated to total-stream bytes via the real M13/M14 byte-share breakdown: **+2.03% / +6.75% /
++14.86%** at 5/4/3-bit - clearing the 1% "meaningful" line by a wide margin at every rate point
+(3-bit alone exceeds M13's entire original deployed recalibration gain). This triggered Phase F's
+coded-validation gate: 243/243 oracle-variant payloads round-tripped exactly through the unmodified
+entropy decoder, and the 5-bit diagnostic reproduced byte-identical totals in a second, independent
+process. Both corroborate the numbers are genuine, real, arithmetic-coded bytes - not a computation
+artifact.
+
+### Why nothing ships
+
+The oracle reference is, by construction, unavailable to any real decoder - it requires the raw,
+uncoded previous frame, which a real system never transmits twice. Every mechanism that could
+plausibly capture part of this gap (a reference-refinement model, a redesigned quantizer) is a new
+model or architecture change, explicitly outside this audit milestone's freezes. M17 confirms
+*whether* a bottleneck exists; it does not attempt to close it.
+
+### Verdict: A - RESIDUAL ORACLE GAP IS A MEANINGFUL TOTAL-STREAM BOTTLENECK
+
+Confirmed under the real deployed pipeline, corroborated by round-trip decode and cross-process
+reproducibility - the strongest possible evidentiary standard this project's audit milestones use,
+and the first of M14-M17's audit chain to land on "yes, real, and large" rather than "confirmed real
+but too small to matter."
+
+---
+
 ## 2026-09-12 — M16: GOP-boundary reference / motion-calibration asymmetry audit (REAL EFFECT, NOT A BOTTLENECK)
 
 **Source:** M14/M15 documented a bit-depth asymmetry in the *calibration-time helper

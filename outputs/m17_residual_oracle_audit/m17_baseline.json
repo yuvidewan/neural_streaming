@@ -1,0 +1,42 @@
+{
+  "phase": "M17 Phase 0/A - baseline confirmation + residual-path trace",
+  "checkpoint": "outputs\\m10f_lambda_boundary\\lambda_3.0e-04_seed42\\best.pt",
+  "rate_points": [
+    {
+      "bits": 5,
+      "codebook_size": 512,
+      "codebook_alphabet": 32,
+      "recalibration_strength": 1024.0,
+      "fresh_residual_identity": "ec858dee10f8a955",
+      "recorded_residual_identity": "ec858dee10f8a955",
+      "match": true
+    },
+    {
+      "bits": 4,
+      "codebook_size": 512,
+      "codebook_alphabet": 16,
+      "recalibration_strength": 1024.0,
+      "fresh_residual_identity": "be872c2beebd2f9b",
+      "recorded_residual_identity": "be872c2beebd2f9b",
+      "match": true
+    },
+    {
+      "bits": 3,
+      "codebook_size": 512,
+      "codebook_alphabet": 8,
+      "recalibration_strength": 256.0,
+      "fresh_residual_identity": "d2d61d66a50cad8a",
+      "recorded_residual_identity": "d2d61d66a50cad8a",
+      "match": true
+    }
+  ],
+  "all_identities_match_recorded": true,
+  "pipeline_trace": {
+    "step_1_real_residual": "delta = latent - reference_latent, where reference_latent = model.encode(warp_blocks(previous_reconstruction, motion, block_size)) - see m13_closed_loop.encode_multi lines ~140-143",
+    "step_2_g16_causal_context": "model11.planes(target_symbols, zero) builds [B,C,3,H,W] causal planes (group_starts-based: only channel-groups BEFORE the current one are visible, using the TRUE target symbols since encode-time knows them; zero -padded for the first group) - m11_ar_entropy.context_planes, group_size=16",
+    "step_3_g16_prediction": "model11.log_probabilities(reference_latent, planes) -> per-position predicted distribution over the 2**bits alphabet, conditioned on BOTH reference_latent and the causal context planes",
+    "step_4_codebook_assignment": "assign_codebook.assign_tensor(rows) - `rows` = the G16 model's predicted probabilities (step 3), reshaped C-major (m11_ar_entropy._rows); argmin L1 or log2-cost distance to the DEPLOYED codebook's 512 prototypes, lowest-index tie-break. This is the ORIGINAL, unmodified assign_codebook - NEVER the recalibrated one (M13's own invariant, reused unmodified)",
+    "step_5_m13_recalibrated_frequencies": "coding_codebook.cumulative[table_index] - a SEPARATE SharedCodebook object holding TRAIN-fit, VAL-A-smoothed frequencies (m13_recalibration.fit_recalibrated_frequencies), used ONLY for the coder's cumulative frequency table, never for assignment",
+    "step_6_arithmetic_coding": "nvc.compression.range_coder.encode_symbols(flat_symbols, coding_codebook.cumulative, table_index) -> payload bytes, via m13_recalibration.encode_frame_recalibrated (called here UNMODIFIED, never reimplemented or approximated - M17's central methodological commitment)"
+  }
+}

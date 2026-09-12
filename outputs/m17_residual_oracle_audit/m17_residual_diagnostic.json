@@ -1,0 +1,359 @@
+{
+  "phase": "M17 Phase B/C/D/E residual diagnostic",
+  "val_b_sequence_ids": [
+    "car-roundabout",
+    "drift-straight",
+    "pigs",
+    "stunt"
+  ],
+  "rate_points": [
+    {
+      "bits": 5,
+      "residual_arm_identity": "ec858dee10f8a955",
+      "total_val_b_bytes": {
+        "A_real": 1333275,
+        "B_oracle_ref_real_motion": 1304660,
+        "C_full_oracle": 1300318
+      },
+      "channel_gain_percent": {
+        "A_vs_C_full_oracle": 2.4718831448875886,
+        "A_vs_B_reference_pixel_effect": 2.146218897076747,
+        "B_vs_C_motion_vector_effect": 0.3328070148544448
+      },
+      "verdict_A_vs_C": "meaningful",
+      "symbol_histogram_divergence_bits": 0.0010177223999090733,
+      "summary": {
+        "boundary": {
+          "count": 28,
+          "mean_bytes_A_real": 5635.142857142857,
+          "mean_bytes_B_oracle_ref_real_motion": 5352.321428571428,
+          "mean_bytes_C_full_oracle": 5274.392857142857,
+          "mean_ideal_bits_A_real": 45076.089555264996,
+          "mean_ideal_bits_C_full_oracle": 42191.26590524544,
+          "mean_fraction_symbols_changed_A_vs_C": 0.4449005126953125,
+          "mean_fraction_assignments_changed_A_vs_B": 0.5438602992466518,
+          "mean_fraction_assignments_changed_B_vs_C": 0.35038321358816965,
+          "mean_fraction_assignments_changed_A_vs_C": 0.6122305733816964,
+          "mean_residual_abs_mean_A_real": 0.6143220982381276,
+          "mean_residual_abs_mean_C_full_oracle": 0.5799551052706582
+        },
+        "ordinary": {
+          "count": 218,
+          "mean_bytes_A_real": 5392.160550458716,
+          "mean_bytes_B_oracle_ref_real_motion": 5297.224770642202,
+          "mean_bytes_C_full_oracle": 5287.316513761468,
+          "mean_ideal_bits_A_real": 43132.50815338556,
+          "mean_ideal_bits_C_full_oracle": 42293.60593738693,
+          "mean_fraction_symbols_changed_A_vs_C": 0.2793472710005734,
+          "mean_fraction_assignments_changed_A_vs_B": 0.36073121237098627,
+          "mean_fraction_assignments_changed_B_vs_C": 0.21871864248853212,
+          "mean_fraction_assignments_changed_A_vs_C": 0.41996359168936354,
+          "mean_residual_abs_mean_A_real": 0.5974507100811792,
+          "mean_residual_abs_mean_C_full_oracle": 0.5880244173656363
+        },
+        "all": {
+          "count": 246,
+          "mean_bytes_A_real": 5419.817073170731,
+          "mean_bytes_B_oracle_ref_real_motion": 5303.495934959349,
+          "mean_bytes_C_full_oracle": 5285.845528455285,
+          "mean_ideal_bits_A_real": 43353.72880075395,
+          "mean_ideal_bits_C_full_oracle": 42281.95747844399,
+          "mean_fraction_symbols_changed_A_vs_C": 0.29819072940485264,
+          "mean_fraction_assignments_changed_A_vs_B": 0.38157517347878556,
+          "mean_fraction_assignments_changed_B_vs_C": 0.2337048538332063,
+          "mean_fraction_assignments_changed_A_vs_C": 0.44184763838605184,
+          "mean_residual_abs_mean_A_real": 0.5993710306844091,
+          "mean_residual_abs_mean_C_full_oracle": 0.587105959078403
+        },
+        "by_gop_position": {
+          "1": {
+            "count": 28,
+            "mean_bytes_A_real": 5635.142857142857,
+            "mean_bytes_C_full_oracle": 5274.392857142857,
+            "bytes_gap_percent": 6.401789788571718
+          },
+          "2": {
+            "count": 28,
+            "mean_bytes_A_real": 5524.214285714285,
+            "mean_bytes_C_full_oracle": 5424.678571428572,
+            "bytes_gap_percent": 1.8018076261653149
+          },
+          "3": {
+            "count": 28,
+            "mean_bytes_A_real": 5331.678571428572,
+            "mean_bytes_C_full_oracle": 5228.035714285715,
+            "bytes_gap_percent": 1.9439067031958528
+          },
+          "4": {
+            "count": 28,
+            "mean_bytes_A_real": 5431.035714285715,
+            "mean_bytes_C_full_oracle": 5332.642857142857,
+            "bytes_gap_percent": 1.8116775937239136
+          },
+          "5": {
+            "count": 27,
+            "mean_bytes_A_real": 5098.259259259259,
+            "mean_bytes_C_full_oracle": 4967.555555555556,
+            "bytes_gap_percent": 2.5636927636884006
+          },
+          "6": {
+            "count": 27,
+            "mean_bytes_A_real": 5412.222222222223,
+            "mean_bytes_C_full_oracle": 5311.888888888889,
+            "bytes_gap_percent": 1.8538287825908546
+          },
+          "7": {
+            "count": 27,
+            "mean_bytes_A_real": 5371.518518518518,
+            "mean_bytes_C_full_oracle": 5266.7037037037035,
+            "bytes_gap_percent": 1.9513069619598564
+          },
+          "8": {
+            "count": 27,
+            "mean_bytes_A_real": 5515.2962962962965,
+            "mean_bytes_C_full_oracle": 5413.333333333333,
+            "bytes_gap_percent": 1.8487304667826276
+          },
+          "9": {
+            "count": 26,
+            "mean_bytes_A_real": 5451.153846153846,
+            "mean_bytes_C_full_oracle": 5351.5,
+            "bytes_gap_percent": 1.8281238975516751
+          }
+        }
+      }
+    },
+    {
+      "bits": 4,
+      "residual_arm_identity": "be872c2beebd2f9b",
+      "total_val_b_bytes": {
+        "A_real": 908404,
+        "B_oracle_ref_real_motion": 843173,
+        "C_full_oracle": 831497
+      },
+      "channel_gain_percent": {
+        "A_vs_C_full_oracle": 8.46616703581226,
+        "A_vs_B_reference_pixel_effect": 7.1808358395603715,
+        "B_vs_C_motion_vector_effect": 1.384769199203485
+      },
+      "verdict_A_vs_C": "meaningful",
+      "symbol_histogram_divergence_bits": 0.003333417125548346,
+      "summary": {
+        "boundary": {
+          "count": 28,
+          "mean_bytes_A_real": 4103.5,
+          "mean_bytes_B_oracle_ref_real_motion": 3555.1428571428573,
+          "mean_bytes_C_full_oracle": 3365.6428571428573,
+          "mean_ideal_bits_A_real": 32823.6000412561,
+          "mean_ideal_bits_C_full_oracle": 26920.222373489927,
+          "mean_fraction_symbols_changed_A_vs_C": 0.39606802804129465,
+          "mean_fraction_assignments_changed_A_vs_B": 0.7088383265904018,
+          "mean_fraction_assignments_changed_B_vs_C": 0.47048732212611605,
+          "mean_fraction_assignments_changed_A_vs_C": 0.7615182059151786,
+          "mean_residual_abs_mean_A_real": 0.6809452985014234,
+          "mean_residual_abs_mean_C_full_oracle": 0.5799551052706582
+        },
+        "ordinary": {
+          "count": 218,
+          "mean_bytes_A_real": 3639.935779816514,
+          "mean_bytes_B_oracle_ref_real_motion": 3411.1422018348626,
+          "mean_bytes_C_full_oracle": 3381.922018348624,
+          "mean_ideal_bits_A_real": 29114.7689458467,
+          "mean_ideal_bits_C_full_oracle": 27051.024081098334,
+          "mean_fraction_symbols_changed_A_vs_C": 0.23394131441728785,
+          "mean_fraction_assignments_changed_A_vs_B": 0.5085561209862385,
+          "mean_fraction_assignments_changed_B_vs_C": 0.28477268044008025,
+          "mean_fraction_assignments_changed_A_vs_C": 0.5694532481902236,
+          "mean_residual_abs_mean_A_real": 0.6226564405161307,
+          "mean_residual_abs_mean_C_full_oracle": 0.5880244173656363
+        },
+        "all": {
+          "count": 246,
+          "mean_bytes_A_real": 3692.6991869918697,
+          "mean_bytes_B_oracle_ref_real_motion": 3427.532520325203,
+          "mean_bytes_C_full_oracle": 3380.069105691057,
+          "mean_ideal_bits_A_real": 29536.91232255996,
+          "mean_ideal_bits_C_full_oracle": 27036.136081858353,
+          "mean_fraction_symbols_changed_A_vs_C": 0.2523947614964431,
+          "mean_fraction_assignments_changed_A_vs_B": 0.5313524695915904,
+          "mean_fraction_assignments_changed_B_vs_C": 0.3059109323393039,
+          "mean_fraction_assignments_changed_A_vs_C": 0.591314300288999,
+          "mean_residual_abs_mean_A_real": 0.6292909446770583,
+          "mean_residual_abs_mean_C_full_oracle": 0.587105959078403
+        },
+        "by_gop_position": {
+          "1": {
+            "count": 28,
+            "mean_bytes_A_real": 4103.5,
+            "mean_bytes_C_full_oracle": 3365.6428571428573,
+            "bytes_gap_percent": 17.98116590367108
+          },
+          "2": {
+            "count": 28,
+            "mean_bytes_A_real": 3761.535714285714,
+            "mean_bytes_C_full_oracle": 3505.6785714285716,
+            "bytes_gap_percent": 6.801933101032058
+          },
+          "3": {
+            "count": 28,
+            "mean_bytes_A_real": 3586.6428571428573,
+            "mean_bytes_C_full_oracle": 3320.3928571428573,
+            "bytes_gap_percent": 7.423376416465855
+          },
+          "4": {
+            "count": 28,
+            "mean_bytes_A_real": 3664.1428571428573,
+            "mean_bytes_C_full_oracle": 3422.6428571428573,
+            "bytes_gap_percent": 6.590900230028461
+          },
+          "5": {
+            "count": 27,
+            "mean_bytes_A_real": 3393.8888888888887,
+            "mean_bytes_C_full_oracle": 3105.3703703703704,
+            "bytes_gap_percent": 8.501118568232654
+          },
+          "6": {
+            "count": 27,
+            "mean_bytes_A_real": 3659.8888888888887,
+            "mean_bytes_C_full_oracle": 3406.185185185185,
+            "bytes_gap_percent": 6.932005626562225
+          },
+          "7": {
+            "count": 27,
+            "mean_bytes_A_real": 3621.0,
+            "mean_bytes_C_full_oracle": 3354.777777777778,
+            "bytes_gap_percent": 7.352174046457392
+          },
+          "8": {
+            "count": 27,
+            "mean_bytes_A_real": 3745.925925925926,
+            "mean_bytes_C_full_oracle": 3501.5185185185187,
+            "bytes_gap_percent": 6.524619339529364
+          },
+          "9": {
+            "count": 26,
+            "mean_bytes_A_real": 3684.6923076923076,
+            "mean_bytes_C_full_oracle": 3437.0384615384614,
+            "bytes_gap_percent": 6.721154046888375
+          }
+        }
+      }
+    },
+    {
+      "bits": 3,
+      "residual_arm_identity": "d2d61d66a50cad8a",
+      "total_val_b_bytes": {
+        "A_real": 549083,
+        "B_oracle_ref_real_motion": 457919,
+        "C_full_oracle": 441390
+      },
+      "channel_gain_percent": {
+        "A_vs_C_full_oracle": 19.61324608483599,
+        "A_vs_B_reference_pixel_effect": 16.60295438030316,
+        "B_vs_C_motion_vector_effect": 3.609590342396799
+      },
+      "verdict_A_vs_C": "meaningful",
+      "symbol_histogram_divergence_bits": 0.007262821849045618,
+      "summary": {
+        "boundary": {
+          "count": 28,
+          "mean_bytes_A_real": 2894.25,
+          "mean_bytes_B_oracle_ref_real_motion": 2077.464285714286,
+          "mean_bytes_C_full_oracle": 1774.6785714285713,
+          "mean_ideal_bits_A_real": 23149.30200988844,
+          "mean_ideal_bits_C_full_oracle": 14191.953277761504,
+          "mean_fraction_symbols_changed_A_vs_C": 0.32708740234375,
+          "mean_fraction_assignments_changed_A_vs_B": 0.8693978445870536,
+          "mean_fraction_assignments_changed_B_vs_C": 0.6329389299665179,
+          "mean_fraction_assignments_changed_A_vs_C": 0.8966217041015625,
+          "mean_residual_abs_mean_A_real": 0.8757399725062507,
+          "mean_residual_abs_mean_C_full_oracle": 0.5799551052706582
+        },
+        "ordinary": {
+          "count": 218,
+          "mean_bytes_A_real": 2146.9908256880735,
+          "mean_bytes_B_oracle_ref_real_motion": 1833.7155963302753,
+          "mean_bytes_C_full_oracle": 1796.7844036697247,
+          "mean_ideal_bits_A_real": 17171.2234997224,
+          "mean_ideal_bits_C_full_oracle": 14369.69774231882,
+          "mean_fraction_symbols_changed_A_vs_C": 0.1689125550996273,
+          "mean_fraction_assignments_changed_A_vs_B": 0.6603679132024083,
+          "mean_fraction_assignments_changed_B_vs_C": 0.38830678397362384,
+          "mean_fraction_assignments_changed_A_vs_C": 0.7088880626433486,
+          "mean_residual_abs_mean_A_real": 0.6992492864438153,
+          "mean_residual_abs_mean_C_full_oracle": 0.5880244173656363
+        },
+        "all": {
+          "count": 246,
+          "mean_bytes_A_real": 2232.0447154471544,
+          "mean_bytes_B_oracle_ref_real_motion": 1861.459349593496,
+          "mean_bytes_C_full_oracle": 1794.2682926829268,
+          "mean_ideal_bits_A_real": 17851.655200066503,
+          "mean_ideal_bits_C_full_oracle": 14349.466665052136,
+          "mean_fraction_symbols_changed_A_vs_C": 0.18691619624936484,
+          "mean_fraction_assignments_changed_A_vs_B": 0.6841599379128557,
+          "mean_fraction_assignments_changed_B_vs_C": 0.41615109327362804,
+          "mean_fraction_assignments_changed_A_vs_C": 0.73025611939469,
+          "mean_residual_abs_mean_A_real": 0.7193376572151494,
+          "mean_residual_abs_mean_C_full_oracle": 0.587105959078403
+        },
+        "by_gop_position": {
+          "1": {
+            "count": 28,
+            "mean_bytes_A_real": 2894.25,
+            "mean_bytes_C_full_oracle": 1774.6785714285713,
+            "bytes_gap_percent": 38.68260960771974
+          },
+          "2": {
+            "count": 28,
+            "mean_bytes_A_real": 2290.3928571428573,
+            "mean_bytes_C_full_oracle": 1885.142857142857,
+            "bytes_gap_percent": 17.69347117618625
+          },
+          "3": {
+            "count": 28,
+            "mean_bytes_A_real": 2110.25,
+            "mean_bytes_C_full_oracle": 1726.9642857142858,
+            "bytes_gap_percent": 18.16304770931
+          },
+          "4": {
+            "count": 28,
+            "mean_bytes_A_real": 2154.8214285714284,
+            "mean_bytes_C_full_oracle": 1811.2142857142858,
+            "bytes_gap_percent": 15.94596834341592
+          },
+          "5": {
+            "count": 27,
+            "mean_bytes_A_real": 1972.2592592592594,
+            "mean_bytes_C_full_oracle": 1613.9259259259259,
+            "bytes_gap_percent": 18.16867288877205
+          },
+          "6": {
+            "count": 27,
+            "mean_bytes_A_real": 2148.5925925925926,
+            "mean_bytes_C_full_oracle": 1821.6296296296296,
+            "bytes_gap_percent": 15.217541198372755
+          },
+          "7": {
+            "count": 27,
+            "mean_bytes_A_real": 2116.4074074074074,
+            "mean_bytes_C_full_oracle": 1775.5555555555557,
+            "bytes_gap_percent": 16.105209736975652
+          },
+          "8": {
+            "count": 27,
+            "mean_bytes_A_real": 2211.5925925925926,
+            "mean_bytes_C_full_oracle": 1903.888888888889,
+            "bytes_gap_percent": 13.91321822718671
+          },
+          "9": {
+            "count": 26,
+            "mean_bytes_A_real": 2168.153846153846,
+            "mean_bytes_C_full_oracle": 1836.1923076923076,
+            "bytes_gap_percent": 15.310792592066989
+          }
+        }
+      }
+    }
+  ]
+}

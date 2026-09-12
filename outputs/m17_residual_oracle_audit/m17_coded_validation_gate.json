@@ -1,0 +1,42 @@
+{
+  "phase": "M17 Phase F coded validation gate",
+  "rate_points": [
+    {
+      "bits": 5,
+      "residual_identity": "ec858dee10f8a955",
+      "payloads_checked": 81,
+      "all_round_trips_match": true,
+      "mismatch_examples": [],
+      "sample_total_bytes": {
+        "A_real": 158698,
+        "C_full_oracle": 155662
+      },
+      "sample_channel_gain_percent": 1.9130675874932261
+    },
+    {
+      "bits": 4,
+      "residual_identity": "be872c2beebd2f9b",
+      "payloads_checked": 81,
+      "all_round_trips_match": true,
+      "mismatch_examples": [],
+      "sample_total_bytes": {
+        "A_real": 109119,
+        "C_full_oracle": 102392
+      },
+      "sample_channel_gain_percent": 6.164829223141707
+    },
+    {
+      "bits": 3,
+      "residual_identity": "d2d61d66a50cad8a",
+      "payloads_checked": 81,
+      "all_round_trips_match": true,
+      "mismatch_examples": [],
+      "sample_total_bytes": {
+        "A_real": 66162,
+        "C_full_oracle": 55673
+      },
+      "sample_channel_gain_percent": 15.853511078867024
+    }
+  ],
+  "overall_verdict": "CORROBORATED - every oracle-variant payload decodes back to its exact symbols; reported byte savings are genuine entropy-coder output, not a computation artifact. This does NOT mean the oracle is implementable - no real decoder can ever possess the oracle reference without transmitting the previous frame twice, which this milestone's freezes correctly forbid attempting to design around."
+}
