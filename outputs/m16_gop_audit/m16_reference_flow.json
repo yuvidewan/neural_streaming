@@ -1,0 +1,86 @@
+{
+  "phase": "M16 Phase A - GOP-boundary reference flow trace",
+  "checkpoint": "outputs\\m10f_lambda_boundary\\lambda_3.0e-04_seed42\\best.pt",
+  "gop_size": 10,
+  "gop_frame_types_at_gop10_for_23_frames": {
+    "i_frame_positions": [
+      0,
+      10,
+      20
+    ],
+    "boundary_p_frame_positions": [
+      1,
+      11,
+      21
+    ],
+    "ordinary_p_frame_positions": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      22
+    ]
+  },
+  "per_bit_depth_t0_trace": {
+    "5bit": {
+      "t0_i_frame": {
+        "step_1_true_latent": "model.encode(frame) - float latent, no quantization",
+        "step_2_quantized_payload": "encode_latent_to_payload(true_latent, intra_params, intra_entropy_model) -> compressed bytes (lossy: bit-depth quantization + entropy coding)",
+        "step_3_decoded_latent": "decode_payload_to_latent(payload, ...) -> DEQUANTIZED latent (this IS 'reconstructed_latent' for an I-frame in encode_multi - see scripts/m13_closed_loop.py line 126)",
+        "step_4_reconstruction": "model.decode(decoded_latent) -> pixel-space reconstruction",
+        "reference_used_by_next_frames_motion_estimation": "step_4 output (`previous` in encode_multi) - PIXEL-SPACE RECONSTRUCTED FRAME, bit-depth-dependent",
+        "mean_abs_quantization_error_latent_space": 0.1785660982131958,
+        "mean_abs_reconstruction_error_pixel_space": 0.03254661709070206
+      }
+    },
+    "4bit": {
+      "t0_i_frame": {
+        "step_1_true_latent": "model.encode(frame) - float latent, no quantization",
+        "step_2_quantized_payload": "encode_latent_to_payload(true_latent, intra_params, intra_entropy_model) -> compressed bytes (lossy: bit-depth quantization + entropy coding)",
+        "step_3_decoded_latent": "decode_payload_to_latent(payload, ...) -> DEQUANTIZED latent (this IS 'reconstructed_latent' for an I-frame in encode_multi - see scripts/m13_closed_loop.py line 126)",
+        "step_4_reconstruction": "model.decode(decoded_latent) -> pixel-space reconstruction",
+        "reference_used_by_next_frames_motion_estimation": "step_4 output (`previous` in encode_multi) - PIXEL-SPACE RECONSTRUCTED FRAME, bit-depth-dependent",
+        "mean_abs_quantization_error_latent_space": 0.37104088068008423,
+        "mean_abs_reconstruction_error_pixel_space": 0.035027600824832916
+      }
+    },
+    "3bit": {
+      "t0_i_frame": {
+        "step_1_true_latent": "model.encode(frame) - float latent, no quantization",
+        "step_2_quantized_payload": "encode_latent_to_payload(true_latent, intra_params, intra_entropy_model) -> compressed bytes (lossy: bit-depth quantization + entropy coding)",
+        "step_3_decoded_latent": "decode_payload_to_latent(payload, ...) -> DEQUANTIZED latent (this IS 'reconstructed_latent' for an I-frame in encode_multi - see scripts/m13_closed_loop.py line 126)",
+        "step_4_reconstruction": "model.decode(decoded_latent) -> pixel-space reconstruction",
+        "reference_used_by_next_frames_motion_estimation": "step_4 output (`previous` in encode_multi) - PIXEL-SPACE RECONSTRUCTED FRAME, bit-depth-dependent",
+        "mean_abs_quantization_error_latent_space": 0.7828875780105591,
+        "mean_abs_reconstruction_error_pixel_space": 0.043716177344322205
+      }
+    }
+  },
+  "gop_boundary_and_ordinary_p_frame_reference": {
+    "claim": "encode_multi has NO branch distinguishing 'the P-frame right after an I-frame' from any other P-frame. Every P-frame (boundary or ordinary) reads `previous` - whatever pixel reconstruction the IMMEDIATELY PRECEDING frame produced, I-typed or P-typed alike (scripts/m13_closed_loop.py lines 131-157).",
+    "reference_for_motion_estimation": "`previous` - PIXEL-SPACE reconstruction (model.decode of the prior frame's reconstructed_latent)",
+    "reference_for_residual_generation": "`reference_latent = model.encode(warped)` - a RE-ENCODED latent, from warping `previous` (pixel space) by the estimated motion, then re-running the encoder. NOT a warp of any latent tensor directly - estimate_block_motion/warp_blocks operate on pixels only in this codec.",
+    "reference_for_entropy_calibration": "DIFFERENT for the two calibration-time helper functions M14 built - NEITHER matches the real coder exactly at ordinary P-frames: calibrate_grids's OWN P-branch advances `previous_reconstruction = model.decode(latent)` (the TRUE, unquantized latent, not `reconstructed_latent = reference_latent + delta`) - documented in its own source as 'very slightly optimistic relative to coding-time residuals'. collect_motion_symbols does the same (true-latent advance) at EVERY frame including I-frames. Both are pre-existing, unmodified by M16.",
+    "classification_per_step": {
+      "true_latent": "model.encode(frame) - exists only transiently, never stored as a reference",
+      "quantized_latent": "the INTEGER SYMBOLS from latent_to_symbols/encode_latent_to_payload - exists only inside the entropy-coded payload bytes",
+      "decoded_latent": "decode_payload_to_latent's output (I-frames) or reference_latent + symbols_to_latent(...) (P-frames) - this is `reconstructed_latent`",
+      "reconstruction": "model.decode(reconstructed_latent) - PIXEL space; THIS is what `previous` holds and what motion estimation actually reads",
+      "re_encoded_latent": "model.encode(warped) - computed fresh every P-frame from the WARPED PIXEL reference; this is `reference_latent`, used for the residual `delta`",
+      "other": "none observed - every quantity in the real coder's per-frame loop falls into one of the five categories above"
+    }
+  },
+  "key_finding": "The REAL deployed coder's bit-depth dependence is NOT concentrated at GOP boundaries - it is uniform in mechanism (every reference is a real, quantized pixel reconstruction) and CUMULATIVE in magnitude (quantization error from intra AND every preceding residual compounds through a GOP). The 'GOP-boundary' framing accurately describes calibrate_grids's/collect_motion_symbols's APPROXIMATIONS, not a distinct property of the deployed codec. Phase B/C measure the real per-GOP-position shape of this empirically rather than assume it peaks at the boundary."
+}

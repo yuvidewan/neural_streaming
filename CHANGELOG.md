@@ -13,6 +13,59 @@ the time.
 
 ---
 
+## 2026-09-12 — M16: GOP-boundary reference / motion-calibration asymmetry audit (REAL EFFECT, NOT A BOTTLENECK)
+
+**Source:** M14/M15 documented a bit-depth asymmetry in the *calibration-time helper
+functions* (`calibrate_grids`, `collect_motion_symbols`), concentrated at GOP boundaries.
+M16 asks whether the real deployed coder has a matching, materially-sized inefficiency -
+audit first, before touching anything.
+**Tests:** 1289 passing (full suite), zero regressions. 12 new tests.
+**Scope:** every M13/M14/M15 identity, checkpoint, quantizer, codebook, motion estimator,
+GOP, `.nvct` v2 frozen. Zero modifications to any existing tracked file.
+
+### The trace, and a correction made mid-audit
+
+Traced `m13_closed_loop.encode_multi`/`decode_sequence` directly - the real coder, not the
+calibration shortcuts. Every frame's reference (I or P) is a real, quantized pixel
+reconstruction; there is no boundary-specific code branch anywhere. Phase A's own first
+conclusion from this was that "GOP-boundary bit-dependence" is purely a calibration-function
+artifact. Phase B/C's actual measurements then showed that conclusion was only half right:
+the *code* has no boundary special-case, but the *data* does - intra quantization is
+measurably coarser (relative to signal) than residual quantization at matched bit budgets,
+so the one reference transition through intra quantization (I -> first P) takes a much
+bigger one-time hit than any transition through residual quantization (P -> next P). Stated
+plainly rather than silently smoothed over, since catching your own structural read being
+incomplete is the point of an audit.
+
+### The measurement
+
+Real vs. an ideal (true-latent, oracle-only, never deployed) reference, VAL-B, per GOP
+position (gop_size=10): position 1 (boundary) shows a SAD gap of +5.2% / +11.9% / +34.6% at
+5/4/3-bit - roughly 3-4x every other position in the GOP (which stays comparatively flat at
++0.8-12.7%, not a monotonically growing "accumulating error" curve). Up to 30.5% of all
+motion vectors (45.3% at the boundary position specifically, 3-bit) differ from what a
+perfect-reference encoder would choose. Motion channel entropy gain reaches "meaningful"
+under the real entropy-model class: +1.04% (4-bit), +3.98% (3-bit).
+
+### Why nothing ships
+
+Translated to total-stream bytes using motion's actual ~4-9% byte share, the oracle upper
+bound for motion is **at most +0.36% of total bytes (3-bit, best case, 100% unrealizable
+oracle)** - weak at every bit depth. Per the milestone's own gate ("if the oracle is not
+meaningful, STOP"), no implementation was attempted; Phase F/G/H were correctly never
+reached. A parallel residual-channel proxy measurement showed a much larger apparent gap
+(up to +12.7% channel / +9.6% total-stream at 3-bit) but only under a simplified per-channel
+model, not the real deployed G16 + M13 entropy coder - flagged as an M17 lead, not acted on,
+since it is not decision-grade evidence as measured.
+
+### Verdict: REFERENCE DISCREPANCY CONFIRMED AND GOP-BOUNDARY-CONCENTRATED, NOT A BOTTLENECK
+
+A real, precisely-characterized, mechanistically-understood effect was found and correctly
+rejected once translated to the metric that actually matters (total-stream bytes) rather
+than chased on an eye-catching channel-level or motion-vector-level number.
+
+---
+
 ## 2026-09-12 — M15: broad-TRAIN calibration policy, a root-cause experiment (COVERAGE CONFIRMED, NO PRODUCTION CHANGE)
 
 **Source:** M14 found and fixed a motion-table calibration gap and named a suspected general

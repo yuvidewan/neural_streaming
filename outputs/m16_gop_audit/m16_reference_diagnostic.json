@@ -1,0 +1,323 @@
+{
+  "phase": "M16 Phase B/C/D/E diagnostic",
+  "rate_points": [
+    {
+      "bits": 5,
+      "reference_summary_val_b": {
+        "boundary": {
+          "count": 16,
+          "mean_fraction_motion_vectors_changed": 0.1826171875,
+          "mean_sad_real": 26.993012189865112,
+          "mean_sad_oracle": 25.654217839241028,
+          "median_sad_real": 19.193272590637207,
+          "median_sad_oracle": 17.194196701049805,
+          "mean_residual_energy_real": 0.6674931775778532,
+          "mean_residual_energy_oracle": 0.6336352284997702
+        },
+        "ordinary": {
+          "count": 128,
+          "mean_fraction_motion_vectors_changed": 0.10443115234375,
+          "mean_sad_real": 26.815224036574364,
+          "mean_sad_oracle": 26.532903611660004,
+          "median_sad_real": 17.439764976501465,
+          "median_sad_oracle": 17.219886779785156,
+          "mean_residual_energy_real": 0.6672828774899244,
+          "mean_residual_energy_oracle": 0.6585777094587684
+        },
+        "all": {
+          "count": 144,
+          "mean_fraction_motion_vectors_changed": 0.11311848958333333,
+          "mean_sad_real": 26.83497827582889,
+          "mean_sad_oracle": 26.435271859169006,
+          "median_sad_real": 17.853973388671875,
+          "median_sad_oracle": 17.219886779785156,
+          "mean_residual_energy_real": 0.667306244166361,
+          "mean_residual_energy_oracle": 0.6558063226855464
+        },
+        "by_gop_position": {
+          "1": {
+            "count": 16,
+            "mean_sad_real": 26.993012189865112,
+            "mean_sad_oracle": 25.654217839241028,
+            "mean_fraction_changed": 0.1826171875
+          },
+          "2": {
+            "count": 16,
+            "mean_sad_real": 28.650417804718018,
+            "mean_sad_oracle": 28.41667002439499,
+            "mean_fraction_changed": 0.112060546875
+          },
+          "3": {
+            "count": 16,
+            "mean_sad_real": 25.445459127426147,
+            "mean_sad_oracle": 25.05664575099945,
+            "mean_fraction_changed": 0.1036376953125
+          },
+          "4": {
+            "count": 16,
+            "mean_sad_real": 25.764145374298096,
+            "mean_sad_oracle": 25.531142234802246,
+            "mean_fraction_changed": 0.0943603515625
+          },
+          "5": {
+            "count": 16,
+            "mean_sad_real": 24.92633557319641,
+            "mean_sad_oracle": 24.67251443862915,
+            "mean_fraction_changed": 0.0972900390625
+          },
+          "6": {
+            "count": 16,
+            "mean_sad_real": 28.567347407341003,
+            "mean_sad_oracle": 28.345208406448364,
+            "mean_fraction_changed": 0.10791015625
+          },
+          "7": {
+            "count": 16,
+            "mean_sad_real": 26.633293569087982,
+            "mean_sad_oracle": 26.27129364013672,
+            "mean_fraction_changed": 0.113037109375
+          },
+          "8": {
+            "count": 16,
+            "mean_sad_real": 27.732915222644806,
+            "mean_sad_oracle": 27.467911541461945,
+            "mean_fraction_changed": 0.1014404296875
+          },
+          "9": {
+            "count": 16,
+            "mean_sad_real": 26.801878213882446,
+            "mean_sad_oracle": 26.501842856407166,
+            "mean_fraction_changed": 0.105712890625
+          }
+        }
+      },
+      "phase_d_offline_entropy": {
+        "motion_h_real_bits_per_symbol": 3.8647887801799232,
+        "motion_h_oracle_bits_per_symbol": 3.858678821300381,
+        "motion_channel_gain_percent": 0.1580929573920443,
+        "motion_verdict": "weak",
+        "residual_h_real_bits_per_symbol_diagnostic_proxy": 3.1622428303482897,
+        "residual_h_oracle_bits_per_symbol_diagnostic_proxy": 3.121384528229024,
+        "residual_channel_gain_percent_diagnostic_proxy": 1.2920671912715043
+      },
+      "phase_e_oracle_bound": {
+        "motion_bytes_per_frame_real": 247.3464819315151,
+        "motion_bytes_per_frame_oracle": 246.95544456322438
+      },
+      "motion_table_real_identity": "e4b8a65412b436bd",
+      "motion_table_oracle_identity": "d7e7b237b6451885"
+    },
+    {
+      "bits": 4,
+      "reference_summary_val_b": {
+        "boundary": {
+          "count": 16,
+          "mean_fraction_motion_vectors_changed": 0.291748046875,
+          "mean_sad_real": 28.717321634292603,
+          "mean_sad_oracle": 25.654217839241028,
+          "median_sad_real": 20.22148323059082,
+          "median_sad_oracle": 17.194196701049805,
+          "mean_residual_energy_real": 0.7292783595621586,
+          "mean_residual_energy_oracle": 0.6336352284997702
+        },
+        "ordinary": {
+          "count": 128,
+          "mean_fraction_motion_vectors_changed": 0.170623779296875,
+          "mean_sad_real": 27.475006587803364,
+          "mean_sad_oracle": 26.532903611660004,
+          "median_sad_real": 18.039793968200684,
+          "median_sad_oracle": 17.219886779785156,
+          "mean_residual_energy_real": 0.691025166073814,
+          "mean_residual_energy_oracle": 0.6585777094587684
+        },
+        "all": {
+          "count": 144,
+          "mean_fraction_motion_vectors_changed": 0.18408203125,
+          "mean_sad_real": 27.613041592968834,
+          "mean_sad_oracle": 26.435271859169006,
+          "median_sad_real": 18.645506858825684,
+          "median_sad_oracle": 17.219886779785156,
+          "mean_residual_energy_real": 0.6952755209058523,
+          "mean_residual_energy_oracle": 0.6558063226855464
+        },
+        "by_gop_position": {
+          "1": {
+            "count": 16,
+            "mean_sad_real": 28.717321634292603,
+            "mean_sad_oracle": 25.654217839241028,
+            "mean_fraction_changed": 0.291748046875
+          },
+          "2": {
+            "count": 16,
+            "mean_sad_real": 29.28070890903473,
+            "mean_sad_oracle": 28.41667002439499,
+            "mean_fraction_changed": 0.178955078125
+          },
+          "3": {
+            "count": 16,
+            "mean_sad_real": 26.12348246574402,
+            "mean_sad_oracle": 25.05664575099945,
+            "mean_fraction_changed": 0.1680908203125
+          },
+          "4": {
+            "count": 16,
+            "mean_sad_real": 26.440185844898224,
+            "mean_sad_oracle": 25.531142234802246,
+            "mean_fraction_changed": 0.1627197265625
+          },
+          "5": {
+            "count": 16,
+            "mean_sad_real": 25.595568895339966,
+            "mean_sad_oracle": 24.67251443862915,
+            "mean_fraction_changed": 0.156005859375
+          },
+          "6": {
+            "count": 16,
+            "mean_sad_real": 29.22833412885666,
+            "mean_sad_oracle": 28.345208406448364,
+            "mean_fraction_changed": 0.1781005859375
+          },
+          "7": {
+            "count": 16,
+            "mean_sad_real": 27.27560257911682,
+            "mean_sad_oracle": 26.27129364013672,
+            "mean_fraction_changed": 0.17333984375
+          },
+          "8": {
+            "count": 16,
+            "mean_sad_real": 28.389515697956085,
+            "mean_sad_oracle": 27.467911541461945,
+            "mean_fraction_changed": 0.167724609375
+          },
+          "9": {
+            "count": 16,
+            "mean_sad_real": 27.466654181480408,
+            "mean_sad_oracle": 26.501842856407166,
+            "mean_fraction_changed": 0.1800537109375
+          }
+        }
+      },
+      "phase_d_offline_entropy": {
+        "motion_h_real_bits_per_symbol": 3.899247516040205,
+        "motion_h_oracle_bits_per_symbol": 3.858678821300381,
+        "motion_channel_gain_percent": 1.0404236861840184,
+        "motion_verdict": "meaningful",
+        "residual_h_real_bits_per_symbol_diagnostic_proxy": 2.245521507577954,
+        "residual_h_oracle_bits_per_symbol_diagnostic_proxy": 2.14391336583428,
+        "residual_channel_gain_percent_diagnostic_proxy": 4.524924005438255
+      },
+      "phase_e_oracle_bound": {
+        "motion_bytes_per_frame_real": 249.55184102657313,
+        "motion_bytes_per_frame_oracle": 246.95544456322438
+      },
+      "motion_table_real_identity": "0fb21334de917ef5",
+      "motion_table_oracle_identity": "d7e7b237b6451885"
+    },
+    {
+      "bits": 3,
+      "reference_summary_val_b": {
+        "boundary": {
+          "count": 16,
+          "mean_fraction_motion_vectors_changed": 0.453125,
+          "mean_sad_real": 34.51862275600433,
+          "mean_sad_oracle": 25.654217839241028,
+          "median_sad_real": 27.677419662475586,
+          "median_sad_oracle": 17.194196701049805,
+          "mean_residual_energy_real": 0.9196660369634628,
+          "mean_residual_energy_oracle": 0.6336352284997702
+        },
+        "ordinary": {
+          "count": 128,
+          "mean_fraction_motion_vectors_changed": 0.2862396240234375,
+          "mean_sad_real": 29.471197485923767,
+          "mean_sad_oracle": 26.532903611660004,
+          "median_sad_real": 20.30470085144043,
+          "median_sad_oracle": 17.219886779785156,
+          "mean_residual_energy_real": 0.7647527402732521,
+          "mean_residual_energy_oracle": 0.6585777094587684
+        },
+        "all": {
+          "count": 144,
+          "mean_fraction_motion_vectors_changed": 0.3047824435763889,
+          "mean_sad_real": 30.03202251593272,
+          "mean_sad_oracle": 26.435271859169006,
+          "median_sad_real": 22.179027557373047,
+          "median_sad_oracle": 17.219886779785156,
+          "mean_residual_energy_real": 0.7819653287943866,
+          "mean_residual_energy_oracle": 0.6558063226855464
+        },
+        "by_gop_position": {
+          "1": {
+            "count": 16,
+            "mean_sad_real": 34.51862275600433,
+            "mean_sad_oracle": 25.654217839241028,
+            "mean_fraction_changed": 0.453125
+          },
+          "2": {
+            "count": 16,
+            "mean_sad_real": 31.540184378623962,
+            "mean_sad_oracle": 28.41667002439499,
+            "mean_fraction_changed": 0.3128662109375
+          },
+          "3": {
+            "count": 16,
+            "mean_sad_real": 28.246615886688232,
+            "mean_sad_oracle": 25.05664575099945,
+            "mean_fraction_changed": 0.28125
+          },
+          "4": {
+            "count": 16,
+            "mean_sad_real": 28.465006947517395,
+            "mean_sad_oracle": 25.531142234802246,
+            "mean_fraction_changed": 0.281494140625
+          },
+          "5": {
+            "count": 16,
+            "mean_sad_real": 27.600445866584778,
+            "mean_sad_oracle": 24.67251443862915,
+            "mean_fraction_changed": 0.2679443359375
+          },
+          "6": {
+            "count": 16,
+            "mean_sad_real": 30.961632013320923,
+            "mean_sad_oracle": 28.345208406448364,
+            "mean_fraction_changed": 0.294921875
+          },
+          "7": {
+            "count": 16,
+            "mean_sad_real": 29.207541942596436,
+            "mean_sad_oracle": 26.27129364013672,
+            "mean_fraction_changed": 0.28125
+          },
+          "8": {
+            "count": 16,
+            "mean_sad_real": 30.34712243080139,
+            "mean_sad_oracle": 27.467911541461945,
+            "mean_fraction_changed": 0.28515625
+          },
+          "9": {
+            "count": 16,
+            "mean_sad_real": 29.40103042125702,
+            "mean_sad_oracle": 26.501842856407166,
+            "mean_fraction_changed": 0.2850341796875
+          }
+        }
+      },
+      "phase_d_offline_entropy": {
+        "motion_h_real_bits_per_symbol": 4.018414858233608,
+        "motion_h_oracle_bits_per_symbol": 3.858678821300381,
+        "motion_channel_gain_percent": 3.97510069439278,
+        "motion_verdict": "meaningful",
+        "residual_h_real_bits_per_symbol_diagnostic_proxy": 1.4184424958470814,
+        "residual_h_oracle_bits_per_symbol_diagnostic_proxy": 1.2384202011313585,
+        "residual_channel_gain_percent_diagnostic_proxy": 12.691546907456061
+      },
+      "phase_e_oracle_bound": {
+        "motion_bytes_per_frame_real": 257.1785509269509,
+        "motion_bytes_per_frame_oracle": 246.95544456322438
+      },
+      "motion_table_real_identity": "9d2245a1f9a4b2e9",
+      "motion_table_oracle_identity": "d7e7b237b6451885"
+    }
+  ]
+}
