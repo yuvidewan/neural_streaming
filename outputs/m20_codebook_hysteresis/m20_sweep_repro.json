@@ -1,0 +1,2250 @@
+{
+  "phase": "M20 Phases C-G",
+  "val_b_sequence_ids": [
+    "car-roundabout",
+    "drift-straight",
+    "pigs",
+    "stunt"
+  ],
+  "declared_states": [
+    "temporal",
+    "channel_group",
+    "raster"
+  ],
+  "declared_margins": [
+    0.0,
+    0.001,
+    0.005,
+    0.01,
+    0.02,
+    0.05,
+    0.1,
+    0.25,
+    0.5
+  ],
+  "p_residual_share_of_total_stream": {
+    "5": 0.8217707570686114,
+    "4": 0.7967743682412419,
+    "3": 0.7575591452610135
+  },
+  "rate_points": [
+    {
+      "bits": 5,
+      "p_frames": 246,
+      "residual_identity": "ec858dee10f8a955",
+      "assign_codebook_id": "c4bb904fe6f88a5f",
+      "coding_codebook_id": "474d54d3673ade9f",
+      "advantage_scale": {
+        "temporal": {
+          "samples": 223232,
+          "mean_bits": 0.09331040435930962,
+          "fraction_exactly_zero": 0.18923810206422018,
+          "percentiles_bits": {
+            "10": 0.0,
+            "25": 0.0028229951858520508,
+            "50": 0.021529674530029297,
+            "75": 0.08248597383499146,
+            "90": 0.2280520439147948,
+            "95": 0.3937879085540755,
+            "99": 1.104990954399109
+          }
+        },
+        "channel_group": {
+          "samples": 251904,
+          "mean_bits": 0.285630941359048,
+          "fraction_exactly_zero": 0.2666293508638211,
+          "percentiles_bits": {
+            "10": 0.0,
+            "25": 0.0,
+            "50": 0.10347402095794678,
+            "75": 0.39025014638900757,
+            "90": 0.7059879541397096,
+            "95": 1.0819575607776633,
+            "99": 2.2059650456905375
+          }
+        },
+        "raster": {
+          "samples": 251904,
+          "mean_bits": 0.09872979021025917,
+          "fraction_exactly_zero": 0.1491798462906504,
+          "percentiles_bits": {
+            "10": 0.0,
+            "25": 0.0051965415477752686,
+            "50": 0.02505183219909668,
+            "75": 0.08712530136108398,
+            "90": 0.24161589145660417,
+            "95": 0.4258469104766841,
+            "99": 1.1378130602836611
+          }
+        }
+      },
+      "configurations": [
+        {
+          "state": "baseline",
+          "margin": 0.0,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1333275,
+          "oracle_residual_bytes": 1300318,
+          "real_ideal_bits": 10665017.284985477,
+          "mean_code_length_bits": 2.646101611374144,
+          "positions": 4030464,
+          "held_positions": 0,
+          "held_fraction": 0.0,
+          "held_made_code_length_worse": 0,
+          "held_made_code_length_better": 0,
+          "held_made_code_length_equal": 0,
+          "held_code_length_delta_bits": 0.0,
+          "routing_churn_vs_oracle": 0.44184763838605184,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 263655.74528824934,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1647581,
+              "fraction_of_positions": 0.40878196654280996,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1181036,
+              "fraction_of_positions": 0.2930273040523374,
+              "sum_delta_code_len_bits": 23140.10108201293,
+              "mean_delta_code_len_bits": 0.019593053117782127,
+              "share_of_total_excess_bits": 0.08776634492343165
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 602032,
+              "fraction_of_positions": 0.14937039507113822,
+              "sum_delta_code_len_bits": 93166.80155749715,
+              "mean_delta_code_len_bits": 0.15475390271197736,
+              "share_of_total_excess_bits": 0.35336533803061954
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 599815,
+              "fraction_of_positions": 0.14882033433371444,
+              "sum_delta_code_len_bits": 147348.8426487393,
+              "mean_delta_code_len_bits": 0.24565714870208194,
+              "share_of_total_excess_bits": 0.558868317045949
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.08776634492343165,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.58203586327097,
+            "top1_share": 0.01280125563706809,
+            "top10_share": 0.09768279781186484
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 157784,
+              "held": 0,
+              "routing_only": 154657,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 280862
+            },
+            "ordinary": {
+              "real_bytes": 1175491,
+              "held": 0,
+              "routing_only": 1026379,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 1499989
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 0,
+          "residual_gain_percent": 0.0,
+          "total_stream_gain_percent": 0.0,
+          "verdict": "weak",
+          "churn_reduction_absolute": 0.0
+        },
+        {
+          "state": "temporal",
+          "margin": 0.001,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1333278,
+          "oracle_residual_bytes": 1300309,
+          "real_ideal_bits": 10665126.197043043,
+          "mean_code_length_bits": 2.6461286335873595,
+          "positions": 4030464,
+          "held_positions": 80501,
+          "held_fraction": 0.01997313460683435,
+          "held_made_code_length_worse": 41059,
+          "held_made_code_length_better": 39425,
+          "held_made_code_length_equal": 17,
+          "held_code_length_delta_bits": 108.9120575765643,
+          "routing_churn_vs_oracle": 0.4412082579077744,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 263721.434143903,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1649359,
+              "fraction_of_positions": 0.4092231068184705,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1179258,
+              "fraction_of_positions": 0.29258616377667684,
+              "sum_delta_code_len_bits": 23205.982056463545,
+              "mean_delta_code_len_bits": 0.019678460571362286,
+              "share_of_total_excess_bits": 0.08799429645070449
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 602831,
+              "fraction_of_positions": 0.14956863527375508,
+              "sum_delta_code_len_bits": 93702.20937717445,
+              "mean_delta_code_len_bits": 0.15543694564011215,
+              "share_of_total_excess_bits": 0.35530752242930935
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 599016,
+              "fraction_of_positions": 0.14862209413109756,
+              "sum_delta_code_len_bits": 146813.24271026504,
+              "mean_delta_code_len_bits": 0.24509068657642707,
+              "share_of_total_excess_bits": 0.5566981811199863
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.08799429645070449,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.581594450549183,
+            "top1_share": 0.012874200092098578,
+            "top10_share": 0.09784431767657521
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 157784,
+              "held": 0,
+              "routing_only": 154657,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 280862
+            },
+            "ordinary": {
+              "real_bytes": 1175494,
+              "held": 80501,
+              "routing_only": 1024601,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 1497412
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 3,
+          "residual_gain_percent": -0.0002250098441806829,
+          "total_stream_gain_percent": -0.00018490651000025007,
+          "verdict": "weak",
+          "churn_reduction_absolute": 0.0006393804782774404
+        },
+        {
+          "state": "temporal",
+          "margin": 0.005,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1333433,
+          "oracle_residual_bytes": 1300372,
+          "real_ideal_bits": 10666277.333774775,
+          "mean_code_length_bits": 2.6464142425722637,
+          "positions": 4030464,
+          "held_positions": 370976,
+          "held_fraction": 0.09204300050813008,
+          "held_made_code_length_worse": 191949,
+          "held_made_code_length_better": 178963,
+          "held_made_code_length_equal": 64,
+          "held_code_length_delta_bits": 1260.0487892950935,
+          "routing_churn_vs_oracle": 0.4511929643832571,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 264340.1175614501,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1615654,
+              "fraction_of_positions": 0.40086054608104676,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1212963,
+              "fraction_of_positions": 0.3009487245141006,
+              "sum_delta_code_len_bits": 23733.780680388874,
+              "mean_delta_code_len_bits": 0.019566780421487608,
+              "share_of_total_excess_bits": 0.0897850122006985
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 596293,
+              "fraction_of_positions": 0.14794648953569614,
+              "sum_delta_code_len_bits": 91977.80822405152,
+              "mean_delta_code_len_bits": 0.1542493509466848,
+              "share_of_total_excess_bits": 0.34795251312041126
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 605554,
+              "fraction_of_positions": 0.1502442398691565,
+              "sum_delta_code_len_bits": 148628.5286570097,
+              "mean_delta_code_len_bits": 0.24544223745035076,
+              "share_of_total_excess_bits": 0.5622624746788902
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.0897850122006985,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.581062991093887,
+            "top1_share": 0.013040930275025406,
+            "top10_share": 0.0979750718527693
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 157784,
+              "held": 0,
+              "routing_only": 154657,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 280862
+            },
+            "ordinary": {
+              "real_bytes": 1175649,
+              "held": 370976,
+              "routing_only": 1058306,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 1537655
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 158,
+          "residual_gain_percent": -0.011850518460182632,
+          "total_stream_gain_percent": -0.009738409526679837,
+          "verdict": "weak",
+          "churn_reduction_absolute": -0.009345325997205278
+        },
+        {
+          "state": "temporal",
+          "margin": 0.01,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1333734,
+          "oracle_residual_bytes": 1300619,
+          "real_ideal_bits": 10668765.928417359,
+          "mean_code_length_bits": 2.6470316887627225,
+          "positions": 4030464,
+          "held_positions": 667766,
+          "held_fraction": 0.16567968353023374,
+          "held_made_code_length_worse": 351137,
+          "held_made_code_length_better": 316514,
+          "held_made_code_length_equal": 115,
+          "held_code_length_delta_bits": 3748.6434318897577,
+          "routing_churn_vs_oracle": 0.4709914292746443,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 264869.1940547943,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1551520,
+              "fraction_of_positions": 0.3849482342479675,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1277097,
+              "fraction_of_positions": 0.3168610363471799,
+              "sum_delta_code_len_bits": 24730.984884108922,
+              "mean_delta_code_len_bits": 0.019365001158180562,
+              "share_of_total_excess_bits": 0.09337055965441095
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 580630,
+              "fraction_of_positions": 0.14406033647738822,
+              "sum_delta_code_len_bits": 89238.40534828226,
+              "mean_delta_code_len_bits": 0.15369237784524098,
+              "share_of_total_excess_bits": 0.33691500314612366
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 621217,
+              "fraction_of_positions": 0.15413039292746444,
+              "sum_delta_code_len_bits": 150899.80382240313,
+              "mean_delta_code_len_bits": 0.24290997159189645,
+              "share_of_total_excess_bits": 0.5697144371994654
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.09337055965441095,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.581712619067257,
+            "top1_share": 0.013089808022103659,
+            "top10_share": 0.09771753326664126
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 157784,
+              "held": 0,
+              "routing_only": 154657,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 280862
+            },
+            "ordinary": {
+              "real_bytes": 1175950,
+              "held": 667766,
+              "routing_only": 1122440,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 1617452
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 459,
+          "residual_gain_percent": -0.03442650615964449,
+          "total_stream_gain_percent": -0.028290696030038264,
+          "verdict": "weak",
+          "churn_reduction_absolute": -0.02914379088859248
+        },
+        {
+          "state": "temporal",
+          "margin": 0.02,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1334697,
+          "oracle_residual_bytes": 1301501,
+          "real_ideal_bits": 10676442.457685908,
+          "mean_code_length_bits": 2.6489363154430627,
+          "positions": 4030464,
+          "held_positions": 1085214,
+          "held_fraction": 0.2692528701410061,
+          "held_made_code_length_worse": 581961,
+          "held_made_code_length_better": 503064,
+          "held_made_code_length_equal": 189,
+          "held_code_length_delta_bits": 11425.172700438387,
+          "routing_churn_vs_oracle": 0.507710526629192,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 265519.3756225972,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1434988,
+              "fraction_of_positions": 0.3560354341336382,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1393629,
+              "fraction_of_positions": 0.34577383646150917,
+              "sum_delta_code_len_bits": 26827.445161594347,
+              "mean_delta_code_len_bits": 0.01925006236350876,
+              "share_of_total_excess_bits": 0.10103761768303579
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 549167,
+              "fraction_of_positions": 0.13625403923716972,
+              "sum_delta_code_len_bits": 81432.73845580222,
+              "mean_delta_code_len_bits": 0.1482841074860693,
+              "share_of_total_excess_bits": 0.30669226403857147
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 652680,
+              "fraction_of_positions": 0.16193669016768292,
+              "sum_delta_code_len_bits": 157259.19200520057,
+              "mean_delta_code_len_bits": 0.24094378869461386,
+              "share_of_total_excess_bits": 0.5922701182783926
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.10103761768303579,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.584013833655932,
+            "top1_share": 0.012614676622840448,
+            "top10_share": 0.09732700751079776
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 157784,
+              "held": 0,
+              "routing_only": 154657,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 280862
+            },
+            "ordinary": {
+              "real_bytes": 1176913,
+              "held": 1085214,
+              "routing_only": 1238972,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 1765447
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 1422,
+          "residual_gain_percent": -0.1066546661416437,
+          "total_stream_gain_percent": -0.08764568574011854,
+          "verdict": "weak",
+          "churn_reduction_absolute": -0.06586288824314018
+        },
+        {
+          "state": "temporal",
+          "margin": 0.05,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1338135,
+          "oracle_residual_bytes": 1304200,
+          "real_ideal_bits": 10703962.056551464,
+          "mean_code_length_bits": 2.6557642138849182,
+          "positions": 4030464,
+          "held_positions": 1750450,
+          "held_fraction": 0.43430483438135165,
+          "held_made_code_length_worse": 971525,
+          "held_made_code_length_better": 778581,
+          "held_made_code_length_equal": 344,
+          "held_code_length_delta_bits": 38944.77156598644,
+          "routing_churn_vs_oracle": 0.5638931398469258,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 271471.57967387274,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1254833,
+              "fraction_of_positions": 0.3113371065961636,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1573784,
+              "fraction_of_positions": 0.3904721639989837,
+              "sum_delta_code_len_bits": 37505.96283323745,
+              "mean_delta_code_len_bits": 0.023831709328114563,
+              "share_of_total_excess_bits": 0.1381579717416259
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 502880,
+              "fraction_of_positions": 0.12476975355691057,
+              "sum_delta_code_len_bits": 69627.0240613245,
+              "mean_delta_code_len_bits": 0.13845653846111297,
+              "share_of_total_excess_bits": 0.2564799753439001
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 698967,
+              "fraction_of_positions": 0.17342097584794208,
+              "sum_delta_code_len_bits": 164338.5927793108,
+              "mean_delta_code_len_bits": 0.23511638286115197,
+              "share_of_total_excess_bits": 0.605362052914474
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.1381579717416259,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.589307911745708,
+            "top1_share": 0.012463081173780487,
+            "top10_share": 0.0970104186515498
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 157784,
+              "held": 0,
+              "routing_only": 154657,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 280862
+            },
+            "ordinary": {
+              "real_bytes": 1180351,
+              "held": 1750450,
+              "routing_only": 1419127,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 1991889
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 4860,
+          "residual_gain_percent": -0.3645159475727063,
+          "total_stream_gain_percent": -0.2995485462004051,
+          "verdict": "weak",
+          "churn_reduction_absolute": -0.12204550146087395
+        },
+        {
+          "state": "temporal",
+          "margin": 0.1,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1343896,
+          "oracle_residual_bytes": 1309046,
+          "real_ideal_bits": 10750024.658739012,
+          "mean_code_length_bits": 2.6671928241361322,
+          "positions": 4030464,
+          "held_positions": 2257960,
+          "held_fraction": 0.5602233390497967,
+          "held_made_code_length_worse": 1292371,
+          "held_made_code_length_better": 965142,
+          "held_made_code_length_equal": 447,
+          "held_code_length_delta_bits": 85007.37375352907,
+          "routing_churn_vs_oracle": 0.6005804790713922,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 278734.63691324677,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1134012,
+              "fraction_of_positions": 0.2813601610137195,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1694605,
+              "fraction_of_positions": 0.42044910958142784,
+              "sum_delta_code_len_bits": 54464.57412671865,
+              "mean_delta_code_len_bits": 0.0321399819584615,
+              "share_of_total_excess_bits": 0.19539937601536828
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 475834,
+              "fraction_of_positions": 0.11805935991488821,
+              "sum_delta_code_len_bits": 59646.10071087663,
+              "mean_delta_code_len_bits": 0.12535064898867385,
+              "share_of_total_excess_bits": 0.21398883673520938
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 726013,
+              "fraction_of_positions": 0.18013136948996444,
+              "sum_delta_code_len_bits": 164623.96207565148,
+              "mean_delta_code_len_bits": 0.22675070842485118,
+              "share_of_total_excess_bits": 0.5906117872494223
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.19539937601536828,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.590440117901053,
+            "top1_share": 0.012455637862042682,
+            "top10_share": 0.09831200576410061
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 157784,
+              "held": 0,
+              "routing_only": 154657,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 280862
+            },
+            "ordinary": {
+              "real_bytes": 1186112,
+              "held": 2257960,
+              "routing_only": 1539948,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 2139756
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 10621,
+          "residual_gain_percent": -0.796609851681011,
+          "total_stream_gain_percent": -0.6546306809042186,
+          "verdict": "weak",
+          "churn_reduction_absolute": -0.15873284068534038
+        },
+        {
+          "state": "temporal",
+          "margin": 0.25,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1357356,
+          "oracle_residual_bytes": 1321107,
+          "real_ideal_bits": 10857782.138336238,
+          "mean_code_length_bits": 2.693928574560209,
+          "positions": 4030464,
+          "held_positions": 2788475,
+          "held_fraction": 0.6918496232691819,
+          "held_made_code_length_worse": 1646128,
+          "held_made_code_length_better": 1141858,
+          "held_made_code_length_equal": 489,
+          "held_code_length_delta_bits": 192764.85335075652,
+          "routing_churn_vs_oracle": 0.6184910719956809,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 290021.67333078233,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1063324,
+              "fraction_of_positions": 0.2638217336763211,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1765293,
+              "fraction_of_positions": 0.4379875369188262,
+              "sum_delta_code_len_bits": 76780.74148083887,
+              "mean_delta_code_len_bits": 0.04349461618033883,
+              "share_of_total_excess_bits": 0.26474139190717344
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 474334,
+              "fraction_of_positions": 0.11768719432799797,
+              "sum_delta_code_len_bits": 55999.76503220078,
+              "mean_delta_code_len_bits": 0.11805977440411353,
+              "share_of_total_excess_bits": 0.19308820747451733
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 727513,
+              "fraction_of_positions": 0.18050353507685468,
+              "sum_delta_code_len_bits": 157241.1668177427,
+              "mean_delta_code_len_bits": 0.216135198708123,
+              "share_of_total_excess_bits": 0.5421704006183093
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.26474139190717344,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.593135551844254,
+            "top1_share": 0.011632407583841464,
+            "top10_share": 0.0971791337176067
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 157784,
+              "held": 0,
+              "routing_only": 154657,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 280862
+            },
+            "ordinary": {
+              "real_bytes": 1199572,
+              "held": 2788475,
+              "routing_only": 1610636,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 2211944
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 24081,
+          "residual_gain_percent": -1.8061540192383416,
+          "total_stream_gain_percent": -1.4842445557720072,
+          "verdict": "weak",
+          "churn_reduction_absolute": -0.17664343360962903
+        },
+        {
+          "state": "temporal",
+          "margin": 0.5,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1372138,
+          "oracle_residual_bytes": 1336040,
+          "real_ideal_bits": 10975955.722246272,
+          "mean_code_length_bits": 2.723248668700743,
+          "positions": 4030464,
+          "held_positions": 3026364,
+          "held_fraction": 0.7508723561356707,
+          "held_made_code_length_worse": 1812623,
+          "held_made_code_length_better": 1213208,
+          "held_made_code_length_equal": 533,
+          "held_code_length_delta_bits": 310938.43726079725,
+          "routing_churn_vs_oracle": 0.6148346691596799,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 288725.6388148365,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1062840,
+              "fraction_of_positions": 0.2637016482469512,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1765777,
+              "fraction_of_positions": 0.4381076223481961,
+              "sum_delta_code_len_bits": 82943.67647587601,
+              "mean_delta_code_len_bits": 0.046972905681677814,
+              "share_of_total_excess_bits": 0.28727506437025796
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 489555,
+              "fraction_of_positions": 0.1214636825933689,
+              "sum_delta_code_len_bits": 54830.26052528787,
+              "mean_delta_code_len_bits": 0.11200020534013108,
+              "share_of_total_excess_bits": 0.1899043699421901
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 712292,
+              "fraction_of_positions": 0.17672704681148374,
+              "sum_delta_code_len_bits": 150951.70181367264,
+              "mean_delta_code_len_bits": 0.21192390454149793,
+              "share_of_total_excess_bits": 0.522820565687552
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.28727506437025796,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.599469586426519,
+            "top1_share": 0.011225258431783536,
+            "top10_share": 0.0953207868870681
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 157784,
+              "held": 0,
+              "routing_only": 154657,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 280862
+            },
+            "ordinary": {
+              "real_bytes": 1214354,
+              "held": 3026364,
+              "routing_only": 1611120,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 2197207
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 38863,
+          "residual_gain_percent": -2.91485252479796,
+          "total_stream_gain_percent": -2.3953405660465728,
+          "verdict": "weak",
+          "churn_reduction_absolute": -0.17298703077362804
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.001,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1333276,
+          "oracle_residual_bytes": 1300312,
+          "real_ideal_bits": 10665026.793839838,
+          "mean_code_length_bits": 2.64610397061972,
+          "positions": 4030464,
+          "held_positions": 14842,
+          "held_fraction": 0.0036824544270833335,
+          "held_made_code_length_worse": 7434,
+          "held_made_code_length_better": 7405,
+          "held_made_code_length_equal": 3,
+          "held_code_length_delta_bits": 9.50885437232658,
+          "routing_churn_vs_oracle": 0.4420195788871951,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 263627.69238198386,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1646959,
+              "fraction_of_positions": 0.4086276418794461,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1181658,
+              "fraction_of_positions": 0.2931816287157012,
+              "sum_delta_code_len_bits": 23132.342731726945,
+              "mean_delta_code_len_bits": 0.01957617409751971,
+              "share_of_total_excess_bits": 0.08774625504140625
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 601961,
+              "fraction_of_positions": 0.14935277923335874,
+              "sum_delta_code_len_bits": 93174.59027872296,
+              "mean_delta_code_len_bits": 0.15478509451396844,
+              "share_of_total_excess_bits": 0.35343248441335007
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 599886,
+              "fraction_of_positions": 0.1488379501714939,
+              "sum_delta_code_len_bits": 147320.75937153396,
+              "mean_delta_code_len_bits": 0.24558125939184106,
+              "share_of_total_excess_bits": 0.5588212605452437
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.08774625504140625,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.581641626370567,
+            "top1_share": 0.012861794572535569,
+            "top10_share": 0.09782769428036077
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 157783,
+              "held": 1711,
+              "routing_only": 154653,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 280860
+            },
+            "ordinary": {
+              "real_bytes": 1175493,
+              "held": 13131,
+              "routing_only": 1027005,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 1500684
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 1,
+          "residual_gain_percent": -7.500328139356096e-05,
+          "total_stream_gain_percent": -6.163550333341668e-05,
+          "verdict": "weak",
+          "churn_reduction_absolute": -0.00017194050114327508
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.005,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1333322,
+          "oracle_residual_bytes": 1300357,
+          "real_ideal_bits": 10665459.896375071,
+          "mean_code_length_bits": 2.646211427859192,
+          "positions": 4030464,
+          "held_positions": 84682,
+          "held_fraction": 0.02101048415269309,
+          "held_made_code_length_worse": 43474,
+          "held_made_code_length_better": 41202,
+          "held_made_code_length_equal": 6,
+          "held_code_length_delta_bits": 442.6113896025454,
+          "routing_churn_vs_oracle": 0.4446654280995935,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 263699.929299686,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1638728,
+              "fraction_of_positions": 0.4065854452489837,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1189889,
+              "fraction_of_positions": 0.2952238253461636,
+              "sum_delta_code_len_bits": 23145.74663239064,
+              "mean_delta_code_len_bits": 0.01945202168638473,
+              "share_of_total_excess_bits": 0.08777304830478846
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 599528,
+              "fraction_of_positions": 0.14874912665142276,
+              "sum_delta_code_len_bits": 93010.0860045356,
+              "mean_delta_code_len_bits": 0.1551388525715823,
+              "share_of_total_excess_bits": 0.35271183519671256
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 602319,
+              "fraction_of_positions": 0.14944160275342988,
+              "sum_delta_code_len_bits": 147544.09666275975,
+              "mean_delta_code_len_bits": 0.24496005715038002,
+              "share_of_total_excess_bits": 0.5595151164984989
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.08777304830478846,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.580687280692455,
+            "top1_share": 0.012938212573043699,
+            "top10_share": 0.09820507018546748
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 157792,
+              "held": 9627,
+              "routing_only": 154888,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 281265
+            },
+            "ordinary": {
+              "real_bytes": 1175530,
+              "held": 75055,
+              "routing_only": 1035001,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 1510943
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 47,
+          "residual_gain_percent": -0.0035251542254973655,
+          "total_stream_gain_percent": -0.0028968686566705846,
+          "verdict": "weak",
+          "churn_reduction_absolute": -0.0028177897135416297
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.01,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1333491,
+          "oracle_residual_bytes": 1300509,
+          "real_ideal_bits": 10666789.191540373,
+          "mean_code_length_bits": 2.6465412398027555,
+          "positions": 4030464,
+          "held_positions": 178735,
+          "held_fraction": 0.044346010781885166,
+          "held_made_code_length_worse": 93851,
+          "held_made_code_length_better": 84870,
+          "held_made_code_length_equal": 14,
+          "held_code_length_delta_bits": 1771.90655490343,
+          "routing_churn_vs_oracle": 0.4485691969956809,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 263808.5454372979,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1626869,
+              "fraction_of_positions": 0.4036431041190295,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1201748,
+              "fraction_of_positions": 0.2981661664761179,
+              "sum_delta_code_len_bits": 23270.620640997167,
+              "mean_delta_code_len_bits": 0.019363977007656488,
+              "share_of_total_excess_bits": 0.08821026097703925
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 595653,
+              "fraction_of_positions": 0.14778769888528964,
+              "sum_delta_code_len_bits": 92592.50278447047,
+              "mean_delta_code_len_bits": 0.1554470518648785,
+              "share_of_total_excess_bits": 0.3509837129460156
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 606194,
+              "fraction_of_positions": 0.150403030519563,
+              "sum_delta_code_len_bits": 147945.42201183023,
+              "mean_delta_code_len_bits": 0.2440562295433974,
+              "share_of_total_excess_bits": 0.5608060260769451
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.08821026097703925,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.581145043810292,
+            "top1_share": 0.01267943343495935,
+            "top10_share": 0.09784630255970529
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 157808,
+              "held": 20434,
+              "routing_only": 155321,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 282014
+            },
+            "ordinary": {
+              "real_bytes": 1175683,
+              "held": 158301,
+              "routing_only": 1046427,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 1525928
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 216,
+          "residual_gain_percent": -0.016200708781009168,
+          "total_stream_gain_percent": -0.013313268720018003,
+          "verdict": "weak",
+          "churn_reduction_absolute": -0.00672155860962903
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.02,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1333960,
+          "oracle_residual_bytes": 1301008,
+          "real_ideal_bits": 10670572.293581044,
+          "mean_code_length_bits": 2.6474798667302437,
+          "positions": 4030464,
+          "held_positions": 336133,
+          "held_fraction": 0.08339809014545224,
+          "held_made_code_length_worse": 179031,
+          "held_made_code_length_better": 157076,
+          "held_made_code_length_equal": 26,
+          "held_code_length_delta_bits": 5555.008595567418,
+          "routing_churn_vs_oracle": 0.4530026815771087,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 263666.2125074464,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1613451,
+              "fraction_of_positions": 0.4003139588891006,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1215166,
+              "fraction_of_positions": 0.30149531170604676,
+              "sum_delta_code_len_bits": 23237.055052568125,
+              "mean_delta_code_len_bits": 0.01912253556515581,
+              "share_of_total_excess_bits": 0.08813057551661788
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 591202,
+              "fraction_of_positions": 0.14668335953379066,
+              "sum_delta_code_len_bits": 92498.02334632634,
+              "mean_delta_code_len_bits": 0.15645756162246802,
+              "share_of_total_excess_bits": 0.3508148521066727
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 610645,
+              "fraction_of_positions": 0.151507369871062,
+              "sum_delta_code_len_bits": 147931.13410855192,
+              "mean_delta_code_len_bits": 0.24225390219939888,
+              "share_of_total_excess_bits": 0.5610545723767093
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.08813057551661788,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.582646423076845,
+            "top1_share": 0.012354408822408536,
+            "top10_share": 0.09670995696773374
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 157859,
+              "held": 38521,
+              "routing_only": 155948,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 283040
+            },
+            "ordinary": {
+              "real_bytes": 1176101,
+              "held": 297612,
+              "routing_only": 1059218,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 1542771
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 685,
+          "residual_gain_percent": -0.05137724775458926,
+          "total_stream_gain_percent": -0.04222031978339043,
+          "verdict": "weak",
+          "churn_reduction_absolute": -0.011155043191056868
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.05,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1335844,
+          "oracle_residual_bytes": 1302839,
+          "real_ideal_bits": 10685600.815672414,
+          "mean_code_length_bits": 2.651208599226395,
+          "positions": 4030464,
+          "held_positions": 634934,
+          "held_fraction": 0.15753372316438008,
+          "held_made_code_length_worse": 344393,
+          "held_made_code_length_better": 290501,
+          "held_made_code_length_equal": 40,
+          "held_code_length_delta_bits": 20583.53068694109,
+          "routing_churn_vs_oracle": 0.45381549121887704,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 263981.82936129963,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1612323,
+              "fraction_of_positions": 0.40003409036775917,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1216294,
+              "fraction_of_positions": 0.3017751802273882,
+              "sum_delta_code_len_bits": 23346.31504447321,
+              "mean_delta_code_len_bits": 0.019194631433249863,
+              "share_of_total_excess_bits": 0.08843909863402073
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 589054,
+              "fraction_of_positions": 0.14615041841336382,
+              "sum_delta_code_len_bits": 94485.20980866304,
+              "mean_delta_code_len_bits": 0.16040160971432676,
+              "share_of_total_excess_bits": 0.3579231572008903
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 612793,
+              "fraction_of_positions": 0.15204031099148882,
+              "sum_delta_code_len_bits": 146150.30450816336,
+              "mean_delta_code_len_bits": 0.23849865208669707,
+              "share_of_total_excess_bits": 0.5536377441650889
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.08843909863402073,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.583735521705183,
+            "top1_share": 0.011939072027439025,
+            "top10_share": 0.09493820066374492
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 158096,
+              "held": 73899,
+              "routing_only": 155368,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 282433
+            },
+            "ordinary": {
+              "real_bytes": 1177748,
+              "held": 561035,
+              "routing_only": 1060926,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 1546654
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 2569,
+          "residual_gain_percent": -0.19268342990005813,
+          "total_stream_gain_percent": -0.15834160806354747,
+          "verdict": "weak",
+          "churn_reduction_absolute": -0.011967852832825199
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.1,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1339881,
+          "oracle_residual_bytes": 1307202,
+          "real_ideal_bits": 10717861.945298802,
+          "mean_code_length_bits": 2.6592129207204933,
+          "positions": 4030464,
+          "held_positions": 917464,
+          "held_fraction": 0.22763235200711382,
+          "held_made_code_length_worse": 513346,
+          "held_made_code_length_better": 404050,
+          "held_made_code_length_equal": 68,
+          "held_code_length_delta_bits": 52844.66031332951,
+          "routing_churn_vs_oracle": 0.44603326068661076,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 261393.7855400268,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1636524,
+              "fraction_of_positions": 0.40603860994664637,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1192093,
+              "fraction_of_positions": 0.295770660648501,
+              "sum_delta_code_len_bits": 22103.455127346147,
+              "mean_delta_code_len_bits": 0.018541720425626313,
+              "share_of_total_excess_bits": 0.0845599870772807
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 596219,
+              "fraction_of_positions": 0.14792812936674288,
+              "sum_delta_code_len_bits": 97917.38252378239,
+              "mean_delta_code_len_bits": 0.1642305638092419,
+              "share_of_total_excess_bits": 0.37459720904033683
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 605628,
+              "fraction_of_positions": 0.15026260003810976,
+              "sum_delta_code_len_bits": 141372.94788889826,
+              "mean_delta_code_len_bits": 0.23343198776955204,
+              "share_of_total_excess_bits": 0.5408428038823825
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.0845599870772807,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.574614178321452,
+            "top1_share": 0.011569139434070123,
+            "top10_share": 0.09231666626969003
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 158519,
+              "held": 106375,
+              "routing_only": 151991,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 277167
+            },
+            "ordinary": {
+              "real_bytes": 1181362,
+              "held": 811089,
+              "routing_only": 1040102,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 1520554
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 6606,
+          "residual_gain_percent": -0.4954716768858638,
+          "total_stream_gain_percent": -0.40716413502055065,
+          "verdict": "weak",
+          "churn_reduction_absolute": -0.004185622300558911
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.25,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1360698,
+          "oracle_residual_bytes": 1332028,
+          "real_ideal_bits": 10884467.05373136,
+          "mean_code_length_bits": 2.7005493793596367,
+          "positions": 4030464,
+          "held_positions": 1419426,
+          "held_fraction": 0.35217434022484756,
+          "held_made_code_length_worse": 844395,
+          "held_made_code_length_better": 574899,
+          "held_made_code_length_equal": 132,
+          "held_code_length_delta_bits": 219449.7687458892,
+          "routing_churn_vs_oracle": 0.4250820749174289,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 229308.28520920995,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1699524,
+              "fraction_of_positions": 0.4216695645960366,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1129093,
+              "fraction_of_positions": 0.28013970599911076,
+              "sum_delta_code_len_bits": 3505.9895692539644,
+              "mean_delta_code_len_bits": 0.0031051379906296157,
+              "share_of_total_excess_bits": 0.015289415147190458
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 617662,
+              "fraction_of_positions": 0.15324836048653456,
+              "sum_delta_code_len_bits": 103118.65839462311,
+              "mean_delta_code_len_bits": 0.16694997975368908,
+              "share_of_total_excess_bits": 0.44969442905450435
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 584185,
+              "fraction_of_positions": 0.14494236891831808,
+              "sum_delta_code_len_bits": 122683.63724533287,
+              "mean_delta_code_len_bits": 0.21000819474196164,
+              "share_of_total_excess_bits": 0.5350161557983052
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.015289415147190458,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.504568710966977,
+            "top1_share": 0.010307746204903455,
+            "top10_share": 0.09427276859438516
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 160309,
+              "held": 161846,
+              "routing_only": 143717,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 263558
+            },
+            "ordinary": {
+              "real_bytes": 1200389,
+              "held": 1257580,
+              "routing_only": 985376,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 1449720
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 27423,
+          "residual_gain_percent": -2.056814985655622,
+          "total_stream_gain_percent": -1.6902304079122856,
+          "verdict": "weak",
+          "churn_reduction_absolute": 0.016765563468622957
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.5,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1422790,
+          "oracle_residual_bytes": 1396456,
+          "real_ideal_bits": 11381141.48428409,
+          "mean_code_length_bits": 2.823779466652993,
+          "positions": 4030464,
+          "held_positions": 2201653,
+          "held_fraction": 0.5462529872491108,
+          "held_made_code_length_worse": 1410213,
+          "held_made_code_length_better": 791224,
+          "held_made_code_length_equal": 216,
+          "held_code_length_delta_bits": 716124.1992986142,
+          "routing_churn_vs_oracle": 0.36416154566819103,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 210665.5986598411,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1876824,
+              "fraction_of_positions": 0.4656595369664634,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 951793,
+              "fraction_of_positions": 0.23614973362868394,
+              "sum_delta_code_len_bits": 5688.428430475576,
+              "mean_delta_code_len_bits": 0.00597653946864032,
+              "share_of_total_excess_bits": 0.02700217058059206
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 685900,
+              "fraction_of_positions": 0.17017891736534552,
+              "sum_delta_code_len_bits": 109662.22261797592,
+              "mean_delta_code_len_bits": 0.15988077360836261,
+              "share_of_total_excess_bits": 0.5205511640989188
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 515947,
+              "fraction_of_positions": 0.12801181203950712,
+              "sum_delta_code_len_bits": 95314.94761138961,
+              "mean_delta_code_len_bits": 0.18473786573308812,
+              "share_of_total_excess_bits": 0.4524466653204891
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.02700217058059206,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.223712241239458,
+            "top1_share": 0.01429686507558435,
+            "top10_share": 0.12368575925749492
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 166979,
+              "held": 252020,
+              "routing_only": 121507,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 225837
+            },
+            "ordinary": {
+              "real_bytes": 1255811,
+              "held": 1949633,
+              "routing_only": 830286,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 1241903
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 89515,
+          "residual_gain_percent": -6.71391873394461,
+          "total_stream_gain_percent": -5.517302080890794,
+          "verdict": "weak",
+          "churn_reduction_absolute": 0.07768609271786081
+        },
+        {
+          "state": "raster",
+          "margin": 0.001,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1333279,
+          "oracle_residual_bytes": 1300299,
+          "real_ideal_bits": 10665099.15016259,
+          "mean_code_length_bits": 2.646121922975268,
+          "positions": 4030464,
+          "held_positions": 77577,
+          "held_fraction": 0.019247659822789635,
+          "held_made_code_length_worse": 39403,
+          "held_made_code_length_better": 38153,
+          "held_made_code_length_equal": 21,
+          "held_code_length_delta_bits": 81.86517710838665,
+          "routing_churn_vs_oracle": 0.4417201096449441,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 263879.9854456794,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1647555,
+              "fraction_of_positions": 0.4087755156726372,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1181062,
+              "fraction_of_positions": 0.29303375492251016,
+              "sum_delta_code_len_bits": 23242.147740473873,
+              "mean_delta_code_len_bits": 0.019679024251456633,
+              "share_of_total_excess_bits": 0.08807847893889757
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 602572,
+              "fraction_of_positions": 0.1495043746824187,
+              "sum_delta_code_len_bits": 93683.42520747929,
+              "mean_delta_code_len_bits": 0.15547258287387944,
+              "share_of_total_excess_bits": 0.35502285271561207
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 599275,
+              "fraction_of_positions": 0.14868635472243394,
+              "sum_delta_code_len_bits": 146954.41249772627,
+              "mean_delta_code_len_bits": 0.24522032872675528,
+              "share_of_total_excess_bits": 0.5568986683454905
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.08807847893889757,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.581083879462945,
+            "top1_share": 0.012907943105309959,
+            "top10_share": 0.09801352896341464
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 157785,
+              "held": 9364,
+              "routing_only": 154601,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 280783
+            },
+            "ordinary": {
+              "real_bytes": 1175494,
+              "held": 68213,
+              "routing_only": 1026461,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 1499554
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 4,
+          "residual_gain_percent": -0.00030001312557424384,
+          "total_stream_gain_percent": -0.00024654201333366673,
+          "verdict": "weak",
+          "churn_reduction_absolute": 0.0001275287411077186
+        },
+        {
+          "state": "raster",
+          "margin": 0.005,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1333422,
+          "oracle_residual_bytes": 1300344,
+          "real_ideal_bits": 10666224.77646924,
+          "mean_code_length_bits": 2.6464012025586237,
+          "positions": 4030464,
+          "held_positions": 385819,
+          "held_fraction": 0.09572570304560467,
+          "held_made_code_length_worse": 198428,
+          "held_made_code_length_better": 187280,
+          "held_made_code_length_equal": 111,
+          "held_code_length_delta_bits": 1207.4914837629067,
+          "routing_churn_vs_oracle": 0.4495474962684197,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 264568.2870443609,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1622235,
+              "fraction_of_positions": 0.4024933605659299,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1206382,
+              "fraction_of_positions": 0.2993159100292175,
+              "sum_delta_code_len_bits": 23666.990178757016,
+              "mean_delta_code_len_bits": 0.019618155923046776,
+              "share_of_total_excess_bits": 0.08945512874257944
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 596344,
+              "fraction_of_positions": 0.1479591431656504,
+              "sum_delta_code_len_bits": 91527.21656005933,
+              "mean_delta_code_len_bits": 0.15348056920176834,
+              "share_of_total_excess_bits": 0.34594931079064933
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 605503,
+              "fraction_of_positions": 0.15023158623920224,
+              "sum_delta_code_len_bits": 149374.08030554454,
+              "mean_delta_code_len_bits": 0.24669420350608426,
+              "share_of_total_excess_bits": 0.5645955604667713
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.08945512874257944,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.578910189278222,
+            "top1_share": 0.013292762322154471,
+            "top10_share": 0.09898636980754574
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 157828,
+              "held": 46504,
+              "routing_only": 155731,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 282310
+            },
+            "ordinary": {
+              "real_bytes": 1175594,
+              "held": 339315,
+              "routing_only": 1050651,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 1529575
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 147,
+          "residual_gain_percent": -0.011025482364853461,
+          "total_stream_gain_percent": -0.009060418990012252,
+          "verdict": "weak",
+          "churn_reduction_absolute": -0.007699857882367878
+        },
+        {
+          "state": "raster",
+          "margin": 0.01,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1333821,
+          "oracle_residual_bytes": 1300728,
+          "real_ideal_bits": 10669393.242318472,
+          "mean_code_length_bits": 2.647187331860171,
+          "positions": 4030464,
+          "held_positions": 720725,
+          "held_fraction": 0.1788193617409807,
+          "held_made_code_length_worse": 377476,
+          "held_made_code_length_better": 343059,
+          "held_made_code_length_equal": 190,
+          "held_code_length_delta_bits": 4375.9573330001485,
+          "routing_churn_vs_oracle": 0.46455271651105184,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 264691.8759183734,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1575463,
+              "fraction_of_positions": 0.39088874134590956,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1253154,
+              "fraction_of_positions": 0.3109205292492378,
+              "sum_delta_code_len_bits": 23988.327426965858,
+              "mean_delta_code_len_bits": 0.019142361933940966,
+              "share_of_total_excess_bits": 0.09062736566332494
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 582638,
+              "fraction_of_positions": 0.14455854214303862,
+              "sum_delta_code_len_bits": 89937.5796571276,
+              "mean_delta_code_len_bits": 0.15436270833197904,
+              "share_of_total_excess_bits": 0.33978216877673595
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 619209,
+              "fraction_of_positions": 0.15363218726181402,
+              "sum_delta_code_len_bits": 150765.96883427995,
+              "mean_delta_code_len_bits": 0.24348155281056952,
+              "share_of_total_excess_bits": 0.5695904655599391
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.09062736566332494,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.579510644851752,
+            "top1_share": 0.013216592432037601,
+            "top10_share": 0.09839140108930386
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 157874,
+              "held": 85675,
+              "routing_only": 158337,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 286501
+            },
+            "ordinary": {
+              "real_bytes": 1175947,
+              "held": 635050,
+              "routing_only": 1094817,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 1585862
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 546,
+          "residual_gain_percent": -0.04095179164088429,
+          "total_stream_gain_percent": -0.033652984820045515,
+          "verdict": "weak",
+          "churn_reduction_absolute": -0.022705078125
+        },
+        {
+          "state": "raster",
+          "margin": 0.02,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1334981,
+          "oracle_residual_bytes": 1301874,
+          "real_ideal_bits": 10678708.088156791,
+          "mean_code_length_bits": 2.6494984419056444,
+          "positions": 4030464,
+          "held_positions": 1207816,
+          "held_fraction": 0.29967170033028456,
+          "held_made_code_length_worse": 647224,
+          "held_made_code_length_better": 560242,
+          "held_made_code_length_equal": 350,
+          "held_code_length_delta_bits": 13690.803171318023,
+          "routing_churn_vs_oracle": 0.4945100613725864,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 264777.2545362752,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1483634,
+              "fraction_of_positions": 0.3681050122268801,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1344983,
+              "fraction_of_positions": 0.3337042583682673,
+              "sum_delta_code_len_bits": 24644.029678687322,
+              "mean_delta_code_len_bits": 0.018322930236803977,
+              "share_of_total_excess_bits": 0.09307457214120717
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 553725,
+              "fraction_of_positions": 0.13738492640053354,
+              "sum_delta_code_len_bits": 83483.22691812739,
+              "mean_delta_code_len_bits": 0.15076658434805615,
+              "share_of_total_excess_bits": 0.31529606674235666
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 648122,
+              "fraction_of_positions": 0.1608058030043191,
+              "sum_delta_code_len_bits": 156649.9979394605,
+              "mean_delta_code_len_bits": 0.24169831905021047,
+              "share_of_total_excess_bits": 0.5916293611164362
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.09307457214120717,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.582241843524848,
+            "top1_share": 0.012646434752921747,
+            "top10_share": 0.09776814778645833
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 157996,
+              "held": 141791,
+              "routing_only": 164150,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 296138
+            },
+            "ordinary": {
+              "real_bytes": 1176985,
+              "held": 1066025,
+              "routing_only": 1180833,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 1696967
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 1706,
+          "residual_gain_percent": -0.127955598057415,
+          "total_stream_gain_percent": -0.10515016868680886,
+          "verdict": "weak",
+          "churn_reduction_absolute": -0.05266242298653456
+        },
+        {
+          "state": "raster",
+          "margin": 0.05,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1339359,
+          "oracle_residual_bytes": 1306371,
+          "real_ideal_bits": 10713768.07435413,
+          "mean_code_length_bits": 2.6581971887986424,
+          "positions": 4030464,
+          "held_positions": 1965255,
+          "held_fraction": 0.48760018697599083,
+          "held_made_code_length_worse": 1084869,
+          "held_made_code_length_better": 879959,
+          "held_made_code_length_equal": 427,
+          "held_code_length_delta_bits": 48750.789368649544,
+          "routing_churn_vs_oracle": 0.5386503886401168,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 263957.0400378296,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1351218,
+              "fraction_of_positions": 0.3352512266577744,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1477399,
+              "fraction_of_positions": 0.36655804393737296,
+              "sum_delta_code_len_bits": 27169.570439133622,
+              "mean_delta_code_len_bits": 0.018390137287986268,
+              "share_of_total_excess_bits": 0.10293178933677902
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 508235,
+              "fraction_of_positions": 0.12609838470210874,
+              "sum_delta_code_len_bits": 74100.01755783716,
+              "mean_delta_code_len_bits": 0.14579873003204652,
+              "share_of_total_excess_bits": 0.2807275666798557
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 693612,
+              "fraction_of_positions": 0.1720923447027439,
+              "sum_delta_code_len_bits": 162687.45204085883,
+              "mean_delta_code_len_bits": 0.23455109202386756,
+              "share_of_total_excess_bits": 0.6163406439833653
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.10293178933677902,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.589889158900633,
+            "top1_share": 0.012574978960238821,
+            "top10_share": 0.09581427845528456
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 158484,
+              "held": 228081,
+              "routing_only": 174136,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 312742
+            },
+            "ordinary": {
+              "real_bytes": 1180875,
+              "held": 1737174,
+              "routing_only": 1303263,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 1858269
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 6084,
+          "residual_gain_percent": -0.4563199639984249,
+          "total_stream_gain_percent": -0.3749904022805071,
+          "verdict": "weak",
+          "churn_reduction_absolute": -0.09680275025406498
+        },
+        {
+          "state": "raster",
+          "margin": 0.1,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1347039,
+          "oracle_residual_bytes": 1314372,
+          "real_ideal_bits": 10775201.692308629,
+          "mean_code_length_bits": 2.67343950778586,
+          "positions": 4030464,
+          "held_positions": 2528472,
+          "held_fraction": 0.6273401772103658,
+          "held_made_code_length_worse": 1432685,
+          "held_made_code_length_better": 1095261,
+          "held_made_code_length_equal": 526,
+          "held_code_length_delta_bits": 110184.40732316443,
+          "routing_churn_vs_oracle": 0.5717952076981707,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 261413.05494456584,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1251019,
+              "fraction_of_positions": 0.31039081356389736,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1577598,
+              "fraction_of_positions": 0.39141845703125,
+              "sum_delta_code_len_bits": 30183.446664730433,
+              "mean_delta_code_len_bits": 0.019132533550835152,
+              "share_of_total_excess_bits": 0.115462659931544
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 474845,
+              "fraction_of_positions": 0.11781397873793191,
+              "sum_delta_code_len_bits": 69464.55556823043,
+              "mean_delta_code_len_bits": 0.14628890599717892,
+              "share_of_total_excess_bits": 0.26572718636014864
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 727002,
+              "fraction_of_positions": 0.18037675066692074,
+              "sum_delta_code_len_bits": 161765.05271160498,
+              "mean_delta_code_len_bits": 0.22250977674284936,
+              "share_of_total_excess_bits": 0.6188101537083074
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.115462659931544,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.603212738136776,
+            "top1_share": 0.011156531853404471,
+            "top10_share": 0.09218963374936483
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 159326,
+              "held": 291800,
+              "routing_only": 180940,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 324040
+            },
+            "ordinary": {
+              "real_bytes": 1187713,
+              "held": 2236672,
+              "routing_only": 1396658,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 1980560
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 13764,
+          "residual_gain_percent": -1.0323451651009732,
+          "total_stream_gain_percent": -0.8483510678811473,
+          "verdict": "weak",
+          "churn_reduction_absolute": -0.12994756931211887
+        },
+        {
+          "state": "raster",
+          "margin": 0.25,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1371131,
+          "oracle_residual_bytes": 1339512,
+          "real_ideal_bits": 10967909.841948763,
+          "mean_code_length_bits": 2.721252402192096,
+          "positions": 4030464,
+          "held_positions": 3158071,
+          "held_fraction": 0.783550231437373,
+          "held_made_code_length_worse": 1876966,
+          "held_made_code_length_better": 1280583,
+          "held_made_code_length_equal": 522,
+          "held_code_length_delta_bits": 302892.5569632927,
+          "routing_churn_vs_oracle": 0.6100992342320884,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 252923.06507494103,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1134024,
+              "fraction_of_positions": 0.28136313833841464,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1694593,
+              "fraction_of_positions": 0.4204461322567327,
+              "sum_delta_code_len_bits": 38198.67426474635,
+              "mean_delta_code_len_bits": 0.02254150363228595,
+              "share_of_total_excess_bits": 0.15102882868127543
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 437457,
+              "fraction_of_positions": 0.10853762742949695,
+              "sum_delta_code_len_bits": 63585.994991036336,
+              "mean_delta_code_len_bits": 0.14535370331492314,
+              "share_of_total_excess_bits": 0.2514044931892464
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 764390,
+              "fraction_of_positions": 0.1896531019753557,
+              "sum_delta_code_len_bits": 151138.39581915835,
+              "mean_delta_code_len_bits": 0.1977241929108941,
+              "share_of_total_excess_bits": 0.5975666781294782
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.15102882868127543,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.640065754071752,
+            "top1_share": 0.009880003890370935,
+            "top10_share": 0.07967345695185468
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 161936,
+              "held": 363215,
+              "routing_only": 191279,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 341530
+            },
+            "ordinary": {
+              "real_bytes": 1209195,
+              "held": 2794856,
+              "routing_only": 1503314,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 2117453
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 37856,
+          "residual_gain_percent": -2.8393242204346443,
+          "total_stream_gain_percent": -2.3332736141898223,
+          "verdict": "weak",
+          "churn_reduction_absolute": -0.1682515958460366
+        },
+        {
+          "state": "raster",
+          "margin": 0.5,
+          "is_hysteresis_candidate": true,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1411971,
+          "oracle_residual_bytes": 1382706,
+          "real_ideal_bits": 11294654.456573004,
+          "mean_code_length_bits": 2.802321136368667,
+          "positions": 4030464,
+          "held_positions": 3513286,
+          "held_fraction": 0.8716827640688516,
+          "held_made_code_length_worse": 2194729,
+          "held_made_code_length_better": 1317996,
+          "held_made_code_length_equal": 561,
+          "held_code_length_delta_bits": 629637.1715875278,
+          "routing_churn_vs_oracle": 0.6484293123570884,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 234143.1587750023,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1018499,
+              "fraction_of_positions": 0.25270018538808436,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1810118,
+              "fraction_of_positions": 0.449109085207063,
+              "sum_delta_code_len_bits": 36532.74551892357,
+              "mean_delta_code_len_bits": 0.020182521536675272,
+              "share_of_total_excess_bits": 0.15602738815883738
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 398494,
+              "fraction_of_positions": 0.09887050225482724,
+              "sum_delta_code_len_bits": 54305.164676746004,
+              "mean_delta_code_len_bits": 0.13627599079721653,
+              "share_of_total_excess_bits": 0.2319314600557262
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 803353,
+              "fraction_of_positions": 0.1993202271500254,
+              "sum_delta_code_len_bits": 143305.24857933272,
+              "mean_delta_code_len_bits": 0.17838390916487862,
+              "share_of_total_excess_bits": 0.6120411517854365
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.15602738815883738,
+          "assignment_distribution": {
+            "prototypes_used": 512,
+            "entropy_bits": 8.671023450695722,
+            "top1_share": 0.00846924820566565,
+            "top10_share": 0.06624671501841971
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 166244,
+              "held": 403039,
+              "routing_only": 198892,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 354568
+            },
+            "ordinary": {
+              "real_bytes": 1245727,
+              "held": 3110247,
+              "routing_only": 1611226,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 2258903
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 78696,
+          "residual_gain_percent": -5.902458232547674,
+          "total_stream_gain_percent": -4.850467570326559,
+          "verdict": "weak",
+          "churn_reduction_absolute": -0.2065816739710366
+        },
+        {
+          "state": "coding_metric",
+          "margin": 0.0,
+          "is_hysteresis_candidate": false,
+          "is_decoder_compatible": true,
+          "real_residual_bytes": 1355811,
+          "oracle_residual_bytes": 1328094,
+          "real_ideal_bits": 10845371.51461172,
+          "mean_code_length_bits": 2.690849369852136,
+          "positions": 4030464,
+          "held_positions": 3112274,
+          "held_fraction": 0.7721875198488313,
+          "held_made_code_length_worse": 1860567,
+          "held_made_code_length_better": 1250585,
+          "held_made_code_length_equal": 1122,
+          "held_code_length_delta_bits": 180354.22962624033,
+          "routing_churn_vs_oracle": 0.39170279153963417,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 221686.48718015064,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 1807161,
+              "fraction_of_positions": 0.4483754227801067,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 1021456,
+              "fraction_of_positions": 0.25343384781504064,
+              "sum_delta_code_len_bits": 16569.061665015834,
+              "mean_delta_code_len_bits": 0.01622102338721965,
+              "share_of_total_excess_bits": 0.07474096358228276
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 644559,
+              "fraction_of_positions": 0.15992178568025914,
+              "sum_delta_code_len_bits": 104478.76721174057,
+              "mean_delta_code_len_bits": 0.16209341148248738,
+              "share_of_total_excess_bits": 0.47129064356023315
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 557288,
+              "fraction_of_positions": 0.1382689437245935,
+              "sum_delta_code_len_bits": 100638.65830339423,
+              "mean_delta_code_len_bits": 0.18058644417858313,
+              "share_of_total_excess_bits": 0.4539683928574841
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.07474096358228276,
+          "assignment_distribution": {
+            "prototypes_used": 501,
+            "entropy_bits": 7.853621177368728,
+            "top1_share": 0.03648686602832825,
+            "top10_share": 0.21760224133003048
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 159441,
+              "held": 352898,
+              "routing_only": 142514,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 262432
+            },
+            "ordinary": {
+              "real_bytes": 1196370,
+              "held": 2759376,
+              "routing_only": 878942,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 1316312
+            }
+          },
+          "delta_residual_bytes_vs_margin0": 22536,
+          "residual_gain_percent": -1.6902739494852899,
+          "total_stream_gain_percent": -1.3890177031218784,
+          "verdict": "weak",
+          "churn_reduction_absolute": 0.05014484684641768
+        },
+        {
+          "state": "oracle_table",
+          "margin": 0.0,
+          "is_hysteresis_candidate": false,
+          "is_decoder_compatible": false,
+          "real_residual_bytes": 402319,
+          "oracle_residual_bytes": 396142,
+          "real_ideal_bits": 3217441.061244352,
+          "mean_code_length_bits": 0.7982805605618489,
+          "positions": 4030464,
+          "held_positions": 4015624,
+          "held_fraction": 0.9963180417936992,
+          "held_made_code_length_worse": 0,
+          "held_made_code_length_better": 4015624,
+          "held_made_code_length_equal": 0,
+          "held_code_length_delta_bits": -7447576.223741117,
+          "routing_churn_vs_oracle": 0.2879435221354167,
+          "symbol_change_rate_vs_oracle": 0.29819072940485264,
+          "total_excess_bits_vs_oracle": 49376.99867353071,
+          "decomposition_2x2": {
+            "symbol_changed=False_assignment_changed=False": {
+              "positions": 2828617,
+              "fraction_of_positions": 0.7018092705951473,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=False_assignment_changed=True": {
+              "positions": 0,
+              "fraction_of_positions": 0.0,
+              "sum_delta_code_len_bits": 0.0,
+              "mean_delta_code_len_bits": 0.0,
+              "share_of_total_excess_bits": 0.0
+            },
+            "symbol_changed=True_assignment_changed=False": {
+              "positions": 41301,
+              "fraction_of_positions": 0.010247207269435975,
+              "sum_delta_code_len_bits": 550.5787551581006,
+              "mean_delta_code_len_bits": 0.013330881943732612,
+              "share_of_total_excess_bits": 0.01115051076308627
+            },
+            "symbol_changed=True_assignment_changed=True": {
+              "positions": 1160546,
+              "fraction_of_positions": 0.2879435221354167,
+              "sum_delta_code_len_bits": 48826.41991837261,
+              "mean_delta_code_len_bits": 0.04207193848272504,
+              "share_of_total_excess_bits": 0.9888494892369137
+            }
+          },
+          "routing_only_share_of_excess_bits": 0.0,
+          "assignment_distribution": {
+            "prototypes_used": 17,
+            "entropy_bits": 3.0155551423600437,
+            "top1_share": 0.31012607977642276,
+            "top10_share": 0.9416079637480945
+          },
+          "gop_position": {
+            "boundary": {
+              "real_bytes": 46701,
+              "held": 458334,
+              "routing_only": 0,
+              "positions": 458752,
+              "frames": 28,
+              "assignment_changed": 198822
+            },
+            "ordinary": {
+              "real_bytes": 355618,
+              "held": 3557290,
+              "routing_only": 0,
+              "positions": 3571712,
+              "frames": 218,
+              "assignment_changed": 961724
+            }
+          },
+          "delta_residual_bytes_vs_margin0": -930956,
+          "residual_gain_percent": 69.82475483302395,
+          "total_stream_gain_percent": 57.37994164126427,
+          "verdict": "meaningful",
+          "churn_reduction_absolute": 0.15390411625063516
+        }
+      ],
+      "roundtrip_checked": 0,
+      "roundtrip_all_exact": true,
+      "roundtrip_records": [],
+      "margin0_identical_to_deployed": true,
+      "margin0_identity_records": []
+    }
+  ]
+}

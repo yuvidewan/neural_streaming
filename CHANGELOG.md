@@ -13,6 +13,77 @@ the time.
 
 ---
 
+## 2026-09-13 — M20: codebook-assignment hysteresis (NEGATIVE RESULT — BRITTLENESS IS NOT EXPLOITABLE)
+
+**Source:** M19 found the 512-entry codebook's assignment is brittle (it flips for 35-55% of
+positions even in the smallest reference-error decile) and that 9-12% of the reference-error
+excess bits come from positions where the residual symbol is unchanged and only the entropy
+table moves. M19 recommended exactly one M20 experiment: a stability margin on the assignment.
+M20 ran it and the answer is a clean negative.
+**Tests:** 1379 passing (full suite), zero regressions. 56 new tests.
+**Scope:** diagnostic only - every M13/M14/M15/M17/M18/M19 identity, checkpoint, quantizer,
+codebook, motion estimator, GOP, `.nvct` v2 frozen; DAVIS TEST untouched; no learned model,
+no production change.
+
+### Hysteresis is decoder-compatible and costs bytes everywhere
+
+Three pre-declared previous-assignment definitions (temporal / previous channel group / raster)
+x eight non-zero margins were swept on all 246 VAL-B P-frames at 5/4/3-bit, against a margin=0
+identity control proven byte-identical to the deployed `m13.encode_frame_recalibrated`. The best
+of 72 (state, margin, bit-depth) results is **+0.0007% of the total stream** - eight bytes out of
+908,404 - against the project's 0.5% "weak" line. The response is monotonically harmful in the
+margin at every state and every bit depth, reaching -2.4%/-4.0%/-6.8% at the largest margin
+tested. **Classification: C - hysteresis does not improve coded rate.**
+
+### Why it fails, measured rather than guessed
+
+Holding a position on its previous assignment makes the actual code length **worse 47-74% of the
+time**: the argmin under a noisy predicted distribution is a weak but genuinely positive
+predictor, and a stability margin is a slightly-losing bet taken tens of millions of times. The
+decision is also far tighter than expected - the median position prefers its prototype over the
+runner-up by **0.003 bits**, which is M19's "brittleness" in numerical form and explains why a
+margin cannot help: the decision is marginal, but so is the consequence.
+
+**14 configurations reduce routing churn while increasing coded bytes** - the failure mode the
+milestone flagged in advance, observed directly (starkest: previous-channel-group @ 0.500 at
+5-bit cuts churn 7.8 points and routing-only cases 19.4% while costing 6.7% of residual bytes).
+Churn reduction was measured and reported but explicitly refused as a success criterion, which
+mattered here.
+
+### Two doors closed alongside it
+
+- **Routing by M13's recalibrated coding tables** (a genuinely decoder-available alternative rule,
+  measured as a labelled reference point, never a candidate) is also worse: -1.39%/-1.93%/-3.37%
+  of the total stream. M13's one-way assign/coding split is retrospectively validated as the
+  better choice, not an oversight.
+- **The non-causal per-symbol "oracle routing" bound** looks like +57% but is vacuous: it collapses
+  to 7-17 distinct tables and needs 1.7-3.0 bits/position of assignment entropy to save 0.8-1.8
+  bits/position - it costs more side information than it saves at every bit depth. Any routing
+  bound that reads the symbol it routes is measuring a side channel, not an opportunity.
+
+### Decoder compatibility, invariants, provenance
+
+654 encode/decode round trips (54 in the Phase B probe, 600 in the sweep) across every state and
+margin: assignments and symbols identical every time, **zero side information, no `.nvct` change**.
+The symbol-change rate is bit-identical across all 27 configurations at every bit depth, so
+residual symbols - and therefore G16 context and the reconstruction - are provably untouched by
+the rule. The 5-bit sweep reproduced byte-for-byte in an independent process. All 117 existing
+M13/M14/M15 `.nvct` streams re-parse with the unmodified reader, are still format version 2, and
+every entropy identity in them is attributable to an earlier milestone's own recorded JSON.
+
+### What this means for M21
+
+M20 does **not** solve the reference bottleneck and must not be read as doing so: it addressed only
+M19's 9-12% routing-only component, leaving the dominant 88-91% mechanism - reference error
+changing the residual symbol itself - entirely untouched. Combined with M19's own bound, the
+expected value of further work on the 512-prototype assignment is close to zero. M21 should target
+the 88-91%: a reference-refinement step applied identically at encoder and decoder (the only thing
+that could move symbols rather than tables), or an explicit, pre-registered freeze-lift.
+
+Full analysis: `outputs/m20_codebook_hysteresis/M20_REPORT.md`.
+
+---
+
 ## 2026-09-12 — M19: reference error shape diagnostic (MULTI-PART MECHANISM, PRECISELY QUANTIFIED)
 
 **Source:** M18 showed shrinking the reference error's aggregate magnitude doesn't reliably recover

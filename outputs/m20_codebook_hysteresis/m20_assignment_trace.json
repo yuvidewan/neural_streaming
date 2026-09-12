@@ -1,0 +1,976 @@
+{
+  "phase": "M20 Phase A/B",
+  "probe_sequence": "car-roundabout",
+  "hysteresis_rule": {
+    "states": [
+      "temporal",
+      "channel_group",
+      "raster"
+    ],
+    "decision": "hold prev(i) iff prev(i) is defined and cost(i, prev(i)) - cost(i, k*(i)) < margin  (STRICT)",
+    "margin_units": "bits of expected code length",
+    "margin_zero_is_identity": "advantage is never negative and the comparison is strict, so margin=0 can never hold a position",
+    "side_information_bits": 0,
+    "container_change": "none - .nvct v2 untouched"
+  },
+  "rate_points": [
+    {
+      "bits": 5,
+      "residual_identity": "ec858dee10f8a955",
+      "assign_codebook_id": "c4bb904fe6f88a5f",
+      "coding_codebook_id": "474d54d3673ade9f",
+      "phase_a_trace": {
+        "function": "m10l_shared_codebook.SharedCodebook.assign_tensor",
+        "candidate_prototypes": {
+          "K": 512,
+          "alphabet": 32,
+          "all_prototypes_are_candidates": true,
+          "evidence": "cost matrix is [N, K] with no masking; distinct prototypes used at this frame = 492 of 512"
+        },
+        "cost_metric": {
+          "name": "code_length",
+          "formula": "cost(i, k) = sum_s p_i(s) * -log2 q_k(s)  (cross-entropy, BITS)",
+          "equals_expected_code_length": true,
+          "argmin_equals_kl_argmin": "H(p,q) = KL(p||q) + H(p); H(p) is constant in k",
+          "reproduced_matches_deployed": true,
+          "independent_float64_recompute_matches": false,
+          "float32_vs_float64_precision_probe": {
+            "positions_differing": 1,
+            "fraction_differing": 6.103515625e-05,
+            "mean_runner_up_advantage_bits_where_differing": 9.707679105019906e-10,
+            "mean_runner_up_advantage_bits_where_agreeing": 0.006371104671231302,
+            "mean_float64_cost_penalty_bits_of_the_deployed_choice": 5.925097109997501e-14,
+            "note": "the deployed GEMM runs in the network's float32; a float64 recompute is not the decoder's path and this disagreement is NOT an encoder/decoder mismatch (both run the identical float32 kernel - see phase_b_roundtrip). It measures how numerically marginal the argmin is."
+          }
+        },
+        "probabilities_to_code_lengths": {
+          "source": "SharedCodebook.probabilities = frequencies / TOTAL_FREQUENCY",
+          "total_frequency": 65536,
+          "derived_from_integer_coder_tables": true,
+          "note": "cost therefore scores the table the arithmetic coder will actually use, not the pre-rounding Lloyd centroid"
+        },
+        "tie_breaking": {
+          "rule": "lowest prototype index (argmin_lowest_index / _torch_argmin_lowest_index)",
+          "probes": [
+            "all K costs equal",
+            "exact 2-way tie between indices 7 and 300"
+          ],
+          "numpy_winners": [
+            0,
+            7
+          ],
+          "torch_winners": [
+            0,
+            7
+          ],
+          "numpy_and_torch_agree": true,
+          "lowest_index_wins": true
+        },
+        "depends_on_current_target_symbol": {
+          "answer": "no",
+          "probe": "flipped the symbol at the last decoding group's centre position",
+          "any_assignment_changed": false
+        },
+        "depends_on_causal_context": {
+          "answer": "yes, but only on channels before G*floor(c/G)",
+          "probe": "flipped one symbol in decoding group 0",
+          "group0_assignments_changed": false,
+          "later_group_assignments_changed": true
+        },
+        "encoder_state": [
+          "reference latent (from its own reconstructed previous frame + motion)",
+          "the full symbol plane (but only its causal part can reach any assignment)",
+          "the frozen K=512 prototype frequencies"
+        ],
+        "decoder_state_before_coding_position_i": [
+          "the identical reference latent (reconstructed the same way)",
+          "every symbol in decoding groups before i's group (already decoded)",
+          "the identical frozen K=512 prototype frequencies"
+        ],
+        "prototype_index_reconstructible_at_decoder": "demonstrated in phase_b_roundtrip",
+        "assignment_cost_scale": {
+          "units": "bits of expected code length",
+          "mean_best_cost_bits": 2.9505740756940213,
+          "runner_up_advantage_bits": {
+            "mean": 0.006370713817887008,
+            "percentiles": {
+              "10": 0.0006289243698120118,
+              "25": 0.0016541481018066406,
+              "50": 0.0038535594940185547,
+              "75": 0.008106768131256104,
+              "90": 0.014647960662841797,
+              "99": 0.03683136463165285
+            }
+          }
+        }
+      },
+      "phase_b_roundtrip": [
+        {
+          "state": "temporal",
+          "margin": 0.0,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 6104
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 6104
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "temporal",
+          "margin": 0.02,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 6104
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 6104
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "temporal",
+          "margin": 0.1,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 6104
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 6104
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.0,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 6104
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 6104
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.02,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 1155,
+              "payload_bytes": 6107
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 1155,
+              "payload_bytes": 6107
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.1,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 3428,
+              "payload_bytes": 6129
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 3428,
+              "payload_bytes": 6129
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "raster",
+          "margin": 0.0,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 6104
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 6104
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "raster",
+          "margin": 0.02,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 4102,
+              "payload_bytes": 6108
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 4102,
+              "payload_bytes": 6108
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "raster",
+          "margin": 0.1,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 9617,
+              "payload_bytes": 6150
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 9617,
+              "payload_bytes": 6150
+            }
+          ],
+          "decoder_compatible": true
+        }
+      ],
+      "decoder_compatible": true
+    },
+    {
+      "bits": 4,
+      "residual_identity": "be872c2beebd2f9b",
+      "assign_codebook_id": "624682536c203a54",
+      "coding_codebook_id": "2d319551c6d8bec1",
+      "phase_a_trace": {
+        "function": "m10l_shared_codebook.SharedCodebook.assign_tensor",
+        "candidate_prototypes": {
+          "K": 512,
+          "alphabet": 16,
+          "all_prototypes_are_candidates": true,
+          "evidence": "cost matrix is [N, K] with no masking; distinct prototypes used at this frame = 501 of 512"
+        },
+        "cost_metric": {
+          "name": "code_length",
+          "formula": "cost(i, k) = sum_s p_i(s) * -log2 q_k(s)  (cross-entropy, BITS)",
+          "equals_expected_code_length": true,
+          "argmin_equals_kl_argmin": "H(p,q) = KL(p||q) + H(p); H(p) is constant in k",
+          "reproduced_matches_deployed": true,
+          "independent_float64_recompute_matches": true,
+          "float32_vs_float64_precision_probe": {
+            "positions_differing": 0,
+            "fraction_differing": 0.0,
+            "mean_runner_up_advantage_bits_where_differing": 0.0,
+            "mean_runner_up_advantage_bits_where_agreeing": 0.0050415654321564135,
+            "mean_float64_cost_penalty_bits_of_the_deployed_choice": 0.0,
+            "note": "the deployed GEMM runs in the network's float32; a float64 recompute is not the decoder's path and this disagreement is NOT an encoder/decoder mismatch (both run the identical float32 kernel - see phase_b_roundtrip). It measures how numerically marginal the argmin is."
+          }
+        },
+        "probabilities_to_code_lengths": {
+          "source": "SharedCodebook.probabilities = frequencies / TOTAL_FREQUENCY",
+          "total_frequency": 65536,
+          "derived_from_integer_coder_tables": true,
+          "note": "cost therefore scores the table the arithmetic coder will actually use, not the pre-rounding Lloyd centroid"
+        },
+        "tie_breaking": {
+          "rule": "lowest prototype index (argmin_lowest_index / _torch_argmin_lowest_index)",
+          "probes": [
+            "all K costs equal",
+            "exact 2-way tie between indices 7 and 300"
+          ],
+          "numpy_winners": [
+            0,
+            7
+          ],
+          "torch_winners": [
+            0,
+            7
+          ],
+          "numpy_and_torch_agree": true,
+          "lowest_index_wins": true
+        },
+        "depends_on_current_target_symbol": {
+          "answer": "no",
+          "probe": "flipped the symbol at the last decoding group's centre position",
+          "any_assignment_changed": false
+        },
+        "depends_on_causal_context": {
+          "answer": "yes, but only on channels before G*floor(c/G)",
+          "probe": "flipped one symbol in decoding group 0",
+          "group0_assignments_changed": false,
+          "later_group_assignments_changed": true
+        },
+        "encoder_state": [
+          "reference latent (from its own reconstructed previous frame + motion)",
+          "the full symbol plane (but only its causal part can reach any assignment)",
+          "the frozen K=512 prototype frequencies"
+        ],
+        "decoder_state_before_coding_position_i": [
+          "the identical reference latent (reconstructed the same way)",
+          "every symbol in decoding groups before i's group (already decoded)",
+          "the identical frozen K=512 prototype frequencies"
+        ],
+        "prototype_index_reconstructible_at_decoder": "demonstrated in phase_b_roundtrip",
+        "assignment_cost_scale": {
+          "units": "bits of expected code length",
+          "mean_best_cost_bits": 2.1307179193809134,
+          "runner_up_advantage_bits": {
+            "mean": 0.00504156682836765,
+            "percentiles": {
+              "10": 0.0004985809326171877,
+              "25": 0.001404792070388794,
+              "50": 0.003275752067565918,
+              "75": 0.006499826908111572,
+              "90": 0.01134746074676514,
+              "99": 0.028214440345764164
+            }
+          }
+        }
+      },
+      "phase_b_roundtrip": [
+        {
+          "state": "temporal",
+          "margin": 0.0,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 4461
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 4461
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "temporal",
+          "margin": 0.02,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 4461
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 4461
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "temporal",
+          "margin": 0.1,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 4461
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 4461
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.0,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 4461
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 4461
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.02,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 1369,
+              "payload_bytes": 4464
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 1369,
+              "payload_bytes": 4464
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.1,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 4060,
+              "payload_bytes": 4485
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 4060,
+              "payload_bytes": 4485
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "raster",
+          "margin": 0.0,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 4461
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 4461
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "raster",
+          "margin": 0.02,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 4475,
+              "payload_bytes": 4473
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 4475,
+              "payload_bytes": 4473
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "raster",
+          "margin": 0.1,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 10327,
+              "payload_bytes": 4512
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 10327,
+              "payload_bytes": 4512
+            }
+          ],
+          "decoder_compatible": true
+        }
+      ],
+      "decoder_compatible": true
+    },
+    {
+      "bits": 3,
+      "residual_identity": "d2d61d66a50cad8a",
+      "assign_codebook_id": "666c05b46e355317",
+      "coding_codebook_id": "50cd2a7277d8fa97",
+      "phase_a_trace": {
+        "function": "m10l_shared_codebook.SharedCodebook.assign_tensor",
+        "candidate_prototypes": {
+          "K": 512,
+          "alphabet": 8,
+          "all_prototypes_are_candidates": true,
+          "evidence": "cost matrix is [N, K] with no masking; distinct prototypes used at this frame = 508 of 512"
+        },
+        "cost_metric": {
+          "name": "code_length",
+          "formula": "cost(i, k) = sum_s p_i(s) * -log2 q_k(s)  (cross-entropy, BITS)",
+          "equals_expected_code_length": true,
+          "argmin_equals_kl_argmin": "H(p,q) = KL(p||q) + H(p); H(p) is constant in k",
+          "reproduced_matches_deployed": true,
+          "independent_float64_recompute_matches": true,
+          "float32_vs_float64_precision_probe": {
+            "positions_differing": 0,
+            "fraction_differing": 0.0,
+            "mean_runner_up_advantage_bits_where_differing": 0.0,
+            "mean_runner_up_advantage_bits_where_agreeing": 0.00413304655377841,
+            "mean_float64_cost_penalty_bits_of_the_deployed_choice": 0.0,
+            "note": "the deployed GEMM runs in the network's float32; a float64 recompute is not the decoder's path and this disagreement is NOT an encoder/decoder mismatch (both run the identical float32 kernel - see phase_b_roundtrip). It measures how numerically marginal the argmin is."
+          }
+        },
+        "probabilities_to_code_lengths": {
+          "source": "SharedCodebook.probabilities = frequencies / TOTAL_FREQUENCY",
+          "total_frequency": 65536,
+          "derived_from_integer_coder_tables": true,
+          "note": "cost therefore scores the table the arithmetic coder will actually use, not the pre-rounding Lloyd centroid"
+        },
+        "tie_breaking": {
+          "rule": "lowest prototype index (argmin_lowest_index / _torch_argmin_lowest_index)",
+          "probes": [
+            "all K costs equal",
+            "exact 2-way tie between indices 7 and 300"
+          ],
+          "numpy_winners": [
+            0,
+            7
+          ],
+          "torch_winners": [
+            0,
+            7
+          ],
+          "numpy_and_torch_agree": true,
+          "lowest_index_wins": true
+        },
+        "depends_on_current_target_symbol": {
+          "answer": "no",
+          "probe": "flipped the symbol at the last decoding group's centre position",
+          "any_assignment_changed": false
+        },
+        "depends_on_causal_context": {
+          "answer": "yes, but only on channels before G*floor(c/G)",
+          "probe": "flipped one symbol in decoding group 0",
+          "group0_assignments_changed": false,
+          "later_group_assignments_changed": true
+        },
+        "encoder_state": [
+          "reference latent (from its own reconstructed previous frame + motion)",
+          "the full symbol plane (but only its causal part can reach any assignment)",
+          "the frozen K=512 prototype frequencies"
+        ],
+        "decoder_state_before_coding_position_i": [
+          "the identical reference latent (reconstructed the same way)",
+          "every symbol in decoding groups before i's group (already decoded)",
+          "the identical frozen K=512 prototype frequencies"
+        ],
+        "prototype_index_reconstructible_at_decoder": "demonstrated in phase_b_roundtrip",
+        "assignment_cost_scale": {
+          "units": "bits of expected code length",
+          "mean_best_cost_bits": 1.3887470473564463,
+          "runner_up_advantage_bits": {
+            "mean": 0.004133046626520809,
+            "percentiles": {
+              "10": 0.00039623975753784186,
+              "25": 0.001061171293258667,
+              "50": 0.002515941858291626,
+              "75": 0.0052106380462646484,
+              "90": 0.009536242485046396,
+              "99": 0.02526641845703126
+            }
+          }
+        }
+      },
+      "phase_b_roundtrip": [
+        {
+          "state": "temporal",
+          "margin": 0.0,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 3085
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 3085
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "temporal",
+          "margin": 0.02,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 3085
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 3085
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "temporal",
+          "margin": 0.1,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 3085
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 3085
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.0,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 3085
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 3085
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.02,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 1141,
+              "payload_bytes": 3088
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 1141,
+              "payload_bytes": 3088
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.1,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 3377,
+              "payload_bytes": 3109
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 3377,
+              "payload_bytes": 3109
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "raster",
+          "margin": 0.0,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 3085
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 0,
+              "payload_bytes": 3085
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "raster",
+          "margin": 0.02,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 4209,
+              "payload_bytes": 3096
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 4209,
+              "payload_bytes": 3096
+            }
+          ],
+          "decoder_compatible": true
+        },
+        {
+          "state": "raster",
+          "margin": 0.1,
+          "frames": [
+            {
+              "step": 0,
+              "previous_defined": false,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 9728,
+              "payload_bytes": 3157
+            },
+            {
+              "step": 1,
+              "previous_defined": true,
+              "assignments_identical": true,
+              "symbols_roundtrip_exact": true,
+              "baseline_assignments_identical": true,
+              "held_positions": 9728,
+              "payload_bytes": 3157
+            }
+          ],
+          "decoder_compatible": true
+        }
+      ],
+      "decoder_compatible": true
+    }
+  ],
+  "all_decoder_compatible": true
+}

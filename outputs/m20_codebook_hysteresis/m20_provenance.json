@@ -1,0 +1,1805 @@
+{
+  "phase": "M20 Phase L",
+  "candidate_adopted": false,
+  "streams_inspected": 117,
+  "container_format_versions": [
+    2
+  ],
+  "identities_seen": {
+    "intra": [
+      "14c4b8bf40056ca1",
+      "8fadd1ca200c033b",
+      "b523711d2e982057"
+    ],
+    "residual": [
+      "1687b85e55d12934",
+      "a72c9dbdb00f7eee",
+      "be872c2beebd2f9b",
+      "c4f1373f63ffbdfe",
+      "d2d61d66a50cad8a",
+      "ec858dee10f8a955"
+    ],
+    "motion": [
+      "60fde348c2f32a70",
+      "90eeac872bfa2f97",
+      "d7e7b237b6451885",
+      "e1bbc6643d038eee",
+      "ee605dd44277b878"
+    ]
+  },
+  "identity_attribution": {
+    "14c4b8bf40056ca1": [
+      "outputs/m10h_motion_compensation/motion_benchmark.json",
+      "outputs/m10i_temporal_residual/conditional_benchmark.json",
+      "outputs/m14_entropy_audit/m14_davis_benchmark.json",
+      "outputs/m14_entropy_audit/m14_entropy_audit.json",
+      "outputs/m14_entropy_audit/m14_offline_gate.json",
+      "outputs/m15_calibration_policy/m15_offline_gate.json",
+      "outputs/m15_calibration_policy/m15_phase0_baseline.json",
+      "outputs/m18_intra_quantizer_audit/m18_reference_bridge_BROAD_same_percentile.json"
+    ],
+    "b523711d2e982057": [
+      "outputs/m10i_temporal_residual/conditional_benchmark.json",
+      "outputs/m14_entropy_audit/m14_davis_benchmark.json",
+      "outputs/m14_entropy_audit/m14_entropy_audit.json",
+      "outputs/m14_entropy_audit/m14_offline_gate.json",
+      "outputs/m15_calibration_policy/m15_offline_gate.json",
+      "outputs/m15_calibration_policy/m15_phase0_baseline.json",
+      "outputs/m18_intra_quantizer_audit/m18_reference_bridge_TIGHT_1_99.json"
+    ],
+    "8fadd1ca200c033b": [
+      "outputs/m10i_temporal_residual/conditional_benchmark.json",
+      "outputs/m14_entropy_audit/m14_davis_benchmark.json",
+      "outputs/m14_entropy_audit/m14_entropy_audit.json",
+      "outputs/m14_entropy_audit/m14_offline_gate.json",
+      "outputs/m15_calibration_policy/m15_offline_gate.json",
+      "outputs/m15_calibration_policy/m15_phase0_baseline.json",
+      "outputs/m18_intra_quantizer_audit/m18_reference_bridge_BROAD_same_percentile.json",
+      "outputs/m18_intra_quantizer_audit/repro_check/m18_reference_bridge_BROAD_same_percentile.json"
+    ],
+    "a72c9dbdb00f7eee": [
+      "outputs/m11_autoregressive_entropy/m11_benchmark.json",
+      "outputs/m11_autoregressive_entropy/m11_training.json",
+      "outputs/m13_recalibration/m13_coded_validation.json",
+      "outputs/m13_recalibration/m13_davis_benchmark.json"
+    ],
+    "1687b85e55d12934": [
+      "outputs/m11_autoregressive_entropy/m11_benchmark.json",
+      "outputs/m11_autoregressive_entropy/m11_training.json",
+      "outputs/m13_recalibration/m13_coded_validation.json",
+      "outputs/m13_recalibration/m13_davis_benchmark.json"
+    ],
+    "c4f1373f63ffbdfe": [
+      "outputs/m11_autoregressive_entropy/m11_benchmark.json",
+      "outputs/m11_autoregressive_entropy/m11_training.json",
+      "outputs/m13_recalibration/m13_coded_validation.json",
+      "outputs/m13_recalibration/m13_davis_benchmark.json"
+    ],
+    "d2d61d66a50cad8a": [
+      "outputs/m13_recalibration/m13_coded_validation.json",
+      "outputs/m13_recalibration/m13_davis_benchmark.json",
+      "outputs/m14_entropy_audit/m14_davis_benchmark.json",
+      "outputs/m14_entropy_audit/m14_entropy_audit.json",
+      "outputs/m17_residual_oracle_audit/m17_baseline.json",
+      "outputs/m17_residual_oracle_audit/m17_coded_validation_gate.json",
+      "outputs/m17_residual_oracle_audit/m17_residual_diagnostic.json",
+      "outputs/m19_reference_error_audit/m19_baseline.json",
+      "outputs/m19_reference_error_audit/m19_identities.json"
+    ],
+    "be872c2beebd2f9b": [
+      "outputs/m13_recalibration/m13_coded_validation.json",
+      "outputs/m13_recalibration/m13_davis_benchmark.json",
+      "outputs/m14_entropy_audit/m14_davis_benchmark.json",
+      "outputs/m14_entropy_audit/m14_entropy_audit.json",
+      "outputs/m17_residual_oracle_audit/m17_baseline.json",
+      "outputs/m17_residual_oracle_audit/m17_coded_validation_gate.json",
+      "outputs/m17_residual_oracle_audit/m17_residual_diagnostic.json",
+      "outputs/m19_reference_error_audit/m19_baseline.json",
+      "outputs/m19_reference_error_audit/m19_identities.json"
+    ],
+    "ec858dee10f8a955": [
+      "outputs/m13_recalibration/m13_coded_validation.json",
+      "outputs/m13_recalibration/m13_davis_benchmark.json",
+      "outputs/m14_entropy_audit/m14_davis_benchmark.json",
+      "outputs/m14_entropy_audit/m14_entropy_audit.json",
+      "outputs/m17_residual_oracle_audit/m17_baseline.json",
+      "outputs/m17_residual_oracle_audit/m17_coded_validation_gate.json",
+      "outputs/m17_residual_oracle_audit/m17_residual_diagnostic.json",
+      "outputs/m17_residual_oracle_audit/repro_check/m17_residual_diagnostic.json",
+      "outputs/m19_reference_error_audit/m19_baseline.json",
+      "outputs/m19_reference_error_audit/m19_identities.json",
+      "outputs/m19_reference_error_audit/repro_check/m19_identities.json"
+    ],
+    "90eeac872bfa2f97": [
+      "outputs/m14_entropy_audit/m14_davis_benchmark.json",
+      "outputs/m14_entropy_audit/m14_entropy_audit.json",
+      "outputs/m14_entropy_audit/m14_offline_gate.json",
+      "outputs/m15_calibration_policy/m15_phase0_baseline.json"
+    ],
+    "e1bbc6643d038eee": [
+      "outputs/m14_entropy_audit/m14_davis_benchmark.json",
+      "outputs/m14_entropy_audit/m14_entropy_audit.json",
+      "outputs/m14_entropy_audit/m14_offline_gate.json",
+      "outputs/m15_calibration_policy/m15_phase0_baseline.json"
+    ],
+    "ee605dd44277b878": [
+      "outputs/m14_entropy_audit/m14_davis_benchmark.json",
+      "outputs/m14_entropy_audit/m14_entropy_audit.json",
+      "outputs/m14_entropy_audit/m14_offline_gate.json",
+      "outputs/m15_calibration_policy/m15_phase0_baseline.json"
+    ],
+    "d7e7b237b6451885": [
+      "outputs/m14_entropy_audit/m14_davis_benchmark.json",
+      "outputs/m14_entropy_audit/m14_offline_gate.json",
+      "outputs/m15_calibration_policy/m15_offline_gate.json",
+      "outputs/m16_gop_audit/m16_reference_diagnostic.json"
+    ],
+    "60fde348c2f32a70": [
+      "outputs/m15_calibration_policy/m15_offline_gate.json"
+    ]
+  },
+  "unattributed_identities": {
+    "intra": [],
+    "residual": [],
+    "motion": []
+  },
+  "nvct_streams_written_by_m20": [],
+  "recorded_m19_identities": {
+    "5": {
+      "residual_identity": "ec858dee10f8a955",
+      "assign_codebook_id": "c4bb904fe6f88a5f",
+      "coding_codebook_id": "474d54d3673ade9f"
+    },
+    "4": {
+      "residual_identity": "be872c2beebd2f9b",
+      "assign_codebook_id": "624682536c203a54",
+      "coding_codebook_id": "2d319551c6d8bec1"
+    },
+    "3": {
+      "residual_identity": "d2d61d66a50cad8a",
+      "assign_codebook_id": "666c05b46e355317",
+      "coding_codebook_id": "50cd2a7277d8fa97"
+    }
+  },
+  "all_streams_unaffected": true,
+  "streams": [
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_3bit_bmx-bumps.nvct",
+      "bytes": 293616,
+      "sha256": "cec6b4733b2670ec438e1cd37c5b53f87c2fcf506437ff80daa8520f68399c4e",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 90,
+      "frame_types": {
+        "None": 90
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "a72c9dbdb00f7eee",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_3bit_car-turn.nvct",
+      "bytes": 178790,
+      "sha256": "735ccb2a94d69a065cdb1956af35ad1e0d3946a79bd5dbe35eccfee60006fb9d",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 80,
+      "frame_types": {
+        "None": 80
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "a72c9dbdb00f7eee",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_3bit_cat-girl.nvct",
+      "bytes": 325165,
+      "sha256": "b11ca30a804a191b1cb183705606aea2783d5416ff2ee7ba6bf9ceb46dcac8e1",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 89,
+      "frame_types": {
+        "None": 89
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "a72c9dbdb00f7eee",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_3bit_cows.nvct",
+      "bytes": 291626,
+      "sha256": "66af6eec80d2fc7a4aa2cbdfea097a0490faa8a88a35939753e7f1e2f716a51f",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 104,
+      "frame_types": {
+        "None": 104
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "a72c9dbdb00f7eee",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_3bit_drift-chicane.nvct",
+      "bytes": 81572,
+      "sha256": "e485b0c1dd04b18e6387be02d82102f0108295ba0dd7516ba5229807c1a8e5d7",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 52,
+      "frame_types": {
+        "None": 52
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "a72c9dbdb00f7eee",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_3bit_drone.nvct",
+      "bytes": 272769,
+      "sha256": "3c1c65414791de4987cb2fbb85daa7ef7c4d1a343d5575e9717620bc74ac51b8",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 91,
+      "frame_types": {
+        "None": 91
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "a72c9dbdb00f7eee",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_3bit_gold-fish.nvct",
+      "bytes": 201490,
+      "sha256": "1926dece43f928b7fed63865f1a740c828d47b4af0d447320cd7d38d8201aeef",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 78,
+      "frame_types": {
+        "None": 78
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "a72c9dbdb00f7eee",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_3bit_schoolgirls.nvct",
+      "bytes": 222349,
+      "sha256": "3d7a9884d33ff0946521d66768b4afe7b6720b232db6445b0fa0fdb0049dbf29",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 80,
+      "frame_types": {
+        "None": 80
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "a72c9dbdb00f7eee",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_3bit_surf.nvct",
+      "bytes": 111196,
+      "sha256": "84a07e5605ed94002f15e7a3e96b431e99f581f768c9ab5f873473683734d804",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 55,
+      "frame_types": {
+        "None": 55
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "a72c9dbdb00f7eee",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_4bit_bmx-bumps.nvct",
+      "bytes": 455344,
+      "sha256": "6b5c273e9ff5137930bbeca572bea11d14a69cf896ab258a1f9bff15233c0dd8",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 90,
+      "frame_types": {
+        "None": 90
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "1687b85e55d12934",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_4bit_car-turn.nvct",
+      "bytes": 286035,
+      "sha256": "0b8564e9fe380d6f2bed951b7495d08c632551f6c06cdf4e420770d690d0c3b4",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 80,
+      "frame_types": {
+        "None": 80
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "1687b85e55d12934",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_4bit_cat-girl.nvct",
+      "bytes": 487194,
+      "sha256": "41f3c73da582fe5ee1895c354d5addcc86dc443d658ccd37ca97f291247af7eb",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 89,
+      "frame_types": {
+        "None": 89
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "1687b85e55d12934",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_4bit_cows.nvct",
+      "bytes": 459314,
+      "sha256": "99bdcc7077a414169037f24a25f6d524e442205f6bd46dfed1fbc18b352112ab",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 104,
+      "frame_types": {
+        "None": 104
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "1687b85e55d12934",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_4bit_drift-chicane.nvct",
+      "bytes": 136681,
+      "sha256": "02ff041d51cbdb750f7295efb01ef06ae2469d8408a64573086493caa66625d5",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 52,
+      "frame_types": {
+        "None": 52
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "1687b85e55d12934",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_4bit_drone.nvct",
+      "bytes": 421012,
+      "sha256": "8705555540225e02c47d978267a9e5784f64b08b209be4eba94ff49bb7638ea5",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 91,
+      "frame_types": {
+        "None": 91
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "1687b85e55d12934",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_4bit_gold-fish.nvct",
+      "bytes": 332969,
+      "sha256": "7ef562eee0afc13001dc97420414df2e075103abba26b36a385c5f957709461d",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 78,
+      "frame_types": {
+        "None": 78
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "1687b85e55d12934",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_4bit_schoolgirls.nvct",
+      "bytes": 337055,
+      "sha256": "cea7c8fb1a2c23af605191f23469dc75e790eb2bfaaf16ba258b353b9686bbe2",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 80,
+      "frame_types": {
+        "None": 80
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "1687b85e55d12934",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_4bit_surf.nvct",
+      "bytes": 176743,
+      "sha256": "ba3fde551e7aa555c1744e1c7a3837237dba26c4a44b388ff76c48b2a2a8da5a",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 55,
+      "frame_types": {
+        "None": 55
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "1687b85e55d12934",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_5bit_bmx-bumps.nvct",
+      "bytes": 629074,
+      "sha256": "7f1dff9c4cf8f4fb91d9d078e6a8f601ed9da420e672a89e3e6620aed29c045a",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 90,
+      "frame_types": {
+        "None": 90
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "c4f1373f63ffbdfe",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_5bit_car-turn.nvct",
+      "bytes": 415526,
+      "sha256": "69374fbcb915595f9a696744779a8ebea86bea985d271971569952bef7a7eae7",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 80,
+      "frame_types": {
+        "None": 80
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "c4f1373f63ffbdfe",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_5bit_cat-girl.nvct",
+      "bytes": 662422,
+      "sha256": "8174f46fadb2d85f68c7a74033ac989a3063547ca9edd386b6a7bac8a6080652",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 89,
+      "frame_types": {
+        "None": 89
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "c4f1373f63ffbdfe",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_5bit_cows.nvct",
+      "bytes": 651637,
+      "sha256": "bf0acceba3b40eab8b867cd85f17310d3c57c08ec0fa77d2404020ee505f1d11",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 104,
+      "frame_types": {
+        "None": 104
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "c4f1373f63ffbdfe",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_5bit_drift-chicane.nvct",
+      "bytes": 206246,
+      "sha256": "ea6ff6bb6ec3ccc06af810533bf188f41228e1d22f304fd57edd0d6a4cf42f61",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 52,
+      "frame_types": {
+        "None": 52
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "c4f1373f63ffbdfe",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_5bit_drone.nvct",
+      "bytes": 587493,
+      "sha256": "dc9f2652f82c6c3ba4372f206defc755a58a0372aa1cf211b7a27befc6412810",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 91,
+      "frame_types": {
+        "None": 91
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "c4f1373f63ffbdfe",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_5bit_gold-fish.nvct",
+      "bytes": 480594,
+      "sha256": "d4b67d51d8cc8826b90fc3c4e05189ab4d3a4e8f6546dfbefb337aabffabda07",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 78,
+      "frame_types": {
+        "None": 78
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "c4f1373f63ffbdfe",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_5bit_schoolgirls.nvct",
+      "bytes": 472403,
+      "sha256": "2903af8b7f5b10ec267285023aa24e418b123a901a8ab66ec3dae0182a14660a",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 80,
+      "frame_types": {
+        "None": 80
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "c4f1373f63ffbdfe",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m11_op_5bit_surf.nvct",
+      "bytes": 255565,
+      "sha256": "3020e80de604e8e3b8efe9be74079b11daf579cf16fdac382dec50b07851fb91",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 55,
+      "frame_types": {
+        "None": 55
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "c4f1373f63ffbdfe",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_3bit_bmx-bumps.nvct",
+      "bytes": 288175,
+      "sha256": "2b66f034589416e70b9d3dce186fd011113e29e54408aee3b4f385a2adb196d9",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 90,
+      "frame_types": {
+        "None": 90
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_3bit_car-turn.nvct",
+      "bytes": 170137,
+      "sha256": "dfd013c9061fd49bfb94ffa1334a3d9962de140738cc3985f4eb1a4b33cf38f7",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 80,
+      "frame_types": {
+        "None": 80
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_3bit_cat-girl.nvct",
+      "bytes": 316801,
+      "sha256": "04cd1ae765ac63da21e335528d81342296312f25bb8aeef8f8a54669e5820ecd",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 89,
+      "frame_types": {
+        "None": 89
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_3bit_cows.nvct",
+      "bytes": 286378,
+      "sha256": "efa8be1f0c5e47b41efb4c7b6928a9cf8d7178e667633980abaa57012a6a3e30",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 104,
+      "frame_types": {
+        "None": 104
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_3bit_drift-chicane.nvct",
+      "bytes": 74643,
+      "sha256": "4893fc10d67f13533309e08cc01c93187a0aff1400bc66295a9ba7d727a2d1e9",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 52,
+      "frame_types": {
+        "None": 52
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_3bit_drone.nvct",
+      "bytes": 263435,
+      "sha256": "a49ae79ccc7c2e967a31377671a99458dabd7be233319cbae03158cdef268795",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 91,
+      "frame_types": {
+        "None": 91
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_3bit_gold-fish.nvct",
+      "bytes": 199077,
+      "sha256": "8daf4274852d1a42b435c093ec59b51fc5962da444ff1479c6fdf3f4bf6e13e5",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 78,
+      "frame_types": {
+        "None": 78
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_3bit_schoolgirls.nvct",
+      "bytes": 215964,
+      "sha256": "9f1545f43fc660c0370ec67fc5f70e60e72044b2f737a7d87eac03e961b71696",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 80,
+      "frame_types": {
+        "None": 80
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_3bit_surf.nvct",
+      "bytes": 103418,
+      "sha256": "60aea42bc95f95aabe0e72f1a6e0e64b86db9b83ff8a40b8cccc04cdcad84cfd",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 55,
+      "frame_types": {
+        "None": 55
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_4bit_bmx-bumps.nvct",
+      "bytes": 450395,
+      "sha256": "0ed3ac6b1706d2bee30e0adab5ac3b3f1c6d086ec26ea77fe68003a09c462b3a",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 90,
+      "frame_types": {
+        "None": 90
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_4bit_car-turn.nvct",
+      "bytes": 276844,
+      "sha256": "83731fdd673c11d93709f80a22deee3417f368726ecf0fa6c2d8969b69cfa8c7",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 80,
+      "frame_types": {
+        "None": 80
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_4bit_cat-girl.nvct",
+      "bytes": 480580,
+      "sha256": "c75b618ed60cb298f026ae33840eb00741657e63d4e6410bb27768b62260cc3c",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 89,
+      "frame_types": {
+        "None": 89
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_4bit_cows.nvct",
+      "bytes": 453061,
+      "sha256": "d162251d2f3b74c8f4c5f47b41a1473a85839395b90144fa16450a67409015af",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 104,
+      "frame_types": {
+        "None": 104
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_4bit_drift-chicane.nvct",
+      "bytes": 128428,
+      "sha256": "d9332a17dea46237a334a1d3a7ee7cfc8e88ffcb1f4364359d6a759ed3965b68",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 52,
+      "frame_types": {
+        "None": 52
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_4bit_drone.nvct",
+      "bytes": 412351,
+      "sha256": "93ab0049d2706995536bba2346064692bff10dbb132f0b33e4a54f9739dc58a7",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 91,
+      "frame_types": {
+        "None": 91
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_4bit_gold-fish.nvct",
+      "bytes": 330451,
+      "sha256": "ed83577054487640d75f980c5aec6b288ac0739c8df36e584a52cbc34729d9d6",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 78,
+      "frame_types": {
+        "None": 78
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_4bit_schoolgirls.nvct",
+      "bytes": 330928,
+      "sha256": "7c6559269d02f9121080bc4fb25f0fcf866ccb9faa3f39657f9ee99aed3b0aa5",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 80,
+      "frame_types": {
+        "None": 80
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_4bit_surf.nvct",
+      "bytes": 164309,
+      "sha256": "312d797fc4fe1ba4ef74cc39d8ec2c838e40709da69aaa91f3f319a3e4036794",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 55,
+      "frame_types": {
+        "None": 55
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_5bit_bmx-bumps.nvct",
+      "bytes": 626009,
+      "sha256": "f40383d7d8b2497a55b95c349bf73865c4275a49b14816e48e09de767239d5c7",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 90,
+      "frame_types": {
+        "None": 90
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_5bit_car-turn.nvct",
+      "bytes": 408417,
+      "sha256": "98b112191a2a1274238416b74c383936b68171aa9242a0da4647586b2c9b6011",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 80,
+      "frame_types": {
+        "None": 80
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_5bit_cat-girl.nvct",
+      "bytes": 658149,
+      "sha256": "0b52ff7fa15cce4a2d79bc6896f7c37cb2108c89a79a34083c120ac1cb49026e",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 89,
+      "frame_types": {
+        "None": 89
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_5bit_cows.nvct",
+      "bytes": 646844,
+      "sha256": "9097388cb3bc564add175f80c91c869fa6c65104656ac2a03c0836c8c1f0b4d8",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 104,
+      "frame_types": {
+        "None": 104
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_5bit_drift-chicane.nvct",
+      "bytes": 198515,
+      "sha256": "36dea4e64e1bc41136ca0b9f0a8f6b6ba359166a06387559d41dc2feed0db2d0",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 52,
+      "frame_types": {
+        "None": 52
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_5bit_drone.nvct",
+      "bytes": 581657,
+      "sha256": "739156bcb1df9ba378ed28fb19d7a9adf1c13b1e295ea5f42f0bab8214f88fde",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 91,
+      "frame_types": {
+        "None": 91
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_5bit_gold-fish.nvct",
+      "bytes": 479194,
+      "sha256": "2350290917ee70d745ba276031385c7b7afd58990e1d2a2d3a5ac46028af85c0",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 78,
+      "frame_types": {
+        "None": 78
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_5bit_schoolgirls.nvct",
+      "bytes": 468056,
+      "sha256": "f083b5f67feea0d836b3278c3ebaf30ca705c9b4322c402b8c8e52fd0a41e0e5",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 80,
+      "frame_types": {
+        "None": 80
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/davis_streams/m13_recal_5bit_surf.nvct",
+      "bytes": 243154,
+      "sha256": "48b510364e8d1c1b1507ae023227089debf8ef92716ce9a5c10ce6a1e7a48f22",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 55,
+      "frame_types": {
+        "None": 55
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/validation_streams/m11_op_3bit_bmx-trees.nvct",
+      "bytes": 91531,
+      "sha256": "b33332096cd2b7bff4199b401dd3464d69c38cddcb7b3d244e546c94545ed2af",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "a72c9dbdb00f7eee",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/validation_streams/m11_op_3bit_car-roundabout.nvct",
+      "bytes": 90337,
+      "sha256": "d95f18f29ef83f77ab6575113853de34fdc4501f9976b4a694ced9c1bba38d5c",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "a72c9dbdb00f7eee",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/validation_streams/m11_op_3bit_dogs-scale.nvct",
+      "bytes": 94321,
+      "sha256": "d6420f4baa024771b570b4c5fd5ee4eff349dcb46513beb5d6b8c28320f95f7f",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "a72c9dbdb00f7eee",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/validation_streams/m11_op_4bit_bmx-trees.nvct",
+      "bytes": 140594,
+      "sha256": "892de6fa03d6ce9fb107f9e7733def1482f8b9479f2bd078f512255f927df26a",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "1687b85e55d12934",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/validation_streams/m11_op_4bit_car-roundabout.nvct",
+      "bytes": 139163,
+      "sha256": "db1f63bbbe21b446c89f57567bf60e8255f42e43b289a8fa49e3d2625f919f2f",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "1687b85e55d12934",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/validation_streams/m11_op_4bit_dogs-scale.nvct",
+      "bytes": 145632,
+      "sha256": "cdf0f8f1c7e8c077118f7024e11dda602cb8691eb824c9a1b3bc3f20160641f2",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "1687b85e55d12934",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/validation_streams/m11_op_5bit_bmx-trees.nvct",
+      "bytes": 196127,
+      "sha256": "3c74c0f97b1e0ef9090e56f200741971bea6f1a2399cce72e32ee87fe690071d",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "c4f1373f63ffbdfe",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/validation_streams/m11_op_5bit_car-roundabout.nvct",
+      "bytes": 194197,
+      "sha256": "48d0da8ae781aa477b2d92472c642261956e53118d5c134819b8178a741ce1d9",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "c4f1373f63ffbdfe",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/validation_streams/m11_op_5bit_dogs-scale.nvct",
+      "bytes": 202252,
+      "sha256": "6a4acf5b88f50c87c4fdc40e169c8e6f31359074a725b073d534cd761b176b66",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "c4f1373f63ffbdfe",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/validation_streams/m13_recal_3bit_bmx-trees.nvct",
+      "bytes": 89621,
+      "sha256": "34de11a01dafd5560999268f9c272eed4276b7b3f9c7ca1470f5cc5c1d23af50",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/validation_streams/m13_recal_3bit_car-roundabout.nvct",
+      "bytes": 87104,
+      "sha256": "f4bbb881359198e1cc6c8a7ae380520fab0d74cf811d689aa06b1a5bbd2a4e5d",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/validation_streams/m13_recal_3bit_dogs-scale.nvct",
+      "bytes": 91724,
+      "sha256": "36a923a73c062b07fb6e9b6aa00d49a283576dbb98032a727beed73b83eb1761",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "90eeac872bfa2f97"
+    },
+    {
+      "path": "outputs/m13_recalibration/validation_streams/m13_recal_4bit_bmx-trees.nvct",
+      "bytes": 138983,
+      "sha256": "40a7e33e32c6b7d964b4c320c513fca88801e18ef29657e7cfcd6e39cd17030f",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/validation_streams/m13_recal_4bit_car-roundabout.nvct",
+      "bytes": 136234,
+      "sha256": "1a2247c36e3f86b3dbb2b18163ab786bdf4972019da05647a51dc7daa4e6d05f",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/validation_streams/m13_recal_4bit_dogs-scale.nvct",
+      "bytes": 143474,
+      "sha256": "f30ac64b3b50cf063e19696689929b92597bd5abadc3e8c25d78c1c1da02dc5b",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "e1bbc6643d038eee"
+    },
+    {
+      "path": "outputs/m13_recalibration/validation_streams/m13_recal_5bit_bmx-trees.nvct",
+      "bytes": 195052,
+      "sha256": "e17d966418285f46acfda9313dcb81c1dfeaeebfc9d2daf8d6e5b0267a5bdfe4",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/validation_streams/m13_recal_5bit_car-roundabout.nvct",
+      "bytes": 192024,
+      "sha256": "3e65846f9c8dd771392998de5ee460ab085594c9efc053534ff188eace05c718",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m13_recalibration/validation_streams/m13_recal_5bit_dogs-scale.nvct",
+      "bytes": 200863,
+      "sha256": "67820499d7783ae557769ff6bd587a235387131b623ca3baf03f1a08f1cfe57a",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "ee605dd44277b878"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_3bit_bmx-bumps.nvct",
+      "bytes": 282415,
+      "sha256": "757dfeb2922833b89ea30c1ce616ef3ac9175978161946c9077001d10b925e52",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 90,
+      "frame_types": {
+        "None": 90
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_3bit_car-turn.nvct",
+      "bytes": 168253,
+      "sha256": "d20a8b7ab2e312f6db71076ea57af33954b6a833084f10ca6a8720e9376ba71a",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 80,
+      "frame_types": {
+        "None": 80
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_3bit_cat-girl.nvct",
+      "bytes": 312604,
+      "sha256": "2dfa59fee3c6dfaf15d4ad64305495b1e5b3f89839e56bf1bc3462eac753250d",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 89,
+      "frame_types": {
+        "None": 89
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_3bit_cows.nvct",
+      "bytes": 287715,
+      "sha256": "52795b6bcd5ab88172b124b65c4932a9df2ad340c515bb2486531da673bb6e56",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 104,
+      "frame_types": {
+        "None": 104
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_3bit_drift-chicane.nvct",
+      "bytes": 73914,
+      "sha256": "27b088477da35983a0f600a48617e7ea0f412398ae5570a4a4ecff22bac834bd",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 52,
+      "frame_types": {
+        "None": 52
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_3bit_drone.nvct",
+      "bytes": 257504,
+      "sha256": "03098fb87f3075f3a07df4c735873b48677643a560606a659fa5331fc2dfc7cb",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 91,
+      "frame_types": {
+        "None": 91
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_3bit_gold-fish.nvct",
+      "bytes": 199147,
+      "sha256": "4b7b730c6e19c70f56bade94a5dd6190739c866c8b34c9a5f5e56537df4bbecb",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 78,
+      "frame_types": {
+        "None": 78
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_3bit_schoolgirls.nvct",
+      "bytes": 218462,
+      "sha256": "0e3dac67a08654210b05b1c8006835a72e7e10bd7a33912b839e27003fff8376",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 80,
+      "frame_types": {
+        "None": 80
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_3bit_surf.nvct",
+      "bytes": 100730,
+      "sha256": "43df11180f80760346e83d565149ace4126abc711c3ec6347ecfa82c695ba186",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 55,
+      "frame_types": {
+        "None": 55
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_4bit_bmx-bumps.nvct",
+      "bytes": 444078,
+      "sha256": "ac9c2e1a6a55c839153b57732e4011d6f437cc9789dfbf456118e5406d884298",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 90,
+      "frame_types": {
+        "None": 90
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_4bit_car-turn.nvct",
+      "bytes": 275173,
+      "sha256": "14f2e0335a518fb5fe1eda89d881dae3aaac0aae251d0b228738a9f16963796b",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 80,
+      "frame_types": {
+        "None": 80
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_4bit_cat-girl.nvct",
+      "bytes": 475977,
+      "sha256": "01a0d7f05831865c4eb643e27b59450222d34fdb0309009f486e659ba2a92680",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 89,
+      "frame_types": {
+        "None": 89
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_4bit_cows.nvct",
+      "bytes": 454540,
+      "sha256": "7414fd211decf30ffe878a88994c80b91c398a521c70b356d6febc60fa4d881d",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 104,
+      "frame_types": {
+        "None": 104
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_4bit_drift-chicane.nvct",
+      "bytes": 128336,
+      "sha256": "e214989b53177dd3935f8b8f83abb5e2ebc7fa0d031a29fb4ef94cc22d3ec373",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 52,
+      "frame_types": {
+        "None": 52
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_4bit_drone.nvct",
+      "bytes": 405896,
+      "sha256": "1f44f8a333956e1d4a75b789f50fe101d74288da8d69603903a88c72ba197cd8",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 91,
+      "frame_types": {
+        "None": 91
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_4bit_gold-fish.nvct",
+      "bytes": 330803,
+      "sha256": "bae1aa6fe56197a7d860997a74913c2e505c70ea131ae80909b60fbe9653b04b",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 78,
+      "frame_types": {
+        "None": 78
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_4bit_schoolgirls.nvct",
+      "bytes": 333545,
+      "sha256": "1064e379c1c98ddbd1b7ec3076e70846e1b8639df413e947ed646e0828def535",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 80,
+      "frame_types": {
+        "None": 80
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_4bit_surf.nvct",
+      "bytes": 161543,
+      "sha256": "1712edba37bc40b61e2e94e2ab69ebf82cbd831dbf2b807ba5491b7bfb082f2b",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 55,
+      "frame_types": {
+        "None": 55
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_5bit_bmx-bumps.nvct",
+      "bytes": 619333,
+      "sha256": "d92ab7b09bf57aea91640e31914d23db68e8be63221543daf7f5b0e6d7a63908",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 90,
+      "frame_types": {
+        "None": 90
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_5bit_car-turn.nvct",
+      "bytes": 407048,
+      "sha256": "24ddb2c50d6a2e72b1da5f6b7cc761c54d37f77dd03e1ac8a18f9bfa714e191b",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 80,
+      "frame_types": {
+        "None": 80
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_5bit_cat-girl.nvct",
+      "bytes": 653392,
+      "sha256": "df50bd24922573c0d604b7ac506818f053ce806fb70e024504e50fe6cfe597f8",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 89,
+      "frame_types": {
+        "None": 89
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_5bit_cows.nvct",
+      "bytes": 648346,
+      "sha256": "b90e6d5e5d988d9def2e73646cd9cf5fc5af82f3678c8b750b6a9962489c4716",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 104,
+      "frame_types": {
+        "None": 104
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_5bit_drift-chicane.nvct",
+      "bytes": 198857,
+      "sha256": "720c32d5a5c88cf21c305443ece9f5fd0bb6f9f9b2ee1d8a0d53c53290c6b21c",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 52,
+      "frame_types": {
+        "None": 52
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_5bit_drone.nvct",
+      "bytes": 575127,
+      "sha256": "bb25b29b11bb83d8afb382f159dc188248dc59a98095a4b6d784a03626df34b8",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 91,
+      "frame_types": {
+        "None": 91
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_5bit_gold-fish.nvct",
+      "bytes": 479595,
+      "sha256": "5f2d1b6e147d75498e4e74f6c34c40291319b4f6afc15b5f200677221df92279",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 78,
+      "frame_types": {
+        "None": 78
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_5bit_schoolgirls.nvct",
+      "bytes": 470694,
+      "sha256": "d6851e6b13baa6e0e5c32bd30ca5a44bfdf9aa5e979d417844c955891f2afa7c",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 80,
+      "frame_types": {
+        "None": 80
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/davis_streams/m13_recal_5bit_surf.nvct",
+      "bytes": 240495,
+      "sha256": "869206052ab59882c281e556b277088e28ddcef1105f530d56a6d2b3d0bda0a9",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 55,
+      "frame_types": {
+        "None": 55
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/coded_validation_streams/m13_recal_3bit_bmx-trees.nvct",
+      "bytes": 87290,
+      "sha256": "d3b6a5261e07b5f6e535906dd1441e4c546b116deaf66b3409c6a5fbe80fb165",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/coded_validation_streams/m13_recal_3bit_car-roundabout.nvct",
+      "bytes": 86143,
+      "sha256": "eea55bec9e41ea32875e7b6321b2349bcdaf91a9e6eae488dc79746e86a78cb2",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/coded_validation_streams/m13_recal_3bit_dogs-scale.nvct",
+      "bytes": 90470,
+      "sha256": "0631ce429cbf8c1a394cb079fee95c1ebd2e1d12da076bce6bb26e808214084c",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/coded_validation_streams/m13_recal_4bit_bmx-trees.nvct",
+      "bytes": 136406,
+      "sha256": "d87dfbd6aa0b2388475f17b569de3f5f2beaf5338c711c732e227e0a96c61b4d",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/coded_validation_streams/m13_recal_4bit_car-roundabout.nvct",
+      "bytes": 135246,
+      "sha256": "d935bec4f509346cfd4c4209db9c1d79b572c7b8f754c1644efeebe9f0814907",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/coded_validation_streams/m13_recal_4bit_dogs-scale.nvct",
+      "bytes": 142121,
+      "sha256": "dd139136203b7a520428570d839b8d26e6f07eb5ecfbc3217e5f0d65122db358",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/coded_validation_streams/m13_recal_5bit_bmx-trees.nvct",
+      "bytes": 192414,
+      "sha256": "2bda5df846bd800f48c933c50277a7a0759d339ba7c7ac109732d4b9c368e6d8",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/coded_validation_streams/m13_recal_5bit_car-roundabout.nvct",
+      "bytes": 191038,
+      "sha256": "55ac28e36dea25a5f28e724e10202e5a410d031d37e1f0922d3e0723d4ca760a",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m14_entropy_audit/coded_validation_streams/m13_recal_5bit_dogs-scale.nvct",
+      "bytes": 199483,
+      "sha256": "434fb8d8dc57e94395a7f90a865507cf7f8574417fc8ace944a680fba82f1dea",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "d7e7b237b6451885"
+    },
+    {
+      "path": "outputs/m15_calibration_policy/coded_validation_streams/m13_recal_3bit_bmx-trees.nvct",
+      "bytes": 87207,
+      "sha256": "ca690bd1243b833ab9b7f4c386dab5cfccb950d0b9f5bbaffae6d6f1f8088546",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "60fde348c2f32a70"
+    },
+    {
+      "path": "outputs/m15_calibration_policy/coded_validation_streams/m13_recal_3bit_car-roundabout.nvct",
+      "bytes": 86153,
+      "sha256": "3084df2cc1107e1782695aed1b9fc333bd2ec77d478025e647bf3aaf87444a43",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "60fde348c2f32a70"
+    },
+    {
+      "path": "outputs/m15_calibration_policy/coded_validation_streams/m13_recal_3bit_dogs-scale.nvct",
+      "bytes": 90521,
+      "sha256": "8c601c2a7d3217d4ba067fc4f7d3d67a7e3bce08b1f3158d79c11b8b8b85694d",
+      "format_version": 2,
+      "quantization_bits": 3,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "b523711d2e982057",
+      "residual_entropy_model_id": "d2d61d66a50cad8a",
+      "motion_entropy_model_id": "60fde348c2f32a70"
+    },
+    {
+      "path": "outputs/m15_calibration_policy/coded_validation_streams/m13_recal_4bit_bmx-trees.nvct",
+      "bytes": 136322,
+      "sha256": "a975331cc9b65c8d21e59bd739222a310d18729ddbf4934801be98b1a735154b",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "60fde348c2f32a70"
+    },
+    {
+      "path": "outputs/m15_calibration_policy/coded_validation_streams/m13_recal_4bit_car-roundabout.nvct",
+      "bytes": 135256,
+      "sha256": "5573559d9c4b7fc369ea017d93bb0f9beb8f77e9198fe2c6d7f96e20ea81a79f",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "60fde348c2f32a70"
+    },
+    {
+      "path": "outputs/m15_calibration_policy/coded_validation_streams/m13_recal_4bit_dogs-scale.nvct",
+      "bytes": 142174,
+      "sha256": "fa48bce77a4b6de35589dfb3bb52071b5d6bba621908019905ae77757799b841",
+      "format_version": 2,
+      "quantization_bits": 4,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "14c4b8bf40056ca1",
+      "residual_entropy_model_id": "be872c2beebd2f9b",
+      "motion_entropy_model_id": "60fde348c2f32a70"
+    },
+    {
+      "path": "outputs/m15_calibration_policy/coded_validation_streams/m13_recal_5bit_bmx-trees.nvct",
+      "bytes": 192330,
+      "sha256": "925e63c9aff87669c4b0b1842c09bc3b7f041e5a5c2fbe49a5951270040d5664",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "60fde348c2f32a70"
+    },
+    {
+      "path": "outputs/m15_calibration_policy/coded_validation_streams/m13_recal_5bit_car-roundabout.nvct",
+      "bytes": 191051,
+      "sha256": "ce827534b4744725571b876796db687fba2436377c0383c1f5fccbf0556beb7e",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "60fde348c2f32a70"
+    },
+    {
+      "path": "outputs/m15_calibration_policy/coded_validation_streams/m13_recal_5bit_dogs-scale.nvct",
+      "bytes": 199535,
+      "sha256": "9bf28a161f29c530e434804b4aa870b88d813e6f6c609c5aafda68083fa18fec",
+      "format_version": 2,
+      "quantization_bits": 5,
+      "frame_count": 30,
+      "frame_types": {
+        "None": 30
+      },
+      "intra_entropy_model_id": "8fadd1ca200c033b",
+      "residual_entropy_model_id": "ec858dee10f8a955",
+      "motion_entropy_model_id": "60fde348c2f32a70"
+    }
+  ]
+}

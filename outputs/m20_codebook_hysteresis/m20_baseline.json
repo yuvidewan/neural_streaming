@@ -1,0 +1,196 @@
+{
+  "phase": "M20 Phase 0",
+  "git_head": "a1565ae1d20bb23d6396f5247f029e845c7e285e",
+  "git_status_porcelain": "?? scripts/m20_baseline.py\n?? scripts/m20_hysteresis.py",
+  "git_clean": false,
+  "baseline_test_suite": [
+    "1323 passed, 1 warning in 243.67s (0:04:03)"
+  ],
+  "val_b_sequence_ids": [
+    "car-roundabout",
+    "drift-straight",
+    "pigs",
+    "stunt"
+  ],
+  "declared_margin_sweep": [
+    0.0,
+    0.001,
+    0.005,
+    0.01,
+    0.02,
+    0.05,
+    0.1
+  ],
+  "declared_hysteresis_states": [
+    "temporal",
+    "channel_group",
+    "raster"
+  ],
+  "rate_points": [
+    {
+      "bits": 5,
+      "p_frames": 246,
+      "residual_identity": "ec858dee10f8a955",
+      "assign_codebook_id": "c4bb904fe6f88a5f",
+      "coding_codebook_id": "474d54d3673ade9f",
+      "m13_smoothing_strength": 1024.0,
+      "expected_identities": {
+        "residual_identity": "ec858dee10f8a955",
+        "assign_codebook_id": "c4bb904fe6f88a5f",
+        "coding_codebook_id": "474d54d3673ade9f"
+      },
+      "identities_match": true,
+      "real_bytes": 1333275,
+      "oracle_bytes": 1300318,
+      "recorded_real_bytes": 1333275,
+      "recorded_oracle_bytes": 1300318,
+      "bytes_match": true,
+      "routing": {
+        "positions": 4030464,
+        "mean_assignment_churn": 0.44184763838605184,
+        "mean_symbol_change_rate": 0.29819072940485264,
+        "total_excess_bits_real_minus_oracle": 263655.7452882492,
+        "decomposition_2x2": {
+          "symbol_changed=False_assignment_changed=False": {
+            "fraction_of_positions": 0.40878196654280996,
+            "mean_delta_code_len_bits": 0.0,
+            "sum_delta_code_len_bits": 0.0,
+            "share_of_total_excess_bits": 0.0
+          },
+          "symbol_changed=False_assignment_changed=True": {
+            "fraction_of_positions": 0.2930273040523374,
+            "mean_delta_code_len_bits": 0.01959305311778214,
+            "sum_delta_code_len_bits": 23140.10108201295,
+            "share_of_total_excess_bits": 0.08776634492343176
+          },
+          "symbol_changed=True_assignment_changed=False": {
+            "fraction_of_positions": 0.14937039507113822,
+            "mean_delta_code_len_bits": 0.15475390271197736,
+            "sum_delta_code_len_bits": 93166.80155749715,
+            "share_of_total_excess_bits": 0.3533653380306197
+          },
+          "symbol_changed=True_assignment_changed=True": {
+            "fraction_of_positions": 0.14882033433371444,
+            "mean_delta_code_len_bits": 0.24565714870208175,
+            "sum_delta_code_len_bits": 147348.84264873917,
+            "share_of_total_excess_bits": 0.5588683170459487
+          }
+        },
+        "routing_only_share_of_excess_bits": 0.08776634492343176,
+        "routing_only_excess_bits": 23140.10108201295,
+        "symbol_change_share_of_excess_bits": 0.9122336550765684
+      }
+    },
+    {
+      "bits": 4,
+      "p_frames": 246,
+      "residual_identity": "be872c2beebd2f9b",
+      "assign_codebook_id": "624682536c203a54",
+      "coding_codebook_id": "2d319551c6d8bec1",
+      "m13_smoothing_strength": 1024.0,
+      "expected_identities": {
+        "residual_identity": "be872c2beebd2f9b",
+        "assign_codebook_id": "624682536c203a54",
+        "coding_codebook_id": "2d319551c6d8bec1"
+      },
+      "identities_match": true,
+      "real_bytes": 908404,
+      "oracle_bytes": 831497,
+      "recorded_real_bytes": 908404,
+      "recorded_oracle_bytes": 831497,
+      "bytes_match": true,
+      "routing": {
+        "positions": 4030464,
+        "mean_assignment_churn": 0.591314300288999,
+        "mean_symbol_change_rate": 0.2523947614964431,
+        "total_excess_bits_real_minus_oracle": 615190.9552125961,
+        "decomposition_2x2": {
+          "symbol_changed=False_assignment_changed=False": {
+            "fraction_of_positions": 0.3207295735677083,
+            "mean_delta_code_len_bits": 0.0,
+            "sum_delta_code_len_bits": 0.0,
+            "share_of_total_excess_bits": 0.0
+          },
+          "symbol_changed=False_assignment_changed=True": {
+            "fraction_of_positions": 0.42687566493584855,
+            "mean_delta_code_len_bits": 0.043802356180214205,
+            "sum_delta_code_len_bits": 75362.2604245518,
+            "share_of_total_excess_bits": 0.1225022243678929
+          },
+          "symbol_changed=True_assignment_changed=False": {
+            "fraction_of_positions": 0.08795612614329268,
+            "mean_delta_code_len_bits": 0.3706519936056963,
+            "sum_delta_code_len_bits": 131397.61434119375,
+            "share_of_total_excess_bits": 0.21358833908048225
+          },
+          "symbol_changed=True_assignment_changed=True": {
+            "fraction_of_positions": 0.1644386353531504,
+            "mean_delta_code_len_bits": 0.6162541725966565,
+            "sum_delta_code_len_bits": 408431.08044685045,
+            "share_of_total_excess_bits": 0.6639094365516247
+          }
+        },
+        "routing_only_share_of_excess_bits": 0.1225022243678929,
+        "routing_only_excess_bits": 75362.2604245518,
+        "symbol_change_share_of_excess_bits": 0.877497775632107
+      }
+    },
+    {
+      "bits": 3,
+      "p_frames": 246,
+      "residual_identity": "d2d61d66a50cad8a",
+      "assign_codebook_id": "666c05b46e355317",
+      "coding_codebook_id": "50cd2a7277d8fa97",
+      "m13_smoothing_strength": 256.0,
+      "expected_identities": {
+        "residual_identity": "d2d61d66a50cad8a",
+        "assign_codebook_id": "666c05b46e355317",
+        "coding_codebook_id": "50cd2a7277d8fa97"
+      },
+      "identities_match": true,
+      "real_bytes": 549083,
+      "oracle_bytes": 441390,
+      "recorded_real_bytes": 549083,
+      "recorded_oracle_bytes": 441390,
+      "bytes_match": true,
+      "routing": {
+        "positions": 4030464,
+        "mean_assignment_churn": 0.73025611939469,
+        "mean_symbol_change_rate": 0.18691619624936484,
+        "total_excess_bits_real_minus_oracle": 861538.3796135348,
+        "decomposition_2x2": {
+          "symbol_changed=False_assignment_changed=False": {
+            "fraction_of_positions": 0.23785226713351118,
+            "mean_delta_code_len_bits": 0.0,
+            "sum_delta_code_len_bits": 0.0,
+            "share_of_total_excess_bits": 0.0
+          },
+          "symbol_changed=False_assignment_changed=True": {
+            "fraction_of_positions": 0.575231536617124,
+            "mean_delta_code_len_bits": 0.04470448115923016,
+            "sum_delta_code_len_bits": 103645.10434361717,
+            "share_of_total_excess_bits": 0.12030236469570846
+          },
+          "symbol_changed=True_assignment_changed=False": {
+            "fraction_of_positions": 0.03189161347179878,
+            "mean_delta_code_len_bits": 0.714593357658512,
+            "sum_delta_code_len_bits": 91852.40100670981,
+            "share_of_total_excess_bits": 0.10661440416376178
+          },
+          "symbol_changed=True_assignment_changed=True": {
+            "fraction_of_positions": 0.15502458277756606,
+            "mean_delta_code_len_bits": 1.0659706928275585,
+            "sum_delta_code_len_bits": 666040.8742632079,
+            "share_of_total_excess_bits": 0.7730832311405299
+          }
+        },
+        "routing_only_share_of_excess_bits": 0.12030236469570846,
+        "routing_only_excess_bits": 103645.10434361717,
+        "symbol_change_share_of_excess_bits": 0.8796976353042917
+      }
+    }
+  ],
+  "all_identities_match": true,
+  "all_bytes_match": true,
+  "status": "CONFIRMED"
+}

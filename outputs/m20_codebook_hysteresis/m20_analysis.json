@@ -1,0 +1,1028 @@
+{
+  "phase": "M20 Phases F/G/H",
+  "rate_points": [
+    {
+      "bits": 5,
+      "p_frames": 246,
+      "residual_identity": "ec858dee10f8a955",
+      "baseline_residual_bytes": 1333275,
+      "m19_routing_only_share": 0.08776634492343176,
+      "m19_routing_only_excess_bits": 23140.10108201295,
+      "m20_ceiling_bytes": 2892.5126352516186,
+      "m20_ceiling_residual_percent": 0.21694793911620774,
+      "m20_ceiling_total_stream_percent": 0.17828147217200105,
+      "curves": {
+        "temporal": {
+          "margins": [
+            0.0,
+            0.001,
+            0.005,
+            0.01,
+            0.02,
+            0.05,
+            0.1,
+            0.25,
+            0.5
+          ],
+          "total_stream_gain_percent": [
+            0.0,
+            -0.00018490651000025007,
+            -0.009738409526679837,
+            -0.028290696030038264,
+            -0.08764568574011854,
+            -0.2995485462004051,
+            -0.6546306809042186,
+            -1.4842445557720072,
+            -2.3953405660465728
+          ],
+          "delta_residual_bytes": [
+            0,
+            3,
+            158,
+            459,
+            1422,
+            4860,
+            10621,
+            24081,
+            38863
+          ],
+          "routing_churn": [
+            0.44184763838605184,
+            0.4412082579077744,
+            0.4511929643832571,
+            0.4709914292746443,
+            0.507710526629192,
+            0.5638931398469258,
+            0.6005804790713922,
+            0.6184910719956809,
+            0.6148346691596799
+          ],
+          "held_fraction": [
+            0.0,
+            0.01997313460683435,
+            0.09204300050813008,
+            0.16567968353023374,
+            0.2692528701410061,
+            0.43430483438135165,
+            0.5602233390497967,
+            0.6918496232691819,
+            0.7508723561356707
+          ],
+          "held_worse_fraction": [
+            0.0,
+            0.5100433534987143,
+            0.5174162209954283,
+            0.5258383924907827,
+            0.5362638152474996,
+            0.5550144248621783,
+            0.5723622207656469,
+            0.5903327087386475,
+            0.5989441455158732
+          ],
+          "counterproductive": [
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "response_shape": "immediately harmful (no margin produces a gain above 0.01% of the total stream; the best non-zero point is +0.0000%)"
+        },
+        "channel_group": {
+          "margins": [
+            0.0,
+            0.001,
+            0.005,
+            0.01,
+            0.02,
+            0.05,
+            0.1,
+            0.25,
+            0.5
+          ],
+          "total_stream_gain_percent": [
+            0.0,
+            -6.163550333341668e-05,
+            -0.0028968686566705846,
+            -0.013313268720018003,
+            -0.04222031978339043,
+            -0.15834160806354747,
+            -0.40716413502055065,
+            -1.6902304079122856,
+            -5.517302080890794
+          ],
+          "delta_residual_bytes": [
+            0,
+            1,
+            47,
+            216,
+            685,
+            2569,
+            6606,
+            27423,
+            89515
+          ],
+          "routing_churn": [
+            0.44184763838605184,
+            0.4420195788871951,
+            0.4446654280995935,
+            0.4485691969956809,
+            0.4530026815771087,
+            0.45381549121887704,
+            0.44603326068661076,
+            0.4250820749174289,
+            0.36416154566819103
+          ],
+          "held_fraction": [
+            0.0,
+            0.0036824544270833335,
+            0.02101048415269309,
+            0.044346010781885166,
+            0.08339809014545224,
+            0.15753372316438008,
+            0.22763235200711382,
+            0.35217434022484756,
+            0.5462529872491108
+          ],
+          "held_worse_fraction": [
+            0.0,
+            0.5008758927368279,
+            0.5133794667107532,
+            0.525084622485803,
+            0.5326195285794612,
+            0.5424075573209184,
+            0.5595271313097844,
+            0.5948848337285635,
+            0.6405246421665903
+          ],
+          "counterproductive": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            true
+          ],
+          "response_shape": "immediately harmful (no margin produces a gain above 0.01% of the total stream; the best non-zero point is +0.0000%)"
+        },
+        "raster": {
+          "margins": [
+            0.0,
+            0.001,
+            0.005,
+            0.01,
+            0.02,
+            0.05,
+            0.1,
+            0.25,
+            0.5
+          ],
+          "total_stream_gain_percent": [
+            0.0,
+            -0.00024654201333366673,
+            -0.009060418990012252,
+            -0.033652984820045515,
+            -0.10515016868680886,
+            -0.3749904022805071,
+            -0.8483510678811473,
+            -2.3332736141898223,
+            -4.850467570326559
+          ],
+          "delta_residual_bytes": [
+            0,
+            4,
+            147,
+            546,
+            1706,
+            6084,
+            13764,
+            37856,
+            78696
+          ],
+          "routing_churn": [
+            0.44184763838605184,
+            0.4417201096449441,
+            0.4495474962684197,
+            0.46455271651105184,
+            0.4945100613725864,
+            0.5386503886401168,
+            0.5717952076981707,
+            0.6100992342320884,
+            0.6484293123570884
+          ],
+          "held_fraction": [
+            0.0,
+            0.019247659822789635,
+            0.09572570304560467,
+            0.1788193617409807,
+            0.29967170033028456,
+            0.48760018697599083,
+            0.6273401772103658,
+            0.783550231437373,
+            0.8716827640688516
+          ],
+          "held_worse_fraction": [
+            0.0,
+            0.5079211622001366,
+            0.514303339130525,
+            0.5237448402650109,
+            0.5358630784821529,
+            0.5520245464329057,
+            0.5666208682556105,
+            0.5943393926229018,
+            0.624694089806523
+          ],
+          "counterproductive": [
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "response_shape": "immediately harmful (no margin produces a gain above 0.01% of the total stream; the best non-zero point is +0.0000%)"
+        }
+      },
+      "phase_e_invariants": {
+        "symbol_change_rate_identical_across_configurations": true,
+        "symbol_change_rate": 0.29819072940485264,
+        "positions_identical_across_configurations": true,
+        "distinct_symbol_change_rates": [
+          0.29819072940485264
+        ]
+      },
+      "any_counterproductive_configuration": true,
+      "counterproductive_configurations": [
+        {
+          "state": "temporal",
+          "margin": 0.001
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.25
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.5
+        },
+        {
+          "state": "raster",
+          "margin": 0.001
+        }
+      ],
+      "best_candidate": {
+        "state": "channel_group",
+        "margin": 0.001,
+        "delta_residual_bytes": 1,
+        "residual_gain_percent": -7.500328139356096e-05,
+        "total_stream_gain_percent": -6.163550333341668e-05,
+        "verdict": "weak",
+        "churn_reduction_absolute": -0.00017194050114327508,
+        "held_fraction": 0.0036824544270833335,
+        "held_worse_fraction": 0.5008758927368279,
+        "fraction_of_opportunity_recovered_percent": -0.03457201838335306
+      },
+      "gop_position": {
+        "boundary": {
+          "frames": 28,
+          "baseline_bytes": 157784,
+          "candidate_bytes": 157783,
+          "delta_bytes": -1,
+          "residual_gain_percent": 0.000633777822846423,
+          "baseline_routing_only_positions": 154657,
+          "candidate_routing_only_positions": 154653,
+          "routing_only_reduction_percent": 0.002586368544585761,
+          "held_fraction": 0.0037296840122767855
+        },
+        "ordinary": {
+          "frames": 218,
+          "baseline_bytes": 1175491,
+          "candidate_bytes": 1175493,
+          "delta_bytes": 2,
+          "residual_gain_percent": -0.00017014166846024344,
+          "baseline_routing_only_positions": 1026379,
+          "candidate_routing_only_positions": 1027005,
+          "routing_only_reduction_percent": -0.060991115367715044,
+          "held_fraction": 0.0036763882418291284
+        }
+      },
+      "reference_points": {
+        "coding_metric": {
+          "delta_residual_bytes": 22536,
+          "residual_gain_percent": -1.6902739494852899,
+          "total_stream_gain_percent": -1.3890177031218784,
+          "decoder_compatible": true
+        },
+        "oracle_table": {
+          "delta_residual_bytes": -930956,
+          "residual_gain_percent": 69.82475483302395,
+          "total_stream_gain_percent": 57.37994164126427,
+          "decoder_compatible": false
+        }
+      },
+      "roundtrip_all_exact": true,
+      "roundtrip_checked": 200,
+      "margin0_identical_to_deployed": true
+    },
+    {
+      "bits": 4,
+      "p_frames": 246,
+      "residual_identity": "be872c2beebd2f9b",
+      "baseline_residual_bytes": 908404,
+      "m19_routing_only_share": 0.1225022243678929,
+      "m19_routing_only_excess_bits": 75362.2604245518,
+      "m20_ceiling_bytes": 9420.282553068975,
+      "m20_ceiling_residual_percent": 1.037014649106452,
+      "m20_ceiling_total_stream_percent": 0.8262666918987065,
+      "curves": {
+        "temporal": {
+          "margins": [
+            0.0,
+            0.001,
+            0.005,
+            0.01,
+            0.02,
+            0.05,
+            0.1,
+            0.25,
+            0.5
+          ],
+          "total_stream_gain_percent": [
+            0.0,
+            -0.002455920747900138,
+            -0.02499776475541212,
+            -0.07692294628244362,
+            -0.19708764001898613,
+            -0.5883684420326475,
+            -1.3314598911830036,
+            -2.8024687077199046,
+            -3.964733201663645
+          ],
+          "delta_residual_bytes": [
+            0,
+            28,
+            285,
+            877,
+            2247,
+            6708,
+            15180,
+            31951,
+            45202
+          ],
+          "routing_churn": [
+            0.591314300288999,
+            0.5905317601149644,
+            0.597859452410442,
+            0.6163615405074949,
+            0.6510079236534553,
+            0.7000985494474086,
+            0.7362182120966717,
+            0.7623990686928354,
+            0.762292877445376
+          ],
+          "held_fraction": [
+            0.0,
+            0.021280180147992885,
+            0.10292661093114837,
+            0.1878188218527693,
+            0.3037178845909553,
+            0.47623325751079776,
+            0.61004638671875,
+            0.7426703228213922,
+            0.7933649822948424
+          ],
+          "held_worse_fraction": [
+            0.0,
+            0.51037087992165,
+            0.5294256608540119,
+            0.5483628072502269,
+            0.5658029742084952,
+            0.5895492489740503,
+            0.6217019078645013,
+            0.651280557350301,
+            0.6562553066662831
+          ],
+          "counterproductive": [
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "response_shape": "immediately harmful (no margin produces a gain above 0.01% of the total stream; the best non-zero point is +0.0000%)"
+        },
+        "channel_group": {
+          "margins": [
+            0.0,
+            0.001,
+            0.005,
+            0.01,
+            0.02,
+            0.05,
+            0.1,
+            0.25,
+            0.5
+          ],
+          "total_stream_gain_percent": [
+            0.0,
+            0.0007016916422571824,
+            -0.0037715925771323556,
+            -0.020612191991304735,
+            -0.07069543295741113,
+            -0.2649763064073685,
+            -0.5996832197640446,
+            -1.3497038738816904,
+            -2.645991471496553
+          ],
+          "delta_residual_bytes": [
+            0,
+            -8,
+            43,
+            235,
+            806,
+            3021,
+            6837,
+            15388,
+            30167
+          ],
+          "routing_churn": [
+            0.591314300288999,
+            0.5914706098354929,
+            0.5929709333714431,
+            0.5953386508352388,
+            0.5980447908727134,
+            0.595812789792937,
+            0.5826626909457571,
+            0.5544550205633892,
+            0.5420566962017277
+          ],
+          "held_fraction": [
+            0.0,
+            0.004175945995299797,
+            0.02436940262957317,
+            0.052012869982215444,
+            0.09718359970464939,
+            0.1839487959698933,
+            0.2594572237836636,
+            0.33879523548653456,
+            0.3833531325425559
+          ],
+          "held_worse_fraction": [
+            0.0,
+            0.49545481551898285,
+            0.5173488087965791,
+            0.535270659619531,
+            0.5452814051749448,
+            0.5618661476478927,
+            0.580515294056896,
+            0.6044216705651109,
+            0.6148285117187272
+          ],
+          "counterproductive": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            true
+          ],
+          "response_shape": "immediately harmful (no margin produces a gain above 0.01% of the total stream; the best non-zero point is +0.0007%)"
+        },
+        "raster": {
+          "margins": [
+            0.0,
+            0.001,
+            0.005,
+            0.01,
+            0.02,
+            0.05,
+            0.1,
+            0.25,
+            0.5
+          ],
+          "total_stream_gain_percent": [
+            0.0,
+            -0.0007016916422571824,
+            -0.015437216129658014,
+            -0.06139801869750346,
+            -0.1992804264010398,
+            -0.65748506879498,
+            -1.4422394592043566,
+            -3.6436215638757017,
+            -7.290927008873254
+          ],
+          "delta_residual_bytes": [
+            0,
+            8,
+            176,
+            700,
+            2272,
+            7496,
+            16443,
+            41541,
+            83124
+          ],
+          "routing_churn": [
+            0.591314300288999,
+            0.5910726407679116,
+            0.5953545299002795,
+            0.6067093019563008,
+            0.6311943240282012,
+            0.6704004799447408,
+            0.6991845107660061,
+            0.7357076009114584,
+            0.7457339899326728
+          ],
+          "held_fraction": [
+            0.0,
+            0.01788305267085874,
+            0.09239680592606707,
+            0.1798755676765752,
+            0.3111649179846291,
+            0.5189112221322408,
+            0.6696712835048272,
+            0.8219415928290142,
+            0.9015805624364838
+          ],
+          "held_worse_fraction": [
+            0.0,
+            0.4954285000763073,
+            0.5158457795607972,
+            0.5365788391987664,
+            0.5589842912149291,
+            0.5795148157764004,
+            0.5947750460711515,
+            0.6179175599174839,
+            0.6421401028348379
+          ],
+          "counterproductive": [
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "response_shape": "immediately harmful (no margin produces a gain above 0.01% of the total stream; the best non-zero point is +0.0000%)"
+        }
+      },
+      "phase_e_invariants": {
+        "symbol_change_rate_identical_across_configurations": true,
+        "symbol_change_rate": 0.2523947614964431,
+        "positions_identical_across_configurations": true,
+        "distinct_symbol_change_rates": [
+          0.2523947614964431
+        ]
+      },
+      "any_counterproductive_configuration": true,
+      "counterproductive_configurations": [
+        {
+          "state": "temporal",
+          "margin": 0.001
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.1
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.25
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.5
+        },
+        {
+          "state": "raster",
+          "margin": 0.001
+        }
+      ],
+      "best_candidate": {
+        "state": "channel_group",
+        "margin": 0.001,
+        "delta_residual_bytes": -8,
+        "residual_gain_percent": 0.000880665430799512,
+        "total_stream_gain_percent": 0.0007016916422571824,
+        "verdict": "weak",
+        "churn_reduction_absolute": -0.0001563095464939268,
+        "held_fraction": 0.004175945995299797,
+        "held_worse_fraction": 0.49545481551898285,
+        "fraction_of_opportunity_recovered_percent": 0.08492314275004129
+      },
+      "gop_position": {
+        "boundary": {
+          "frames": 28,
+          "baseline_bytes": 114898,
+          "candidate_bytes": 114899,
+          "delta_bytes": 1,
+          "residual_gain_percent": -0.0008703371686191231,
+          "baseline_routing_only_positions": 208958,
+          "candidate_routing_only_positions": 208928,
+          "routing_only_reduction_percent": 0.014356952114779047,
+          "held_fraction": 0.003590175083705357
+        },
+        "ordinary": {
+          "frames": 218,
+          "baseline_bytes": 793506,
+          "candidate_bytes": 793497,
+          "delta_bytes": -9,
+          "residual_gain_percent": 0.0011342069247113444,
+          "baseline_routing_only_positions": 1511549,
+          "candidate_routing_only_positions": 1512137,
+          "routing_only_reduction_percent": -0.03890049214415146,
+          "held_fraction": 0.004251182626146789
+        }
+      },
+      "reference_points": {
+        "coding_metric": {
+          "delta_residual_bytes": 21992,
+          "residual_gain_percent": -2.420949269267859,
+          "total_stream_gain_percent": -1.9289503245649946,
+          "decoder_compatible": true
+        },
+        "oracle_table": {
+          "delta_residual_bytes": -583358,
+          "residual_gain_percent": 64.21790304754272,
+          "total_stream_gain_percent": 51.16717913048318,
+          "decoder_compatible": false
+        }
+      },
+      "roundtrip_all_exact": true,
+      "roundtrip_checked": 200,
+      "margin0_identical_to_deployed": true
+    },
+    {
+      "bits": 3,
+      "p_frames": 246,
+      "residual_identity": "d2d61d66a50cad8a",
+      "baseline_residual_bytes": 549083,
+      "m19_routing_only_share": 0.12030236469570846,
+      "m19_routing_only_excess_bits": 103645.10434361717,
+      "m20_ceiling_bytes": 12955.638042952147,
+      "m20_ceiling_residual_percent": 2.3595044907513336,
+      "m20_ceiling_total_stream_percent": 1.7874642052531033,
+      "curves": {
+        "temporal": {
+          "margins": [
+            0.0,
+            0.001,
+            0.005,
+            0.01,
+            0.02,
+            0.05,
+            0.1,
+            0.25,
+            0.5
+          ],
+          "total_stream_gain_percent": [
+            0.0,
+            -0.002345456965420024,
+            -0.06139578527128886,
+            -0.17314991127071355,
+            -0.4236999024002879,
+            -1.2595103904305527,
+            -2.6660947293986204,
+            -5.220021428627447,
+            -6.817691526248852
+          ],
+          "delta_residual_bytes": [
+            0,
+            17,
+            445,
+            1255,
+            3071,
+            9129,
+            19324,
+            37835,
+            49415
+          ],
+          "routing_churn": [
+            0.73025611939469,
+            0.7292435808879573,
+            0.7449631109470274,
+            0.7709819514576982,
+            0.800646774167937,
+            0.8397536859279726,
+            0.8667892828220274,
+            0.8897412307863313,
+            0.8952654086477388
+          ],
+          "held_fraction": [
+            0.0,
+            0.03199954149199695,
+            0.14436154249237804,
+            0.24230808165015244,
+            0.3574255966558689,
+            0.5251980913363821,
+            0.6503571300971799,
+            0.7747723339049797,
+            0.8221013759209858
+          ],
+          "held_worse_fraction": [
+            0.0,
+            0.5254433098400441,
+            0.5717047868500835,
+            0.5957870765727299,
+            0.61809215801015,
+            0.6547190276607243,
+            0.69286799649479,
+            0.7304905511014215,
+            0.736817516485838
+          ],
+          "counterproductive": [
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "response_shape": "immediately harmful (no margin produces a gain above 0.01% of the total stream; the best non-zero point is +0.0000%)"
+        },
+        "channel_group": {
+          "margins": [
+            0.0,
+            0.001,
+            0.005,
+            0.01,
+            0.02,
+            0.05,
+            0.1,
+            0.25,
+            0.5
+          ],
+          "total_stream_gain_percent": [
+            0.0,
+            0.00041390417036823947,
+            -0.0033112333629459157,
+            -0.02124708074556963,
+            -0.08002147293785965,
+            -0.31511904170701965,
+            -0.7265397870530498,
+            -1.4792935048960878,
+            -2.102495217413867
+          ],
+          "delta_residual_bytes": [
+            0,
+            -3,
+            24,
+            154,
+            580,
+            2284,
+            5266,
+            10722,
+            15239
+          ],
+          "routing_churn": [
+            0.73025611939469,
+            0.7302355262322154,
+            0.731665634527439,
+            0.7333019225577998,
+            0.7335914673844004,
+            0.7253390676606961,
+            0.7110521270007621,
+            0.6917647695153709,
+            0.6855558069740854
+          ],
+          "held_fraction": [
+            0.0,
+            0.004511143133892276,
+            0.02678004319105691,
+            0.055606997110010166,
+            0.1000683792238313,
+            0.17958453418762704,
+            0.240997314453125,
+            0.29865395150533536,
+            0.32291071201727645
+          ],
+          "held_worse_fraction": [
+            0.0,
+            0.47041029589704103,
+            0.4868162614882894,
+            0.49661791345784884,
+            0.5160169789894923,
+            0.5446699336427151,
+            0.5647148088550659,
+            0.5728794381389599,
+            0.5723952730737314
+          ],
+          "counterproductive": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            true,
+            true
+          ],
+          "response_shape": "immediately harmful (no margin produces a gain above 0.01% of the total stream; the best non-zero point is +0.0004%)"
+        },
+        "raster": {
+          "margins": [
+            0.0,
+            0.001,
+            0.005,
+            0.01,
+            0.02,
+            0.05,
+            0.1,
+            0.25,
+            0.5
+          ],
+          "total_stream_gain_percent": [
+            0.0,
+            0.00013796805678941316,
+            -0.02952516415293442,
+            -0.11313380656731879,
+            -0.3348484738279058,
+            -1.1750739396754322,
+            -2.703484072788551,
+            -7.591692324837459,
+            -15.427174206021812
+          ],
+          "delta_residual_bytes": [
+            0,
+            -1,
+            214,
+            820,
+            2427,
+            8517,
+            19595,
+            55025,
+            111817
+          ],
+          "routing_churn": [
+            0.73025611939469,
+            0.7292361375762195,
+            0.7363524398183435,
+            0.7536392832190041,
+            0.7758578168667429,
+            0.8055127151613313,
+            0.8281976963446392,
+            0.8477741024358486,
+            0.8285832598926576
+          ],
+          "held_fraction": [
+            0.0,
+            0.024592205760924798,
+            0.1218323746347815,
+            0.2191405257558435,
+            0.3447377274676067,
+            0.5405223815421748,
+            0.6929296478023373,
+            0.860523254890752,
+            0.9385237034743394
+          ],
+          "held_worse_fraction": [
+            0.0,
+            0.4971347283036381,
+            0.5436267032691772,
+            0.5675752175517811,
+            0.5906547396709353,
+            0.625394527384194,
+            0.6543188481352952,
+            0.6950818670083511,
+            0.7212676389211264
+          ],
+          "counterproductive": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "response_shape": "immediately harmful (no margin produces a gain above 0.01% of the total stream; the best non-zero point is +0.0001%)"
+        }
+      },
+      "phase_e_invariants": {
+        "symbol_change_rate_identical_across_configurations": true,
+        "symbol_change_rate": 0.18691619624936484,
+        "positions_identical_across_configurations": true,
+        "distinct_symbol_change_rates": [
+          0.18691619624936484
+        ]
+      },
+      "any_counterproductive_configuration": true,
+      "counterproductive_configurations": [
+        {
+          "state": "temporal",
+          "margin": 0.001
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.05
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.1
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.25
+        },
+        {
+          "state": "channel_group",
+          "margin": 0.5
+        }
+      ],
+      "best_candidate": {
+        "state": "channel_group",
+        "margin": 0.001,
+        "delta_residual_bytes": -3,
+        "residual_gain_percent": 0.0005463654857280228,
+        "total_stream_gain_percent": 0.00041390417036823947,
+        "verdict": "weak",
+        "churn_reduction_absolute": 2.0593162474602522e-05,
+        "held_fraction": 0.004511143133892276,
+        "held_worse_fraction": 0.47041029589704103,
+        "fraction_of_opportunity_recovered_percent": 0.023155941761062063
+      },
+      "gop_position": {
+        "boundary": {
+          "frames": 28,
+          "baseline_bytes": 81039,
+          "candidate_bytes": 81041,
+          "delta_bytes": 2,
+          "residual_gain_percent": -0.0024679475314354814,
+          "baseline_routing_only_positions": 273768,
+          "candidate_routing_only_positions": 273789,
+          "routing_only_reduction_percent": -0.007670728500043833,
+          "held_fraction": 0.003016880580357143
+        },
+        "ordinary": {
+          "frames": 218,
+          "baseline_bytes": 468044,
+          "candidate_bytes": 468039,
+          "delta_bytes": -5,
+          "residual_gain_percent": 0.001068275632205519,
+          "baseline_routing_only_positions": 2044682,
+          "candidate_routing_only_positions": 2044605,
+          "routing_only_reduction_percent": 0.003765866770480691,
+          "held_fraction": 0.004703066764621559
+        }
+      },
+      "reference_points": {
+        "coding_metric": {
+          "delta_residual_bytes": 24391,
+          "residual_gain_percent": -4.442133520797402,
+          "total_stream_gain_percent": -3.3651788731505765,
+          "decoder_compatible": true
+        },
+        "oracle_table": {
+          "delta_residual_bytes": -421859,
+          "residual_gain_percent": 76.829732481246,
+          "total_stream_gain_percent": 58.20306646912505,
+          "decoder_compatible": false
+        }
+      },
+      "roundtrip_all_exact": true,
+      "roundtrip_checked": 200,
+      "margin0_identical_to_deployed": true
+    }
+  ],
+  "decoder_compatible": true,
+  "best_total_stream_gain_percent": 0.0007016916422571824,
+  "classification": "C - HYSTERESIS DOES NOT IMPROVE CODED RATE",
+  "coded_validation_gated": false,
+  "full_davis_gated": false,
+  "reproducibility": {
+    "compared": "outputs\\m20_codebook_hysteresis\\m20_sweep_repro.json",
+    "checks": [
+      {
+        "bits": 5,
+        "configurations": 27,
+        "identical": true
+      }
+    ],
+    "all_identical": true
+  }
+}
