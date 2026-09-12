@@ -1,0 +1,187 @@
+{
+  "phase": "M18 Phase 0/A",
+  "checkpoint": "outputs\\m10f_lambda_boundary\\lambda_3.0e-04_seed42\\best.pt",
+  "formula_note": "Both intra and residual are UniformQuantizer per-channel affine grids: scale=(x_max-x_min)/(2**bits-1), zero_point=-round(x_min/scale), q=clamp(round(x/scale)+zero_point,0,2**bits-1). Percentile source: calibrate_quantization_params, (0.1, 99.9) percentile, per_channel mode, identical code path for both - the ONLY difference is which calibration tensor (calibrate_grids's intra_stack vs residual_stack) produced scale/zero_point. Both entropy models use alphabet size 2**bits identically - EmpiricalEntropyModel enforces frequencies.shape[1] == 2**bits structurally, so there is no alphabet/range asymmetry between intra and residual tables.",
+  "rate_points": [
+    {
+      "bits": 5,
+      "intra": {
+        "name": "intra",
+        "bits": 5,
+        "num_channels": 64,
+        "global_min": -39.882957458496094,
+        "global_max": 40.59892272949219,
+        "mean_per_channel_std": 2.8279213905334473,
+        "mean_step": 0.7201268672943115,
+        "mean_step_over_std_ratio": 0.27096912264823914,
+        "train_fit": {
+          "latent_mse": 0.06199875473976135,
+          "latent_mae": 0.1821034997701645,
+          "latent_max_abs_error": 18.429977416992188,
+          "clipped_percent": 0.1561279296875,
+          "mean_step": 0.7201268672943115,
+          "mean_error_over_step_ratio": 0.31649935245513916,
+          "mean_snr_db": 21.40851522328171
+        },
+        "held_out_eval": {
+          "latent_mse": 0.13856762647628784,
+          "latent_mae": 0.19223719835281372,
+          "latent_max_abs_error": 23.357620239257812,
+          "clipped_percent": 0.442108154296875,
+          "mean_step": 0.7201268672943115,
+          "mean_error_over_step_ratio": 0.36970463395118713,
+          "mean_snr_db": 20.243283593553006
+        }
+      },
+      "residual": {
+        "name": "residual",
+        "bits": 5,
+        "num_channels": 64,
+        "global_min": -27.70460319519043,
+        "global_max": 24.238462448120117,
+        "mean_per_channel_std": 0.9092050790786743,
+        "mean_step": 0.3898550868034363,
+        "mean_step_over_std_ratio": 0.4240761697292328,
+        "train_fit": {
+          "latent_mse": 0.022875746712088585,
+          "latent_mae": 0.09853201359510422,
+          "latent_max_abs_error": 18.27707290649414,
+          "clipped_percent": 0.17364331463861732,
+          "mean_step": 0.3898550868034363,
+          "mean_error_over_step_ratio": 0.36944448947906494,
+          "mean_snr_db": 16.142947845216682
+        },
+        "held_out_eval": {
+          "latent_mse": 0.05567347630858421,
+          "latent_mae": 0.10502621531486511,
+          "latent_max_abs_error": 28.869407653808594,
+          "clipped_percent": 0.4373508029513889,
+          "mean_step": 0.3898550868034363,
+          "mean_error_over_step_ratio": 0.5491472482681274,
+          "mean_snr_db": 13.4285594618323
+        }
+      },
+      "raw_step_ratio_residual_over_intra": 0.5413700064659647
+    },
+    {
+      "bits": 4,
+      "intra": {
+        "name": "intra",
+        "bits": 4,
+        "num_channels": 64,
+        "global_min": -39.882957458496094,
+        "global_max": 40.59892272949219,
+        "mean_per_channel_std": 2.8279213905334473,
+        "mean_step": 1.4882621765136719,
+        "mean_step_over_std_ratio": 0.5600028038024902,
+        "train_fit": {
+          "latent_mse": 0.23554225265979767,
+          "latent_mae": 0.3724103271961212,
+          "latent_max_abs_error": 19.218204498291016,
+          "clipped_percent": 0.1231231689453125,
+          "mean_step": 1.4882621765136719,
+          "mean_error_over_step_ratio": 0.2945132851600647,
+          "mean_snr_db": 15.72449863903175
+        },
+        "held_out_eval": {
+          "latent_mse": 0.3235865831375122,
+          "latent_mae": 0.38281553983688354,
+          "latent_max_abs_error": 24.14584732055664,
+          "clipped_percent": 0.36810302734375,
+          "mean_step": 1.4882621765136719,
+          "mean_error_over_step_ratio": 0.31150999665260315,
+          "mean_snr_db": 15.289246864896736
+        }
+      },
+      "residual": {
+        "name": "residual",
+        "bits": 4,
+        "num_channels": 64,
+        "global_min": -27.70460319519043,
+        "global_max": 24.238462448120117,
+        "mean_per_channel_std": 0.9155578017234802,
+        "mean_step": 0.8063609600067139,
+        "mean_step_over_std_ratio": 0.8707857131958008,
+        "train_fit": {
+          "latent_mse": 0.06182510405778885,
+          "latent_mae": 0.18880394101142883,
+          "latent_max_abs_error": 18.566097259521484,
+          "clipped_percent": 0.15359377727828213,
+          "mean_step": 0.8063609600067139,
+          "mean_error_over_step_ratio": 0.2967792749404907,
+          "mean_snr_db": 11.780835021253505
+        },
+        "held_out_eval": {
+          "latent_mse": 0.09612051397562027,
+          "latent_mae": 0.19730186462402344,
+          "latent_max_abs_error": 28.941919326782227,
+          "clipped_percent": 0.3942192925347222,
+          "mean_step": 0.8063609600067139,
+          "mean_error_over_step_ratio": 0.3656275272369385,
+          "mean_snr_db": 10.305057555079417
+        }
+      },
+      "raw_step_ratio_residual_over_intra": 0.5418137830363025
+    },
+    {
+      "bits": 3,
+      "intra": {
+        "name": "intra",
+        "bits": 3,
+        "num_channels": 64,
+        "global_min": -39.882957458496094,
+        "global_max": 40.59892272949219,
+        "mean_per_channel_std": 2.8279213905334473,
+        "mean_step": 3.189133405685425,
+        "mean_step_over_std_ratio": 1.200006127357483,
+        "train_fit": {
+          "latent_mse": 1.0120651721954346,
+          "latent_mae": 0.7730171084403992,
+          "latent_max_abs_error": 20.96356964111328,
+          "clipped_percent": 0.0870208740234375,
+          "mean_step": 3.189133405685425,
+          "mean_error_over_step_ratio": 0.2834533154964447,
+          "mean_snr_db": 9.441090908066496
+        },
+        "held_out_eval": {
+          "latent_mse": 1.1278703212738037,
+          "latent_mae": 0.7842012047767639,
+          "latent_max_abs_error": 25.891212463378906,
+          "clipped_percent": 0.287078857421875,
+          "mean_step": 3.189133405685425,
+          "mean_error_over_step_ratio": 0.2885999381542206,
+          "mean_snr_db": 9.297384867384423
+        }
+      },
+      "residual": {
+        "name": "residual",
+        "bits": 3,
+        "num_channels": 64,
+        "global_min": -27.70460319519043,
+        "global_max": 24.238462448120117,
+        "mean_per_channel_std": 0.9435572624206543,
+        "mean_step": 1.7322931289672852,
+        "mean_step_over_std_ratio": 1.8159323930740356,
+        "train_fit": {
+          "latent_mse": 0.1874546855688095,
+          "latent_mae": 0.328705370426178,
+          "latent_max_abs_error": 19.38151741027832,
+          "clipped_percent": 0.1245765046700419,
+          "mean_step": 1.7322931289672852,
+          "mean_error_over_step_ratio": 0.24419188499450684,
+          "mean_snr_db": 7.096135344621047
+        },
+        "held_out_eval": {
+          "latent_mse": 0.24812465906143188,
+          "latent_mae": 0.36271142959594727,
+          "latent_max_abs_error": 28.54344940185547,
+          "clipped_percent": 0.3271484375,
+          "mean_step": 1.7322931289672852,
+          "mean_error_over_step_ratio": 0.27912282943725586,
+          "mean_snr_db": 6.012013055056162
+        }
+      },
+      "raw_step_ratio_residual_over_intra": 0.5431861601897998
+    }
+  ]
+}

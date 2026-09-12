@@ -13,6 +13,55 @@ the time.
 
 ---
 
+## 2026-09-12 — M18: intra quantizer precision audit (DOES NOT EXPLAIN THE M17 GAP)
+
+**Source:** M17 confirmed a large, real, deployed-pipeline residual-rate bottleneck (+2.0% to
++14.9% total-stream upper bound vs an unattainable oracle reference) and decomposed ~85% of it to
+reference PIXEL quality. M18 tests the smallest plausible realizable fix: recalibrating the intra
+quantizer's scale/percentile parameters - never its architecture, alphabet, or any frozen
+downstream stage.
+**Tests:** 1310 passing (full suite), zero regressions. 10 new tests.
+**Scope:** every M13/M14/M15/M17 identity, checkpoint, quantizer family, codebook, motion
+estimator, GOP, `.nvct` v2 frozen; DAVIS TEST untouched. Zero modifications to any existing
+tracked file.
+
+### The audit rejects the naive premise before any candidate is even tested
+
+Normalized (step/std, SNR - never raw scale) comparison of the deployed intra vs residual
+quantizers shows intra is already the RELATIVELY better-calibrated one at every bit depth (e.g.
+5-bit SNR 20.24dB vs residual's 13.43dB; near-identical clipping fractions, 0.44% vs 0.44%). Intra's
+larger ABSOLUTE error comes from latents with inherently higher variance (whole-image content vs a
+motion-compensated difference), not a fixable calibration defect.
+
+### Two realistic candidates, tested through the real deployed pipeline anyway
+
+Broader TRAIN coverage (best offline MSE candidate at 5/4-bit, +37.7%/+12.4% latent MSE) and
+tighter percentile clipping (best at 3-bit, +19.8% latent MSE) were each pushed through the real
+M11-G16+M13 closed loop, holding everything except I-frame coding frozen. Neither closes the gap:
+broader coverage recovers a negligible 1.3%/-2.0% of M17's oracle gap (net total-stream
++0.194%/+0.104% - real but an order of magnitude below the 0.5% gate); tighter clipping recovers a
+real 6.8% on the P-frame channel alone at 3-bit, but its own I-frame byte cost (+27%) MORE than
+erases it - net total-stream **-3.244%**, worse than doing nothing. Where a candidate helps at all,
+the effect is boundary-position-concentrated, matching M16/M17's own GOP-position finding exactly.
+
+### The important secondary question, confirmed
+
+Per the milestone's own explicit framing: intra reconstruction genuinely improved (latent and, in
+most configurations, image-space MSE) under every tested candidate, while actual downstream
+residual bytes barely moved or moved the wrong way once I-frame cost was honestly netted out. The
+bottleneck is real (M17) but is NOT simply "bad intra PSNR" - aggregate reconstruction quality does
+not reliably predict downstream byte cost through the context-conditioned G16 + codebook pipeline.
+
+### Verdict: C - INTRA QUANTIZER DOES NOT EXPLAIN / CLOSE THE M17 GAP
+
+No candidate reached the 0.5% coded-validation gate; Phase F/G were correctly never triggered. This
+strengthens rather than weakens the case for M17's own larger-scope recommendation - a causal
+reference-refinement mechanism targeted at the SHAPE of the reference error, not just its
+magnitude, since magnitude improvements alone (this milestone's entire candidate set) do not
+transfer to byte savings.
+
+---
+
 ## 2026-09-12 — M17: residual oracle audit through the deployed M11-G16 + M13 pipeline (MEANINGFUL BOTTLENECK CONFIRMED)
 
 **Source:** M16's simplified per-channel proxy estimated a residual-side reference-quality gap of

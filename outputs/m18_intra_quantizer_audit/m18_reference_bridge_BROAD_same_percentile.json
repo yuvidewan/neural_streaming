@@ -1,0 +1,87 @@
+{
+  "phase": "M18 Phase C/D/H reference bridge",
+  "candidate": "BROAD_same_percentile",
+  "percentiles": [
+    0.1,
+    99.9
+  ],
+  "broad_train": true,
+  "rate_points": [
+    {
+      "bits": 5,
+      "base_intra_identity": "8fadd1ca200c033b",
+      "candidate_intra_identity": "9715726f72ea1e53",
+      "base_summary": {
+        "i_frames": 29,
+        "total_i_bytes": 225575,
+        "mean_i_reconstruction_mse": 0.0013992018808996112,
+        "p_frames": 246,
+        "total_p_bytes": 1333275,
+        "boundary_p_frames": 28,
+        "boundary_p_bytes": 157784,
+        "ordinary_p_frames": 218,
+        "ordinary_p_bytes": 1175491,
+        "mean_p_reconstruction_mse": 0.001261706080555545
+      },
+      "candidate_summary": {
+        "i_frames": 29,
+        "total_i_bytes": 222979,
+        "mean_i_reconstruction_mse": 0.0013418914730146784,
+        "p_frames": 246,
+        "total_p_bytes": 1332841,
+        "boundary_p_frames": 28,
+        "boundary_p_bytes": 157150,
+        "ordinary_p_frames": 218,
+        "ordinary_p_bytes": 1175691,
+        "mean_p_reconstruction_mse": 0.001261866578479237
+      },
+      "delta_i_bytes": -2596,
+      "delta_p_bytes": -434,
+      "delta_boundary_p_bytes": -634,
+      "delta_ordinary_p_bytes": 200,
+      "p_channel_gain_percent": 0.03255142412480546,
+      "m17_real_to_oracle_gain_percent": 2.4718831448875886,
+      "fraction_oracle_gap_recovered_percent": 1.316867433322208,
+      "net_delta_bytes": -3030,
+      "net_total_stream_gain_percent": 0.1943740577990185
+    },
+    {
+      "bits": 4,
+      "base_intra_identity": "14c4b8bf40056ca1",
+      "candidate_intra_identity": "c5492af44d0bad79",
+      "base_summary": {
+        "i_frames": 29,
+        "total_i_bytes": 165243,
+        "mean_i_reconstruction_mse": 0.0015809699764539455,
+        "p_frames": 246,
+        "total_p_bytes": 908404,
+        "boundary_p_frames": 28,
+        "boundary_p_bytes": 114898,
+        "ordinary_p_frames": 218,
+        "ordinary_p_bytes": 793506,
+        "mean_p_reconstruction_mse": 0.0013234389528709773
+      },
+      "candidate_summary": {
+        "i_frames": 29,
+        "total_i_bytes": 162619,
+        "mean_i_reconstruction_mse": 0.0016693409737038973,
+        "p_frames": 246,
+        "total_p_bytes": 909911,
+        "boundary_p_frames": 28,
+        "boundary_p_bytes": 116855,
+        "ordinary_p_frames": 218,
+        "ordinary_p_bytes": 793056,
+        "mean_p_reconstruction_mse": 0.001322669619850519
+      },
+      "delta_i_bytes": -2624,
+      "delta_p_bytes": 1507,
+      "delta_boundary_p_bytes": 1957,
+      "delta_ordinary_p_bytes": -450,
+      "p_channel_gain_percent": -0.1658953505268581,
+      "m17_real_to_oracle_gain_percent": 8.46616703581226,
+      "fraction_oracle_gap_recovered_percent": -1.9595095374933362,
+      "net_delta_bytes": -1117,
+      "net_total_stream_gain_percent": 0.10403791935338152
+    }
+  ]
+}

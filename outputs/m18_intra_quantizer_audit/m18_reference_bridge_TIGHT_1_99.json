@@ -1,0 +1,49 @@
+{
+  "phase": "M18 Phase C/D/H reference bridge",
+  "candidate": "TIGHT_1_99",
+  "percentiles": [
+    1.0,
+    99.0
+  ],
+  "broad_train": true,
+  "rate_points": [
+    {
+      "bits": 3,
+      "base_intra_identity": "b523711d2e982057",
+      "candidate_intra_identity": "e3ff1078dffe4566",
+      "base_summary": {
+        "i_frames": 29,
+        "total_i_bytes": 105148,
+        "mean_i_reconstruction_mse": 0.0025863547664906443,
+        "p_frames": 246,
+        "total_p_bytes": 549083,
+        "boundary_p_frames": 28,
+        "boundary_p_bytes": 81039,
+        "ordinary_p_frames": 218,
+        "ordinary_p_bytes": 468044,
+        "mean_p_reconstruction_mse": 0.0015779337301524735
+      },
+      "candidate_summary": {
+        "i_frames": 29,
+        "total_i_bytes": 133702,
+        "mean_i_reconstruction_mse": 0.002845855999802207,
+        "p_frames": 246,
+        "total_p_bytes": 541755,
+        "boundary_p_frames": 28,
+        "boundary_p_bytes": 74706,
+        "ordinary_p_frames": 218,
+        "ordinary_p_bytes": 467049,
+        "mean_p_reconstruction_mse": 0.0015756289982918378
+      },
+      "delta_i_bytes": 28554,
+      "delta_p_bytes": -7328,
+      "delta_boundary_p_bytes": -6333,
+      "delta_ordinary_p_bytes": -995,
+      "p_channel_gain_percent": 1.334588759804984,
+      "m17_real_to_oracle_gain_percent": 19.61324608483599,
+      "fraction_oracle_gap_recovered_percent": 6.804527685179167,
+      "net_delta_bytes": 21226,
+      "net_total_stream_gain_percent": -3.2444197844492235
+    }
+  ]
+}
