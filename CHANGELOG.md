@@ -13,6 +13,77 @@ the time.
 
 ---
 
+## 2026-09-13 — M21: causal reference refinement (VAL-B MARGINAL, DID NOT REPLICATE ON TEST)
+
+**Source:** M17 proved the decoded reference costs real bytes; M18 that shrinking its aggregate
+error does not recover them; M19 that the dominant mechanism is the reference error changing the
+residual SYMBOL; M20 closed the codebook-routing branch. M21 tested the one remaining direct
+mechanism: a small, causal, decoder-available refinement of the previous reconstruction.
+**Tests:** 1439 passing (full suite), zero regressions. 60 new tests.
+**Scope:** experiment only - every M10-M20 identity, checkpoint, quantizer, codebook, motion
+estimator, GOP, lambda and `.nvct` v2 frozen; no production change; `src/nvc/` untouched.
+
+### The deployed reference is a local optimum at 5- and 4-bit
+
+18 pre-registered candidates (12 pixel-domain, 5 latent-domain, plus an identity control) were
+measured open-loop against M16/M17's oracle reference before anything was built. At 5-bit and
+4-bit, across 136 comparisons (17 transforms x 4 metrics x 2 rate points), **not one candidate
+improved pixel MSE, latent MSE, symbol agreement or coded bytes**. Latent-domain smoothing is
+catastrophic (up to -57.8% of the residual channel); the theoretically motivated autoencoder
+re-projection nearly doubles pixel error, because the autoencoder is lossy and a round trip of an
+already-good reconstruction just adds a second dose of its own loss.
+
+### A real 3-bit crossover that did not generalize
+
+At 3-bit - where the residual quantizer is coarsest and the reference carries the most
+quantization noise - three mild pixel smoothers improve **all four metrics together**, which is
+the opposite of M18's pattern. In the real closed loop `px_median3_a50` (a half-strength 3x3
+median on the decoded previous frame) reached **+0.7141% of the total stream on VAL-B at 3-bit
+with PSNR and MS-SSIM both up** - a pure win clearing the 0.5% gate.
+
+Locked by the declared Phase 7 rule before DAVIS was opened, it delivered **+0.1411% on the full
+719-frame DAVIS TEST** - a fifth of the VAL-B estimate, below the production line - while costing
+-0.8228% at 5-bit and -0.6341% at 4-bit. BD-rate applied at every rate point is a wash (+0.059%
+PSNR / -0.181% MS-SSIM). **Classification: C - no coded-rate improvement**, graded on the held-out
+set because VAL-B is the set the candidate was selected on.
+
+The gap is sequence variance, not a bug: 6 of 9 TEST sequences improve (three by 1.5-1.9%), but
+`schoolgirls` alone costs +7,971 bytes and flips the aggregate. VAL-B's four sequences contained
+no comparable case - an honest sign the offline gate is thin for an effect this size.
+
+### Two findings that do survive
+
+- **The gain is not picture quality.** At 3-bit the winner makes pixel MSE against the oracle
+  *worse* (-2.7%) while improving motion SAD (+12.0% of the way to the oracle), residual RMS
+  (+23.9%) and coded bytes (+5.0%). It is a better PREDICTION TARGET, not a better picture. Any
+  future refinement trained against reconstruction error would have rejected it.
+- **The gain is GOP-boundary-located.** On TEST at 3-bit the entire effect is at position 1
+  (+2.4954% of its residual bytes) while positions 2-9 get slightly worse (-0.2177%),
+  independently replicating the boundary spike M16/M17/M19 all found and localising a real
+  mechanism to it.
+
+### Decoder compatibility, provenance, reproducibility
+
+All 18 candidates are decoder-compatible: 158 sequence-level round trips with symbols,
+reconstructions AND refined reference latents identical every time, zero side information, no
+`.nvct` change. A negative control proves the refinement is load-bearing. The identity arm
+reproduces `m13_closed_loop.encode_multi` byte-for-byte including the container file, and
+reproduces M14's recorded DAVIS totals **exactly at all three rate points**. The 3-bit VAL-B sweep
+reproduced byte-for-byte in an independent process.
+
+### What this means for M22
+
+M21 was the last cheap structural experiment available under the current freezes. M18, M19, M20
+and M21 now agree: aggregate reference error is not the lever, routing is not exploitable, and the
+reference cannot be improved by causal post-processing. All four point at the thing none of them
+was allowed to touch - **the residual quantizer and the autoencoder that define what a symbol is**.
+M22 should be scoped as an explicit, pre-registered freeze-lift there, optimising the reference as
+a prediction target rather than as a picture.
+
+Full analysis: `outputs/m21_reference_refinement/m21_report.md`.
+
+---
+
 ## 2026-09-13 — M20: codebook-assignment hysteresis (NEGATIVE RESULT — BRITTLENESS IS NOT EXPLOITABLE)
 
 **Source:** M19 found the 512-entry codebook's assignment is brittle (it flips for 35-55% of

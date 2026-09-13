@@ -1,0 +1,200 @@
+{
+  "phase": "M21 Phase 1",
+  "rate_points": {
+    "5": {
+      "sequence": "car-roundabout",
+      "p_frame_index": 1,
+      "stages": [
+        {
+          "name": "I_frame_reconstruction",
+          "shape": [
+            1,
+            3,
+            256,
+            256
+          ],
+          "dtype": "torch.float32",
+          "device": "cuda:0",
+          "min": 0.013819148764014244,
+          "max": 0.9887567162513733,
+          "mean": 0.44722503423690796,
+          "std": 0.2323634922504425,
+          "note": "model.decode(decoded intra latent) - seeds `previous`"
+        },
+        {
+          "name": "previous",
+          "shape": [
+            1,
+            3,
+            256,
+            256
+          ],
+          "dtype": "torch.float32",
+          "device": "cuda:0",
+          "min": 0.013819148764014244,
+          "max": 0.9887567162513733,
+          "mean": 0.44722503423690796,
+          "std": 0.2323634922504425,
+          "note": "decoded previous reconstruction; PIXEL insertion point - available identically at encoder and decoder, upstream of both motion estimation and warping"
+        },
+        {
+          "name": "current_frame",
+          "shape": [
+            1,
+            3,
+            256,
+            256
+          ],
+          "dtype": "torch.float32",
+          "device": "cuda:0",
+          "min": 0.0,
+          "max": 1.0,
+          "mean": 0.4450955390930176,
+          "std": 0.23561877012252808,
+          "note": "ENCODER ONLY - a refinement must never read this"
+        },
+        {
+          "name": "current_latent",
+          "shape": [
+            1,
+            64,
+            16,
+            16
+          ],
+          "dtype": "torch.float32",
+          "device": "cuda:0",
+          "min": -27.601627349853516,
+          "max": 34.86406326293945,
+          "mean": 0.6035356521606445,
+          "std": 4.898707866668701,
+          "note": "ENCODER ONLY - model.encode(current frame)"
+        },
+        {
+          "name": "motion",
+          "shape": [
+            2,
+            16,
+            16
+          ],
+          "dtype": "torch.float32",
+          "device": "cuda:0",
+          "min": -16.0,
+          "max": 14.0,
+          "mean": 2.9609375,
+          "std": 4.948901176452637,
+          "note": "ENCODER ONLY before coding; the DECODED field below is what both sides share"
+        },
+        {
+          "name": "decoded_motion",
+          "shape": [
+            2,
+            16,
+            16
+          ],
+          "dtype": "torch.float32",
+          "device": "cpu",
+          "min": -16.0,
+          "max": 14.0,
+          "mean": 2.9609375,
+          "std": 4.948901176452637,
+          "note": "available identically at encoder and decoder"
+        },
+        {
+          "name": "warped",
+          "shape": [
+            1,
+            3,
+            256,
+            256
+          ],
+          "dtype": "torch.float32",
+          "device": "cuda:0",
+          "min": 0.013819148764014244,
+          "max": 0.9887567162513733,
+          "mean": 0.4439723491668701,
+          "std": 0.23179420828819275,
+          "note": "warp_blocks(previous, decoded_motion) - integer indexing, no interpolation; available identically at both sides"
+        },
+        {
+          "name": "reference_latent",
+          "shape": [
+            1,
+            64,
+            16,
+            16
+          ],
+          "dtype": "torch.float32",
+          "device": "cuda:0",
+          "min": -27.244739532470703,
+          "max": 34.66356658935547,
+          "mean": 0.5783110857009888,
+          "std": 4.853693962097168,
+          "note": "model.encode(warped); LATENT insertion point - available identically at both sides, downstream of motion"
+        },
+        {
+          "name": "delta",
+          "shape": [
+            1,
+            64,
+            16,
+            16
+          ],
+          "dtype": "torch.float32",
+          "device": "cuda:0",
+          "min": -9.951478004455566,
+          "max": 18.894702911376953,
+          "mean": 0.02522464096546173,
+          "std": 1.177746057510376,
+          "note": "ENCODER ONLY - latent minus reference"
+        }
+      ],
+      "motion_roundtrip_lossless": true,
+      "symbols": {
+        "count": 16384,
+        "dtype": "int64",
+        "min": 0,
+        "max": 31,
+        "alphabet": 32
+      },
+      "g16_rows": {
+        "shape": [
+          16384,
+          32
+        ],
+        "dtype": "torch.float32",
+        "device": "cuda:0"
+      },
+      "table_index": {
+        "count": 16384,
+        "distinct": 492,
+        "K": 512
+      },
+      "payload_bytes": 6104,
+      "ideal_bits": 48829.652935565624,
+      "insertion_points": [
+        {
+          "name": "pixel",
+          "tensor": "previous",
+          "available_at_decoder": true,
+          "upstream_of_motion": true,
+          "reads_current_frame": false
+        },
+        {
+          "name": "latent",
+          "tensor": "reference_latent",
+          "available_at_decoder": true,
+          "upstream_of_motion": false,
+          "reads_current_frame": false
+        }
+      ],
+      "forbidden_inputs": [
+        "current_frame",
+        "current_latent",
+        "delta",
+        "symbols",
+        "future frames",
+        "pre-coding motion vectors"
+      ]
+    }
+  }
+}
