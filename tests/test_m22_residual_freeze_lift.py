@@ -432,9 +432,13 @@ def test_m22_introduces_no_new_container_format(script):
 def test_m22_does_not_modify_any_production_source():
     result = subprocess.run(["git", "status", "--short"], capture_output=True, text=True,
                             cwd=ROOT, check=False)
+    # Scoped to src/nvc/ deliberately. An earlier version failed on ANY modified
+    # tracked file, so an unrelated in-progress edit (a README change, say) looked
+    # identical to this milestone touching production code - a false positive that
+    # fires for everyone with a dirty tree.
     modified = [line for line in result.stdout.splitlines()
-                if line.startswith(" M") or line.startswith("M ")]
-    modified_production = [line for line in modified if "CHANGELOG.md" not in line]
+                if line[:2].strip() in {"M", "A", "D", "R"}]
+    modified_production = [line for line in modified if "src/nvc/" in line.replace("\\", "/")]
     assert modified_production == [], f"unexpected production modifications: {modified_production}"
 
 
