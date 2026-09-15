@@ -1,16 +1,37 @@
 # Real-Time Neural Video Compression & Streaming Engine
 
-B.Tech AIML minor project (12-week scope). This repository builds a video
-codec that represents frames as compact neural latent vectors instead of
-traditional pixel/motion-vector blocks (H.264/H.265-style compression).
+A learned video codec that represents frames as neural latent vectors
+instead of traditional pixel/motion-vector blocks. Started as a B.Tech AIML
+minor project; the objective has since been raised (see below).
 
 ## Objective
 
-Given a raw video, encode each frame into a small latent representation
-using a convolutional neural encoder / Variational Autoencoder (VAE),
-quantize and serialize that representation into a custom `.nvc` binary
-format, then decode it back into a reconstructed frame - and measure how
-that compares to conventional codecs on quality and size.
+**Reach rate-distortion parity with H.264, and then H.265, on a held-out
+benchmark, measured by BD-rate at matched quality.**
+
+Concretely: encode video through a learned analysis transform, code the
+latents with a learned entropy model, reconstruct through a synthesis
+transform, and beat `libx264` at equal PSNR/MS-SSIM on the DAVIS test split.
+Parity with H.264 is the near-term bar; H.265 is the target after it.
+
+This is a deliberately harder objective than the original brief, which asked
+only to build such a codec and measure it against conventional ones. That
+part is done. The bar now is to win.
+
+### Where that stands today
+
+| | BPP | PSNR | MS-SSIM |
+|---|---|---|---|
+| H.264 `crf33` | **0.0662** | 28.04 dB | 0.9460 |
+| This codec, 3-bit (M22) | 0.3170 | 27.93 dB | 0.9468 |
+
+**H.264 currently needs ~4.8x fewer bits for the same quality**, and leads at
+every point on the measured curve; H.265 leads by more. Both arms are on the
+identical DAVIS test split (9 sequences, 719 frames). Closing that gap is
+what this project is now for.
+
+See [`PARITY_ROADMAP.md`](PARITY_ROADMAP.md) for the staged plan, what is
+reusable, and what has to be rebuilt.
 
 > **See also:** [`OPTIMIZATION_ANALYSIS.md`](OPTIMIZATION_ANALYSIS.md) - a
 > code-level audit of where this codec can still be made faster and where
@@ -21,16 +42,32 @@ that compares to conventional codecs on quality and size.
 
 ## Current Development Status
 
-**Milestone 8A (this repository state): the Milestone 7 codec/evaluation stack unchanged, plus quantization-aware training (QAT) - a differentiable, distortion-only noise relaxation, now with one real trained checkpoint and one real DAVIS benchmark behind it.** A first QAT run (14 epochs, fine-tuned from `vimeo_epoch17_best.pt`) improved PSNR/MS-SSIM at every bit depth, but with a confound not yet ruled out - see "Milestone 8A" below for the mechanism, the numbers (not hardcoded here - read the benchmark output), and exactly what this first run does and does not establish.
+**Milestone 22.** The research pipeline is a working motion-compensated video
+codec: GOP structure, block motion estimation with a losslessly coded motion
+payload, a learned causal entropy model (M11-G16), a 512-entry shared
+codebook, recalibrated coding tables, and a from-scratch range coder writing
+a `.nvct` v2 container. Byte-exact encode/decode round trips are verified on
+every rate point.
 
-Measured on the DAVIS test split: **1.88 BPP at 27.17 dB (12.75x vs raw
-uint8 RGB)** at 8-bit, or **1.38 BPP at 27.10 dB (17.41x)** at 6-bit.
+Measured on the full DAVIS test split (719 frames), M22 candidate:
+**0.3170 BPP at 27.93 dB** (3-bit), **0.5043 BPP at 29.01 dB** (4-bit),
+**0.7211 BPP at 29.29 dB** (5-bit).
 
-The model is a deterministic autoencoder, not a VAE, and the entropy model
-is a static counted table - no learned/context/hyperprior model, and no
-inter-frame prediction, so this compresses **still frames**, not yet video.
-Quantization-aware training is now implemented (Milestone 8A) but has not
-yet been used to produce a trained checkpoint.
+### Two things to know before reading further
+
+**1. The video codec is not in the installable package.** `src/nvc/` contains
+the autoencoder, quantizer, entropy model, range coder and container - but no
+motion compensation, no GOP, no inter-frame prediction. All of that lives in
+`scripts/m10h_motion_compensation.py` and its siblings, loaded via
+`importlib`. Installing this package gets you the still-image codec.
+Promoting the video codec into `src/nvc/` is the first item on the roadmap.
+
+**2. The model is a plain autoencoder, not a compression architecture.**
+593,411 parameters; `Conv/ReLU` encoder and `ConvTranspose/ReLU` decoder. No
+GDN, no residual blocks, no hyperprior, no learned optical flow. Published
+codecs that beat H.265 run 10-30M parameters with all of those. This is the
+single biggest reason for the gap in the table above, and the roadmap's
+central bet.
 
 Implemented:
 - Repository/directory structure
