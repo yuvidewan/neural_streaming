@@ -6,7 +6,42 @@ build-backend = "setuptools.build_meta"
 name = "nvc"
 version = "0.0.1"
 description = "Real-Time Neural Video Compression & Streaming Engine (core package)"
+readme = "README.md"
 requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "Aditya" }]
+keywords = ["video-compression", "neural-codec", "entropy-coding", "rate-distortion"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+# Derived from what src/nvc actually imports, not copied from requirements.txt.
+# Pillow was pinned there but is imported nowhere in this repository; torchvision
+# pulls it in transitively if anything needs it. matplotlib is used only by
+# scripts/, so it lives in the `research` extra rather than the runtime set.
+dependencies = [
+    "torch>=2.4,<3.0",
+    "torchvision>=0.19,<1.0",
+    "opencv-python>=4.9,<5.0",
+    "numpy>=1.26,<3.0",
+    "pytorch-msssim>=1.0,<2.0",
+    "tqdm>=4.66,<5.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0,<9.0"]
+research = ["matplotlib>=3.8,<4.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+# The C range coder source ships with the package - it is compiled on demand at
+# first use (see src/nvc/compression/_native/__init__.py), so a wheel without it
+# would have no arithmetic coder and no fallback.
+[tool.setuptools.package-data]
+"nvc.compression._native" = ["*.c"]
