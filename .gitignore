@@ -142,3 +142,11 @@ outputs/**/m19_raw_*bit.json
 # --- Google Drive for Desktop's internal upload-staging cache, in case
 # this repo ever ends up inside a Drive-backed-up folder ---
 .tmp.driveupload/
+
+# --- M22 research artifacts: regenerable caches and intermediate streams.
+# The refitted checkpoints themselves are already covered by the repo-wide *.pt
+# rule; their .provenance.json sidecars ARE committed, and those carry the
+# SHA256, grid/calibration signatures and training identity needed to audit or
+# re-fit any stack the M22 report cites. ---
+outputs/m22_residual_freeze_lift/m22_train_residuals_*.pt
+outputs/m22_residual_freeze_lift/*_streams/

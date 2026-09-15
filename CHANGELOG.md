@@ -13,6 +13,121 @@ the time.
 
 ---
 
+## 2026-09-15 — M22: residual-quantizer freeze-lift (MEANINGFUL, REPLICATES ON DAVIS TEST)
+
+**Source:** M17 measured a real residual oracle gap and called it unimplementable. M18 (intra
+precision), M20 (codebook hysteresis) and M21 (causal reference refinement) each attacked the
+decoded *reference* and each failed to convert a measured mechanism into coded bytes. M22 lifted
+the one freeze none of them touched: the residual quantizer itself.
+**Tests:** 1534 passing (full suite), zero regressions. 98 new tests.
+**Scope:** experiment only — `src/nvc/` untouched; GOP, motion, `.nvct` v2, range coder, M11-G16
+architecture, K=512, M13 mechanism and λ=3e-4 all frozen; the autoencoder was never retrained.
+
+### Re-centering the residual grid is worth 1.1-1.8% of the total stream, on held-out TEST
+
+Eight grids were pre-registered before any VAL-B coded result was read, spanning the step-size
+axis in both directions. The winner, `symmetric_p01`, forces the grid symmetric about zero
+(half-width = max(|p0.1|, |p99.9|)) instead of spanning the raw (0.1, 99.9) percentile range. Its
+`scale` is essentially unchanged — ratio **1.02** — and what actually moves is `zero_point`, on
+**37 of 64 channels**. That realignment drops 0th-order residual symbol entropy from **1.568 to
+1.239 bits** at 3-bit: 21% fewer bits for the same residuals at the same step and the same quality.
+
+Full 719-frame DAVIS TEST, against the frozen production baseline (whose totals reproduced M14's
+record byte-for-byte at all three rate points):
+
+| bits | baseline | candidate | total stream | P-residual | dPSNR | dMS-SSIM |
+|---|---|---|---|---|---|---|
+| 5 | 4,292,887 | 4,247,581 | **+1.0554%** | +1.2866% | **+0.0213** | +0.000074 |
+| 4 | 3,009,891 | 2,970,488 | **+1.3091%** | +1.6484% | **+0.0320** | -0.000036 |
+| 3 | 1,900,744 | 1,867,362 | **+1.7563%** | +2.3296% | -0.0126 | -0.000412 |
+
+**BD-rate -2.4746% PSNR / -1.0968% MS-SSIM.** At 5- and 4-bit it is a strict Pareto improvement:
+fewer bytes *and* higher PSNR. All 9 TEST sequences improve individually (+1.14% to +3.79%); none
+regresses. I-frame bytes are identical to the byte at every rate point and motion moves by at most
+162 bytes, so the entire gain sits in the P-residual channel — exactly where the freeze was lifted.
+
+### It generalizes, which is the part M21 failed
+
+VAL-B predicted +1.6271%; TEST delivered **+1.7563%** — a gap of **-0.1292 points in the
+candidate's favour**, with 87%/105%/116% retention at 5/4/3-bit. M21's locked candidate went
++0.7141% to +0.1411% at this identical step, retaining 20%. Runtime is unchanged (the change adds
+no operations, parameters or memory), decode is exact on 9/9 sequences at all three rate points,
+and an independent process reproduces the locked candidate with **zero** differences across 13
+aggregate and 24 per-sequence fields.
+
+### The mechanism is NOT the one M17-M21 were chasing
+
+Phase 13's four-level decomposition (real vs oracle reference, on VAL-B) is unambiguous: gap
+closure at the coded-byte level is **-5.23% / -0.33% / +0.22%** at 5/4/3-bit — zero within
+measurement, slightly *negative* at 5-bit. Symbol agreement barely moves (70.18% -> 70.51%).
+
+Both arms get cheaper: a better-aligned grid helps the oracle reference exactly as much as the real
+one, so the ratio between them is unmoved while both absolute costs fall. **M17's oracle gap is
+still open and still unexploited**; M22 found an orthogonal axis. The GOP-boundary anomaly is
+likewise untouched — the gain is uniform across GOP position (+1.3035% boundary vs +1.2844%
+ordinary at 5-bit), and the boundary's oracle gap stays at 38.7% against 16.3% for ordinary
+positions at 3-bit.
+
+### The quantizer is welded to the entropy stack, and that was priced
+
+`calibration_signature` hashes only the residual scale/zero_point, so any grid change moves it and
+the deployed G16 checkpoint rejects it with a `ProvenanceError`. The residual quantizer therefore
+has **no interface at which it can change alone** — it drags M10K, G16, the K=512 codebook and the
+M13 frequencies with it. M22 ran two explicitly separated arms rather than papering over this.
+
+Refitting the downstream stack is worth **+57.61% of the total stream** averaged over 7 variants.
+Phase 15 decomposed why, without repairing anything: under the new grid **99.7630%** of positions
+route to a different K=512 prototype, and coding the new symbols with the deployed tables costs
+**+103.1045%** more bits. Recalibration is not a separately schedulable phase — it is an
+inseparable part of the same atomic change, and the calibration signature already refuses to let a
+partial deployment exist.
+
+Attribution was closed with a full 2x2 (grid x refitted stack). The grid's main effect is
+**+1.6271%**; the refit's own effect is **-0.12% to +0.12%**, i.e. nothing, at every rate point.
+The gain is the grid's, not the fitting procedure's.
+
+### The bigger lead, correctly excluded
+
+`broad_p001` (percentiles 0.01/99.99) scores **BD-rate -8.2372%** — four to seven times the
+selected candidate — but reaches it by shifting the quality-per-bit-depth operating point
+(-0.7873 dB at fixed 3-bit depth), failing the distortion guard declared before any result was
+read. The guard was not relaxed to admit it.
+
+An interim reading during the sweep called that candidate "not a representation improvement, just a
+lower quality point." **That was wrong**, and BD-rate refutes it: it genuinely needs ~8% fewer bits
+at equal quality. What the fixed-depth guard rejects is narrower — its unsuitability as a *drop-in*
+replacement — and conflating the two would have buried the largest measurement in the milestone.
+
+### Classification: A — meaningful residual-representation success
+
+Graded on held-out DAVIS TEST, not on the selection set. **M23 should optimize the residual
+quantizer specifically (option B):** re-derive the inherited (0.1, 99.9) percentiles against
+BD-rate rather than fixed-depth bytes, separate the centering and range axes that M22 only varied
+jointly, decide the quality operating point explicitly, and revisit the integer rounding of
+`zero_point` — which leaves even the "symmetric" grid asymmetric by up to half a step.
+
+### Two bugs found in the research rig, both caught by guards rather than luck
+
+**A wrong origin.** The first full sweep reported a control of 897,872 bytes where Phase 0 had
+established 723,381 — a 24% error. `collect_train_residuals` walked I-frames as
+`model.decode(latent)` while production performs the full intra round trip, shifting the rebuilt
+3-bit mean step from 1.73229 to 1.7266. Every delta was being measured from the wrong place. Fixed,
+and `verify_deployed_grid()` now **raises** if the TRAIN stack does not rebuild the deployed grid
+exactly, rather than quietly reporting a control that is not the control.
+
+**A closure writing into a deleted file.** Incremental report persistence was added after a crashed
+run lost 1.5 hours of refits; its `persist()` closure wrote through a variable named `path`, which
+a later `for path in stream_dir.glob(...)` rebound — so every write landed in a just-deleted
+`.nvct` file. Fixed by renaming both, with an AST-level regression test that fails if any name
+`persist()` closes over is also a loop target in `main`.
+
+### Files changed
+
+`scripts/m22_residual.py` · `scripts/m22_baseline.py` · `scripts/m22_diagnostics.py` ·
+`scripts/m22_sweep.py` · `scripts/m22_analysis.py` · `scripts/m22_mechanism.py` ·
+`scripts/m22_codebook.py` · `scripts/m22_reproduce.py` · `scripts/m22_davis.py` ·
+`tests/test_m22_residual_freeze_lift.py` · `outputs/m22_residual_freeze_lift/m22_report.md`
+
 ## 2026-09-13 — M21: causal reference refinement (VAL-B MARGINAL, DID NOT REPLICATE ON TEST)
 
 **Source:** M17 proved the decoded reference costs real bytes; M18 that shrinking its aggregate

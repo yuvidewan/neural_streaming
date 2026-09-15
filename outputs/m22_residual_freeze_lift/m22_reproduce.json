@@ -1,0 +1,85 @@
+{
+  "phase": "M22 Phase 20",
+  "variant": "symmetric_p01",
+  "arm": "refit",
+  "bits": 3,
+  "grid_signature": "39db8a09133b0f39",
+  "checkpoint_sha256": "f4046d07efcda945ab40bf59c88a54cfee03cd47262465801b02bf062c3d9a1a",
+  "val_b_sequence_ids": [
+    "car-roundabout",
+    "drift-straight",
+    "pigs",
+    "stunt"
+  ],
+  "fields_compared": [
+    "total_container_bytes",
+    "total_residual_bytes",
+    "total_p_frame_residual_bytes",
+    "total_i_frame_residual_bytes",
+    "total_motion_bytes",
+    "total_overhead_bytes",
+    "residual_symbols",
+    "p_frame_ideal_bits",
+    "stream_bpp",
+    "mean_psnr_db",
+    "mean_msssim",
+    "residual_rms",
+    "residual_mae"
+  ],
+  "aggregate_differences": [],
+  "per_sequence_differences": [],
+  "decode_checks": {
+    "symbols_exact": true,
+    "reconstruction_exact": true,
+    "references_exact": true,
+    "sequences_verified": 4
+  },
+  "reproduced": true,
+  "seconds": 90.56901810001,
+  "recorded_aggregate": {
+    "arm": "identity",
+    "bits": 3,
+    "total_motion_bytes": 62464,
+    "total_residual_bytes": 643192,
+    "total_i_frame_residual_bytes": 105148,
+    "total_p_frame_residual_bytes": 538044,
+    "total_container_overhead_bytes": 6795,
+    "total_container_bytes": 712451,
+    "total_pixels": 18022400,
+    "stream_bpp": 0.31625133167613634,
+    "compression_ratio": 75.88900850725173,
+    "mean_psnr_db": 27.91836732611345,
+    "mean_msssim": 0.9597870856523514,
+    "p_frame_ideal_bits": 4303260.4486549245,
+    "p_frames": 246,
+    "encode_seconds": {
+      "network": 0.2799632002133876,
+      "tables": 0.2670468997093849,
+      "coder": 0.09717420017113909
+    },
+    "byte_accounting_closes": true
+  },
+  "reproduced_aggregate": {
+    "arm": "identity",
+    "bits": 3,
+    "total_motion_bytes": 62464,
+    "total_residual_bytes": 643192,
+    "total_i_frame_residual_bytes": 105148,
+    "total_p_frame_residual_bytes": 538044,
+    "total_container_overhead_bytes": 6795,
+    "total_container_bytes": 712451,
+    "total_pixels": 18022400,
+    "stream_bpp": 0.31625133167613634,
+    "compression_ratio": 75.88900850725173,
+    "mean_psnr_db": 27.91836732611345,
+    "mean_msssim": 0.9597870856523514,
+    "p_frame_ideal_bits": 4303260.4486549245,
+    "p_frames": 246,
+    "encode_seconds": {
+      "network": 0.311124199826736,
+      "tables": 0.2757698000932578,
+      "coder": 0.1042883000918664
+    },
+    "byte_accounting_closes": true
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "positions": 4030464,
+  "assignment_drift": 0.9976298014322916,
+  "refit_bits_per_symbol": 1.067683633610156,
+  "deployed_bits_per_symbol": 2.16851305275162,
+  "deployed_table_penalty_percent": 103.1044575834915,
+  "symbol_entropy_bits": 1.4583967091282064,
+  "variant": "symmetric_p01",
+  "bits": 3,
+  "seconds": 73.49395360000199,
+  "deployed_grid_signature": "56f4c328ca1e0cf0",
+  "candidate_grid_signature": "39db8a09133b0f39",
+  "val_b_sequence_ids": [
+    "car-roundabout",
+    "drift-straight",
+    "pigs",
+    "stunt"
+  ],
+  "checkpoint_sha256": "f4046d07efcda945ab40bf59c88a54cfee03cd47262465801b02bf062c3d9a1a"
+}

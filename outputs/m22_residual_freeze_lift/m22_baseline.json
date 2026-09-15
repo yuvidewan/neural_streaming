@@ -1,0 +1,713 @@
+{
+  "phase": "M22 Phase 0/1",
+  "git_head": "19472b8074a22e0791a4c3662617dc75defc3b97",
+  "git_status_porcelain": "?? scripts/m22_baseline.py\n?? scripts/m22_residual.py",
+  "non_m22_working_tree_changes": [],
+  "clean_except_m22": true,
+  "baseline_test_suite": [
+    "1439 passed, 1 warning in 215.79s (0:03:35)"
+  ],
+  "val_b_sequence_ids": [
+    "car-roundabout",
+    "drift-straight",
+    "pigs",
+    "stunt"
+  ],
+  "declared_grid_variants": [
+    {
+      "name": "deployed",
+      "definition": "scale/zero_point from calibrate_quantization_params at percentiles (0.1, 99.9), per channel - the frozen production grid",
+      "family": "control",
+      "params": {}
+    },
+    {
+      "name": "broad_p001",
+      "definition": "percentiles (0.01, 99.99): wider range, coarser step, less clipping",
+      "family": "A",
+      "params": {
+        "lower": 0.01,
+        "upper": 99.99
+      }
+    },
+    {
+      "name": "tight_p1",
+      "definition": "percentiles (1.0, 99.0): narrower range, finer step, more clipping",
+      "family": "A",
+      "params": {
+        "lower": 1.0,
+        "upper": 99.0
+      }
+    },
+    {
+      "name": "tight_p05",
+      "definition": "percentiles (0.5, 99.5): a milder tightening than tight_p1",
+      "family": "A",
+      "params": {
+        "lower": 0.5,
+        "upper": 99.5
+      }
+    },
+    {
+      "name": "symmetric_p01",
+      "definition": "symmetric about zero, half-width = max(|p0.1|, |p99.9|)",
+      "family": "A",
+      "params": {}
+    },
+    {
+      "name": "mad_k8",
+      "definition": "symmetric, half-width = 8 * per-channel MAD (robust scale)",
+      "family": "A",
+      "params": {
+        "k": 8.0
+      }
+    },
+    {
+      "name": "mad_k12",
+      "definition": "symmetric, half-width = 12 * per-channel MAD",
+      "family": "A",
+      "params": {
+        "k": 12.0
+      }
+    },
+    {
+      "name": "mse_optimal",
+      "definition": "symmetric, per-channel half-width minimising TRAIN quantization MSE over a fixed 48-point geometric ladder",
+      "family": "A",
+      "params": {
+        "candidates": 48
+      }
+    }
+  ],
+  "rate_points": [
+    {
+      "bits": 5,
+      "identities": {
+        "residual": "ec858dee10f8a955",
+        "intra": "8fadd1ca200c033b",
+        "motion": "d7e7b237b6451885",
+        "assign_codebook": "c4bb904fe6f88a5f",
+        "coding_codebook": "474d54d3673ade9f",
+        "m10k": "70fbfc21465d2a2f",
+        "calibration_signature": "928411732c587518"
+      },
+      "expected_identities": {
+        "residual_identity": "ec858dee10f8a955",
+        "assign_codebook_id": "c4bb904fe6f88a5f",
+        "coding_codebook_id": "474d54d3673ade9f"
+      },
+      "identities_match": true,
+      "baseline": {
+        "arm": "identity",
+        "bits": 5,
+        "total_motion_bytes": 59367,
+        "total_residual_bytes": 1558850,
+        "total_i_frame_residual_bytes": 225575,
+        "total_p_frame_residual_bytes": 1333275,
+        "total_container_overhead_bytes": 6795,
+        "total_container_bytes": 1625012,
+        "total_pixels": 18022400,
+        "stream_bpp": 0.7213299005681818,
+        "compression_ratio": 33.27187737690552,
+        "mean_psnr_db": 29.4392612805755,
+        "mean_msssim": 0.9817617386579514,
+        "p_frame_ideal_bits": 10665017.284985473,
+        "p_frames": 246,
+        "encode_seconds": {
+          "network": 0.2980785000399919,
+          "tables": 0.2812977999128634,
+          "coder": 0.14264220012410078
+        },
+        "byte_accounting_closes": true
+      },
+      "per_sequence": [
+        {
+          "sequence": "car-roundabout",
+          "residual_bytes": 465191,
+          "p_frame_residual_bytes": 398280,
+          "motion_bytes": 15400,
+          "container_bytes": 482346,
+          "mean_psnr_db": 27.13064442753042,
+          "mean_msssim": 0.9830601215362549
+        },
+        {
+          "sequence": "drift-straight",
+          "residual_bytes": 382924,
+          "p_frame_residual_bytes": 340634,
+          "motion_bytes": 15594,
+          "container_bytes": 400048,
+          "mean_psnr_db": 28.104914769118352,
+          "mean_msssim": 0.9809744358062744
+        },
+        {
+          "sequence": "pigs",
+          "residual_bytes": 358676,
+          "p_frame_residual_bytes": 304155,
+          "motion_bytes": 12154,
+          "container_bytes": 372621,
+          "mean_psnr_db": 33.810891061308126,
+          "mean_msssim": 0.9858893156051636
+        },
+        {
+          "sequence": "stunt",
+          "residual_bytes": 352059,
+          "p_frame_residual_bytes": 290206,
+          "motion_bytes": 16219,
+          "container_bytes": 369997,
+          "mean_psnr_db": 28.710594864345097,
+          "mean_msssim": 0.9771230816841125
+        }
+      ],
+      "gop_position": {
+        "0": {
+          "residual_bytes": 225575,
+          "motion_bytes": 0,
+          "frames": 29
+        },
+        "1": {
+          "residual_bytes": 157784,
+          "motion_bytes": 6674,
+          "frames": 28
+        },
+        "2": {
+          "residual_bytes": 154678,
+          "motion_bytes": 7072,
+          "frames": 28
+        },
+        "3": {
+          "residual_bytes": 149287,
+          "motion_bytes": 6612,
+          "frames": 28
+        },
+        "4": {
+          "residual_bytes": 152069,
+          "motion_bytes": 6782,
+          "frames": 28
+        },
+        "5": {
+          "residual_bytes": 137653,
+          "motion_bytes": 6410,
+          "frames": 27
+        },
+        "6": {
+          "residual_bytes": 146130,
+          "motion_bytes": 6458,
+          "frames": 27
+        },
+        "7": {
+          "residual_bytes": 145031,
+          "motion_bytes": 6739,
+          "frames": 27
+        },
+        "8": {
+          "residual_bytes": 148913,
+          "motion_bytes": 6450,
+          "frames": 27
+        },
+        "9": {
+          "residual_bytes": 141730,
+          "motion_bytes": 6170,
+          "frames": 26
+        }
+      },
+      "decode_checks": {
+        "symbols_exact": true,
+        "reconstruction_exact": true,
+        "references_exact": true,
+        "sequences_verified": 4
+      },
+      "residual_statistics": {
+        "p_frames": 246,
+        "residual_rms": 1.1103088369308516,
+        "residual_mae": 0.5993710301392446,
+        "residual_symbols": 4030464,
+        "symbol_agreement_with_oracle": 0.7018092705951473,
+        "boundary_symbol_agreement_with_oracle": 0.5550994873046875,
+        "g16_ideal_bits": 10665017.284985477,
+        "oracle_g16_ideal_bits": 10401361.539697226,
+        "coded_residual_bytes": 1333275,
+        "oracle_coded_residual_bytes": 1300318,
+        "m17_oracle_gap_bytes": 32957,
+        "m17_oracle_gap_percent": 2.4718831448875886
+      },
+      "encode_seconds": {
+        "network": 0.2980785000399919,
+        "tables": 0.2812977999128634,
+        "coder": 0.14264220012410078
+      },
+      "recorded_p_residual_bytes": 1333275,
+      "recorded_total_bytes": 1625012,
+      "bytes_match": true,
+      "coupling_audit": {
+        "deployed_grid_signature": "b9995ffb22ee8509",
+        "probe_grid_signature": "1204c81e175b7da7",
+        "deployed_calibration_signature": "928411732c587518",
+        "probe_calibration_signature": "64d10d806501011a",
+        "calibration_signature_moves_with_the_grid": true,
+        "calibration_signature_hashes": [
+          "residual_params.scale",
+          "residual_params.zero_point",
+          "bits",
+          "mode",
+          "calibration_frames"
+        ],
+        "g16_checkpoint_rejects_the_new_grid": true,
+        "g16_rejection_message": "ProvenanceError: M11 model provenance mismatch: calibration 928411732c587518 != 64d10d806501011a",
+        "symbol_cache_key_includes_the_grid": false,
+        "symbol_cache_key_inputs": [
+          "bits",
+          "block_size",
+          "calibration_frames",
+          "checkpoint",
+          "gop",
+          "quant_mode",
+          "search_range",
+          "train_frames",
+          "train_ids",
+          "val_frames_per_sequence",
+          "val_ids"
+        ],
+        "symbol_cache_key_for_deployed": "9567a10e6fb446f93b5f7bc8982e110b6fd2b3ffd2c0202f57b57cd2dab4428a",
+        "symbol_cache_hazard": "m11_data.load_or_collect's cache key does not include the residual grid, so calling it under a new grid silently returns symbols collected under the deployed one - m22_residual.collect_symbols_for_grid exists to avoid that",
+        "container_needs_a_new_field": false,
+        "container_reason": ".nvct v2 already carries residual_entropy_model_id, and m11_ar_entropy.model_identity already hashes the calibration signature and the coding codebook into it - so a refitted stack is a DIFFERENT stream identity that the existing header check rejects, with no format change",
+        "invalidated_in_order": [
+          "M10K learned entropy model",
+          "M11-G16 (initialised from M10K, trained on these symbols)",
+          "K=512 assignment codebook (fitted to G16's predictions)",
+          "M13 coding frequencies (fitted to those assignments)"
+        ],
+        "unchanged_by_a_residual_grid_change": [
+          "intra quantizer and intra entropy model",
+          "motion estimator, motion coding, motion table",
+          "range coder API",
+          "causal decode ordering",
+          "container format",
+          "GOP",
+          "autoencoder weights"
+        ],
+        "minimum_intervention": "residual_params alone, evaluated in two explicitly separated arms: STALE (deployed downstream kept, provenance override recorded) and REFIT (M10K/G16/codebook/M13 rebuilt on TRAIN by the original fitting code)"
+      }
+    },
+    {
+      "bits": 4,
+      "identities": {
+        "residual": "be872c2beebd2f9b",
+        "intra": "14c4b8bf40056ca1",
+        "motion": "d7e7b237b6451885",
+        "assign_codebook": "624682536c203a54",
+        "coding_codebook": "2d319551c6d8bec1",
+        "m10k": "00ac53e03a70fdc7",
+        "calibration_signature": "eab9082596c6f980"
+      },
+      "expected_identities": {
+        "residual_identity": "be872c2beebd2f9b",
+        "assign_codebook_id": "624682536c203a54",
+        "coding_codebook_id": "2d319551c6d8bec1"
+      },
+      "identities_match": true,
+      "baseline": {
+        "arm": "identity",
+        "bits": 4,
+        "total_motion_bytes": 60084,
+        "total_residual_bytes": 1073647,
+        "total_i_frame_residual_bytes": 165243,
+        "total_p_frame_residual_bytes": 908404,
+        "total_container_overhead_bytes": 6795,
+        "total_container_bytes": 1140526,
+        "total_pixels": 18022400,
+        "stream_bpp": 0.5062704190340909,
+        "compression_ratio": 47.40549535915884,
+        "mean_psnr_db": 29.102749935620295,
+        "mean_msssim": 0.9769150018692017,
+        "p_frame_ideal_bits": 7266080.431349751,
+        "p_frames": 246,
+        "encode_seconds": {
+          "network": 0.28855769980873447,
+          "tables": 0.24315250005747657,
+          "coder": 0.11833150015445426
+        },
+        "byte_accounting_closes": true
+      },
+      "per_sequence": [
+        {
+          "sequence": "car-roundabout",
+          "residual_bytes": 324805,
+          "p_frame_residual_bytes": 274714,
+          "motion_bytes": 15721,
+          "container_bytes": 342281,
+          "mean_psnr_db": 26.953319552100737,
+          "mean_msssim": 0.9787952303886414
+        },
+        {
+          "sequence": "drift-straight",
+          "residual_bytes": 281637,
+          "p_frame_residual_bytes": 249927,
+          "motion_bytes": 15613,
+          "container_bytes": 298780,
+          "mean_psnr_db": 27.87391022103774,
+          "mean_msssim": 0.9776999950408936
+        },
+        {
+          "sequence": "pigs",
+          "residual_bytes": 232683,
+          "p_frame_residual_bytes": 194637,
+          "motion_bytes": 12316,
+          "container_bytes": 246790,
+          "mean_psnr_db": 33.044181922236604,
+          "mean_msssim": 0.9791582226753235
+        },
+        {
+          "sequence": "stunt",
+          "residual_bytes": 234522,
+          "p_frame_residual_bytes": 189126,
+          "motion_bytes": 16434,
+          "container_bytes": 252675,
+          "mean_psnr_db": 28.539588047106108,
+          "mean_msssim": 0.9720065593719482
+        }
+      ],
+      "gop_position": {
+        "0": {
+          "residual_bytes": 165243,
+          "motion_bytes": 0,
+          "frames": 29
+        },
+        "1": {
+          "residual_bytes": 114898,
+          "motion_bytes": 6940,
+          "frames": 28
+        },
+        "2": {
+          "residual_bytes": 105323,
+          "motion_bytes": 7111,
+          "frames": 28
+        },
+        "3": {
+          "residual_bytes": 100426,
+          "motion_bytes": 6684,
+          "frames": 28
+        },
+        "4": {
+          "residual_bytes": 102596,
+          "motion_bytes": 6839,
+          "frames": 28
+        },
+        "5": {
+          "residual_bytes": 91635,
+          "motion_bytes": 6473,
+          "frames": 27
+        },
+        "6": {
+          "residual_bytes": 98817,
+          "motion_bytes": 6512,
+          "frames": 27
+        },
+        "7": {
+          "residual_bytes": 97767,
+          "motion_bytes": 6782,
+          "frames": 27
+        },
+        "8": {
+          "residual_bytes": 101140,
+          "motion_bytes": 6509,
+          "frames": 27
+        },
+        "9": {
+          "residual_bytes": 95802,
+          "motion_bytes": 6234,
+          "frames": 26
+        }
+      },
+      "decode_checks": {
+        "symbols_exact": true,
+        "reconstruction_exact": true,
+        "references_exact": true,
+        "sequences_verified": 4
+      },
+      "residual_statistics": {
+        "p_frames": 246,
+        "residual_rms": 1.12723597290867,
+        "residual_mae": 0.6292909475846019,
+        "residual_symbols": 4030464,
+        "symbol_agreement_with_oracle": 0.7476052385035569,
+        "boundary_symbol_agreement_with_oracle": 0.6039319719587054,
+        "g16_ideal_bits": 7266080.431349749,
+        "oracle_g16_ideal_bits": 6650889.476137158,
+        "coded_residual_bytes": 908404,
+        "oracle_coded_residual_bytes": 831497,
+        "m17_oracle_gap_bytes": 76907,
+        "m17_oracle_gap_percent": 8.46616703581226
+      },
+      "encode_seconds": {
+        "network": 0.28855769980873447,
+        "tables": 0.24315250005747657,
+        "coder": 0.11833150015445426
+      },
+      "recorded_p_residual_bytes": 908404,
+      "recorded_total_bytes": 1140526,
+      "bytes_match": true,
+      "coupling_audit": {
+        "deployed_grid_signature": "5c1a710bced3acd6",
+        "probe_grid_signature": "e42fd1dcd3f974b0",
+        "deployed_calibration_signature": "eab9082596c6f980",
+        "probe_calibration_signature": "e5d5b41b4f52458c",
+        "calibration_signature_moves_with_the_grid": true,
+        "calibration_signature_hashes": [
+          "residual_params.scale",
+          "residual_params.zero_point",
+          "bits",
+          "mode",
+          "calibration_frames"
+        ],
+        "g16_checkpoint_rejects_the_new_grid": true,
+        "g16_rejection_message": "ProvenanceError: M11 model provenance mismatch: calibration eab9082596c6f980 != e5d5b41b4f52458c",
+        "symbol_cache_key_includes_the_grid": false,
+        "symbol_cache_key_inputs": [
+          "bits",
+          "block_size",
+          "calibration_frames",
+          "checkpoint",
+          "gop",
+          "quant_mode",
+          "search_range",
+          "train_frames",
+          "train_ids",
+          "val_frames_per_sequence",
+          "val_ids"
+        ],
+        "symbol_cache_key_for_deployed": "68be6bb957032ff8e715e8174f7791c09dd3806c29fa3ec1f0bb195f947028fc",
+        "symbol_cache_hazard": "m11_data.load_or_collect's cache key does not include the residual grid, so calling it under a new grid silently returns symbols collected under the deployed one - m22_residual.collect_symbols_for_grid exists to avoid that",
+        "container_needs_a_new_field": false,
+        "container_reason": ".nvct v2 already carries residual_entropy_model_id, and m11_ar_entropy.model_identity already hashes the calibration signature and the coding codebook into it - so a refitted stack is a DIFFERENT stream identity that the existing header check rejects, with no format change",
+        "invalidated_in_order": [
+          "M10K learned entropy model",
+          "M11-G16 (initialised from M10K, trained on these symbols)",
+          "K=512 assignment codebook (fitted to G16's predictions)",
+          "M13 coding frequencies (fitted to those assignments)"
+        ],
+        "unchanged_by_a_residual_grid_change": [
+          "intra quantizer and intra entropy model",
+          "motion estimator, motion coding, motion table",
+          "range coder API",
+          "causal decode ordering",
+          "container format",
+          "GOP",
+          "autoencoder weights"
+        ],
+        "minimum_intervention": "residual_params alone, evaluated in two explicitly separated arms: STALE (deployed downstream kept, provenance override recorded) and REFIT (M10K/G16/codebook/M13 rebuilt on TRAIN by the original fitting code)"
+      }
+    },
+    {
+      "bits": 3,
+      "identities": {
+        "residual": "d2d61d66a50cad8a",
+        "intra": "b523711d2e982057",
+        "motion": "d7e7b237b6451885",
+        "assign_codebook": "666c05b46e355317",
+        "coding_codebook": "50cd2a7277d8fa97",
+        "m10k": "c52cb42b2b390a8b",
+        "calibration_signature": "95a513136a72daf0"
+      },
+      "expected_identities": {
+        "residual_identity": "d2d61d66a50cad8a",
+        "assign_codebook_id": "666c05b46e355317",
+        "coding_codebook_id": "50cd2a7277d8fa97"
+      },
+      "identities_match": true,
+      "baseline": {
+        "arm": "identity",
+        "bits": 3,
+        "total_motion_bytes": 62355,
+        "total_residual_bytes": 654231,
+        "total_i_frame_residual_bytes": 105148,
+        "total_p_frame_residual_bytes": 549083,
+        "total_container_overhead_bytes": 6795,
+        "total_container_bytes": 723381,
+        "total_pixels": 18022400,
+        "stream_bpp": 0.32110307173295455,
+        "compression_ratio": 74.74235568808139,
+        "mean_psnr_db": 27.94314576473267,
+        "mean_msssim": 0.9601545035839081,
+        "p_frame_ideal_bits": 4391507.179216361,
+        "p_frames": 246,
+        "encode_seconds": {
+          "network": 0.2891695998987416,
+          "tables": 0.23393060007947497,
+          "coder": 0.09772759996121749
+        },
+        "byte_accounting_closes": true
+      },
+      "per_sequence": [
+        {
+          "sequence": "car-roundabout",
+          "residual_bytes": 201522,
+          "p_frame_residual_bytes": 168393,
+          "motion_bytes": 16229,
+          "container_bytes": 219506,
+          "mean_psnr_db": 26.27441657322634,
+          "mean_msssim": 0.9652445912361145
+        },
+        {
+          "sequence": "drift-straight",
+          "residual_bytes": 184588,
+          "p_frame_residual_bytes": 163560,
+          "motion_bytes": 15645,
+          "container_bytes": 201763,
+          "mean_psnr_db": 26.970297420928787,
+          "mean_msssim": 0.9642626047134399
+        },
+        {
+          "sequence": "pigs",
+          "residual_bytes": 128559,
+          "p_frame_residual_bytes": 106648,
+          "motion_bytes": 13185,
+          "container_bytes": 143535,
+          "mean_psnr_db": 30.8284936479088,
+          "mean_msssim": 0.9558905363082886
+        },
+        {
+          "sequence": "stunt",
+          "residual_bytes": 139562,
+          "p_frame_residual_bytes": 110482,
+          "motion_bytes": 17296,
+          "container_bytes": 158577,
+          "mean_psnr_db": 27.69937541686675,
+          "mean_msssim": 0.9552202820777893
+        }
+      ],
+      "gop_position": {
+        "0": {
+          "residual_bytes": 105148,
+          "motion_bytes": 0,
+          "frames": 29
+        },
+        "1": {
+          "residual_bytes": 81039,
+          "motion_bytes": 7645,
+          "frames": 28
+        },
+        "2": {
+          "residual_bytes": 64131,
+          "motion_bytes": 7350,
+          "frames": 28
+        },
+        "3": {
+          "residual_bytes": 59087,
+          "motion_bytes": 6905,
+          "frames": 28
+        },
+        "4": {
+          "residual_bytes": 60335,
+          "motion_bytes": 7064,
+          "frames": 28
+        },
+        "5": {
+          "residual_bytes": 53251,
+          "motion_bytes": 6649,
+          "frames": 27
+        },
+        "6": {
+          "residual_bytes": 58012,
+          "motion_bytes": 6734,
+          "frames": 27
+        },
+        "7": {
+          "residual_bytes": 57143,
+          "motion_bytes": 6920,
+          "frames": 27
+        },
+        "8": {
+          "residual_bytes": 59713,
+          "motion_bytes": 6681,
+          "frames": 27
+        },
+        "9": {
+          "residual_bytes": 56372,
+          "motion_bytes": 6407,
+          "frames": 26
+        }
+      },
+      "decode_checks": {
+        "symbols_exact": true,
+        "reconstruction_exact": true,
+        "references_exact": true,
+        "sequences_verified": 4
+      },
+      "residual_statistics": {
+        "p_frames": 246,
+        "residual_rms": 1.1968075681691208,
+        "residual_mae": 0.7193376511577668,
+        "residual_symbols": 4030464,
+        "symbol_agreement_with_oracle": 0.8130838037506352,
+        "boundary_symbol_agreement_with_oracle": 0.67291259765625,
+        "g16_ideal_bits": 4391507.179216357,
+        "oracle_g16_ideal_bits": 3529968.7996028224,
+        "coded_residual_bytes": 549083,
+        "oracle_coded_residual_bytes": 441390,
+        "m17_oracle_gap_bytes": 107693,
+        "m17_oracle_gap_percent": 19.61324608483599
+      },
+      "encode_seconds": {
+        "network": 0.2891695998987416,
+        "tables": 0.23393060007947497,
+        "coder": 0.09772759996121749
+      },
+      "recorded_p_residual_bytes": 549083,
+      "recorded_total_bytes": 723381,
+      "bytes_match": true,
+      "coupling_audit": {
+        "deployed_grid_signature": "56f4c328ca1e0cf0",
+        "probe_grid_signature": "ada10cb2457ff9ab",
+        "deployed_calibration_signature": "95a513136a72daf0",
+        "probe_calibration_signature": "2d43e16dc8e2835b",
+        "calibration_signature_moves_with_the_grid": true,
+        "calibration_signature_hashes": [
+          "residual_params.scale",
+          "residual_params.zero_point",
+          "bits",
+          "mode",
+          "calibration_frames"
+        ],
+        "g16_checkpoint_rejects_the_new_grid": true,
+        "g16_rejection_message": "ProvenanceError: M11 model provenance mismatch: calibration 95a513136a72daf0 != 2d43e16dc8e2835b",
+        "symbol_cache_key_includes_the_grid": false,
+        "symbol_cache_key_inputs": [
+          "bits",
+          "block_size",
+          "calibration_frames",
+          "checkpoint",
+          "gop",
+          "quant_mode",
+          "search_range",
+          "train_frames",
+          "train_ids",
+          "val_frames_per_sequence",
+          "val_ids"
+        ],
+        "symbol_cache_key_for_deployed": "3dec706297d6c19fed9d8ada3a2535bb9546c53dad800213ff73a174915478ad",
+        "symbol_cache_hazard": "m11_data.load_or_collect's cache key does not include the residual grid, so calling it under a new grid silently returns symbols collected under the deployed one - m22_residual.collect_symbols_for_grid exists to avoid that",
+        "container_needs_a_new_field": false,
+        "container_reason": ".nvct v2 already carries residual_entropy_model_id, and m11_ar_entropy.model_identity already hashes the calibration signature and the coding codebook into it - so a refitted stack is a DIFFERENT stream identity that the existing header check rejects, with no format change",
+        "invalidated_in_order": [
+          "M10K learned entropy model",
+          "M11-G16 (initialised from M10K, trained on these symbols)",
+          "K=512 assignment codebook (fitted to G16's predictions)",
+          "M13 coding frequencies (fitted to those assignments)"
+        ],
+        "unchanged_by_a_residual_grid_change": [
+          "intra quantizer and intra entropy model",
+          "motion estimator, motion coding, motion table",
+          "range coder API",
+          "causal decode ordering",
+          "container format",
+          "GOP",
+          "autoencoder weights"
+        ],
+        "minimum_intervention": "residual_params alone, evaluated in two explicitly separated arms: STALE (deployed downstream kept, provenance override recorded) and REFIT (M10K/G16/codebook/M13 rebuilt on TRAIN by the original fitting code)"
+      }
+    }
+  ],
+  "all_identities_match": true,
+  "all_bytes_match": true,
+  "status": "CONFIRMED"
+}
