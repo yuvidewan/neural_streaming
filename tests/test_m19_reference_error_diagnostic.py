@@ -311,9 +311,12 @@ def test_m19_scripts_do_not_modify_any_production_source():
     import subprocess
     result = subprocess.run(["git", "status", "--short"], capture_output=True, text=True,
                             cwd=Path(__file__).resolve().parents[1])
+    # Scoped to src/nvc/ deliberately. An earlier version failed on ANY modified
+    # tracked file, so an unrelated in-progress edit (a README change, say) looked
+    # identical to this milestone touching production code.
     modified = [line for line in result.stdout.splitlines()
-               if line.startswith(" M") or line.startswith("M ")]
-    modified_production = [line for line in modified if "CHANGELOG.md" not in line]
+               if line[:2].strip() in {"M", "A", "D", "R"}]
+    modified_production = [line for line in modified if "src/nvc/" in line.replace("\\", "/")]
     assert modified_production == [], f"unexpected production modifications: {modified_production}"
 
 
