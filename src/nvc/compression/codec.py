@@ -181,6 +181,18 @@ def decode_payload_to_latent(
             f"Entropy model is {entropy_model.bits}-bit but params are {params.bits}-bit"
         )
     latent_channels, latent_height, latent_width = shape
+    # The header's latent_channels chooses which frequency table each symbol is
+    # coded against, so a file declaring more channels than the model has tables
+    # would index outside it. `entropy_model_id` does NOT catch this: it hashes
+    # the model, not the header, so a crafted header can carry a legitimate id
+    # alongside any dimensions it likes. Checked here, where the two meet.
+    available_tables = entropy_model.cumulative.shape[0]
+    if latent_channels > available_tables:
+        raise NVCFormatError(
+            f"Stream declares {latent_channels} latent channels but the entropy "
+            f"model only has {available_tables} frequency tables; decoding would "
+            "read outside the model. Refusing the stream."
+        )
     table_index = channel_table_index(latent_channels, latent_height, latent_width)
     symbol_count = latent_channels * latent_height * latent_width
     symbols = decode_symbols(payload, symbol_count, entropy_model.cumulative, table_index)

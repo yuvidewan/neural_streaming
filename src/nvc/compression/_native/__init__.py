@@ -212,19 +212,19 @@ def load():
 
     try:
         lib.rc_encode.argtypes = [
-            c_i64_p, ctypes.c_int64,           # symbols, n
-            c_i64_p, ctypes.c_int64,           # cumulative, table_width
-            c_i64_p,                           # table_index
-            ctypes.POINTER(c_u8_p), c_i64_p,   # out_data, out_len
+            c_i64_p, ctypes.c_int64,                            # symbols, n
+            c_i64_p, ctypes.c_int64, ctypes.c_int64,            # cumulative, width, num_tables
+            c_i64_p,                                            # table_index
+            ctypes.POINTER(c_u8_p), c_i64_p,                    # out_data, out_len
         ]
         lib.rc_encode.restype = ctypes.c_int32
 
         lib.rc_decode.argtypes = [
-            c_u8_p, ctypes.c_int64,            # payload, payload_len
-            ctypes.c_int64,                    # n
-            c_i64_p, ctypes.c_int64,           # cumulative, table_width
-            c_i64_p,                           # table_index
-            c_i64_p,                           # out_symbols
+            c_u8_p, ctypes.c_int64,                             # payload, payload_len
+            ctypes.c_int64,                                     # n
+            c_i64_p, ctypes.c_int64, ctypes.c_int64,            # cumulative, width, num_tables
+            c_i64_p,                                            # table_index
+            c_i64_p,                                            # out_symbols
         ]
         lib.rc_decode.restype = ctypes.c_int32
 
@@ -237,10 +237,10 @@ def load():
         lib.rc_decoder_open.restype = ctypes.c_void_p
 
         lib.rc_decoder_decode.argtypes = [
-            ctypes.c_void_p, ctypes.c_int64,   # handle, n
-            c_i64_p, ctypes.c_int64,           # cumulative, table_width
-            c_i64_p,                           # table_index
-            c_i64_p,                           # out_symbols
+            ctypes.c_void_p, ctypes.c_int64,                    # handle, n
+            c_i64_p, ctypes.c_int64, ctypes.c_int64,            # cumulative, width, num_tables
+            c_i64_p,                                            # table_index
+            c_i64_p,                                            # out_symbols
         ]
         lib.rc_decoder_decode.restype = ctypes.c_int32
 

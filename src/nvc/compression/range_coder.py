@@ -278,6 +278,19 @@ def _validate_inputs(symbols: np.ndarray, cumulative: np.ndarray, table_index: n
         )
     if np.any(totals <= 0):
         raise ValueError("every frequency table must have a positive total")
+    # `table_index` selects a ROW of `cumulative`; an out-of-range row is a
+    # read outside the array. The C backend indexes `cumulative + table *
+    # table_width` directly, so this bound is the difference between a clean
+    # error and an out-of-bounds read that can spin the decoder's
+    # renormalization loop forever on garbage interval bounds. Reachable from a
+    # crafted .nvc header, whose latent_channels sets this array's values.
+    if table_index.size:
+        lowest, highest = int(table_index.min()), int(table_index.max())
+        if lowest < 0 or highest >= cumulative.shape[0]:
+            raise ValueError(
+                f"table_index must lie in [0, {cumulative.shape[0]}) for a "
+                f"{cumulative.shape[0]}-table model, got [{lowest}, {highest}]"
+            )
 
 
 # --- Native backend safeguard -----------------------------------------
@@ -317,9 +330,16 @@ def _encode_symbols_c(symbols: np.ndarray, cumulative: np.ndarray, table_index: 
     status = lib.rc_encode(
         symbols_arr.ctypes.data_as(ctypes.POINTER(ctypes.c_int64)), ctypes.c_int64(len(symbols_arr)),
         cumulative_arr.ctypes.data_as(ctypes.POINTER(ctypes.c_int64)), ctypes.c_int64(table_width),
+        ctypes.c_int64(cumulative_arr.shape[0]),
         table_index_arr.ctypes.data_as(ctypes.POINTER(ctypes.c_int64)),
         ctypes.byref(out_ptr), ctypes.byref(out_len),
     )
+    if status == -2:
+        raise ValueError(
+            "Native range coder refused out-of-range symbols or table indices "
+            "(rc_encode status -2). This should have been caught by "
+            "_validate_inputs; the C guard is the backstop."
+        )
     if status != 0:
         raise MemoryError(
             "Native range coder failed to allocate its output buffer "
@@ -349,9 +369,16 @@ def _decode_symbols_c(
         payload_ptr, ctypes.c_int64(len(payload)),
         ctypes.c_int64(num_symbols_to_decode),
         cumulative_arr.ctypes.data_as(ctypes.POINTER(ctypes.c_int64)), ctypes.c_int64(table_width),
+        ctypes.c_int64(cumulative_arr.shape[0]),
         table_index_arr.ctypes.data_as(ctypes.POINTER(ctypes.c_int64)),
         out.ctypes.data_as(ctypes.POINTER(ctypes.c_int64)),
     )
+    if status == -2:
+        raise ValueError(
+            "Native range coder refused an out-of-range table index, or decoded a "
+            "symbol outside the alphabet (rc_decode status -2) - the payload does "
+            "not match the frequency tables it is being decoded against."
+        )
     if status != 0:
         raise RuntimeError(
             f"Native range coder rc_decode rejected its inputs (status {status}) - "
@@ -514,6 +541,7 @@ class ResumableDecoder:
         status = self._lib.rc_decoder_decode(
             self._handle, ctypes.c_int64(n),
             cumulative_arr.ctypes.data_as(ctypes.POINTER(ctypes.c_int64)), ctypes.c_int64(table_width),
+            ctypes.c_int64(cumulative_arr.shape[0]),
             table_index_arr.ctypes.data_as(ctypes.POINTER(ctypes.c_int64)),
             out.ctypes.data_as(ctypes.POINTER(ctypes.c_int64)),
         )

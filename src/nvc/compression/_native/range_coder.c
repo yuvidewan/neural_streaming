@@ -144,9 +144,12 @@ static int64_t bisect_right_i64(const int64_t *cum, int64_t table_width, int64_t
 
 /* symbols, table_index: length n, int64.
  * cumulative: num_tables x table_width (= num_symbols + 1) row-major, int64.
- * All inputs are assumed already validated Python-side (matching
- * range_coder.py's _validate_inputs) - this function does no input
- * validation of its own.
+ * Python-side _validate_inputs checks these too, but this function no longer
+ * TRUSTS that: `table_index` and `symbols` are re-checked against num_tables
+ * and table_width here. An earlier version took the bounds on faith and was
+ * never even passed num_tables, so an out-of-range table index indexed outside
+ * `cumulative` and could spin the renormalization loop forever on garbage
+ * interval bounds - reachable from a crafted .nvc header.
  *
  * Returns 0 on success: *out_data points at a malloc'd buffer of *out_len
  * bytes - free it with rc_free once the caller has copied the bytes out
@@ -157,10 +160,26 @@ static int64_t bisect_right_i64(const int64_t *cum, int64_t table_width, int64_t
 NVC_EXPORT
 int32_t rc_encode(
     const int64_t *symbols, int64_t n,
-    const int64_t *cumulative, int64_t table_width,
+    const int64_t *cumulative, int64_t table_width, int64_t num_tables,
     const int64_t *table_index,
     uint8_t **out_data, int64_t *out_len
 ) {
+    if (symbols == NULL || cumulative == NULL || table_index == NULL
+        || out_data == NULL || out_len == NULL
+        || n <= 0 || table_width <= 1 || num_tables <= 0) {
+        if (out_data != NULL) *out_data = NULL;
+        if (out_len != NULL) *out_len = 0;
+        return -2;
+    }
+    for (int64_t i = 0; i < n; i++) {
+        if (table_index[i] < 0 || table_index[i] >= num_tables
+            || symbols[i] < 0 || symbols[i] > table_width - 2) {
+            *out_data = NULL;
+            *out_len = 0;
+            return -2;                 /* out of range: refuse, do not read */
+        }
+    }
+
     BitWriter w;
     int ok = bw_init(&w);
     if (!ok) {
@@ -303,13 +322,18 @@ void *rc_decoder_open(const uint8_t *payload, int64_t payload_len) {
 NVC_EXPORT
 int32_t rc_decoder_decode(
     void *handle, int64_t n,
-    const int64_t *cumulative, int64_t table_width,
+    const int64_t *cumulative, int64_t table_width, int64_t num_tables,
     const int64_t *table_index,
     int64_t *out_symbols
 ) {
     if (handle == NULL || cumulative == NULL || table_index == NULL || out_symbols == NULL
-        || n <= 0 || table_width <= 0) {
+        || n <= 0 || table_width <= 1 || num_tables <= 0) {
         return -1;
+    }
+    for (int64_t pos = 0; pos < n; pos++) {
+        if (table_index[pos] < 0 || table_index[pos] >= num_tables) {
+            return -2;                 /* out of range: refuse, do not read */
+        }
     }
     RCDecoderState *dec = (RCDecoderState *)handle;
 
@@ -321,6 +345,11 @@ int32_t rc_decoder_decode(
 
         int64_t scaled = ((dec->value - dec->low + 1) * total - 1) / span;
         int64_t symbol = bisect_right_i64(cum, table_width, scaled) - 1;
+        /* A malformed or non-monotonic table can put this outside the alphabet;
+         * cum[symbol + 1] would then read past the row. Refuse instead. */
+        if (symbol < 0 || symbol > table_width - 2) {
+            return -2;
+        }
         out_symbols[pos] = symbol;
 
         dec->high = dec->low + (span * cum[symbol + 1]) / total - 1;
@@ -371,20 +400,21 @@ NVC_EXPORT
 int32_t rc_decode(
     const uint8_t *payload, int64_t payload_len,
     int64_t n,
-    const int64_t *cumulative, int64_t table_width,
+    const int64_t *cumulative, int64_t table_width, int64_t num_tables,
     const int64_t *table_index,
     int64_t *out_symbols
 ) {
     if (cumulative == NULL || table_index == NULL || out_symbols == NULL
-        || n <= 0 || table_width <= 0 || (payload == NULL && payload_len != 0)) {
+        || n <= 0 || table_width <= 1 || num_tables <= 0
+        || (payload == NULL && payload_len != 0)) {
         return -1;
     }
     void *handle = rc_decoder_open(payload, payload_len);
     if (handle == NULL) {
         return -1;
     }
-    int32_t status = rc_decoder_decode(handle, n, cumulative, table_width, table_index,
-                                        out_symbols);
+    int32_t status = rc_decoder_decode(handle, n, cumulative, table_width, num_tables,
+                                        table_index, out_symbols);
     rc_decoder_close(handle);
     return status;
 }

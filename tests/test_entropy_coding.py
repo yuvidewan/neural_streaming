@@ -10,6 +10,10 @@ All tests use tiny synthetic tensors and a tiny model so they stay fast.
 
 from __future__ import annotations
 
+import subprocess
+import sys
+import textwrap
+from pathlib import Path
 import numpy as np
 import pytest
 import torch
@@ -56,8 +60,14 @@ from nvc.compression.nvc_format import (
     STREAM_FIXED_HEADER_SIZE,
     STREAM_MAGIC,
 )
-from nvc.compression.range_coder import MAX_TOTAL_FREQUENCY
+from nvc.compression.range_coder import (
+    MAX_TOTAL_FREQUENCY,
+    decode_symbols,
+    encode_symbols,
+)
 from nvc.models import BaselineAutoencoder
+
+ROOT = Path(__file__).resolve().parents[1]
 
 BIT_WIDTHS = (8, 6, 4)
 
@@ -1342,3 +1352,138 @@ def test_stream_format_is_smaller_than_n_separate_nvc_files(tmp_path):
 
     assert stream_total < per_frame_total
     assert per_frame_total - stream_total == expected_savings
+
+
+# --- BUG-01: out-of-range table_index must never reach the native coder ------------------
+#
+# `table_index` selects a ROW of `cumulative`. The C backend indexes
+# `cumulative + table * table_width` directly, so an out-of-range row is a read
+# outside the array - and the garbage interval bounds that produces could spin
+# the decoder's renormalization loop forever. A crafted `.nvc` header reached
+# this: `entropy_model_id` hashes the MODEL, not the header, so a file can carry
+# a legitimate id alongside any `latent_channels` it likes.
+#
+# The decode hang is in C and holds the GIL, so it cannot be interrupted from
+# Python. Every test here that exercises the decode path therefore runs it in a
+# SUBPROCESS with a timeout - an in-process regression would hang pytest itself
+# with no way to recover.
+
+
+def _crafted_stream(latent_channels: int):
+    """A container whose header is internally consistent and carries a genuine
+    entropy_model_id, but declares more channels than the model has tables."""
+    from nvc.compression.codec import encode_latent_to_payload
+    from nvc.compression.entropy_model import TOTAL_FREQUENCY, EmpiricalEntropyModel
+    from nvc.compression.nvc_format import NVCHeader, NVCWriter
+    from nvc.compression.quantization import QuantizationParams
+
+    channels, height, width, bits = 4, 2, 2, 3
+    model = EmpiricalEntropyModel(
+        np.full((channels, 2 ** bits), TOTAL_FREQUENCY // 2 ** bits, dtype=np.int64), bits=bits)
+    params = QuantizationParams(
+        scale=torch.ones(1, channels, 1, 1), zero_point=torch.zeros(1, channels, 1, 1),
+        bits=bits, mode="per_channel")
+    payload, _ = encode_latent_to_payload(
+        torch.zeros(1, channels, height, width), params=params, entropy_model=model)
+    header = NVCHeader(
+        quantization_bits=bits, quantization_mode="per_channel",
+        image_width=16, image_height=16, image_channels=3,
+        latent_channels=latent_channels, latent_height=1, latent_width=1,
+        symbol_count=latent_channels, payload_length=len(payload),
+        entropy_model_id=model.model_id(),          # genuine id, wrong dimensions
+        scales=tuple([1.0] * latent_channels), zero_points=tuple([0] * latent_channels))
+    return NVCWriter.to_bytes(header, payload), model
+
+
+def test_encode_refuses_a_table_index_outside_the_model():
+    frequencies = np.full((4, 8), TOTAL_FREQUENCY // 8, dtype=np.int64)
+    cumulative = np.concatenate(
+        [np.zeros((4, 1), dtype=np.int64), np.cumsum(frequencies, axis=1)], axis=1)
+    symbols = np.array([0, 1], dtype=np.int64)
+    with pytest.raises(ValueError, match=r"table_index must lie in \[0, 4\)"):
+        encode_symbols(symbols, cumulative, np.array([0, 9999], dtype=np.int64))
+    with pytest.raises(ValueError, match=r"table_index must lie in"):
+        encode_symbols(symbols, cumulative, np.array([0, -1], dtype=np.int64))
+    # the in-range case is untouched
+    assert encode_symbols(symbols, cumulative, np.array([0, 3], dtype=np.int64))
+
+
+def test_decode_refuses_a_table_index_outside_the_model():
+    frequencies = np.full((4, 8), TOTAL_FREQUENCY // 8, dtype=np.int64)
+    cumulative = np.concatenate(
+        [np.zeros((4, 1), dtype=np.int64), np.cumsum(frequencies, axis=1)], axis=1)
+    payload = encode_symbols(np.array([0, 1], dtype=np.int64), cumulative,
+                             np.array([0, 1], dtype=np.int64))
+    with pytest.raises(ValueError, match=r"table_index must lie in"):
+        decode_symbols(payload, 2, cumulative, np.array([0, 9999], dtype=np.int64))
+
+
+def test_stream_declaring_more_channels_than_the_model_has_tables_is_refused():
+    """The container-level guard. `entropy_model_id` cannot catch this on its
+    own - it hashes the model, so a crafted header carries a valid one."""
+    from nvc.compression.codec import decode_latent
+    data, model = _crafted_stream(latent_channels=300)
+    with pytest.raises(NVCFormatError, match="frequency tables"):
+        decode_latent(data, entropy_model=model)
+
+
+def test_crafted_stream_fails_fast_instead_of_hanging():
+    """The regression that matters. Before the fix this spun in the native
+    renormalization loop indefinitely - measured at ~2 hours of CPU before it
+    was killed - holding the GIL, so no in-process timeout could recover it.
+
+    Run in a subprocess: if this regresses, the subprocess times out and the
+    test fails, rather than hanging the whole suite.
+    """
+    program = textwrap.dedent(
+        """
+        import sys
+        import numpy as np, torch
+        from nvc.compression.codec import decode_latent, encode_latent_to_payload
+        from nvc.compression.entropy_model import EmpiricalEntropyModel, TOTAL_FREQUENCY
+        from nvc.compression.nvc_format import NVCFormatError, NVCHeader, NVCWriter
+        from nvc.compression.quantization import QuantizationParams
+
+        C, H, W, bits = 4, 2, 2, 3
+        model = EmpiricalEntropyModel(
+            np.full((C, 2 ** bits), TOTAL_FREQUENCY // 2 ** bits, dtype=np.int64), bits=bits)
+        params = QuantizationParams(
+            scale=torch.ones(1, C, 1, 1), zero_point=torch.zeros(1, C, 1, 1),
+            bits=bits, mode="per_channel")
+        payload, _ = encode_latent_to_payload(
+            torch.zeros(1, C, H, W), params=params, entropy_model=model)
+
+        EVIL = 20000
+        header = NVCHeader(
+            quantization_bits=bits, quantization_mode="per_channel",
+            image_width=16, image_height=16, image_channels=3,
+            latent_channels=EVIL, latent_height=1, latent_width=1,
+            symbol_count=EVIL, payload_length=len(payload),
+            entropy_model_id=model.model_id(),
+            scales=tuple([1.0] * EVIL), zero_points=tuple([0] * EVIL))
+        data = NVCWriter.to_bytes(header, payload)
+        try:
+            decode_latent(data, entropy_model=model)
+        except NVCFormatError:
+            print("REFUSED")
+            sys.exit(0)
+        print("DECODED")
+        sys.exit(1)
+        """
+    )
+    result = subprocess.run([sys.executable, "-c", program], capture_output=True, text=True,
+                            timeout=120, cwd=ROOT)
+    assert "REFUSED" in result.stdout, (
+        f"crafted stream was not refused (stdout={result.stdout!r}, "
+        f"stderr={result.stderr[-400:]!r})")
+
+
+def test_native_backend_bounds_checks_independently_of_python():
+    """Defense in depth: the C entry points now receive num_tables and check it
+    themselves. An earlier version was never passed num_tables at all, so it
+    could not have checked even in principle."""
+    source = (ROOT / "src/nvc/compression/_native/range_coder.c").read_text(encoding="utf-8")
+    for entry in ("rc_encode", "rc_decoder_decode", "rc_decode"):
+        signature = source.split(f"int32_t {entry}(", 1)[1].split(")", 1)[0]
+        assert "num_tables" in signature, f"{entry} is not given num_tables"
+    assert source.count(">= num_tables") >= 2, "C code does not bounds-check table_index"
