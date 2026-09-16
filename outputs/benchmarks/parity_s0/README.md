@@ -36,7 +36,7 @@ Across 28.3-29.8 dB, each doubling of rate buys NVC **1.3 dB**, against **2.8 dB
 for H.264 and H.265 over the same quality window. Going from 4 to 5 bits, NVC gains
 +0.36 dB for 43% more bits. Finer quantization no longer buys quality: the
 decoder is near the ceiling of what this 593k-parameter autoencoder can
-reconstruct. That is direct evidence for the roadmap's diagnosis. The binding
+reconstruct. That is strong evidence for the roadmap's diagnosis. The binding
 constraint is the transform, not the entropy coder, and no amount of entropy
 coding moves a ceiling.
 
@@ -92,9 +92,8 @@ effect is real but small next to the gap.
   28.3-29.8 dB (0.947-0.974 MS-SSIM), so every BD-rate here is averaged over that
   window. The classical curves cover it with 13 CRF points each, so none of it is
   extrapolated. BD-rate uses the project's piecewise-linear `_bd_rate_linear`.
-- **Resolution caveat.** 256x256 is small. Classical codecs typically gain
-  relative efficiency at higher resolutions, so this gap is unlikely to shrink at
-  1080p.
+- **Resolution caveat.** 256x256 is small, and nothing here was measured at a
+  larger resolution. Do not quote these ratios for 1080p.
 
 ## A bug this run found and fixed
 
@@ -105,8 +104,9 @@ as such. A frame tensor with identical values but a channels-last layout, which
 scored up to +0.005 high. CPU, float64 and contiguous CUDA inputs all agree. The
 fix is in `nvc.evaluation.perceptual_metrics.msssim`, which now forces a contiguous
 layout, with a CUDA regression test and a negative control. No earlier result is
-affected: the only code that fed permuted frames to `msssim` is this script, and
-every other caller passes contiguous tensors. PSNR was never affected.
+affected, as far as a search can show: this script is the only file that both
+calls `msssim` and permutes frames into NCHW, and nothing calls pytorch-msssim
+directly. PSNR was never affected.
 
 ## Files
 
