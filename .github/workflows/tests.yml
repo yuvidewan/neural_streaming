@@ -59,4 +59,16 @@ jobs:
       - name: Run tests
         env:
           MPLBACKEND: Agg
-        run: python -m pytest tests/ -q -rfEs --durations=15
+        run: |
+          set -o pipefail
+          python -m pytest tests/ -q -rfEs --durations=15 2>&1 | tee pytest.log
+
+      # Job logs can only be downloaded with admin rights on the repository, but
+      # annotations are public: every failing test is listed on the commit and
+      # pull request, readable by anyone.
+      - name: Report failing tests as annotations
+        if: failure()
+        run: |
+          grep -E "^(FAILED|ERROR) " pytest.log | head -40 | while IFS= read -r line; do
+            echo "::error title=pytest::${line}"
+          done

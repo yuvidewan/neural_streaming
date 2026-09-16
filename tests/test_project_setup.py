@@ -184,10 +184,13 @@ def test_ci_runs_the_whole_test_suite_on_the_supported_python():
     assert re.search(r"^\s+push:\s*\n\s+branches: \[master\]", workflow, re.MULTILINE)
     assert re.search(r"^\s+pull_request:", workflow, re.MULTILINE)
 
-    run_lines = re.findall(r"run: (.+)", workflow)
-    pytest_runs = [line for line in run_lines if "pytest" in line]
-    assert pytest_runs == ["python -m pytest tests/ -q -rfEs --durations=15"]
-    assert any('pip install -e ".[dev,research]"' in line for line in run_lines)
+    pytest_runs = [line.strip() for line in workflow.splitlines()
+                   if "python -m pytest" in line]
+    assert len(pytest_runs) == 1 and pytest_runs[0].startswith("python -m pytest tests/ ")
+    assert " -k " not in pytest_runs[0] and "--deselect" not in pytest_runs[0]
+    # piped through tee, so pipefail must be on or a failing suite would pass CI
+    assert "set -o pipefail" in workflow
+    assert 'pip install -e ".[dev,research]"' in workflow
 
     python = re.search(r'python-version: "([\d.]+)"', workflow).group(1)
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]

@@ -94,14 +94,15 @@ def test_main_fails_cleanly_when_calibration_file_is_missing(mod, monkeypatch, t
 
 def test_extract_reconciling_collisions_handles_dir_then_file_ordering(mod, tmp_path):
     """Directory entry listed before a file entry at the same path - plain
-    zipfile.extractall() crashes with PermissionError on this ordering."""
+    zipfile.extractall() crashes on this ordering: PermissionError on Windows,
+    IsADirectoryError on Linux."""
     zip_path = tmp_path / "a.zip"
     with zipfile.ZipFile(zip_path, "w") as zf:
         zf.writestr("a/b/", "")
         zf.writestr("a/b", b"file-data")
         zf.writestr("a/b/c.txt", b"nested-file-data")
 
-    with pytest.raises((FileExistsError, PermissionError)):
+    with pytest.raises((FileExistsError, PermissionError, IsADirectoryError)):
         with zipfile.ZipFile(zip_path) as zf:
             zf.extractall(tmp_path / "plain")
 
@@ -209,7 +210,8 @@ def test_reset_dir_with_retry_raises_a_clear_error_after_exhausting_attempts(mod
 
 def test_try_add_defender_exclusion_simulated_success(mod, tmp_path, capsys):
     target = tmp_path / "data"
-    with mock.patch.object(mod.shutil, "which", return_value=r"C:\Windows\System32\powershell.exe"), \
+    with mock.patch.object(mod.sys, "platform", "win32"), \
+         mock.patch.object(mod.shutil, "which", return_value=r"C:\Windows\System32\powershell.exe"), \
          mock.patch.object(mod.subprocess, "run") as run_mock:
         run_mock.return_value = subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr="")
         mod._try_add_defender_exclusion(target)
@@ -219,7 +221,8 @@ def test_try_add_defender_exclusion_simulated_success(mod, tmp_path, capsys):
 
 
 def test_try_add_defender_exclusion_non_elevated_terminal_does_not_raise(mod, tmp_path):
-    with mock.patch.object(mod.shutil, "which", return_value="powershell"), \
+    with mock.patch.object(mod.sys, "platform", "win32"), \
+         mock.patch.object(mod.shutil, "which", return_value="powershell"), \
          mock.patch.object(mod.subprocess, "run") as run_mock:
         run_mock.return_value = subprocess.CompletedProcess(
             args=[], returncode=1, stdout="", stderr="Access is denied."
@@ -228,7 +231,8 @@ def test_try_add_defender_exclusion_non_elevated_terminal_does_not_raise(mod, tm
 
 
 def test_try_add_defender_exclusion_missing_powershell_does_not_call_subprocess(mod, tmp_path):
-    with mock.patch.object(mod.shutil, "which", return_value=None), \
+    with mock.patch.object(mod.sys, "platform", "win32"), \
+         mock.patch.object(mod.shutil, "which", return_value=None), \
          mock.patch.object(mod.subprocess, "run") as run_mock:
         mod._try_add_defender_exclusion(tmp_path)
         run_mock.assert_not_called()
@@ -242,7 +246,8 @@ def test_try_add_defender_exclusion_non_windows_skips_cleanly(mod, tmp_path):
 
 
 def test_try_add_defender_exclusion_subprocess_timeout_does_not_raise(mod, tmp_path):
-    with mock.patch.object(mod.shutil, "which", return_value="powershell"), \
+    with mock.patch.object(mod.sys, "platform", "win32"), \
+         mock.patch.object(mod.shutil, "which", return_value="powershell"), \
          mock.patch.object(mod.subprocess, "run", side_effect=subprocess.TimeoutExpired(cmd="x", timeout=30)):
         mod._try_add_defender_exclusion(tmp_path)  # must not raise
 
