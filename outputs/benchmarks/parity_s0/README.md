@@ -113,6 +113,5 @@ every other caller passes contiguous tensors. PSNR was never affected.
 - `parity.json` - every operating point (per-sequence detail, all conventions),
   every comparison, the reproduction checks and the environment.
 - `parity_rd.png` - rate-distortion curves (`scripts/plot_parity.py`).
-- `run.log` - console output of the run.
 
 Reproduce with `./.venv/Scripts/python.exe scripts/benchmark_parity.py --no-resume`.
