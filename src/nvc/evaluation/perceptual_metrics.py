@@ -63,7 +63,14 @@ def msssim(
             "requirements.txt)."
         ) from exc
 
-    return _ms_ssim(prediction, target, data_range=data_range, size_average=True)
+    # Force standard NCHW memory layout. A tensor with identical values but a
+    # channels-last layout (what `permute` produces, e.g. converting decoded
+    # HWC video frames) takes a different CUDA float32 convolution path and
+    # measured about +0.005 too high on real frames (torch 2.13+cu130, cuDNN
+    # 9.20) - larger than most effects this project measures. CPU, float64 and
+    # contiguous CUDA inputs all agree to 1e-6.
+    return _ms_ssim(prediction.contiguous(), target.contiguous(),
+                    data_range=data_range, size_average=True)
 
 
 def _validate_pair(

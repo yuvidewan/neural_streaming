@@ -159,3 +159,34 @@ def test_mse_and_psnr_behavior_is_unchanged():
 
     assert mse(image, image).item() == 0.0
     assert psnr(image, image).item() == float("inf")
+
+
+def _channels_last_pair(device):
+    generator = torch.Generator().manual_seed(0)
+    target = torch.nn.functional.interpolate(
+        torch.rand(1, 3, 24, 24, generator=generator), size=(192, 192),
+        mode="bilinear", align_corners=False)
+    noisy = (target + torch.randn(target.shape, generator=generator) * 0.03).clamp(0, 1)
+    noisy = torch.round(noisy * 255) / 255
+    # Same values, channels-last memory layout - what permuting decoded HWC
+    # video frames into [N, C, H, W] produces.
+    channels_last = noisy.permute(0, 2, 3, 1).contiguous().permute(0, 3, 1, 2)
+    assert torch.equal(channels_last, noisy) and not channels_last.is_contiguous()
+    return noisy.to(device), channels_last.to(device), target.to(device)
+
+
+def test_score_does_not_depend_on_memory_layout_cpu():
+    contiguous, channels_last, target = _channels_last_pair("cpu")
+    assert float(msssim(channels_last, target)) == pytest.approx(
+        float(msssim(contiguous, target)), abs=1e-6)
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
+def test_score_does_not_depend_on_memory_layout_cuda():
+    """Regression: a channels-last input measured ~+0.005 too high on CUDA
+    float32 before msssim() forced a contiguous layout. The CPU value is the
+    reference - it agrees with float64 on both devices."""
+    contiguous, channels_last, target = _channels_last_pair("cuda")
+    reference = float(msssim(contiguous.cpu(), target.cpu()))
+    assert float(msssim(channels_last, target)) == pytest.approx(reference, abs=1e-5)
+    assert float(msssim(contiguous, target)) == pytest.approx(reference, abs=1e-5)
