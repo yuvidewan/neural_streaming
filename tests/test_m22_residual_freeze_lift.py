@@ -367,7 +367,12 @@ def test_code_identity_covers_every_script_that_can_change_a_refit(m22):
 
 
 def test_saved_checkpoints_match_their_recorded_digests():
-    """Every checkpoint the sweep wrote must still hash to what was recorded."""
+    """Every checkpoint the sweep wrote must still hash to what was recorded.
+
+    The provenance records are committed but the `.pt` files are git-ignored, so a
+    fresh checkout (CI) has records without checkpoints. The record fields are
+    checked everywhere; digests are checked for every checkpoint that is present.
+    """
     import hashlib
     directory = ROOT / "outputs/m22_residual_freeze_lift/checkpoints"
     if not directory.is_dir():
@@ -378,8 +383,9 @@ def test_saved_checkpoints_match_their_recorded_digests():
     for record_path in records:
         record = json.loads(record_path.read_text(encoding="utf-8"))
         checkpoint = ROOT / record["path"]
-        assert checkpoint.is_file(), record["path"]
-        assert hashlib.sha256(checkpoint.read_bytes()).hexdigest() == record["sha256"]
+        if checkpoint.is_file():
+            assert hashlib.sha256(checkpoint.read_bytes()).hexdigest() == record["sha256"], \
+                record["path"]
         assert record["training"]["lambda"] == 3e-4
         assert record["training"]["gamma"] is None
         assert record["dataset_identity"]["split_discipline"].startswith("TRAIN fits")

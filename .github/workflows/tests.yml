@@ -1,0 +1,62 @@
+# Runs the full test suite on every push to master and every pull request.
+#
+# Linux on purpose: all development so far has been Windows + Colab, so this is
+# also the check that nothing assumes Windows. The CPU build of PyTorch is
+# installed explicitly (the default wheel pulls ~2 GB of CUDA libraries a runner
+# cannot use); CUDA-only tests skip themselves. FFmpeg is installed so the
+# H.264/H.265 harness tests run instead of skipping. gcc is preinstalled and is
+# what compiles the native range coder on first use.
+#
+# Research artifacts that are git-ignored (datasets, *.pt checkpoints, codec
+# bundles) are absent here by design; tests that need them skip.
+
+name: tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pytest:
+    name: pytest (ubuntu, Python 3.11)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -hide_banner -encoders | grep -E "libx264|libx265"
+
+      - name: Install CPU PyTorch
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install the package
+        run: python -m pip install -e ".[dev,research]"
+
+      - name: Run tests
+        env:
+          MPLBACKEND: Agg
+        run: python -m pytest tests/ -q -rfEs --durations=15

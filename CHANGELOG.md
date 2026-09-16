@@ -66,7 +66,10 @@ The research scripts are unchanged and remain the record of how each piece was
 derived. Bundles (`*.pt`) are regenerable and not committed; `bundles.json` records
 their digests and identities.
 
-**Still open in Stage 0:** CI.
+**CI** (`.github/workflows/tests.yml`) now runs the full suite on Ubuntu for every push and
+pull request. A dry run on a fresh clone found one test that assumed git-ignored M22
+checkpoints were present; it now checks digests for the checkpoints that exist and the
+committed provenance records everywhere. **Stage 0 is complete.**
 
 ---
 

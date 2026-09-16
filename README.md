@@ -1,5 +1,7 @@
 # Real-Time Neural Video Compression & Streaming Engine
 
+[![tests](https://github.com/yuvidewan/neural_streaming/actions/workflows/tests.yml/badge.svg)](https://github.com/yuvidewan/neural_streaming/actions/workflows/tests.yml)
+
 A learned video codec that represents frames as neural latent vectors
 instead of traditional pixel/motion-vector blocks. Started as a B.Tech AIML
 minor project; the objective has since been raised (see below).

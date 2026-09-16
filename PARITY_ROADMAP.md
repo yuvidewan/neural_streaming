@@ -114,7 +114,8 @@ consecutive milestones with no shipped gain.
   (`scripts/verify_promoted_codec.py`), 2026-09-16.
 - [x] Fix the decoder hang on malformed containers (unbounded `table_index`) - `33844a6`.
 - [x] Declare dependencies in `pyproject.toml`, add a LICENSE - `9f419a2`.
-- [ ] CI.
+- [x] CI - `.github/workflows/tests.yml`: the full suite on Ubuntu, Python 3.11, CPU
+  PyTorch and FFmpeg, on every push to master and every pull request.
 
 **Gate:** a single reproducible BD-rate number vs H.264. Everything after this is
 measured against it. **Met:** +450.7% (PSNR) / +378.3% (MS-SSIM) against default

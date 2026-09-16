@@ -1,8 +1,8 @@
 """Sanity checks for the repository foundation.
 
-These do not test compression, model, or streaming behavior (none of that
-exists yet) - only that the package structure and configuration mechanism
-are importable and internally consistent.
+These do not test codec behavior (see the per-module test files) - only that
+the package structure, configuration, packaging metadata and CI are importable
+and internally consistent.
 """
 
 from pathlib import Path
@@ -17,6 +17,7 @@ def test_subpackages_import() -> None:
     import nvc.evaluation
     import nvc.models
     import nvc.utils
+    import nvc.video
 
     assert nvc.__version__
 
@@ -167,3 +168,28 @@ def test_the_project_has_a_license():
     data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     assert data["project"]["license"] == {"file": "LICENSE"}
     assert any("License :: OSI Approved" in c for c in data["project"]["classifiers"])
+
+
+def test_ci_runs_the_whole_test_suite_on_the_supported_python():
+    """BUG-06: a workflow that silently tested a subset, or a Python the package
+    does not support, would look green while guarding nothing.
+
+    Read as text rather than parsed, so the check needs no YAML dependency.
+    """
+    import re
+    import tomllib
+
+    workflow = (ROOT / ".github/workflows/tests.yml").read_text(encoding="utf-8")
+    assert re.search(r"^on:\s*$", workflow, re.MULTILINE)
+    assert re.search(r"^\s+push:\s*\n\s+branches: \[master\]", workflow, re.MULTILINE)
+    assert re.search(r"^\s+pull_request:", workflow, re.MULTILINE)
+
+    run_lines = re.findall(r"run: (.+)", workflow)
+    pytest_runs = [line for line in run_lines if "pytest" in line]
+    assert pytest_runs == ["python -m pytest tests/ -q -rfEs --durations=15"]
+    assert any('pip install -e ".[dev,research]"' in line for line in run_lines)
+
+    python = re.search(r'python-version: "([\d.]+)"', workflow).group(1)
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]
+    minimum = project["requires-python"].removeprefix(">=")
+    assert tuple(map(int, python.split("."))) >= tuple(map(int, minimum.split(".")))
