@@ -3,9 +3,13 @@
 **Objective.** Beat `libx264` at equal quality on the DAVIS test split, measured
 by BD-rate. Then `libx265`.
 
-**Where we start.** H.264 `crf33` reaches 28.04 dB at 0.0662 BPP. The M22 codec
-reaches 27.93 dB at 0.3170 BPP. H.264 needs **~4.8x fewer bits** for the same
-quality, and leads at every measured point.
+**Where we start** (Stage 0 scoreboard, 2026-09-16,
+[`outputs/benchmarks/parity_s0/`](outputs/benchmarks/parity_s0/README.md)). Against
+default `libx264` on DAVIS TEST, the M22 codec has a BD-rate of **+450.7% on PSNR**
+and **+378.3% on MS-SSIM**: H.264 needs ~5.5x fewer bits for the same PSNR, and
+leads at every measured point. The gap widens with quality (4.8x at the 3-bit
+point, 7.5x at 5-bit), because each rate doubling buys this codec 1.3 dB against
+H.264's 2.8 dB.
 
 This document is the plan to close that. It is deliberately explicit about what
 will be thrown away, because the honest answer is "most of the model, none of the
@@ -99,16 +103,21 @@ consecutive milestones with no shipped gain.
 
 ### Stage 0 - Establish the scoreboard (~1 week, no new modelling)
 
-- Re-run H.264/H.265 vs the current codec in **one pass**, three rate points,
-  BD-rate on both metrics. The comparison currently on disk pairs against a
-  pre-motion-compensation codec and is not quotable.
-- Promote the video codec from `scripts/` into `src/nvc/` so there is one codec,
+- [x] Re-run H.264/H.265 vs the current codec in **one pass**, three rate points,
+  BD-rate on both metrics - `scripts/benchmark_parity.py`, 2026-09-16. It found
+  that the earlier comparison scored H.264 and NVC with different PSNR
+  definitions, and that `msssim()` read high on channels-last CUDA tensors
+  (fixed).
+- [ ] Promote the video codec from `scripts/` into `src/nvc/` so there is one codec,
   not two. Add `encode()` / `decode()`.
-- Fix the decoder hang on malformed containers (unbounded `table_index`), declare
-  dependencies in `pyproject.toml`, add a LICENSE and CI.
+- [x] Fix the decoder hang on malformed containers (unbounded `table_index`) - `33844a6`.
+- [x] Declare dependencies in `pyproject.toml`, add a LICENSE - `9f419a2`.
+- [ ] CI.
 
 **Gate:** a single reproducible BD-rate number vs H.264. Everything after this is
-measured against it.
+measured against it. **Met:** +450.7% (PSNR) / +378.3% (MS-SSIM) against default
+`libx264`, reproducible with `scripts/benchmark_parity.py --no-resume`. Every later
+stage reports its BD-rate against this same harness.
 
 ### Stage 1 - A real analysis/synthesis transform (~3 weeks)
 
@@ -180,7 +189,7 @@ and should be treated as a stretch goal, not a commitment.
 
 What is *not* realistic: reaching parity by continuing to optimize the current
 architecture. At the 1-4% per milestone the recent milestones delivered, closing
-a 4.8x gap takes ~80 milestones. The plan above is shorter precisely because it
+a 5.5x gap takes ~85 milestones. The plan above is shorter precisely because it
 changes the thing that is actually limiting the result.
 
 ---

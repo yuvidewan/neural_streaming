@@ -20,15 +20,21 @@ part is done. The bar now is to win.
 
 ### Where that stands today
 
-| | BPP | PSNR | MS-SSIM |
-|---|---|---|---|
-| H.264 `crf33` | **0.0662** | 28.04 dB | 0.9460 |
-| This codec, 3-bit (M22) | 0.3170 | 27.93 dB | 0.9468 |
+Measured in a single pass on the DAVIS test split (9 sequences, 719 frames):
+every codec scored on the same frames by the same metric code
+([`outputs/benchmarks/parity_s0/`](outputs/benchmarks/parity_s0/README.md)).
 
-**H.264 currently needs ~4.8x fewer bits for the same quality**, and leads at
-every point on the measured curve; H.265 leads by more. Both arms are on the
-identical DAVIS test split (9 sequences, 719 frames). Closing that gap is
-what this project is now for.
+| This codec (M22) vs | BD-rate, PSNR | BD-rate, MS-SSIM |
+|---|---:|---:|
+| **H.264** (libx264, medium) | **+450.7%** | **+378.3%** |
+| H.265 (libx265, medium) | +485.0% | +371.5% |
+| H.264, forced to this codec's GOP (I every 10, no B) | +300.5% | +244.7% |
+
+**H.264 needs ~5.5x fewer bits for the same PSNR** (~4.8x on MS-SSIM), and
+leads at every measured point. The gap widens with quality: each doubling of
+rate buys this codec 1.3 dB, against 2.8 dB for H.264, because the
+autoencoder is near its reconstruction ceiling. Closing that gap is what this
+project is now for.
 
 See [`PARITY_ROADMAP.md`](PARITY_ROADMAP.md) for the staged plan, what is
 reusable, and what has to be rebuilt.
