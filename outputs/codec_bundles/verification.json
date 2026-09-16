@@ -1,0 +1,455 @@
+{
+  "sequences": [
+    "bmx-bumps",
+    "car-turn",
+    "cat-girl",
+    "cows",
+    "drift-chicane",
+    "drone",
+    "gold-fish",
+    "schoolgirls",
+    "surf"
+  ],
+  "frames": 719,
+  "bundles": {
+    "nvc_deployed_3bit": {
+      "total_bytes": 1900744,
+      "m22_recorded_total_bytes": 1900744,
+      "matches_recorded_total": true,
+      "verified": true,
+      "bundle_sha256": "5713a5d372386b0768ceb61f5a162e75a03adf1394ec6a1a364a3719b451713a",
+      "seconds": 392.0902320000023,
+      "sequences": [
+        {
+          "sequence": "bmx-bumps",
+          "bytes": 282415,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "car-turn",
+          "bytes": 168253,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "cat-girl",
+          "bytes": 312604,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "cows",
+          "bytes": 287715,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "drift-chicane",
+          "bytes": 73914,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "drone",
+          "bytes": 257504,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "gold-fish",
+          "bytes": 199147,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "schoolgirls",
+          "bytes": 218462,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "surf",
+          "bytes": 100730,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        }
+      ]
+    },
+    "nvc_deployed_4bit": {
+      "total_bytes": 3009891,
+      "m22_recorded_total_bytes": 3009891,
+      "matches_recorded_total": true,
+      "verified": true,
+      "bundle_sha256": "0190e502e40d6b786f9bb644a6ba69ff5fec651bad64582da449e3441dfb8814",
+      "seconds": 601.2129009999917,
+      "sequences": [
+        {
+          "sequence": "bmx-bumps",
+          "bytes": 444078,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "car-turn",
+          "bytes": 275173,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "cat-girl",
+          "bytes": 475977,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "cows",
+          "bytes": 454540,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "drift-chicane",
+          "bytes": 128336,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "drone",
+          "bytes": 405896,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "gold-fish",
+          "bytes": 330803,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "schoolgirls",
+          "bytes": 333545,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "surf",
+          "bytes": 161543,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        }
+      ]
+    },
+    "nvc_deployed_5bit": {
+      "total_bytes": 4292887,
+      "m22_recorded_total_bytes": 4292887,
+      "matches_recorded_total": true,
+      "verified": true,
+      "bundle_sha256": "97081c12c6cff9d2aaa2528b7d9b20bd87c1480ade36b1e48796c8fe0d4ad8a0",
+      "seconds": 419.73117379999894,
+      "sequences": [
+        {
+          "sequence": "bmx-bumps",
+          "bytes": 619333,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "car-turn",
+          "bytes": 407048,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "cat-girl",
+          "bytes": 653392,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "cows",
+          "bytes": 648346,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "drift-chicane",
+          "bytes": 198857,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "drone",
+          "bytes": 575127,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "gold-fish",
+          "bytes": 479595,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "schoolgirls",
+          "bytes": 470694,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "surf",
+          "bytes": 240495,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        }
+      ]
+    },
+    "nvc_m22_3bit": {
+      "total_bytes": 1867362,
+      "m22_recorded_total_bytes": 1867362,
+      "matches_recorded_total": true,
+      "verified": true,
+      "bundle_sha256": "bde3bd8003937a7088fa8c532ec204cf3b4bfe65ec7395bbeb8ebfa1e5925b7c",
+      "seconds": 387.57935810000345,
+      "sequences": [
+        {
+          "sequence": "bmx-bumps",
+          "bytes": 277977,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "car-turn",
+          "bytes": 165182,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "cat-girl",
+          "bytes": 309029,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "cows",
+          "bytes": 283713,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "drift-chicane",
+          "bytes": 72300,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "drone",
+          "bytes": 253994,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "gold-fish",
+          "bytes": 191592,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "schoolgirls",
+          "bytes": 215318,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "surf",
+          "bytes": 98257,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        }
+      ]
+    },
+    "nvc_m22_4bit": {
+      "total_bytes": 2970488,
+      "m22_recorded_total_bytes": 2970488,
+      "matches_recorded_total": true,
+      "verified": true,
+      "bundle_sha256": "9adb30be5ace0206cb70f6379beb378afb69c1321f603c7dea16f353d6b424ca",
+      "seconds": 370.8302732000011,
+      "sequences": [
+        {
+          "sequence": "bmx-bumps",
+          "bytes": 438517,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "car-turn",
+          "bytes": 271489,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "cat-girl",
+          "bytes": 471521,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "cows",
+          "bytes": 449528,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "drift-chicane",
+          "bytes": 125984,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "drone",
+          "bytes": 401085,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "gold-fish",
+          "bytes": 323375,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "schoolgirls",
+          "bytes": 329936,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "surf",
+          "bytes": 159053,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        }
+      ]
+    },
+    "nvc_m22_5bit": {
+      "total_bytes": 4247581,
+      "m22_recorded_total_bytes": 4247581,
+      "matches_recorded_total": true,
+      "verified": true,
+      "bundle_sha256": "e01aac7d709bed7fb520510d03aedf6bbd5ed257fe8925121a24060a1bb9c9d1",
+      "seconds": 371.92076220001036,
+      "sequences": [
+        {
+          "sequence": "bmx-bumps",
+          "bytes": 613036,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "car-turn",
+          "bytes": 402075,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "cat-girl",
+          "bytes": 647888,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "cows",
+          "bytes": 642196,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "drift-chicane",
+          "bytes": 196837,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "drone",
+          "bytes": 569345,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "gold-fish",
+          "bytes": 473607,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "schoolgirls",
+          "bytes": 465565,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        },
+        {
+          "sequence": "surf",
+          "bytes": 237032,
+          "bytes_identical_to_research": true,
+          "reconstruction_identical_to_research": true,
+          "decode_bit_exact": true
+        }
+      ]
+    }
+  },
+  "all_verified": true
+}

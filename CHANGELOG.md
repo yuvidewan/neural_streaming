@@ -13,6 +13,63 @@ the time.
 
 ---
 
+## 2026-09-16 — Stage 0: the H.264 scoreboard, and the video codec promoted into `nvc.video` (GATE MET)
+
+The first two items of `PARITY_ROADMAP.md` Stage 0. Neither changes a single coded
+byte; both change what the project can measure and ship.
+
+### The scoreboard (`scripts/benchmark_parity.py`, `outputs/benchmarks/parity_s0/`)
+
+One pass on DAVIS TEST: every codec saw the same frames and was scored by the same
+code on the 8-bit pixels a decoder delivers. Against default `libx264` the M22 codec
+has a **BD-rate of +450.7% on PSNR and +378.3% on MS-SSIM** (~5.5x the bits). The
+"4.8x" quoted since 15 September was only the 3-bit point: the gap widens with
+quality, because each rate doubling buys this codec 1.3 dB against H.264's 2.8 dB.
+Forcing x264 into this codec's GOP structure still leaves +300.5%.
+
+Two things the run found. The August comparison had scored H.264 and NVC with
+different PSNR definitions (all four common conventions are now reported;
++451% to +507%, same conclusion). And `nvc.evaluation.perceptual_metrics.msssim`
+read up to +0.005 too high on channels-last CUDA tensors, which was fixed in
+`8968b8e`. No earlier result was affected.
+
+### The promotion (`src/nvc/video/`)
+
+The video codec lived only in `scripts/`, assembled at run time by `importlib`, and
+rebuilt its state from TRAIN data on every run. It is now a package:
+
+- `nvc.video.motion`, `.container`, `.entropy`: the inference paths of M10H, M10L,
+  M11 and M13, ported with the arithmetic unchanged.
+- `nvc.video.bundle.CodecBundle`: one file per operating point holding everything
+  the codec needs. It is loaded with `weights_only=True` and recomputes every
+  identity on load, so a drifted bundle is refused.
+- `nvc.video.VideoCodec`, plus `nvc.encode(frames, bundle)` and
+  `nvc.decode(data, bundle)`.
+- Hardening the research reader lacked: quantization-block sizes are checked
+  against the latent channel count, decoded motion vectors are range-checked, and
+  a stream is refused before any payload is read unless its structure and all
+  three identities match the bundle.
+
+`scripts/export_codec_bundle.py` froze six bundles (deployed and M22, at 5/4/3 bits),
+cross-checking each identity against the research rig's own.
+`scripts/verify_promoted_codec.py` then ran the package and the research path side
+by side on **all 9 DAVIS TEST sequences for all 6 bundles: 54 of 54 streams are
+byte-identical, reconstructions are identical, package decode is bit-exact, and
+every total equals M22 Phase 19's recorded bytes** (1,900,744 / 3,009,891 /
+4,292,887 deployed; 1,867,362 / 2,970,488 / 4,247,581 M22).
+
+`tests/test_video_codec.py` (25 tests) pins the same contract on a miniature codec
+in seconds. Its central test was checked with a negative control: routing prototypes
+through the wrong codebook makes it fail.
+
+The research scripts are unchanged and remain the record of how each piece was
+derived. Bundles (`*.pt`) are regenerable and not committed; `bundles.json` records
+their digests and identities.
+
+**Still open in Stage 0:** CI.
+
+---
+
 ## 2026-09-15 — M22: residual-quantizer freeze-lift (MEANINGFUL, REPLICATES ON DAVIS TEST)
 
 **Source:** M17 measured a real residual oracle gap and called it unimplementable. M18 (intra

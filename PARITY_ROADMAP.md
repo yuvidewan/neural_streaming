@@ -72,7 +72,7 @@ reason this is a 4-6 month plan and not a restart.
 - **The research method** - pre-registered candidates, VAL-B gates, TEST locked
   until candidate lock, provenance hashes, byte-exact reproduction. This is better
   than most published work and transfers unchanged.
-- **The test suite** - 1,534 tests. Most concern the coder, container and data
+- **The test suite** - 1,584 tests. Most concern the coder, container and data
   pipeline, all of which survive.
 
 ### Rebuild
@@ -108,8 +108,10 @@ consecutive milestones with no shipped gain.
   that the earlier comparison scored H.264 and NVC with different PSNR
   definitions, and that `msssim()` read high on channels-last CUDA tensors
   (fixed).
-- [ ] Promote the video codec from `scripts/` into `src/nvc/` so there is one codec,
-  not two. Add `encode()` / `decode()`.
+- [x] Promote the video codec from `scripts/` into `src/nvc/` so there is one codec,
+  not two. Add `encode()` / `decode()` - `nvc.video` with frozen, self-verifying
+  codec bundles, proven byte-identical to the research code on all of DAVIS TEST
+  (`scripts/verify_promoted_codec.py`), 2026-09-16.
 - [x] Fix the decoder hang on malformed containers (unbounded `table_index`) - `33844a6`.
 - [x] Declare dependencies in `pyproject.toml`, add a LICENSE - `9f419a2`.
 - [ ] CI.

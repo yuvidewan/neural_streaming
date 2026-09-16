@@ -48,25 +48,35 @@ reusable, and what has to be rebuilt.
 
 ## Current Development Status
 
-**Milestone 22.** The research pipeline is a working motion-compensated video
-codec: GOP structure, block motion estimation with a losslessly coded motion
-payload, a learned causal entropy model (M11-G16), a 512-entry shared
-codebook, recalibrated coding tables, and a from-scratch range coder writing
-a `.nvct` v2 container. Byte-exact encode/decode round trips are verified on
-every rate point.
+**Milestone 22, and PARITY_ROADMAP Stage 0.** The codec is a working
+motion-compensated video codec: GOP structure, block motion estimation with a
+losslessly coded motion payload, a learned causal entropy model (M11-G16), a
+512-entry shared codebook, recalibrated coding tables, and a from-scratch range
+coder writing a `.nvct` v2 container.
 
-Measured on the full DAVIS test split (719 frames), M22 candidate:
-**0.3170 BPP at 27.93 dB** (3-bit), **0.5043 BPP at 29.01 dB** (4-bit),
-**0.7211 BPP at 29.29 dB** (5-bit).
+Measured on the full DAVIS test split (719 frames) by the Stage 0 scoreboard, M22
+codec, per-frame PSNR averaged per sequence: **0.3170 BPP at 28.31 dB** (3-bit),
+**0.5043 BPP at 29.46 dB** (4-bit), **0.7211 BPP at 29.82 dB** (5-bit). The M22
+milestone report quotes 27.93 / 29.01 / 29.29 dB for the same streams; that is
+per-sequence pooled-MSE PSNR, a different convention (see
+[`outputs/benchmarks/parity_s0/`](outputs/benchmarks/parity_s0/README.md)).
 
 ### Two things to know before reading further
 
-**1. The video codec is not in the installable package.** `src/nvc/` contains
-the autoencoder, quantizer, entropy model, range coder and container - but no
-motion compensation, no GOP, no inter-frame prediction. All of that lives in
-`scripts/m10h_motion_compensation.py` and its siblings, loaded via
-`importlib`. Installing this package gets you the still-image codec.
-Promoting the video codec into `src/nvc/` is the first item on the roadmap.
+**1. The video codec is `nvc.video`.** It was promoted out of the research
+scripts on 2026-09-16 and is proven byte-identical to them on every DAVIS TEST
+sequence at every operating point (`scripts/verify_promoted_codec.py`):
+
+```python
+import nvc
+data = nvc.encode(frames, "outputs/codec_bundles/nvc_m22_3bit.pt")   # [N, 3, H, W] in [0, 1]
+frames_hat = nvc.decode(data, "outputs/codec_bundles/nvc_m22_3bit.pt")
+```
+
+A **codec bundle** freezes everything one operating point needs (autoencoder,
+grids, context model, codebooks, motion tables) and checks its own identities on
+load. Build them with `scripts/export_codec_bundle.py`. The research scripts in
+`scripts/` stay as the record of how each piece was derived.
 
 **2. The model is a plain autoencoder, not a compression architecture.**
 593,411 parameters; `Conv/ReLU` encoder and `ConvTranspose/ReLU` decoder. No
@@ -175,17 +185,21 @@ Implemented:
   out (not deleted, not callable), purely for reference - see "Milestone
   8B" under "Entropy Coding & the .nvc Bitstream" below.
 
-**Not implemented yet** (do not assume any of this works):
+**Not implemented yet** (do not assume any of this works). This list dates
+from Milestone 8A; items since delivered are marked, not deleted:
 - Variational latents (mu/logvar, KL divergence) - the current model is a
   plain deterministic autoencoder
-- Learned entropy models, hyperpriors, context or autoregressive models -
-  the entropy model is a static counted table
+- Hyperpriors - still missing (PARITY_ROADMAP Stage 2). *Delivered since:* a
+  learned causal context model (M10K/M11-G16) replaced the static tables for
+  P-frame residuals; I-frames still use static per-channel tables.
 - A same-epoch-budget QAT-vs-baseline control run (needed to separate "the
   noise relaxation helped" from "more training helped" - see Milestone 8A's
   "Known limitations")
-- Inter-frame / temporal prediction, so this codes still frames, not video
-- Training on Vimeo-90K - the data pipeline exists, but no training run has
-  used it yet; the current checkpoint is still DAVIS-only
+- ~~Inter-frame / temporal prediction~~ - *delivered:* motion-compensated
+  P-frames (M10H), now in `nvc.video`
+- ~~Training on Vimeo-90K~~ - *delivered:* the checkpoint lineage starts from
+  Vimeo-90K training (`vimeo_epoch17`); the deployed M10F weights were then
+  fine-tuned on DAVIS TRAIN
 - Video reassembly
 - Perceptual/adversarial/SSIM/rate losses - training uses plain MSE only
 - VMAF / LPIPS perceptual metrics (MS-SSIM is implemented as of Milestone 7)
@@ -246,7 +260,10 @@ Implemented:
 
 Target core model: a Variational Autoencoder (VAE) with simple temporal
 conditioning between frames, plus quantization and entropy coding for a real
-`.nvc` bitstream. **Current state (Milestone 4):** the Encoder/Decoder boxes
+`.nvc` bitstream. *(Historical - this section describes the Milestone 4-6
+still-image design. The current codec adds motion compensation and a learned
+context model; see `nvc.video` and "Current Development Status" above.)*
+**Current state (Milestone 4):** the Encoder/Decoder boxes
 are implemented as a deterministic (non-variational) baseline - see
 "Baseline Autoencoder" below - trained with plain MSE. As of Milestone 6
 **every box in this diagram is implemented for still frames**, including

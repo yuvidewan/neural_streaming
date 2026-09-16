@@ -1,0 +1,148 @@
+{
+  "bundles": {
+    "nvc_deployed_5bit": {
+      "file": "nvc_deployed_5bit.pt",
+      "sha256": "97081c12c6cff9d2aaa2528b7d9b20bd87c1480ade36b1e48796c8fe0d4ad8a0",
+      "bytes": 2720056,
+      "bits": 5,
+      "arm": "deployed",
+      "identities": {
+        "intra": "8fadd1ca200c033b",
+        "residual": "ec858dee10f8a955",
+        "motion": "d7e7b237b6451885",
+        "calibration_signature": "928411732c587518",
+        "autoencoder_sha256": "d13768584bd27314d48190efe224d41383d23a4cb42c8c84642938379925d043"
+      },
+      "provenance": {
+        "arm": "deployed",
+        "description": "M10H + M11-G16 + K=512 + M13 recalibrated tables + M14 motion table",
+        "autoencoder_checkpoint": "outputs/m10f_lambda_boundary/lambda_3.0e-04_seed42/best.pt",
+        "autoencoder_checkpoint_sha256": "b35411b5f726f561aaa9f2ef59db88bbec0a8695efe8537b3a0c2f1897ac16b6",
+        "calibration_split": "train",
+        "exported_at_commit": "1bc6bdb",
+        "exported_utc": "2026-09-16T14:46:14.382257+00:00"
+      }
+    },
+    "nvc_m22_5bit": {
+      "file": "nvc_m22_5bit.pt",
+      "sha256": "e01aac7d709bed7fb520510d03aedf6bbd5ed257fe8925121a24060a1bb9c9d1",
+      "bytes": 2720063,
+      "bits": 5,
+      "arm": "m22",
+      "identities": {
+        "intra": "8fadd1ca200c033b",
+        "residual": "1beacb80413dda69",
+        "motion": "d7e7b237b6451885",
+        "calibration_signature": "a4d91238650a18dc",
+        "autoencoder_sha256": "d13768584bd27314d48190efe224d41383d23a4cb42c8c84642938379925d043"
+      },
+      "provenance": {
+        "arm": "m22",
+        "description": "deployed stack with M22's locked symmetric_p01 residual grid and its refitted M10K/G16/K=512/M13 stack",
+        "m22_checkpoint": "outputs/m22_residual_freeze_lift/checkpoints/m22_symmetric_p01_5bit.pt",
+        "m22_checkpoint_sha256": "5b03740aef4091ead9ec5adeb9e87de8eb31ba980f110015dca125493d97b20b",
+        "autoencoder_checkpoint": "outputs/m10f_lambda_boundary/lambda_3.0e-04_seed42/best.pt",
+        "autoencoder_checkpoint_sha256": "b35411b5f726f561aaa9f2ef59db88bbec0a8695efe8537b3a0c2f1897ac16b6",
+        "calibration_split": "train",
+        "exported_at_commit": "1bc6bdb",
+        "exported_utc": "2026-09-16T14:46:14.502038+00:00"
+      }
+    },
+    "nvc_deployed_4bit": {
+      "file": "nvc_deployed_4bit.pt",
+      "sha256": "0190e502e40d6b786f9bb644a6ba69ff5fec651bad64582da449e3441dfb8814",
+      "bytes": 2578680,
+      "bits": 4,
+      "arm": "deployed",
+      "identities": {
+        "intra": "14c4b8bf40056ca1",
+        "residual": "be872c2beebd2f9b",
+        "motion": "d7e7b237b6451885",
+        "calibration_signature": "eab9082596c6f980",
+        "autoencoder_sha256": "d13768584bd27314d48190efe224d41383d23a4cb42c8c84642938379925d043"
+      },
+      "provenance": {
+        "arm": "deployed",
+        "description": "M10H + M11-G16 + K=512 + M13 recalibrated tables + M14 motion table",
+        "autoencoder_checkpoint": "outputs/m10f_lambda_boundary/lambda_3.0e-04_seed42/best.pt",
+        "autoencoder_checkpoint_sha256": "b35411b5f726f561aaa9f2ef59db88bbec0a8695efe8537b3a0c2f1897ac16b6",
+        "calibration_split": "train",
+        "exported_at_commit": "1bc6bdb",
+        "exported_utc": "2026-09-16T14:48:11.515841+00:00"
+      }
+    },
+    "nvc_m22_4bit": {
+      "file": "nvc_m22_4bit.pt",
+      "sha256": "9adb30be5ace0206cb70f6379beb378afb69c1321f603c7dea16f353d6b424ca",
+      "bytes": 2578687,
+      "bits": 4,
+      "arm": "m22",
+      "identities": {
+        "intra": "14c4b8bf40056ca1",
+        "residual": "c7cd664a2bd54006",
+        "motion": "d7e7b237b6451885",
+        "calibration_signature": "17951a5dd2863f4a",
+        "autoencoder_sha256": "d13768584bd27314d48190efe224d41383d23a4cb42c8c84642938379925d043"
+      },
+      "provenance": {
+        "arm": "m22",
+        "description": "deployed stack with M22's locked symmetric_p01 residual grid and its refitted M10K/G16/K=512/M13 stack",
+        "m22_checkpoint": "outputs/m22_residual_freeze_lift/checkpoints/m22_symmetric_p01_4bit.pt",
+        "m22_checkpoint_sha256": "45e66a6eb4f998fb7cff2efe78512faf0e2b56813b1bf8d46cd72f663e2aae8c",
+        "autoencoder_checkpoint": "outputs/m10f_lambda_boundary/lambda_3.0e-04_seed42/best.pt",
+        "autoencoder_checkpoint_sha256": "b35411b5f726f561aaa9f2ef59db88bbec0a8695efe8537b3a0c2f1897ac16b6",
+        "calibration_split": "train",
+        "exported_at_commit": "1bc6bdb",
+        "exported_utc": "2026-09-16T14:48:11.624269+00:00"
+      }
+    },
+    "nvc_deployed_3bit": {
+      "file": "nvc_deployed_3bit.pt",
+      "sha256": "5713a5d372386b0768ceb61f5a162e75a03adf1394ec6a1a364a3719b451713a",
+      "bytes": 2507960,
+      "bits": 3,
+      "arm": "deployed",
+      "identities": {
+        "intra": "b523711d2e982057",
+        "residual": "d2d61d66a50cad8a",
+        "motion": "d7e7b237b6451885",
+        "calibration_signature": "95a513136a72daf0",
+        "autoencoder_sha256": "d13768584bd27314d48190efe224d41383d23a4cb42c8c84642938379925d043"
+      },
+      "provenance": {
+        "arm": "deployed",
+        "description": "M10H + M11-G16 + K=512 + M13 recalibrated tables + M14 motion table",
+        "autoencoder_checkpoint": "outputs/m10f_lambda_boundary/lambda_3.0e-04_seed42/best.pt",
+        "autoencoder_checkpoint_sha256": "b35411b5f726f561aaa9f2ef59db88bbec0a8695efe8537b3a0c2f1897ac16b6",
+        "calibration_split": "train",
+        "exported_at_commit": "1bc6bdb",
+        "exported_utc": "2026-09-16T14:50:12.940406+00:00"
+      }
+    },
+    "nvc_m22_3bit": {
+      "file": "nvc_m22_3bit.pt",
+      "sha256": "bde3bd8003937a7088fa8c532ec204cf3b4bfe65ec7395bbeb8ebfa1e5925b7c",
+      "bytes": 2507967,
+      "bits": 3,
+      "arm": "m22",
+      "identities": {
+        "intra": "b523711d2e982057",
+        "residual": "e48a24b89db049a9",
+        "motion": "d7e7b237b6451885",
+        "calibration_signature": "cf0db4af8a31f5ea",
+        "autoencoder_sha256": "d13768584bd27314d48190efe224d41383d23a4cb42c8c84642938379925d043"
+      },
+      "provenance": {
+        "arm": "m22",
+        "description": "deployed stack with M22's locked symmetric_p01 residual grid and its refitted M10K/G16/K=512/M13 stack",
+        "m22_checkpoint": "outputs/m22_residual_freeze_lift/checkpoints/m22_symmetric_p01_3bit.pt",
+        "m22_checkpoint_sha256": "f4046d07efcda945ab40bf59c88a54cfee03cd47262465801b02bf062c3d9a1a",
+        "autoencoder_checkpoint": "outputs/m10f_lambda_boundary/lambda_3.0e-04_seed42/best.pt",
+        "autoencoder_checkpoint_sha256": "b35411b5f726f561aaa9f2ef59db88bbec0a8695efe8537b3a0c2f1897ac16b6",
+        "calibration_split": "train",
+        "exported_at_commit": "1bc6bdb",
+        "exported_utc": "2026-09-16T14:50:13.059545+00:00"
+      }
+    }
+  }
+}

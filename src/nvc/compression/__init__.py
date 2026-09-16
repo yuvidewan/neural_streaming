@@ -17,9 +17,9 @@
                     decode_frame_payload / build_stream_header)
 - storage_analysis: theoretical raw tensor storage arithmetic
 
-Learned entropy models, hyperpriors, context/autoregressive models, and
-inter-frame prediction are NOT implemented - the entropy model here is a
-static table counted from calibration data.
+This is the still-image layer. The video codec - motion compensation, the
+learned causal context model and the `.nvct` container - is `nvc.video`, which
+builds on the quantizer, tables and range coder defined here.
 """
 
 from .calibration import (

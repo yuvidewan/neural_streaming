@@ -1,5 +1,12 @@
 # From Minor Project to Adopted Technology: A Production Roadmap
 
+> **Status note (2026-09-16).** This document was written around Milestone 8 and
+> is kept as written. Several of its "not done" items have since been delivered:
+> the codec is now a motion-compensated *video* codec (`nvc.video`), MS-SSIM is
+> implemented and reported, and the test suite is well past 1,500 tests. The
+> project's objective has also moved to H.264/H.265 parity - the current plan is
+> [`PARITY_ROADMAP.md`](PARITY_ROADMAP.md).
+
 This document picks up where `README.md`'s 12-week academic roadmap leaves off. It's organized in four parts, roughly in order of both difficulty and time horizon:
 
 1. **[Where the project actually stands today](#1-where-the-project-actually-stands-today)** — an honest baseline, so everything below is calibrated against reality, not aspiration.
