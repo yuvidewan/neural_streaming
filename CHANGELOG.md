@@ -13,6 +13,73 @@ the time.
 
 ---
 
+## 2026-09-23 — Stage 1 begins: a real analysis/synthesis transform
+
+Stage 0 established that the gap to H.264 is in the transform, not the entropy
+coder. This is the replacement transform. It is **not trained yet** — no coded byte
+changes, no BD-rate moves, and the deployed codec is untouched. What exists is the
+architecture, under test, ready for the training run that is the actual long pole of
+the stage.
+
+### `nvc.models.gdn` — GDN and IGDN
+
+Generalized Divisive Normalization (Ballé, Laparra and Simoncelli 2016): each
+channel is divided by a norm pooled across all channels at the same spatial
+position, `y_i = x_i / sqrt(beta_i + sum_j gamma_ij x_j^2)`. IGDN multiplies by the
+same root. Unlike ReLU it is smooth and it mixes channels, which is the point — it
+removes statistical dependence between channels rather than making the network
+represent it, so the entropy coder's per-channel factorized model becomes a less
+wrong assumption about the latent.
+
+`beta` and `gamma` are stored as square roots with an asymmetric lower bound
+(`LowerBound`): the gradient is blocked only when it would push a parameter further
+below the floor, never when it would bring it back. A plain `torch.clamp` pins a
+parameter at the floor permanently, and a negative value under the square root is a
+NaN several hours into a training run.
+
+### `nvc.models.residual_transform` — the transform itself
+
+`AnalysisTransform` / `SynthesisTransform` / `ResidualGDNAutoencoder`: the same
+four-stage stride-16 structure, with GDN in place of ReLU, identity-initialized
+residual blocks between the downsampling stages, and 192 channels instead of 32/64.
+
+**8,437,827 parameters against the baseline's 593,411** — inside the 8–12M band
+Stage 1 asks for, and pinned by a test so the defaults cannot drift out of it.
+
+Three things are deliberately unchanged, because Stage 1's lever is the transform
+and nothing else: stride 16 exactly (the latent grids, the G16 context model, the
+motion block size and `nvc.video.codec.AUTOENCODER_STRIDE` are all written against
+it), the sigmoid that keeps reconstructions in `[0, 1]`, and the
+`encode`/`decode`/`config_dict`/`num_parameters` surface, so existing training,
+checkpoint and evaluation code takes the new model without edits. No BatchNorm: a
+codec cannot have a frame's latent depend on what else was in the batch.
+
+### Tests (`tests/test_residual_gdn_transform.py`, 34 tests)
+
+Beyond shapes: GDN with zero gamma is exactly the identity (which pins the pedestal
+arithmetic); it contracts large activations more than small ones, and IGDN expands
+where it contracts; parameters stay non-negative after a hostile update; every
+parameter receives a finite gradient; twenty Adam steps reduce the loss without a
+NaN. The residual block is the identity at initialization, with a negative control
+that it stops being one once trained.
+
+One honest caveat, tested to a bound rather than asserted away: a frame's latent is
+bit-identical across repeated calls, but encoding it inside a batch of 4 differs
+from encoding it alone in the last couple of mantissa bits (~7e-9). That is
+PyTorch's 3x3 and 1x1 convolution kernels choosing a different code path per batch
+size, not this model's arithmetic — the baseline's 5x5 stride-2 convolutions happen
+not to. It is ~7 orders of magnitude below one quantizer step and the codec encodes
+a frame at a time, so it cannot change a symbol; the test bounds it at 1e-6, where
+real batch leakage would land far above.
+
+### What is not done
+
+Training on full Vimeo-90k (~91,701 sequences; the deployed checkpoints saw 10
+chunks) and the intra-only BD-rate gate. Until those run, this is a better
+architecture on paper only.
+
+---
+
 ## 2026-09-16 — Stage 0: the H.264 scoreboard, and the video codec promoted into `nvc.video` (GATE MET)
 
 The first two items of `PARITY_ROADMAP.md` Stage 0. Neither changes a single coded

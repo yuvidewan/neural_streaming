@@ -127,6 +127,18 @@ stage reports its BD-rate against this same harness.
 Replace ReLU with GDN/IGDN, add residual blocks, scale to ~8-12M parameters
 (192-256 channels). Train on full Vimeo-90k with the existing RD objective.
 
+- [x] The architecture - `nvc.models.gdn` (GDN/IGDN with the bounded
+  reparameterization) and `nvc.models.residual_transform`
+  (`AnalysisTransform`, `SynthesisTransform`, `ResidualGDNAutoencoder`).
+  8,437,827 parameters at the default 192 channels, against the baseline's
+  593,411. Stride 16, the `[0, 1]` output range and
+  `encode`/`decode`/`config_dict`/`num_parameters` are all unchanged, so the
+  existing training, checkpoint and evaluation paths take it as-is.
+- [ ] Train it on full Vimeo-90k (~91,701 sequences; the deployed checkpoints
+  saw 10 chunks). This is the long pole of the stage and needs the GPU budget
+  in section 4.
+- [ ] Measure the gate.
+
 **Gate:** intra-only BD-rate vs the current intra codec. Expect the largest
 single jump of the whole plan here.
 

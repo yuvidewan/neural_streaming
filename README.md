@@ -87,6 +87,12 @@ codecs that beat H.265 run 10-30M parameters with all of those. This is the
 single biggest reason for the gap in the table above, and the roadmap's
 central bet.
 
+The replacement transform now exists as code — `nvc.models.ResidualGDNAutoencoder`,
+8,437,827 parameters with GDN/IGDN and residual blocks (PARITY_ROADMAP Stage 1).
+It is **not trained and not deployed**: every number on this page still comes from
+the 593k baseline. The Vimeo-90k training run and the intra-only BD-rate gate are
+what would change that.
+
 Implemented:
 - Repository/directory structure
 - Python environment configuration (`requirements.txt`, `pyproject.toml`)
