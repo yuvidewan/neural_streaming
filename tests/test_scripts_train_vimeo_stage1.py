@@ -219,3 +219,107 @@ def test_it_does_not_modify_the_milestone_8b_script(stage1):
         cwd=ROOT, capture_output=True, text=True, check=True).stdout
 
     assert changed.strip() == "", f"M8B script modified: {changed}"
+
+
+# --- the manifest -> loader path ---------------------------------------------------
+
+
+def test_it_builds_loaders_from_a_real_vimeo_sequence_manifest(stage1, tmp_path):
+    """The bug this exists for: Vimeo chunks produce a SEQUENCE manifest
+    (`sequence_id` + `frame_filenames`), and the frame loaders want a
+    `frame_directory` per item, so `create_train_loader` died with
+    `KeyError: 'frame_directory'` - but only after a 9GB download, an
+    extraction and a symlink pass, none of which the other tests reach.
+
+    This builds a miniature Vimeo tree, runs it through the same
+    `build_chunk_manifests` the script uses, and constructs the loaders from
+    the result. It would have caught that in seconds.
+    """
+    from helpers import make_vimeo_dataset
+
+    chunks = stage1._load_script("train_vimeo_qat_combined")
+    root = make_vimeo_dataset(
+        tmp_path / "vimeo",
+        train_sequence_ids=["00001/0001", "00001/0002", "00002/0001"],
+        test_sequence_ids=["00003/0001"],
+        width=64, height=64,
+    )
+    train_manifest, val_manifest = chunks.build_chunk_manifests(
+        root, tmp_path / "vimeo_manifest.json", 42)
+
+    args = _args(stage1, crop_size=32)
+    train_loader, val_loader = stage1.build_loaders(train_manifest, val_manifest, args)
+
+    train_batch = next(iter(train_loader))
+    val_batch = next(iter(val_loader))
+    assert train_batch.shape[1:] == (3, 32, 32)
+    assert val_batch.shape[1:] == (3, 32, 32)
+
+
+def test_the_loaders_are_the_sequence_ones_not_the_frame_ones(stage1):
+    """A static backstop for the same bug: the frame loaders cannot read a
+    Vimeo sequence manifest at all."""
+    source = (ROOT / "scripts" / "train_vimeo_stage1.py").read_text(encoding="utf-8")
+
+    assert "create_sequence_train_loader(" in source
+    assert "create_sequence_test_loader(" in source
+    assert "create_train_loader(" not in source
+    assert "create_val_loader(" not in source
+
+
+# --- chunk reuse ------------------------------------------------------------------
+
+
+def _fake_chunks(stage1, tmp_path, monkeypatch):
+    """The real helper module, with the 9GB download stubbed out."""
+    chunks = stage1._load_script("train_vimeo_qat_combined")
+    calls = []
+    monkeypatch.setattr(chunks, "download_and_extract_chunk",
+                        lambda *a, **k: calls.append(a) or (tmp_path / "downloaded"))
+    return chunks, calls
+
+
+def test_reuse_chunk_skips_the_download_when_frames_are_already_extracted(
+        stage1, tmp_path, monkeypatch):
+    """download_and_extract_chunk wipes its scratch dir first, so without this a
+    crash mid-chunk re-pays the whole 6-10GB download."""
+    from helpers import make_vimeo_dataset
+
+    chunks, calls = _fake_chunks(stage1, tmp_path, monkeypatch)
+    chunk_dir = tmp_path / "chunk_1"
+    make_vimeo_dataset(chunk_dir / "vimeo_settuplet_1",
+                       train_sequence_ids=["00001/0001"], test_sequence_ids=["00003/0001"],
+                       width=64, height=64)
+
+    root = stage1.prepare_chunk(chunks, 1, chunk_dir, _args(stage1, reuse_chunk=True))
+
+    assert calls == [], "downloaded despite the frames already being extracted"
+    assert (root / "00001" / "0001" / "im1.png").is_file()
+
+
+def test_reuse_chunk_is_off_by_default(stage1, tmp_path, monkeypatch):
+    """On Colab the VM is wiped between sessions, so reuse would be a lie."""
+    from helpers import make_vimeo_dataset
+
+    chunks, calls = _fake_chunks(stage1, tmp_path, monkeypatch)
+    chunk_dir = tmp_path / "chunk_1"
+    make_vimeo_dataset(chunk_dir / "vimeo_settuplet_1",
+                       train_sequence_ids=["00001/0001"], test_sequence_ids=["00003/0001"],
+                       width=64, height=64)
+
+    stage1.prepare_chunk(chunks, 1, chunk_dir, _args(stage1))
+
+    assert len(calls) == 1
+
+
+def test_reuse_chunk_falls_back_to_downloading_a_half_extracted_chunk(
+        stage1, tmp_path, monkeypatch):
+    """An interrupted extraction leaves a directory with no im1.png in it.
+    Training on that would silently use a fraction of the chunk."""
+    chunks, calls = _fake_chunks(stage1, tmp_path, monkeypatch)
+    chunk_dir = tmp_path / "chunk_1"
+    (chunk_dir / "partial").mkdir(parents=True)
+
+    stage1.prepare_chunk(chunks, 1, chunk_dir, _args(stage1, reuse_chunk=True))
+
+    assert len(calls) == 1

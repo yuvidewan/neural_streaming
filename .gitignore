@@ -98,6 +98,11 @@ outputs/benchmarks/*
 # caught by *.pt below) plus progress_*.json/history.json, which are not.
 # Auto-created by scripts/train_vimeo_qat_combined.py - no .gitkeep needed.
 outputs/qat_combined/
+# Stage 1 Vimeo training output (scripts/train_vimeo_stage1.py): checkpoints,
+# progress.json, history.json, and the per-chunk Vimeo manifests - which are
+# ~170k lines of regenerable run artifact, not an analysis product. All of it
+# is rebuilt by re-running the script, so none of it belongs in git.
+outputs/stage1_vimeo/
 
 # Per-step training telemetry from the Milestone 10 experiments
 # (scripts/m10*.py). One record per optimizer step x 18,120 steps ~= 9 MB per

@@ -71,6 +71,36 @@ rather than copied or modified) and 8 for the notebook (every code cell parses, 
 flag it passes exists in a parser it calls, the output directory cannot collide with
 the baseline runs' `progress.json`).
 
+### Two bugs the first real chunk found
+
+The trial run on chunk 1 (locally, not Colab — the machine already had the Kaggle
+token, symlink permission and the disk) got through download, extraction,
+symlinking and the split (8,958 train / 995 test sequences) and then died:
+
+- **`KeyError: 'frame_directory'`.** Vimeo chunks produce a *sequence* manifest
+  (`sequence_id` + `frame_filenames`), and the script used the frame loaders,
+  which want a `frame_directory` per item. `train_vimeo_qat_combined.py` uses
+  `create_sequence_*_loader`; this now does too. The tests missed it because they
+  passed loaders in directly, so nothing exercised the manifest→loader path — it
+  is now `build_loaders()` with a test that builds a miniature Vimeo tree, runs it
+  through the same `build_chunk_manifests`, and constructs the loaders.
+  Negative-controlled: the frame loader raises exactly that `KeyError` on that
+  manifest.
+- **A re-run re-downloads the whole chunk.** `download_and_extract_chunk` wipes
+  its scratch directory before downloading, so a crash mid-chunk costs the full
+  6–10GB again — and `--keep-chunk` does not help, since it only governs deletion
+  *after* training. New `--reuse-chunk` skips the download when the frames are
+  already extracted, falling back to downloading if it finds a half-extracted tree
+  rather than silently training on a fraction of a chunk. Off by default: on Colab
+  the VM is wiped between sessions, so reuse would be a lie.
+
+With both fixed the chunk trains: 3,920 steps per epoch at batch 16 (8,958
+sequences x 7 frames), ~3.3 it/s on the RTX 5060, so about 20 minutes an epoch.
+
+One operational note from the same run: the 9GB download dropped its connection
+once and resumed. The Kaggle CLI retries up to 5 times on its own, but a ten-chunk
+run wants supervision rather than fire-and-forget.
+
 ### Not done
 
 The run itself, the `lambda` sweep, and recalibrating the intra grids, G16 context

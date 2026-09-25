@@ -66,7 +66,10 @@ from typing import Any
 
 import torch
 
-from nvc.data.loaders import create_train_loader, create_val_loader
+from nvc.data.loaders import (
+    create_sequence_test_loader,
+    create_sequence_train_loader,
+)
 from nvc.models import ResidualGDNAutoencoder
 from nvc.training import (
     QuantizationNoise,
@@ -142,6 +145,11 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
 
     parser.add_argument("--kaggle-dataset-owner", default="wangsally")
     parser.add_argument("--kaggle-dataset-prefix", default="vimeo-90k")
+    parser.add_argument("--reuse-chunk", action="store_true",
+                        help="Skip the download when a chunk's frames are already extracted "
+                             "in --scratch-dir. Pairs with --keep-chunk to make a re-run after "
+                             "a crash cost nothing. Off by default: on Colab the VM is wiped "
+                             "between sessions, so the data is never there to reuse.")
     parser.add_argument("--keep-chunk", action="store_true",
                         help="Do not delete each chunk after training on it. Needs ~89GB free "
                              "for the full set, so off by default.")
@@ -183,6 +191,60 @@ def build_rate_estimator(args) -> RateEstimator | None:
         noise.scale, bits=noise.bits, mode=noise.mode,
         track_scale=args.rate_track_scale, scale_momentum=args.rate_scale_momentum,
     )
+
+
+def prepare_chunk(chunks, chunk_number: int, chunk_dir: Path, args) -> Path:
+    """Get this chunk's frames on disk, and return the folder holding its groups.
+
+    `download_and_extract_chunk` wipes its scratch directory before downloading,
+    so an interrupted run re-pays the whole 6-10GB download even when the frames
+    are still sitting there. That is the right default on Colab, where the VM is
+    wiped between sessions anyway, but locally it is minutes of wasted bandwidth
+    every time a chunk crashes - hence --reuse-chunk.
+
+    Reuse is only taken when the directory actually holds an extracted chunk:
+    `_find_sequences_source_root` locates it by finding an im1.png, and raises if
+    there is none, in which case this falls through to a normal download rather
+    than training on a half-extracted tree.
+    """
+    if args.reuse_chunk and chunk_dir.is_dir():
+        try:
+            group_root = chunks._find_sequences_source_root(chunk_dir)
+        except RuntimeError:
+            print(f"[chunk {chunk_number}] --reuse-chunk: nothing extracted at {chunk_dir}, "
+                  "downloading", flush=True)
+        else:
+            print(f"[chunk {chunk_number}] reusing already-extracted frames at {group_root}",
+                  flush=True)
+            return group_root
+    return chunks.download_and_extract_chunk(
+        chunk_number, chunk_dir,
+        dataset_owner=args.kaggle_dataset_owner,
+        dataset_prefix=args.kaggle_dataset_prefix)
+
+
+def build_loaders(train_manifest: Path, val_manifest: Path, args):
+    """Sequence loaders, not the frame ones.
+
+    `build_chunk_manifests` writes a Vimeo SEQUENCE manifest - items carry
+    `sequence_id` and `frame_filenames` - and `FrameDataset` cannot read one: it
+    wants a `frame_directory` per item and dies with `KeyError: 'frame_directory'`.
+    That failure only surfaces after a 9GB download, an extraction and a symlink
+    pass, which is why this is a function with a test rather than four lines
+    inline in `main`.
+
+    The "val" loader is the chunk's own test split. It exists only to give this
+    chunk a validation signal and is discarded with the chunk; it is not the
+    official Vimeo split and not a benchmark. The real comparison is DAVIS, which
+    nothing here trains on.
+    """
+    train_loader = create_sequence_train_loader(
+        train_manifest, batch_size=args.batch_size, num_workers=args.num_workers,
+        seed=args.seed, crop_size=args.crop_size)
+    val_loader = create_sequence_test_loader(
+        val_manifest, batch_size=args.batch_size, num_workers=args.num_workers,
+        crop_size=args.crop_size)
+    return train_loader, val_loader
 
 
 def build_optimizer(model, rate_estimator, args) -> torch.optim.Optimizer:
@@ -349,22 +411,15 @@ def main(argv: list[str] | None = None) -> int:
             print(f"[chunk {chunk_number}] already done, skipping", flush=True)
             continue
 
-        group_root = chunks.download_and_extract_chunk(
-            chunk_number, scratch_dir / f"chunk_{chunk_number}",
-            dataset_owner=args.kaggle_dataset_owner,
-            dataset_prefix=args.kaggle_dataset_prefix)
+        group_root = prepare_chunk(
+            chunks, chunk_number, scratch_dir / f"chunk_{chunk_number}", args)
         chunks.relink_sequences_to_chunk(group_root, vimeo_root)
         sequence_ids = chunks.discover_complete_sequence_ids(vimeo_root / "sequences")
         chunks.write_chunk_split_lists(vimeo_root, sequence_ids, args.seed)
         train_manifest, val_manifest = chunks.build_chunk_manifests(
             vimeo_root, output_dir / "vimeo_manifest.json", args.seed)
 
-        train_loader = create_train_loader(
-            train_manifest, batch_size=args.batch_size, num_workers=args.num_workers,
-            seed=args.seed, crop_size=args.crop_size)
-        val_loader = create_val_loader(
-            val_manifest, batch_size=args.batch_size, num_workers=args.num_workers,
-            crop_size=args.crop_size)
+        train_loader, val_loader = build_loaders(train_manifest, val_manifest, args)
 
         start_epoch, best_val_loss = train_one_chunk(
             model=model, optimizer=optimizer, rate_estimator=rate_estimator,
