@@ -13,7 +13,16 @@ from typing import Any
 
 import torch
 
-from nvc.models import BaselineAutoencoder
+from nvc.models import BaselineAutoencoder, ResidualGDNAutoencoder
+
+# Which class a checkpoint's `architecture` field names. A checkpoint written
+# before Stage 1 existed has no such field, so the default is the baseline and
+# every M1-M22 checkpoint keeps loading exactly as it always has.
+_DEFAULT_ARCHITECTURE = "BaselineAutoencoder"
+_ARCHITECTURES: dict[str, type[torch.nn.Module]] = {
+    "BaselineAutoencoder": BaselineAutoencoder,
+    "ResidualGDNAutoencoder": ResidualGDNAutoencoder,
+}
 
 
 def save_checkpoint(
@@ -50,6 +59,18 @@ def save_checkpoint(
         "history": history,
         "model_config": model_config,
     }
+    # Written only for a non-default architecture, so a baseline checkpoint is
+    # still byte-for-byte what this function has always produced (see the note
+    # about `extra` above - same reasoning). `model_config` is splatted into the
+    # constructor, so the class name cannot live inside it.
+    architecture = type(model).__name__
+    if architecture != _DEFAULT_ARCHITECTURE:
+        if architecture not in _ARCHITECTURES:
+            raise ValueError(
+                f"{architecture} is not a known architecture, so a checkpoint of it "
+                f"could not be loaded back. Add it to checkpoint._ARCHITECTURES."
+            )
+        document["architecture"] = architecture
     if extra is not None:
         document["extra"] = extra
     torch.save(document, path)
@@ -74,20 +95,31 @@ def load_model_from_checkpoint(
     *,
     device: str | torch.device | None = None,
     eval_mode: bool = True,
-) -> tuple[BaselineAutoencoder, dict[str, Any]]:
-    """Rebuild a trained BaselineAutoencoder from a checkpoint.
+) -> tuple[torch.nn.Module, dict[str, Any]]:
+    """Rebuild a trained autoencoder from a checkpoint.
 
     The architecture comes from the checkpoint's own saved `model_config`,
     so callers never have to re-specify the training-time arguments (e.g.
     --latent-channels). Returns (model, checkpoint) so callers can also read
     `epoch`/`history` without loading the file twice.
 
+    WHICH class gets built comes from the checkpoint's `architecture` field.
+    Checkpoints written before Stage 1 existed do not have one and load as
+    `BaselineAutoencoder`, exactly as before - so every M1-M22 checkpoint, and
+    every script that loads one, is unaffected.
+
     This is the single model-loading path shared by every inference-side
     consumer (reconstruction, latent analysis, quantization experiments) -
     it is deliberately not reimplemented per script.
     """
     checkpoint = load_checkpoint(path, map_location=device)
-    model = BaselineAutoencoder(**checkpoint["model_config"])
+    architecture = checkpoint.get("architecture", _DEFAULT_ARCHITECTURE)
+    if architecture not in _ARCHITECTURES:
+        raise ValueError(
+            f"Checkpoint {path} names an unknown architecture {architecture!r}; "
+            f"known: {sorted(_ARCHITECTURES)}"
+        )
+    model = _ARCHITECTURES[architecture](**checkpoint["model_config"])
     model.load_state_dict(checkpoint["model_state_dict"])
     if device is not None:
         model = model.to(device)

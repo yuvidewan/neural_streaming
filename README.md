@@ -88,10 +88,13 @@ single biggest reason for the gap in the table above, and the roadmap's
 central bet.
 
 The replacement transform now exists as code — `nvc.models.ResidualGDNAutoencoder`,
-8,437,827 parameters with GDN/IGDN and residual blocks (PARITY_ROADMAP Stage 1).
-It is **not trained and not deployed**: every number on this page still comes from
-the 593k baseline. The Vimeo-90k training run and the intra-only BD-rate gate are
-what would change that.
+8,437,827 parameters with GDN/IGDN and residual blocks (PARITY_ROADMAP Stage 1) —
+along with the path to train it: `scripts/train_vimeo_stage1.py` and
+`colab_train_stage1.ipynb`. It is **not trained and not deployed**: every number on
+this page still comes from the 593k baseline. What would change that is the
+Vimeo-90k run, recalibrating the intra grids/context model/codebooks against the new
+latent, and then the intra-only BD-rate gate — against the current codec's
+**+176.2%** in [`outputs/benchmarks/parity_intra/`](outputs/benchmarks/parity_intra/README.md).
 
 Implemented:
 - Repository/directory structure

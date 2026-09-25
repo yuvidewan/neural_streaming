@@ -138,9 +138,21 @@ Replace ReLU with GDN/IGDN, add residual blocks, scale to ~8-12M parameters
   `outputs/benchmarks/parity_intra/`, 2026-09-25. The current codec all-intra is
   **+176.2% BD-rate (PSNR) / +167.6% (MS-SSIM) against x264 all-intra**. A trained
   Stage 1 transform is measured against that number.
-- [ ] Train it on full Vimeo-90k (~91,701 sequences; the deployed checkpoints
+- [x] The training path - `scripts/train_vimeo_stage1.py` (chunked, resumable,
+  both objectives) and `colab_train_stage1.ipynb`, which is a thin wrapper around
+  it. `scripts/train_autoencoder.py` also grew `--architecture stage1`, and
+  checkpoints now record which transform they hold so a Stage 1 checkpoint cannot
+  be loaded back as a baseline one.
+- [ ] Run it on full Vimeo-90k (~91,701 sequences; the deployed checkpoints
   saw 10 chunks). This is the long pole of the stage and needs the GPU budget
-  in section 4.
+  in section 4. Two phases: distortion-only from scratch, then calibrate, then
+  `D + lambda*R` - the rate proxy needs a bin width, and a bin width needs a
+  trained model. `lambda` is unswept and wants a short sweep before ten chunks
+  are committed to one value.
+- [ ] Recalibrate the rest of the codec against the new latent. The intra grids,
+  the G16 context model and the codebooks were all fitted against the baseline
+  transform's latent distribution; a new transform invalidates them, and the gate
+  number means nothing until they are refitted.
 - [ ] Re-run the intra-only scoreboard with the trained transform and compare.
 
 **Gate:** intra-only BD-rate vs the current intra codec. Expect the largest

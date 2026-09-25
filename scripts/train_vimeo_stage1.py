@@ -1,0 +1,394 @@
+"""PARITY_ROADMAP Stage 1 - train the GDN/residual transform on Vimeo-90K.
+
+Chunked, resumable training of `ResidualGDNAutoencoder` (8,437,827 parameters)
+over the ten Kaggle Vimeo-90K chunks. Designed to be driven either from a local
+machine or from `colab_train_stage1.ipynb`, which is a thin wrapper around this
+file: mount Drive, install, run this with `--output-dir` pointed at Drive.
+
+WHY A NEW SCRIPT AND NOT A FLAG ON THE OLD ONE
+-----------------------------------------------
+`train_vimeo_qat_combined.py` trains two BaselineAutoencoder arms (QAT and its
+matched control) and is the record of Milestone 8B. It is not modified here.
+Its chunk machinery - Kaggle download, collision-reconciling extraction,
+symlinking one chunk at a time into `sequences/`, per-chunk split lists,
+manifest building, progress bookkeeping - is reused read-only through the usual
+`_load_script` helper, so there is exactly one implementation of the awkward
+parts and this file only adds what Stage 1 needs.
+
+THE TWO PHASES, AND WHY THERE ARE TWO
+--------------------------------------
+The rate proxy needs a quantization bin width, and a bin width comes from
+calibrating a *trained* model - a from-scratch network has no meaningful latent
+scale to calibrate. So Stage 1 trains the way the baseline lineage did (M7/M8
+distortion-only, then M9+ rate):
+
+  Phase A (default)   distortion only, from scratch.
+      python scripts/train_vimeo_stage1.py --output-dir <dir>
+
+  then calibrate the Phase A result:
+      python scripts/calibrate_quantizer.py --checkpoint <dir>/checkpoints/best.pt \
+          --manifest <a Vimeo train manifest> --bits 4 --mode per_channel \
+          --output <dir>/calibration/stage1_4bit_train.json
+
+  Phase B              D + lambda*R, continuing from Phase A's weights.
+      python scripts/train_vimeo_stage1.py --output-dir <dir> --rate-enabled \
+          --rate-calibration <dir>/calibration/stage1_4bit_train.json \
+          --rate-lambda <value> --rate-track-scale --reset-progress
+
+`--rate-track-scale` is recommended for Phase B for the reason M9F.5 found: with
+a frozen bin width the encoder can lower the proxy rate just by shrinking the
+latent, which the real quantizer (it recalibrates per model) does not reward.
+
+RESUMING
+--------
+Interrupt and re-run at any time. `progress.json` records which chunks are done
+and they are skipped; training continues from `checkpoints/latest.pt`, including
+the optimizer state and the rate estimator's own parameters. This matters more
+than usual here: Colab disconnects, and a full pass over ten chunks is long.
+
+WHAT IT DOES NOT DO
+-------------------
+Measure anything. The Stage 1 gate is intra-only BD-rate from
+`scripts/benchmark_parity.py --gop 1`, against the denominator in
+`outputs/benchmarks/parity_intra/` (+176.2% PSNR for the current codec). A
+checkpoint from this script is an input to that measurement, not a result.
+"""
+
+from __future__ import annotations
+
+import argparse
+import importlib.util
+import json
+import shutil
+import sys
+from pathlib import Path
+from typing import Any
+
+import torch
+
+from nvc.data.loaders import create_train_loader, create_val_loader
+from nvc.models import ResidualGDNAutoencoder
+from nvc.training import (
+    QuantizationNoise,
+    RateEstimator,
+    save_checkpoint,
+    train_one_epoch,
+    train_one_epoch_with_rate,
+    validate_one_epoch,
+    validate_one_epoch_with_rate,
+)
+from nvc.training.checkpoint import load_checkpoint
+from nvc.utils.config import load_default_config
+from nvc.utils.device import get_device
+from nvc.utils.seed import seed_everything
+
+DEFAULT_CHUNKS = list(range(1, 11))
+
+
+def _load_script(name: str):
+    spec = importlib.util.spec_from_file_location(name, Path(__file__).parent / f"{name}.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def build_arg_parser(defaults) -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Train the Stage 1 GDN/residual transform on chunked Vimeo-90K.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "--output-dir", type=Path, default=Path("outputs/stage1_vimeo"),
+        help="Everything this run owns: checkpoints/, progress.json, history.json. "
+             "Point it at Google Drive when running on Colab so a disconnect loses nothing.",
+    )
+    parser.add_argument("--chunks", type=int, nargs="+", default=DEFAULT_CHUNKS,
+                        help="Kaggle chunk numbers to cycle through, in order.")
+    parser.add_argument("--scratch-dir", type=Path, default=Path("/content/vimeo_scratch"),
+                        help="Working area for the chunk being trained on. Wiped per chunk.")
+    parser.add_argument("--vimeo-root", type=Path, default=None,
+                        help="Where sequences/ is symlinked. Defaults to <scratch>/vimeo_root.")
+
+    parser.add_argument("--epochs-per-chunk-max", type=int, default=4,
+                        help="Ceiling per chunk; early stopping usually stops sooner.")
+    parser.add_argument("--early-stop-patience", type=int, default=2)
+    parser.add_argument("--early-stop-min-delta", type=float, default=1e-5)
+    parser.add_argument("--batch-size", type=int, default=16,
+                        help="16 rather than the baseline's 32: the Stage 1 model is 14x larger "
+                             "and peaks near 3 GiB at this batch and crop size.")
+    parser.add_argument("--crop-size", type=int, default=256,
+                        help="Vimeo frames are 448x256; must be divisible by 16.")
+    parser.add_argument("--learning-rate", type=float, default=1e-4)
+    parser.add_argument("--latent-channels", type=int, default=192)
+    parser.add_argument("--base-channels", type=int, default=192)
+    parser.add_argument("--residual-blocks", type=int, default=1)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--num-workers", type=int, default=2,
+                        help="Colab is Linux, so >0 is safe; use 0 on Windows.")
+    parser.add_argument("--device", choices=["auto", "cpu", "cuda"], default="auto")
+
+    parser.add_argument("--rate-enabled", action="store_true",
+                        help="Phase B: train on D + lambda*R instead of distortion alone. "
+                             "Requires --rate-calibration.")
+    parser.add_argument("--rate-lambda", type=float, default=0.0)
+    parser.add_argument("--rate-lr", type=float, default=defaults.rate_lr)
+    parser.add_argument("--rate-calibration", type=Path, default=None,
+                        help="calibrate_quantizer.py output from the TRAIN split, supplying the "
+                             "rate estimator's bin width.")
+    parser.add_argument("--rate-track-scale", action="store_true",
+                        help="Nudge the bin width toward each batch's own dynamic range "
+                             "(M9F.5). Recommended for Phase B.")
+    parser.add_argument("--rate-scale-momentum", type=float, default=defaults.rate_scale_momentum)
+
+    parser.add_argument("--kaggle-dataset-owner", default="wangsally")
+    parser.add_argument("--kaggle-dataset-prefix", default="vimeo-90k")
+    parser.add_argument("--keep-chunk", action="store_true",
+                        help="Do not delete each chunk after training on it. Needs ~89GB free "
+                             "for the full set, so off by default.")
+    parser.add_argument("--reset-progress", action="store_true",
+                        help="Clear the completed-chunk list so every chunk is visited again, "
+                             "keeping the weights. This is how Phase B starts from Phase A.")
+    parser.add_argument("--max-batches", type=int, default=None,
+                        help="Cap batches per epoch. Smoke tests only.")
+    return parser
+
+
+def build_model(args, quantization_noise=None) -> ResidualGDNAutoencoder:
+    return ResidualGDNAutoencoder(
+        latent_channels=args.latent_channels,
+        base_channels=args.base_channels,
+        residual_blocks=args.residual_blocks,
+        quantization_noise=quantization_noise,
+    )
+
+
+def build_rate_estimator(args) -> RateEstimator | None:
+    """The rate proxy for Phase B, or None for Phase A.
+
+    The bin width comes from a calibration file rather than from anything this
+    script invents, so the proxy's quantization scale is the same object the
+    real quantizer uses - see rate_estimator.py's own docstring on why that
+    correspondence is the whole point.
+    """
+    if not args.rate_enabled:
+        return None
+    if args.rate_calibration is None:
+        raise SystemExit("--rate-enabled requires --rate-calibration (see this script's docstring)")
+    if not args.rate_calibration.is_file():
+        raise SystemExit(f"--rate-calibration not found: {args.rate_calibration}")
+    # bits/mode come from the file's own record; from_calibration also refuses
+    # anything not calibrated on the train split.
+    noise = QuantizationNoise.from_calibration(args.rate_calibration)
+    return RateEstimator(
+        noise.scale, bits=noise.bits, mode=noise.mode,
+        track_scale=args.rate_track_scale, scale_momentum=args.rate_scale_momentum,
+    )
+
+
+def build_optimizer(model, rate_estimator, args) -> torch.optim.Optimizer:
+    """Model parameters at --learning-rate; the estimator's own loc/log_scale in
+    a separate group at --rate-lr, exactly as train_autoencoder.py does it
+    (M9C.1: 128 scalars fitting a density need far larger steps than the model)."""
+    if rate_estimator is None:
+        return torch.optim.Adam(model.parameters(), lr=args.learning_rate)
+    return torch.optim.Adam(
+        [
+            {"params": list(model.parameters()), "lr": args.learning_rate},
+            {"params": list(rate_estimator.parameters()), "lr": args.rate_lr},
+        ]
+    )
+
+
+def train_one_chunk(
+    *, model, optimizer, rate_estimator, train_loader, val_loader, device, args,
+    start_epoch: int, chunk_number: int, history: list[dict[str, Any]],
+    checkpoint_dir: Path, model_config: dict[str, Any], best_val_loss: float,
+    checkpoint_extra,
+) -> tuple[int, float]:
+    """Up to --epochs-per-chunk-max epochs on one chunk, stopping early when the
+    validation loss stops improving. Best-checkpoint tracking is GLOBAL across
+    chunks; only the early-stopping decision is scoped to this chunk.
+    """
+    epoch = start_epoch
+    best_chunk_val_loss = float("inf")
+    stalled = 0
+
+    for step in range(args.epochs_per_chunk_max):
+        if rate_estimator is None:
+            train_metrics = train_one_epoch(
+                model, train_loader, optimizer, device, max_batches=args.max_batches,
+                progress_desc=f"chunk {chunk_number} epoch {epoch} train")
+            val_metrics = validate_one_epoch(
+                model, val_loader, device, max_batches=args.max_batches,
+                progress_desc=f"chunk {chunk_number} epoch {epoch} val")
+        else:
+            train_metrics = train_one_epoch_with_rate(
+                model, train_loader, optimizer, device, rate_estimator=rate_estimator,
+                lambda_rate=args.rate_lambda, max_batches=args.max_batches,
+                progress_desc=f"chunk {chunk_number} epoch {epoch} train")
+            val_metrics = validate_one_epoch_with_rate(
+                model, val_loader, device, rate_estimator=rate_estimator,
+                lambda_rate=args.rate_lambda, max_batches=args.max_batches,
+                progress_desc=f"chunk {chunk_number} epoch {epoch} val")
+
+        val_loss = val_metrics["loss"]
+        record = {
+            "epoch": epoch, "chunk": chunk_number,
+            "train_loss": train_metrics["loss"], "val_loss": val_loss,
+            "val_psnr": val_metrics["psnr"],
+            "rate_enabled": rate_estimator is not None,
+            "rate_lambda": args.rate_lambda if rate_estimator is not None else None,
+        }
+        # Only the rate loops report these; the distortion-only ones do not.
+        for key in ("distortion", "rate"):
+            if key in val_metrics:
+                record[f"val_{key}"] = val_metrics[key]
+        history.append(record)
+
+        extra_note = ""
+        if "rate" in val_metrics:
+            extra_note = (f" val_distortion={val_metrics['distortion']:.6f}"
+                          f" val_rate={val_metrics['rate']:.4f}")
+        print(f"  chunk {chunk_number} epoch {epoch} (step {step + 1}/{args.epochs_per_chunk_max}): "
+              f"train={train_metrics['loss']:.6f} val={val_loss:.6f} "
+              f"val_psnr={val_metrics['psnr']:.2f} dB{extra_note}", flush=True)
+
+        extra = checkpoint_extra()
+        save_checkpoint(checkpoint_dir / "latest.pt", model=model, optimizer=optimizer,
+                        epoch=epoch, history=history, model_config=model_config, extra=extra)
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            save_checkpoint(checkpoint_dir / "best.pt", model=model, optimizer=optimizer,
+                            epoch=epoch, history=history, model_config=model_config, extra=extra)
+            print(f"    new global-best val loss {best_val_loss:.6f}", flush=True)
+        (checkpoint_dir / "history.json").write_text(json.dumps(history, indent=2), encoding="utf-8")
+
+        epoch += 1
+        if val_loss < best_chunk_val_loss - args.early_stop_min_delta:
+            best_chunk_val_loss = val_loss
+            stalled = 0
+        else:
+            stalled += 1
+            if stalled >= args.early_stop_patience:
+                print(f"  early stop on chunk {chunk_number} after {step + 1} epoch(s)", flush=True)
+                break
+
+    return epoch, best_val_loss
+
+
+def main(argv: list[str] | None = None) -> int:
+    defaults = load_default_config()
+    args = build_arg_parser(defaults).parse_args(argv)
+    if args.crop_size % 16 != 0:
+        raise SystemExit(f"--crop-size must be divisible by 16, got {args.crop_size}")
+    seed_everything(args.seed)
+    device = get_device() if args.device == "auto" else torch.device(args.device)
+
+    chunks = _load_script("train_vimeo_qat_combined")
+
+    output_dir = args.output_dir
+    checkpoint_dir = output_dir / "checkpoints"
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    progress_path = output_dir / "progress.json"
+    scratch_dir = args.scratch_dir
+    vimeo_root = args.vimeo_root or (scratch_dir / "vimeo_root")
+
+    rate_estimator = build_rate_estimator(args)
+    if rate_estimator is not None:
+        rate_estimator = rate_estimator.to(device)
+    model = build_model(args).to(device)
+    optimizer = build_optimizer(model, rate_estimator, args)
+    model_config = model.config_dict()
+
+    def checkpoint_extra():
+        if rate_estimator is None:
+            return None
+        return {"rate_estimator_state_dict": rate_estimator.state_dict(),
+                "rate_lambda": args.rate_lambda,
+                "rate_track_scale": args.rate_track_scale}
+
+    history: list[dict[str, Any]] = []
+    start_epoch = 1
+    best_val_loss = float("inf")
+    latest = checkpoint_dir / "latest.pt"
+    if latest.is_file():
+        checkpoint = load_checkpoint(latest, map_location=device)
+        model.load_state_dict(checkpoint["model_state_dict"])
+        history = checkpoint["history"]
+        start_epoch = checkpoint["epoch"] + 1
+        saved_rate = (checkpoint.get("extra") or {}).get("rate_estimator_state_dict")
+        if rate_estimator is not None and saved_rate is not None:
+            rate_estimator.load_state_dict(saved_rate)
+        # The optimizer's parameter list changes between Phase A and Phase B
+        # (the estimator's loc/log_scale join it), so a cross-phase resume must
+        # start the optimizer fresh rather than fail - M9C's reasoning exactly.
+        try:
+            optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        except ValueError:
+            print("[resume] optimizer state does not match this objective; starting it fresh "
+                  "(expected when moving from Phase A to Phase B)", flush=True)
+        print(f"[resume] from {latest} at epoch {start_epoch}", flush=True)
+
+    progress = chunks._load_or_init_progress(progress_path)
+    if args.reset_progress:
+        print(f"[progress] clearing {len(progress['completed_chunks'])} completed chunk(s); "
+              "weights are kept", flush=True)
+        progress["completed_chunks"] = []
+    if progress.get("best_val_loss") is not None and not args.reset_progress:
+        best_val_loss = progress["best_val_loss"]
+
+    print("=" * 70)
+    print(f"Stage 1 transform: {type(model).__name__}, {model.num_parameters():,} parameters")
+    print(f"Objective: {'D + %g*R' % args.rate_lambda if rate_estimator is not None else 'distortion only (Phase A)'}")
+    print(f"Chunks: {args.chunks}   done already: {progress['completed_chunks']}")
+    print(f"Device: {device}   batch {args.batch_size} at {args.crop_size}x{args.crop_size}")
+    print("=" * 70, flush=True)
+
+    for chunk_number in args.chunks:
+        if chunk_number in progress["completed_chunks"]:
+            print(f"[chunk {chunk_number}] already done, skipping", flush=True)
+            continue
+
+        group_root = chunks.download_and_extract_chunk(
+            chunk_number, scratch_dir / f"chunk_{chunk_number}",
+            dataset_owner=args.kaggle_dataset_owner,
+            dataset_prefix=args.kaggle_dataset_prefix)
+        chunks.relink_sequences_to_chunk(group_root, vimeo_root)
+        sequence_ids = chunks.discover_complete_sequence_ids(vimeo_root / "sequences")
+        chunks.write_chunk_split_lists(vimeo_root, sequence_ids, args.seed)
+        train_manifest, val_manifest = chunks.build_chunk_manifests(
+            vimeo_root, output_dir / "vimeo_manifest.json", args.seed)
+
+        train_loader = create_train_loader(
+            train_manifest, batch_size=args.batch_size, num_workers=args.num_workers,
+            seed=args.seed, crop_size=args.crop_size)
+        val_loader = create_val_loader(
+            val_manifest, batch_size=args.batch_size, num_workers=args.num_workers,
+            crop_size=args.crop_size)
+
+        start_epoch, best_val_loss = train_one_chunk(
+            model=model, optimizer=optimizer, rate_estimator=rate_estimator,
+            train_loader=train_loader, val_loader=val_loader, device=device, args=args,
+            start_epoch=start_epoch, chunk_number=chunk_number, history=history,
+            checkpoint_dir=checkpoint_dir, model_config=model_config,
+            best_val_loss=best_val_loss, checkpoint_extra=checkpoint_extra)
+
+        progress["completed_chunks"].append(chunk_number)
+        progress["best_val_loss"] = best_val_loss
+        chunks._save_progress(progress_path, progress)
+
+        if not args.keep_chunk:
+            shutil.rmtree(scratch_dir / f"chunk_{chunk_number}", ignore_errors=True)
+            print(f"[chunk {chunk_number}] deleted to free disk", flush=True)
+
+    print("=" * 70)
+    print(f"Done. Best validation loss {best_val_loss:.6f}")
+    print(f"Checkpoints: {checkpoint_dir}")
+    print("Next: calibrate (Phase A -> B), or measure the gate with "
+          "scripts/benchmark_parity.py --gop 1")
+    print("=" * 70)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -13,6 +13,73 @@ the time.
 
 ---
 
+## 2026-09-25 — The Stage 1 training path: Vimeo-90K on Colab
+
+The Stage 1 transform existed but nothing could train it on Vimeo, and the Vimeo
+images are not on the development machine — the earlier runs were on Kaggle/Colab.
+This is the path from the architecture to a trained checkpoint. **Nothing is trained
+yet**; this is the machinery, not a result.
+
+### `scripts/train_vimeo_stage1.py`
+
+Chunked, resumable training of `ResidualGDNAutoencoder` over the ten Kaggle Vimeo-90K
+chunks. `train_vimeo_qat_combined.py` (Milestone 8B) is **not** modified — its chunk
+machinery (Kaggle download, collision-reconciling extraction, one-chunk-at-a-time
+symlinking, per-chunk split lists, manifest building, progress bookkeeping) is reused
+read-only through the usual `_load_script` helper, so there is one implementation of
+the awkward parts and this script only adds what Stage 1 needs.
+
+**Two phases, because the rate proxy needs a bin width and a bin width needs a trained
+model.** A from-scratch network has no meaningful latent scale to calibrate, so this
+runs the way the baseline lineage did: Phase A distortion-only from scratch, then
+calibrate on a train-split manifest, then Phase B on `D + lambda*R` continuing from
+Phase A's weights. The optimizer's parameter list changes between phases (the rate
+estimator's own `loc`/`log_scale` join it), so a cross-phase resume restarts the
+optimizer and says so rather than failing — M9C's reasoning exactly.
+
+### `colab_train_stage1.ipynb`
+
+A thin wrapper: mount Drive, cache the Kaggle token, install, run the script. All the
+logic is in the tested script rather than in cells. The run cells build an argument
+list and call `subprocess.run(..., check=True)` instead of `!python ... \` shell
+continuations, which IPython does not reliably continue and which break on any Drive
+path containing a space. A sanity cell reports measured ms/step before committing to a
+long run.
+
+### Checkpoints now record their architecture
+
+`save_checkpoint` writes `architecture` for any non-default model and
+`load_model_from_checkpoint` dispatches on it, so a Stage 1 checkpoint rebuilds as a
+`ResidualGDNAutoencoder` rather than being silently mis-loaded. Baseline checkpoints
+are unaffected: the field is omitted for them, so every M1–M22 checkpoint is
+byte-identical and loads exactly as before. `scripts/train_autoencoder.py` gained
+`--architecture {baseline,stage1}`, `--base-channels` and `--residual-blocks`, all
+defaulting to the previous behavior.
+
+### A pre-existing bug, fixed in passing
+
+`python scripts/train_autoencoder.py --help` crashed with
+`AttributeError: 'tuple' object has no attribute 'strip'`. A stray trailing comma
+inside `help=( ... )` on `--rate-track-scale` made that help string a one-element
+tuple. Present on master since M9F; the CLI's own help has been unusable since.
+
+### Tests
+
+21 new: 13 for the trainer (both objectives, early stopping, checkpoint reload,
+refusal to start Phase B without a calibration, and that the M8B script is imported
+rather than copied or modified) and 8 for the notebook (every code cell parses, every
+flag it passes exists in a parser it calls, the output directory cannot collide with
+the baseline runs' `progress.json`).
+
+### Not done
+
+The run itself, the `lambda` sweep, and recalibrating the intra grids, G16 context
+model and codebooks against the new latent — all of which were fitted against the
+baseline transform and are invalidated by a new one. The gate number means nothing
+until that recalibration happens.
+
+---
+
 ## 2026-09-25 — The intra-only scoreboard: the Stage 1 gate's denominator
 
 Stage 1 is gated on intra-only BD-rate against the current intra codec, and that

@@ -39,12 +39,13 @@ import math
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 import torch
 
 from nvc.data.loaders import create_train_loader, create_val_loader
 from nvc.data.validation import DatasetValidationError
-from nvc.models import BaselineAutoencoder
+from nvc.models import BaselineAutoencoder, ResidualGDNAutoencoder
 from nvc.training import (
     QuantizationNoise,
     RateEstimator,
@@ -82,6 +83,28 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
     parser.add_argument(
         "--latent-channels", type=int, default=defaults.latent_channels,
         help="Number of channels in the spatial latent tensor.",
+    )
+    parser.add_argument(
+        "--architecture", choices=["baseline", "stage1"], default="baseline",
+        help=(
+            "Which analysis/synthesis transform to train. 'baseline' (the default, "
+            "and every run before Stage 1) is the 593k-parameter Conv/ReLU "
+            "BaselineAutoencoder. 'stage1' is ResidualGDNAutoencoder - GDN/IGDN, "
+            "residual blocks and 192 channels, ~8.4M parameters - which "
+            "PARITY_ROADMAP.md Stage 1 exists to train. Both keep stride 16 and the "
+            "[0, 1] output range, so everything downstream is unaffected; the "
+            "checkpoint records which one it holds."
+        ),
+    )
+    parser.add_argument(
+        "--base-channels", type=int, default=None,
+        help="Width of the transform's hidden stages. None keeps the architecture's "
+             "own default (32 for baseline, 192 for stage1).",
+    )
+    parser.add_argument(
+        "--residual-blocks", type=int, default=1,
+        help="Residual blocks per position in the stage1 transform. Ignored by "
+             "--architecture baseline, which has none.",
     )
     parser.add_argument("--device", choices=["auto", "cpu", "cuda"], default="auto")
     parser.add_argument("--checkpoint-dir", type=Path, default=defaults.checkpoint_dir)
@@ -177,7 +200,7 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
             "dynamic range (EMA-smoothed via --rate-scale-momentum), matching what the "
             "deployed codec actually does. Off by default - existing M9A/M9C/M9C.1 "
             "behavior (a bin width frozen at the calibration file's own value) is "
-            "unchanged unless this is passed. Ignored unless --rate-enabled.",
+            "unchanged unless this is passed. Ignored unless --rate-enabled."
         ),
     )
     parser.add_argument(
@@ -331,9 +354,17 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[ERROR] {exc}", file=sys.stderr)
         return 1
 
-    model = BaselineAutoencoder(
-        latent_channels=args.latent_channels, quantization_noise=quantization_noise,
-    ).to(device)
+    model_kwargs: dict[str, Any] = {
+        "latent_channels": args.latent_channels,
+        "quantization_noise": quantization_noise,
+    }
+    if args.base_channels is not None:
+        model_kwargs["base_channels"] = args.base_channels
+    if args.architecture == "stage1":
+        model_kwargs["residual_blocks"] = args.residual_blocks
+        model = ResidualGDNAutoencoder(**model_kwargs).to(device)
+    else:
+        model = BaselineAutoencoder(**model_kwargs).to(device)
     # The rate estimator's own loc/log_scale must be in the optimizer too -
     # it is a real nn.Module with learnable parameters (see rate_estimator.py),
     # unlike QuantizationNoise which has none. Milestone 9C.1: they go into
@@ -405,7 +436,7 @@ def main(argv: list[str] | None = None) -> int:
     latent_elements = sample_latent[0].numel()
 
     print("=" * 60)
-    print("BaselineAutoencoder")
+    print(type(model).__name__)
     print("=" * 60)
     print(f"Input shape:            {tuple(sample_batch.shape[1:])}")
     print(f"Latent shape:           {tuple(sample_latent.shape[1:])}")
