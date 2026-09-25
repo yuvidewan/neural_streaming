@@ -92,6 +92,8 @@ outputs/benchmarks/*
 # The Stage 0 scoreboard is an analysis product, not a regenerable run dump:
 # PARITY_ROADMAP.md's gate cites it. Small (JSON + plot + README).
 !outputs/benchmarks/parity_s0/
+# Same for the intra-only run: it is the denominator of the Stage 1 gate.
+!outputs/benchmarks/parity_intra/
 # QAT+control combined training output (Milestone 8B): checkpoints (already
 # caught by *.pt below) plus progress_*.json/history.json, which are not.
 # Auto-created by scripts/train_vimeo_qat_combined.py - no .gitkeep needed.

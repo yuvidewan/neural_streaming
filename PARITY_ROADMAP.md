@@ -134,13 +134,32 @@ Replace ReLU with GDN/IGDN, add residual blocks, scale to ~8-12M parameters
   593,411. Stride 16, the `[0, 1]` output range and
   `encode`/`decode`/`config_dict`/`num_parameters` are all unchanged, so the
   existing training, checkpoint and evaluation paths take it as-is.
+- [x] The gate's denominator - `scripts/benchmark_parity.py --gop 1`,
+  `outputs/benchmarks/parity_intra/`, 2026-09-25. The current codec all-intra is
+  **+176.2% BD-rate (PSNR) / +167.6% (MS-SSIM) against x264 all-intra**. A trained
+  Stage 1 transform is measured against that number.
 - [ ] Train it on full Vimeo-90k (~91,701 sequences; the deployed checkpoints
   saw 10 chunks). This is the long pole of the stage and needs the GPU budget
   in section 4.
-- [ ] Measure the gate.
+- [ ] Re-run the intra-only scoreboard with the trained transform and compare.
 
 **Gate:** intra-only BD-rate vs the current intra codec. Expect the largest
 single jump of the whole plan here.
+
+**What measuring the denominator already changed.** It split the Stage 0 deficit
+into a transform half and a temporal half for the first time. Against x264 forced
+into NVC's own structure: **+176.2% all-intra, +306.2% at GOP 10.** Forced
+all-intra, x264 needs 2.8x the bits it needed with P-frames; NVC needs only 1.8x.
+Both get worse without temporal prediction - x264 gets worse faster, which is the
+whole reason the intra-only gap is the smaller number. The transform remains the
+largest single deficit and Stage 1 is still the right next move, but NVC's motion
+compensation is measurably the weaker half, and Stage 3 is carrying more of the
+remaining gap than this plan assumed when it was written.
+
+One arm from that run is unusable: x265 configured all-intra performs *worse* than
+x264 all-intra (0.5326 vs 0.3026 bpp at 29 dB), which is backwards. Its rate curve
+also has a floor. Undiagnosed; Stage 0's x265 arms are unaffected. See the run's
+README before citing anything `h265_intra`.
 
 ### Stage 2 - Hyperprior (~2-3 weeks)
 

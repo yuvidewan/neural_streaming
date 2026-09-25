@@ -13,6 +13,69 @@ the time.
 
 ---
 
+## 2026-09-25 — The intra-only scoreboard: the Stage 1 gate's denominator
+
+Stage 1 is gated on intra-only BD-rate against the current intra codec, and that
+number did not exist. `scripts/benchmark_parity.py --gop 1` now measures it, on the
+same 719 DAVIS TEST frames, with the same scorer and the same primary convention as
+the Stage 0 scoreboard. Results in `outputs/benchmarks/parity_intra/`.
+
+**The current codec all-intra is +176.2% BD-rate (PSNR) / +167.6% (MS-SSIM) against
+x264 all-intra.** Across the four reporting conventions, +127.5% to +176.2%.
+
+### What it changed about the plan
+
+It splits the Stage 0 deficit into a transform half and a temporal half for the
+first time. Against x264 forced into NVC's own structure: **+176.2% all-intra,
++306.2% at GOP 10.** Measured the other way — what each codec loses when forced
+all-intra, at matched PSNR — x264 needs **2.8x** the bits it needed with P-frames,
+NVC only **1.8x**. Both get worse without temporal prediction; x264 gets worse
+faster, which is exactly why the intra-only gap is the smaller of the two.
+
+The transform is still the largest single deficit, and +176% with no motion
+involved at all is what Stage 1 targets. But NVC's motion compensation is now
+measurably the weaker half, and Stage 3 is carrying more of the remaining gap than
+the roadmap assumed.
+
+### One arm is broken and must not be cited
+
+The report contains `nvc_*_vs_h265_intra` at +31.3%. **Unusable.** x265 configured
+all-intra needs 0.5326 bpp at 29 dB where x264 all-intra needs 0.3026 — x265
+performing worse than x264 is backwards for any correctly-configured encoder, and
+its rate curve has a floor (0.3772 bpp at crf38 to 0.3388 at crf44 while PSNR falls
+25.4 to 23.4 dB). Undiagnosed; `keyint=1` is the suspect. Stage 0's x265 arms
+behave normally and are unaffected.
+
+### Script changes
+
+GOP 1 did not work before this. Three fixes, all in `scripts/benchmark_parity.py`:
+
+- **Calibration and coding GOPs are now separate.** The residual grid, context
+  model, codebooks and motion table are fitted on P-frame data; at GOP 1 there are
+  none, and `calibrate_grids` raised on an empty collection. The intra tables this
+  measurement uses are fitted on I-frame latents and do not depend on the GOP, so
+  calibration stays at the deployed GOP 10 and only the coding GOP changes — which
+  is also what makes this *the current intra codec* rather than a re-tuned one.
+- **The M22 reproduction check is skipped away from the deployed GOP.** M22 recorded
+  its totals at GOP 10; elsewhere a mismatch is the point of the run, not a failure.
+  It now reports `null` with a reason instead of marking the run invalid.
+- **At GOP 1 the forced arms are named `h264_intra` / `h265_intra`**, because
+  calling an all-intra encode "lowdelay" invites the one misreading that matters
+  here. `--gop` does not reach the default `h264` / `h265` arms at all — they keep
+  their B-frames, so `nvc_*_vs_h264` (+920.3%) is context, not the gate.
+  `compare()` now finds classical arms by name from the report rather than from a
+  hardcoded list, which would have silently dropped the renamed arms.
+
+Six new tests in `tests/test_benchmark_parity.py` (18 total) cover the renaming, the
+all-intra encoder flags, the default arms keeping their B-frames, arm discovery in
+`compare()`, and both GOP rules.
+
+`nvc_deployed` and `nvc_m22` came out byte-identical at all three rate points, as
+expected — M22's residual re-centering only touches P-frame residuals. Decode was
+bit-exact everywhere.
+
+---
+
 ## 2026-09-23 — Stage 1 begins: a real analysis/synthesis transform
 
 Stage 0 established that the gap to H.264 is in the transform, not the entropy

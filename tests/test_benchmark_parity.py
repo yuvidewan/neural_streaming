@@ -144,3 +144,79 @@ def test_ffmpeg_round_trip_preserves_frame_count_and_shape(parity, tmp_path, arm
     assert result["decoded"].shape == frames.shape
     assert result["bytes"] > 0
     assert not any(tmp_path.iterdir())              # the .mp4 was measured, then removed
+
+
+# --- Intra-only mode (--gop 1), the Stage 1 gate's denominator --------------------
+
+
+def test_gop_one_renames_the_forced_arms_to_what_they_actually_are(parity):
+    """At GOP 1 the forced arms are all-intra, not low-delay. The name is what
+    a reader six months from now sees first, so it has to be the truth."""
+    arms = {arm.name: arm for arm in parity.classical_arms(1)}
+
+    assert set(arms) == {"h264", "h265", "h264_intra", "h265_intra"}
+    assert "all-intra" in arms["h264_intra"].describe()["structure"]
+    assert arms["h264"].describe()["structure"] == "encoder default GOP and B-frames"
+
+
+def test_gop_one_forced_arms_are_genuinely_all_intra(parity):
+    arms = {arm.name: arm for arm in parity.classical_arms(1)}
+
+    x264 = arms["h264_intra"].encoder_arguments(30)
+    for flag, value in (("-g", "1"), ("-keyint_min", "1"), ("-bf", "0")):
+        assert x264[x264.index(flag) + 1] == value
+    x265 = arms["h265_intra"].encoder_arguments(30)
+    params = set(x265[x265.index("-x265-params") + 1].split(":"))
+    assert {"keyint=1", "min-keyint=1", "bframes=0"} <= params
+
+
+def test_the_default_arms_keep_their_b_frames_at_gop_one(parity):
+    """--gop only reaches the forced arms. `h264`/`h265` stay at the encoder's
+    own GOP whatever --gop says, so they are NOT the intra reference - reading
+    the gate off `nvc_*_vs_h264` instead of `..._vs_h264_intra` would compare
+    all-intra NVC against H.264 with B-frames."""
+    arms = {arm.name: arm for arm in parity.classical_arms(1)}
+
+    assert "-g" not in arms["h264"].encoder_arguments(30)
+    assert "keyint" not in arms["h265"].encoder_arguments(30)[-1]
+
+
+def test_comparisons_find_the_classical_arms_by_name_not_by_a_fixed_list(parity):
+    """compare() used to iterate a hardcoded arm tuple, which would silently
+    drop the renamed intra arms and produce a report with no gate number in it."""
+    report = {"points": {}}
+    for arm, bpps in (("nvc_deployed", (0.3, 0.7)), ("h264_intra", (0.2, 0.6))):
+        for index, bpp in enumerate(bpps):
+            report["points"][f"{arm}/{index}"] = {
+                "arm": arm, "bpp": bpp, "bits": 4 + index, "total_bytes": 1,
+                "quality": {c: {"psnr": 28.0 + index, "msssim": 0.95 + 0.01 * index}
+                            for c in parity.CONVENTIONS},
+            }
+
+    results = parity.compare(report)
+
+    assert "nvc_deployed_vs_h264_intra" in results
+
+
+def test_the_reproduction_check_is_skipped_away_from_the_deployed_gop(parity):
+    """M22 recorded its DAVIS totals at the deployed GOP. At any other GOP the
+    codec is configured differently, so a byte mismatch is expected and must not
+    be reported as a failed reproduction - that would mark the run invalid."""
+    source = inspect.getsource(parity.run_nvc)
+
+    assert "args.gop == parity.DEPLOYED_GOP".replace("parity.", "") in source
+    assert parity.DEPLOYED_GOP == 10
+
+
+def test_intra_only_runs_calibrate_at_the_deployed_gop(parity):
+    """The residual grid, context model, codebooks and motion table are all
+    fitted on P-frame data, and GOP 1 has none - calibrating there raises. The
+    intra tables this measurement uses do not depend on the GOP, so calibration
+    stays at the deployed GOP and only the coding GOP changes."""
+    source = inspect.getsource(parity.run_nvc)
+
+    assert "calibration_gop = DEPLOYED_GOP if args.gop == 1 else args.gop" in source
+    assert "gop_size=calibration_gop" in source
+    # the encode/decode calls must still use the requested GOP, not the
+    # calibration one, or --gop 1 would silently measure the GOP-10 codec
+    assert "gop_size=args.gop" in source

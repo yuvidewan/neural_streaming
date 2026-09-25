@@ -84,6 +84,10 @@ CONVENTIONS = ("sequence_mean", "frame_mean", "sequence_pooled", "global_pooled"
 DEFAULT_CRFS = (20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44)
 M22_CANDIDATE = "symmetric_p01"
 FRAMERATE = 30
+# The GOP the deployed codec runs at, and therefore the one M22 recorded its
+# DAVIS totals at. Only a run at this GOP has anything to reproduce - see
+# run_nvc, and --gop 1 for the intra-only measurement.
+DEPLOYED_GOP = 10
 
 
 def _load_script(name: str):
@@ -251,17 +255,31 @@ class ClassicalArm:
         return arguments
 
     def describe(self) -> dict[str, Any]:
+        if not self.lowdelay:
+            structure = "encoder default GOP and B-frames"
+        elif self.gop == 1:
+            structure = "all-intra: every frame an I-frame, no B-frames"
+        else:
+            structure = f"I every {self.gop}, P only"
         return {"encoder": self.encoder, "preset": "medium", "pix_fmt": "yuv420p",
-                "lowdelay": self.lowdelay,
-                "structure": (f"I every {self.gop}, P only" if self.lowdelay
-                              else "encoder default GOP and B-frames")}
+                "lowdelay": self.lowdelay, "structure": structure}
 
 
 def classical_arms(gop: int) -> list[ClassicalArm]:
+    """The two default-configuration arms, plus two forced into NVC's structure.
+
+    At GOP 1 the forced arms are all-intra, so they are named for what they are
+    rather than "lowdelay" - at that GOP they are the intra-vs-intra comparison
+    the Stage 1 gate is measured against, and a report read six months from now
+    should not have to work that out from the GOP field. The default-GOP `h264`
+    and `h265` arms are unaffected by --gop and keep their B-frames either way;
+    they stay in the report as context, not as the intra reference.
+    """
+    forced = "intra" if gop == 1 else "lowdelay"
     return [ClassicalArm("h264", "libx264", lowdelay=False, gop=gop),
             ClassicalArm("h265", "libx265", lowdelay=False, gop=gop),
-            ClassicalArm("h264_lowdelay", "libx264", lowdelay=True, gop=gop),
-            ClassicalArm("h265_lowdelay", "libx265", lowdelay=True, gop=gop)]
+            ClassicalArm(f"h264_{forced}", "libx264", lowdelay=True, gop=gop),
+            ClassicalArm(f"h265_{forced}", "libx265", lowdelay=True, gop=gop)]
 
 
 def ffmpeg_round_trip(frames_uint8: np.ndarray, arm: ClassicalArm, crf: int,
@@ -388,7 +406,13 @@ def run_nvc(args, device, sequences, frame_cache, report, persist) -> None:
     model, _ = load_model_from_checkpoint(args.checkpoint, device=device)
     model.eval()
 
-    recorded = recorded_nvc_totals(args.m22_dir)
+    # At any GOP other than the deployed one this is a different codec
+    # configuration, so M22's recorded totals are not a target it could hit.
+    # Reporting a mismatch there would read as a failure when it is the whole
+    # point of the run, so the check is skipped and says why instead.
+    recorded = (recorded_nvc_totals(args.m22_dir) if args.gop == DEPLOYED_GOP
+                else {"nvc_deployed": {}, "nvc_m22": {}})
+    calibration_gop = DEPLOYED_GOP if args.gop == 1 else args.gop
     train_full = discover_sequences(args.manifest, split="train")
     motion_train = m21.broad_train_sequences(
         args.manifest, frames_per_sequence=args.train_frames_per_sequence)
@@ -400,12 +424,22 @@ def run_nvc(args, device, sequences, frame_cache, report, persist) -> None:
             print(f"  [resume] NVC {bits}-bit already measured", flush=True)
             continue
 
+        # Calibration and coding can use different GOPs, and at GOP 1 they must.
+        # The deployed codec's residual grid, G16 context model, codebooks and
+        # motion table are all fitted on P-frame data; at GOP 1 there are no
+        # P-frames, so calibrating there collects nothing and `calibrate_grids`
+        # raises. The INTRA half - the quantization params and entropy model this
+        # measurement actually uses - is fitted on I-frame latents and does not
+        # depend on the GOP at all. So the rig is always built at the deployed
+        # GOP, which is what makes it "the current intra codec" rather than a
+        # differently-calibrated one, and only the coding GOP below changes.
         rig = m21.prepare_rate_point(
             model, bits=bits, manifest=args.manifest, checkpoint=args.checkpoint,
             m11_dir=args.m11_dir, m10k_dir=args.m10k_dir, device=device,
             cache_dir=args.cache_dir or md.DEFAULT_CACHE_DIR, train_full=train_full,
             motion_train=motion_train, calibration_frames=args.calibration_frames,
-            gop_size=args.gop, block_size=args.block_size, search_range=args.search_range,
+            gop_size=calibration_gop, block_size=args.block_size,
+            search_range=args.search_range,
             motion_cache=args.m22_dir / "m22_deployed_motion_table.json")
         checkpoint = args.m22_dir / "checkpoints" / f"m22_{M22_CANDIDATE}_{bits}bit.pt"
         loaded = mech.load_refit_checkpoint(checkpoint, device=device, m22=m22, ma=ma, ml=ml,
@@ -467,6 +501,11 @@ def run_nvc(args, device, sequences, frame_cache, report, persist) -> None:
                          float_quality["sequence_mean"]["msssim"]}
             if expected is None:
                 check["reproduces"] = None
+                check["reason"] = (
+                    f"GOP {args.gop} is not the deployed GOP {DEPLOYED_GOP} that M22 "
+                    "recorded its DAVIS totals at, so there is nothing to reproduce"
+                    if args.gop != DEPLOYED_GOP else "no recorded total for this arm and bit depth"
+                )
             else:
                 check["bytes_match"] = point["total_bytes"] == expected["total_container_bytes"]
                 check["psnr_abs_diff_db"] = abs(float_quality["sequence_pooled"]["psnr"]
@@ -516,10 +555,13 @@ def compare(report: dict[str, Any]) -> dict[str, Any]:
     for point in report["points"].values():
         by_arm.setdefault(point["arm"], []).append(point)
     results: dict[str, Any] = {}
+    # Taken from the report rather than hardcoded, so the forced arms are picked
+    # up under whichever name this GOP gave them (see classical_arms).
+    classical_names = sorted(name for name in by_arm if not name.startswith("nvc_"))
     for nvc in ("nvc_deployed", "nvc_m22"):
         if len(by_arm.get(nvc, [])) < 2:
             continue
-        for classical in ("h264", "h265", "h264_lowdelay", "h265_lowdelay"):
+        for classical in classical_names:
             if len(by_arm.get(classical, [])) < 2:
                 continue
             entry: dict[str, Any] = {}
@@ -556,8 +598,10 @@ def main(argv: list[str] | None = None) -> int:
                      "checkpoint": str(args.checkpoint), "m22_candidate": M22_CANDIDATE,
                      "primary_convention": PRIMARY_CONVENTION,
                      "max_sequences": args.max_sequences, "max_frames": args.max_frames}
+    intra_only = args.gop == 1
     report: dict[str, Any] = {
-        "stage": "PARITY_ROADMAP Stage 0 - single-pass scoreboard",
+        "stage": ("PARITY_ROADMAP Stage 1 gate - intra-only scoreboard (every frame an I-frame)"
+                  if intra_only else "PARITY_ROADMAP Stage 0 - single-pass scoreboard"),
         "started_utc": datetime.now(timezone.utc).isoformat(),
         "configuration": configuration,
         "environment": {"python": platform.python_version(), "torch": torch.__version__,
@@ -586,8 +630,12 @@ def main(argv: list[str] | None = None) -> int:
                          "frames": sum(s.frame_count for s in sequences),
                          "resolution": [sequences[0].width, sequences[0].height]}
     print("=" * 110)
-    print(f"STAGE 0 SCOREBOARD - {len(sequences)} sequences, {report['dataset']['frames']} "
+    print(f"{'INTRA-ONLY SCOREBOARD (GOP 1)' if intra_only else 'STAGE 0 SCOREBOARD'} - "
+          f"{len(sequences)} sequences, {report['dataset']['frames']} "
           f"frames, primary convention: {PRIMARY_CONVENTION}")
+    if intra_only:
+        print("Every frame is an I-frame on both sides; the M22 reproduction check does not "
+              "apply at this GOP.")
     print("=" * 110, flush=True)
 
     run_classical(args, device, sequences, frame_cache, report, persist)
