@@ -91,6 +91,20 @@ only once Stage 1 clears that gate.
 10 tests, including a bit-exact intra round trip on a miniature model and a
 negative control that the decoder refuses a stream containing a P-frame.
 
+### `colab_train_stage1.ipynb` corrected
+
+The notebook's section 7 told the reader to measure the gate with
+`benchmark_parity.py --gop 1` and warned that the intra grids, G16 context model and
+codebooks would all need recalibrating "before the number means anything". Both were
+wrong, and wrong in the way that costs most: the command **raises a provenance error**
+on a 192-channel Stage 1 checkpoint rather than producing a number, and the reader
+would have found that out after a 13-hour training run. It now points at
+`benchmark_intra_gate.py`, says explicitly why not to use the parity harness here, and
+scopes the refitting as needed for a full-video number only.
+
+Three tests pin the corrected instructions, including one asserting the old
+"before the number means anything" claim does not come back.
+
 ---
 
 ## 2026-09-25 — The Stage 1 training path: Vimeo-90K on Colab

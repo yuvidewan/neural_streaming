@@ -72,7 +72,8 @@ def test_every_flag_the_notebook_passes_exists_in_a_script_it_calls():
     still catches a rename in either script, which is the failure worth
     guarding, without the test having to parse the cells' argument lists.
     """
-    known = _script_flags("train_vimeo_stage1", "calibrate_quantizer")
+    known = _script_flags("train_vimeo_stage1", "calibrate_quantizer",
+                          "benchmark_intra_gate")
 
     used = set(re.findall(r"'(--[a-z0-9-]+)'", NOTEBOOK.read_text(encoding="utf-8")))
 
@@ -120,6 +121,27 @@ def test_it_points_at_the_real_gate_and_its_denominator(notebook):
     has to say what to do next or the number never gets measured."""
     text = "\n".join(_cells(notebook, "markdown"))
 
-    assert "benchmark_parity.py --gop 1" in text
+    assert "benchmark_intra_gate.py" in text
     assert "176.2" in text
-    assert "nvc_deployed_vs_h264_intra" in text
+
+
+def test_it_warns_against_the_parity_harness_for_a_stage_1_checkpoint(notebook):
+    """`benchmark_parity.py --gop 1` produced the denominator, but it rebuilds the
+    deployed stack through prepare_rate_point, all of which is fitted to a
+    64-channel latent - against Stage 1's 192 it raises a provenance error instead
+    of producing a number. Someone reaching section 7 after a 13-hour run should
+    not have to rediscover that."""
+    text = "\n".join(_cells(notebook, "markdown"))
+
+    assert "Do not use `benchmark_parity.py --gop 1`" in text
+    assert "64-channel" in text
+
+
+def test_it_does_not_claim_the_gate_needs_the_entropy_stack_refitted(notebook):
+    """An earlier draft said the intra grids, G16 context model and codebooks all
+    had to be recalibrated 'before the number means anything'. That is true of a
+    full-video number and false of this gate: the intra path needs none of it."""
+    text = "\n".join(_cells(notebook, "markdown"))
+
+    assert "before the number means anything" not in text
+    assert "not needed for this gate" in text
