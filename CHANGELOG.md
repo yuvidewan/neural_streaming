@@ -13,6 +13,86 @@ the time.
 
 ---
 
+## 2026-09-27 — The Stage 1 gate harness: measuring a new transform without retraining the entropy stack
+
+`scripts/benchmark_intra_gate.py` measures intra-only BD-rate for **any**
+analysis/synthesis transform. It exists because measuring Stage 1 looked blocked
+behind weeks of retraining, and wasn't.
+
+### The blocker, and why it was not one
+
+`benchmark_parity.py --gop 1` reaches the intra numbers through
+`m21.prepare_rate_point`, which rebuilds the entire deployed stack: the M11-G16
+context model, the M10K learned entropy model, the K=512 codebooks, M14's motion
+table, and a provenance check on each. Every one is fitted to a **64-channel**
+latent. Stage 1's has 192, and `ChannelContextEntropyModel`'s
+`nn.Embedding(latent_channels, hidden)` alone makes the trained G16 checkpoint
+unloadable against it. Read literally: retrain the entropy stack before measuring
+anything — weeks of work, on the entropy side, which is not where the parity gap is.
+
+But **an I-frame touches none of it.** In `m21.encode_sequence_refined` the
+P-branch uses the context model, codebooks and motion; the I-branch uses
+`intra_params` and `intra_entropy_model` and nothing else. At GOP 1 there are no
+P-frames — which is exactly why `nvc_deployed` and `nvc_m22` came out
+byte-identical in the `--gop 1` run.
+
+So the harness needs one thing: `calibrate_grids`, which runs the autoencoder over
+TRAIN frames and fits the grids. It is architecture-agnostic. **No trained entropy
+model, no codebook, no provenance gate, no retraining.** A test AST-walks the
+script's calls and imports to keep it that way, rather than substring-matching the
+file — the module docstring legitimately names what it avoids.
+
+### Verified, not asserted
+
+Run with `--verify` on the deployed checkpoint it reproduces the committed
+intra-only run's own totals, PSNR and MS-SSIM to 1e-6, through a completely
+different code path built on the promoted package (`nvc.video.container`,
+`nvc.compression.codec`) rather than on the research scripts. Artifacts in
+`outputs/benchmarks/intra_gate_baseline/`.
+
+The x264 all-intra curve is read from the committed `parity_intra.json` rather
+than re-encoded, so the reference side is the same curve `+176.2%` came from and
+FFmpeg never runs. Scoring imports `benchmark_parity`'s own `score_frames` /
+`aggregate_quality` / `bd_rate`; a second scorer would end the one property that
+makes these numbers comparable across runs.
+
+### The bug this cost, worth recording
+
+The first version defaulted `--checkpoint` to
+`outputs/checkpoints/vimeo_epoch17_best.pt` — where the checkpoint lineage
+*starts* (Vimeo training, before the DAVIS fine-tune), not the deployed M10F
+model. It coded **38% more bytes at 2.5 dB lower PSNR**, which looked exactly like
+a bug in the new coding path.
+
+What exposed it was the M11 provenance gate: the calibration signature came out
+`4c3bd029…` where the deployed 4-bit checkpoint records `eab90825…`. Along the way
+`calibrate_grids` was confirmed deterministic — two fresh-seeded calls produced
+identical grids — which ruled out RNG state and pointed at an input instead. Two
+tests now pin the default: equal to `benchmark_parity`'s, and not the lineage start.
+
+### Header fields an intra stream cannot fill honestly
+
+`.nvct` v2 records `residual_entropy_model_id`, `motion_entropy_model_id` and
+`motion_bits` whether or not the stream has P-frames. The deployed path fills the
+residual one from the M11-G16+M13 identity, which does not exist here; this fills
+it from `calibrate_grids`'s own static residual model. That changes 8 bytes of a
+**fixed 56-byte** header and nothing else — the ids are truncated/padded to 8
+bytes, and the quantization blocks after them are sized by `numel`, from the same
+calibration either way. Total stream bytes are unchanged, which is what `--verify`
+proves.
+
+### What this changes about the plan
+
+Measuring a trained Stage 1 checkpoint is now one command and one calibration.
+Recalibrating the G16 context model, codebooks and motion table is still needed
+for a **full-video** number, but not for the Stage 1 gate, and should be scoped
+only once Stage 1 clears that gate.
+
+10 tests, including a bit-exact intra round trip on a miniature model and a
+negative control that the decoder refuses a stream containing a P-frame.
+
+---
+
 ## 2026-09-25 — The Stage 1 training path: Vimeo-90K on Colab
 
 The Stage 1 transform existed but nothing could train it on Vimeo, and the Vimeo

@@ -1,0 +1,483 @@
+{
+  "stage": "PARITY_ROADMAP Stage 1 gate - intra-only BD-rate",
+  "started_utc": "2026-09-26T20:51:27.740961+00:00",
+  "configuration": {
+    "checkpoint": "outputs\\m10f_lambda_boundary\\lambda_3.0e-04_seed42\\best.pt",
+    "architecture": "BaselineAutoencoder",
+    "model_config": {
+      "in_channels": 3,
+      "latent_channels": 64,
+      "base_channels": 32
+    },
+    "parameters": 593411,
+    "rate_points": [
+      5,
+      4,
+      3
+    ],
+    "gop": 1,
+    "calibration_gop": 10,
+    "calibration_frames": 400,
+    "block_size": 16,
+    "search_range": 16,
+    "denominator": "outputs\\benchmarks\\parity_intra\\parity_intra.json",
+    "reference_arm": "h264_intra",
+    "primary_convention": "sequence_mean",
+    "max_sequences": null,
+    "max_frames": null
+  },
+  "environment": {
+    "python": "3.11.9",
+    "torch": "2.13.0+cu130",
+    "device": "cuda",
+    "platform": "Windows-10-10.0.26200-SP0"
+  },
+  "dataset": {
+    "split": "test",
+    "sequences": [
+      "bmx-bumps",
+      "car-turn",
+      "cat-girl",
+      "cows",
+      "drift-chicane",
+      "drone",
+      "gold-fish",
+      "schoolgirls",
+      "surf"
+    ],
+    "frames": 719
+  },
+  "points": {
+    "intra/5bit": {
+      "label": "intra/5bit",
+      "arm": "nvc_intra",
+      "setting": "5bit",
+      "total_bytes": 5628186,
+      "total_pixels": 47120384,
+      "frames": 719,
+      "bpp": 0.9555416186761126,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 29.600742325495283,
+          "msssim": 0.9683075080266439
+        },
+        "frame_mean": {
+          "psnr": 29.37056853375581,
+          "msssim": 0.9681656372232132
+        },
+        "sequence_pooled": {
+          "psnr": 29.37077719424555,
+          "msssim": 0.9683075080266439
+        },
+        "global_pooled": {
+          "psnr": 28.542485016487067,
+          "msssim": 0.9681656372232132
+        }
+      },
+      "encode_seconds": 2.753714000020409,
+      "decode_seconds": 1.5438036999839824,
+      "per_sequence": [
+        {
+          "sequence": "bmx-bumps",
+          "bytes": 689146,
+          "bpp": 0.9347140842013889,
+          "mean_psnr": 30.294273045620397,
+          "mean_msssim": 0.9664286302195655
+        },
+        {
+          "sequence": "car-turn",
+          "bytes": 591882,
+          "bpp": 0.9031402587890625,
+          "mean_psnr": 30.085870963011114,
+          "mean_msssim": 0.972049181163311
+        },
+        {
+          "sequence": "cat-girl",
+          "bytes": 731863,
+          "bpp": 1.0038061249122192,
+          "mean_psnr": 29.463759823936726,
+          "mean_msssim": 0.9825619285026294
+        },
+        {
+          "sequence": "cows",
+          "bytes": 862355,
+          "bpp": 1.0121917724609375,
+          "mean_psnr": 26.09792986450844,
+          "mean_msssim": 0.9625334630791957
+        },
+        {
+          "sequence": "drift-chicane",
+          "bytes": 348623,
+          "bpp": 0.8183945875901443,
+          "mean_psnr": 32.492332369604924,
+          "mean_msssim": 0.9735371218277857
+        },
+        {
+          "sequence": "drone",
+          "bytes": 671097,
+          "bpp": 0.9002309945913461,
+          "mean_psnr": 33.150293571592975,
+          "mean_msssim": 0.9802822994661855
+        },
+        {
+          "sequence": "gold-fish",
+          "bytes": 651890,
+          "bpp": 1.0202104617387822,
+          "mean_psnr": 26.881616978394057,
+          "mean_msssim": 0.9357177897905692
+        },
+        {
+          "sequence": "schoolgirls",
+          "bytes": 708057,
+          "bpp": 1.0804092407226562,
+          "mean_psnr": 26.31391338527654,
+          "mean_msssim": 0.968413570523262
+        },
+        {
+          "sequence": "surf",
+          "bytes": 373273,
+          "bpp": 0.8284645774147728,
+          "mean_psnr": 31.626690927512385,
+          "mean_msssim": 0.9732435876672918
+        }
+      ],
+      "bits": 5,
+      "decode_reconstruction_exact": true,
+      "calibration_provenance": {
+        "split": "train",
+        "bits": 5,
+        "mode": "per_channel",
+        "gop_size": 10,
+        "reference_mode": "mc",
+        "block_size": 16,
+        "search_range": 16,
+        "motion_bits": 6,
+        "lower_percentile": 0.1,
+        "upper_percentile": 99.9,
+        "intra_frames": 400,
+        "residual_frames": 358,
+        "motion_frames": 358,
+        "intra_entropy_model_id": "8fadd1ca200c033b",
+        "residual_entropy_model_id": "fcf966d2cf211c92",
+        "motion_entropy_model_id": "ee605dd44277b878"
+      }
+    },
+    "intra/4bit": {
+      "label": "intra/4bit",
+      "arm": "nvc_intra",
+      "setting": "4bit",
+      "total_bytes": 4130011,
+      "total_pixels": 47120384,
+      "frames": 719,
+      "bpp": 0.7011846083427503,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 28.692045206104506,
+          "msssim": 0.951546902237768
+        },
+        "frame_mean": {
+          "psnr": 28.49624534060985,
+          "msssim": 0.9525452053099249
+        },
+        "sequence_pooled": {
+          "psnr": 28.555862253273446,
+          "msssim": 0.951546902237768
+        },
+        "global_pooled": {
+          "psnr": 27.942976180344804,
+          "msssim": 0.9525452053099249
+        }
+      },
+      "encode_seconds": 2.554095999992569,
+      "decode_seconds": 1.5343069999944419,
+      "per_sequence": [
+        {
+          "sequence": "bmx-bumps",
+          "bytes": 501021,
+          "bpp": 0.67955322265625,
+          "mean_psnr": 29.198192295022054,
+          "mean_msssim": 0.9493760572539436
+        },
+        {
+          "sequence": "car-turn",
+          "bytes": 426173,
+          "bpp": 0.6502883911132813,
+          "mean_psnr": 29.17610996053249,
+          "mean_msssim": 0.9528887137770653
+        },
+        {
+          "sequence": "cat-girl",
+          "bytes": 544187,
+          "bpp": 0.7463941252633427,
+          "mean_psnr": 28.672121995312,
+          "mean_msssim": 0.9737557159380966
+        },
+        {
+          "sequence": "cows",
+          "bytes": 641825,
+          "bpp": 0.7533440223106971,
+          "mean_psnr": 25.661580595600597,
+          "mean_msssim": 0.9517176013726455
+        },
+        {
+          "sequence": "drift-chicane",
+          "bytes": 243328,
+          "bpp": 0.5712139423076923,
+          "mean_psnr": 31.01755325928169,
+          "mean_msssim": 0.9445930501589408
+        },
+        {
+          "sequence": "drone",
+          "bytes": 484414,
+          "bpp": 0.6498084435096154,
+          "mean_psnr": 31.368448944432703,
+          "mean_msssim": 0.9597125708401858
+        },
+        {
+          "sequence": "gold-fish",
+          "bytes": 488461,
+          "bpp": 0.7644434219751602,
+          "mean_psnr": 26.84252287313305,
+          "mean_msssim": 0.9254308740297953
+        },
+        {
+          "sequence": "schoolgirls",
+          "bytes": 537548,
+          "bpp": 0.820233154296875,
+          "mean_psnr": 25.9615767283535,
+          "mean_msssim": 0.962850634008646
+        },
+        {
+          "sequence": "surf",
+          "bytes": 263054,
+          "bpp": 0.583837890625,
+          "mean_psnr": 30.330300203272472,
+          "mean_msssim": 0.9435969027605924
+        }
+      ],
+      "bits": 4,
+      "decode_reconstruction_exact": true,
+      "calibration_provenance": {
+        "split": "train",
+        "bits": 4,
+        "mode": "per_channel",
+        "gop_size": 10,
+        "reference_mode": "mc",
+        "block_size": 16,
+        "search_range": 16,
+        "motion_bits": 6,
+        "lower_percentile": 0.1,
+        "upper_percentile": 99.9,
+        "intra_frames": 400,
+        "residual_frames": 358,
+        "motion_frames": 358,
+        "intra_entropy_model_id": "14c4b8bf40056ca1",
+        "residual_entropy_model_id": "8a64b259c6c9b389",
+        "motion_entropy_model_id": "e1bbc6643d038eee"
+      }
+    },
+    "intra/3bit": {
+      "label": "intra/3bit",
+      "arm": "nvc_intra",
+      "setting": "3bit",
+      "total_bytes": 2638574,
+      "total_pixels": 47120384,
+      "frames": 719,
+      "bpp": 0.4479715615220793,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 26.22806176941636,
+          "msssim": 0.8951282718342353
+        },
+        "frame_mean": {
+          "psnr": 26.09570600864,
+          "msssim": 0.8992401867151592
+        },
+        "sequence_pooled": {
+          "psnr": 26.18733898240962,
+          "msssim": 0.8951282718342353
+        },
+        "global_pooled": {
+          "psnr": 25.89978671426262,
+          "msssim": 0.8992401867151592
+        }
+      },
+      "encode_seconds": 2.2829434999875957,
+      "decode_seconds": 1.2824653999705333,
+      "per_sequence": [
+        {
+          "sequence": "bmx-bumps",
+          "bytes": 315431,
+          "bpp": 0.42783067491319443,
+          "mean_psnr": 26.302520252645,
+          "mean_msssim": 0.8920086052682664
+        },
+        {
+          "sequence": "car-turn",
+          "bytes": 262911,
+          "bpp": 0.40117034912109373,
+          "mean_psnr": 26.49935730095735,
+          "mean_msssim": 0.8936024516820907
+        },
+        {
+          "sequence": "cat-girl",
+          "bytes": 355019,
+          "bpp": 0.4869357334094101,
+          "mean_psnr": 26.241457558086648,
+          "mean_msssim": 0.9388075470924377
+        },
+        {
+          "sequence": "cows",
+          "bytes": 417823,
+          "bpp": 0.4904210017277644,
+          "mean_psnr": 24.140662305217635,
+          "mean_msssim": 0.9109326681265464
+        },
+        {
+          "sequence": "drift-chicane",
+          "bytes": 142693,
+          "bpp": 0.3349726750300481,
+          "mean_psnr": 27.34557550554363,
+          "mean_msssim": 0.8447442742494436
+        },
+        {
+          "sequence": "drone",
+          "bytes": 301559,
+          "bpp": 0.4045208941449176,
+          "mean_psnr": 27.602164069684633,
+          "mean_msssim": 0.8946094938686916
+        },
+        {
+          "sequence": "gold-fish",
+          "bytes": 322547,
+          "bpp": 0.5047873472556089,
+          "mean_psnr": 25.83268087183,
+          "mean_msssim": 0.8790519413275596
+        },
+        {
+          "sequence": "schoolgirls",
+          "bytes": 363616,
+          "bpp": 0.554833984375,
+          "mean_psnr": 24.638202120393483,
+          "mean_msssim": 0.938391050696373
+        },
+        {
+          "sequence": "surf",
+          "bytes": 156975,
+          "bpp": 0.34839976917613635,
+          "mean_psnr": 27.449935940388887,
+          "mean_msssim": 0.864006414196708
+        }
+      ],
+      "bits": 3,
+      "decode_reconstruction_exact": true,
+      "calibration_provenance": {
+        "split": "train",
+        "bits": 3,
+        "mode": "per_channel",
+        "gop_size": 10,
+        "reference_mode": "mc",
+        "block_size": 16,
+        "search_range": 16,
+        "motion_bits": 6,
+        "lower_percentile": 0.1,
+        "upper_percentile": 99.9,
+        "intra_frames": 400,
+        "residual_frames": 358,
+        "motion_frames": 358,
+        "intra_entropy_model_id": "b523711d2e982057",
+        "residual_entropy_model_id": "13fe5bdc4ebb1ef9",
+        "motion_entropy_model_id": "90eeac872bfa2f97"
+      }
+    }
+  },
+  "comparisons": {
+    "sequence_mean/psnr": {
+      "bd_rate_percent": 176.1850622572322,
+      "quality_overlap": [
+        26.22806176941636,
+        29.600742325495283
+      ]
+    },
+    "sequence_mean/msssim": {
+      "bd_rate_percent": 167.5521463402255,
+      "quality_overlap": [
+        0.8951282718342353,
+        0.9683075080266439
+      ]
+    },
+    "frame_mean/psnr": {
+      "bd_rate_percent": 164.2193514766801,
+      "quality_overlap": [
+        26.09570600864,
+        29.37056853375581
+      ]
+    },
+    "frame_mean/msssim": {
+      "bd_rate_percent": 150.296968750795,
+      "quality_overlap": [
+        0.8992401867151592,
+        0.9681656372232132
+      ]
+    },
+    "sequence_pooled/psnr": {
+      "bd_rate_percent": 163.95073954334754,
+      "quality_overlap": [
+        26.18733898240962,
+        29.37077719424555
+      ]
+    },
+    "sequence_pooled/msssim": {
+      "bd_rate_percent": 167.5521463402255,
+      "quality_overlap": [
+        0.8951282718342353,
+        0.9683075080266439
+      ]
+    },
+    "global_pooled/psnr": {
+      "bd_rate_percent": 127.53138496859168,
+      "quality_overlap": [
+        25.89978671426262,
+        28.542485016487067
+      ]
+    },
+    "global_pooled/msssim": {
+      "bd_rate_percent": 150.296968750795,
+      "quality_overlap": [
+        0.8992401867151592,
+        0.9681656372232132
+      ]
+    }
+  },
+  "valid": true,
+  "verification": [
+    {
+      "bits": 5,
+      "recorded_bytes": 5628186,
+      "measured_bytes": 5628186,
+      "bytes_match": true,
+      "psnr_abs_diff_db": 0.0,
+      "msssim_abs_diff": 0.0,
+      "reproduces": true
+    },
+    {
+      "bits": 4,
+      "recorded_bytes": 4130011,
+      "measured_bytes": 4130011,
+      "bytes_match": true,
+      "psnr_abs_diff_db": 0.0,
+      "msssim_abs_diff": 0.0,
+      "reproduces": true
+    },
+    {
+      "bits": 3,
+      "recorded_bytes": 2638574,
+      "measured_bytes": 2638574,
+      "bytes_match": true,
+      "psnr_abs_diff_db": 0.0,
+      "msssim_abs_diff": 0.0,
+      "reproduces": true
+    }
+  ],
+  "finished_utc": "2026-09-26T20:57:47.893419+00:00"
+}

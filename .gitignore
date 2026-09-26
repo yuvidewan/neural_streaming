@@ -94,6 +94,9 @@ outputs/benchmarks/*
 !outputs/benchmarks/parity_s0/
 # Same for the intra-only run: it is the denominator of the Stage 1 gate.
 !outputs/benchmarks/parity_intra/
+# And for the lean gate harness's verification run, which is the proof that the
+# harness reproduces that denominator exactly.
+!outputs/benchmarks/intra_gate_baseline/
 # QAT+control combined training output (Milestone 8B): checkpoints (already
 # caught by *.pt below) plus progress_*.json/history.json, which are not.
 # Auto-created by scripts/train_vimeo_qat_combined.py - no .gitkeep needed.

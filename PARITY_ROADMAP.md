@@ -149,11 +149,22 @@ Replace ReLU with GDN/IGDN, add residual blocks, scale to ~8-12M parameters
   `D + lambda*R` - the rate proxy needs a bin width, and a bin width needs a
   trained model. `lambda` is unswept and wants a short sweep before ten chunks
   are committed to one value.
-- [ ] Recalibrate the rest of the codec against the new latent. The intra grids,
-  the G16 context model and the codebooks were all fitted against the baseline
-  transform's latent distribution; a new transform invalidates them, and the gate
-  number means nothing until they are refitted.
-- [ ] Re-run the intra-only scoreboard with the trained transform and compare.
+- [x] The gate harness - `scripts/benchmark_intra_gate.py`, verified against the
+  denominator above. **This removed what looked like the stage's biggest blocker.**
+  The deployed stack's G16 context model, M10K model and codebooks are all fitted
+  to a 64-channel latent (`ChannelContextEntropyModel`'s
+  `nn.Embedding(latent_channels, hidden)` alone makes the trained G16 checkpoint
+  unloadable against Stage 1's 192), which read as "retrain the entropy stack
+  before measuring anything". But an I-frame touches none of it: it needs only the
+  intra grid, which `calibrate_grids` fits by running the autoencoder. So the gate
+  needs one calibration and no retraining. Verified by reproducing the deployed
+  codec's own intra totals byte-for-byte through the lean path.
+- [ ] Re-run the gate with the trained transform and compare against +176.2%.
+- [ ] Recalibrate the rest of the codec against the new latent. Needed for a
+  full-video number, **not** for the Stage 1 gate: the G16 context model, the
+  codebooks and the motion table are all P-frame machinery fitted to the baseline
+  transform's latent, and a new transform invalidates them. Scope this when Stage 1
+  clears its intra gate, not before.
 
 **Gate:** intra-only BD-rate vs the current intra codec. Expect the largest
 single jump of the whole plan here.
