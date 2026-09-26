@@ -413,3 +413,32 @@ def test_the_first_epoch_always_counts_as_an_improvement(stage1, tmp_path):
 
     assert len(result["history"]) == 1
     assert result["best"] < float("inf"), "the first epoch did not set a best"
+
+
+def test_the_notebook_starts_phase_b_at_this_project_s_swept_lambda():
+    """lambda chooses the operating point on the RD curve; it is not a value
+    training reveals. M10D/M10E/M10F swept 0 to 6e-4 on this same D + lambda*R
+    form and selected 3e-4 - the deployed checkpoint is lambda_3.0e-04_seed42 -
+    so starting there keeps Stage 1 at the baseline's operating point, which is
+    what makes the gate comparison like-for-like. An earlier draft used 0.01,
+    ~33x larger, which would have trained at a different rate point entirely."""
+    import json
+    import re
+
+    notebook = json.loads((ROOT / "colab_train_stage1.ipynb").read_text(encoding="utf-8"))
+    config = "".join(notebook["cells"][2]["source"])
+
+    match = re.search(r"^RATE_LAMBDA\s*=\s*([0-9.e-]+)", config, re.MULTILINE)
+    assert match, "RATE_LAMBDA not found in the config cell"
+    assert float(match.group(1)) == 3e-4
+
+
+def test_the_deployed_checkpoint_confirms_that_lambda():
+    """The claim above is checkable against the repo rather than taken on trust."""
+    import json
+
+    decision = json.loads(
+        (ROOT / "outputs" / "m10f_lambda_boundary" / "boundary_decision.json")
+        .read_text(encoding="utf-8"))
+
+    assert decision["final_lambda_decision"]["selected"] == 0.0003

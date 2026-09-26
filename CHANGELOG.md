@@ -91,6 +91,34 @@ only once Stage 1 clears that gate.
 10 tests, including a bit-exact intra round trip on a miniature model and a
 negative control that the decoder refuses a stream containing a P-frame.
 
+### Phase B's lambda: 0.01 was 33x off this project's own swept value
+
+`RATE_LAMBDA` had been left at 0.01 and described as "not a settled value, sweep it".
+The first half is wrong and the framing was confused.
+
+Lambda in `D + lambda*R` **chooses where on the rate-distortion curve the model
+sits** — it is not a value training reveals. Every lambda yields a valid model at a
+different rate/quality tradeoff, which is why a real RD curve means training several
+(Stage 4's job, as the roadmap says).
+
+And it had already been swept here. **M10D** (refinement) → **M10E** (lock) →
+**M10F** (boundary) covered 0 to 6e-4 on this same objective form, and
+`outputs/m10f_lambda_boundary/boundary_decision.json` records
+`final_lambda_decision.selected: 0.0003`. The deployed checkpoint is literally
+`lambda_3.0e-04_seed42`. So the default is now **3e-4**, which keeps Stage 1 at the
+baseline's operating point — the thing that makes the gate comparison like-for-like.
+At 0.01 Stage 1 would have trained at a far more aggressive rate point than the
+codec it is being measured against.
+
+Two caveats kept in the notebook rather than dropped: 3e-4 was tuned for the 593k
+transform, so a different transform can move the optimum and it is a starting point
+for a short sweep on one chunk; and a lambda from a paper is not transferable,
+because the scale depends on how D and R are expressed and most papers put lambda on
+the distortion term with a 255² factor, which inverts it.
+
+Two tests pin this — the notebook's value, and the recorded sweep decision it comes
+from, so the claim is checkable against the repo rather than taken on trust.
+
 ### The training schedule: a final LR decay, and early stopping made relative
 
 Two things in `scripts/train_vimeo_stage1.py` that would each have cost a 20-hour

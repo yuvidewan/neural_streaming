@@ -145,3 +145,57 @@ def test_it_does_not_claim_the_gate_needs_the_entropy_stack_refitted(notebook):
 
     assert "before the number means anything" not in text
     assert "not needed for this gate" in text
+
+
+# --- the audit fixes: things that would each cost a session or a checkpoint -------
+
+
+def test_phase_b_is_off_by_default(notebook):
+    """"Reopen and Run All" is the documented way to resume after a disconnect. If
+    the Phase B cells were unguarded, finishing Phase A during a Run All would
+    immediately start a 9GB calibration download and a second full training run
+    that nobody asked for."""
+    config = _cells(notebook, "code")[0]
+
+    assert re.search(r"^RUN_PHASE_B\s*=\s*False", config, re.MULTILINE)
+
+
+def test_the_calibration_and_phase_b_cells_are_guarded(notebook):
+    code = _cells(notebook, "code")
+    calibration = next(c for c in code if "calibrate_quantizer.py" in c)
+    phase_b = next(c for c in code if "--rate-enabled" in c)
+
+    for cell in (calibration, phase_b):
+        assert "if not RUN_PHASE_B:" in cell
+        assert "else:" in cell
+
+
+def test_phase_b_snapshots_phase_a_before_overwriting_best(notebook):
+    """Phase B resets the best-loss tracker - its objective is D + lambda*R, which
+    is not comparable to Phase A's plain MSE - so its first epoch overwrites
+    best.pt. Confirmed at train_vimeo_stage1.py's `not args.reset_progress` guard.
+    Without a snapshot, a badly chosen lambda destroys ~20 hours of Phase A work."""
+    phase_b = next(c for c in _cells(notebook, "code") if "--rate-enabled" in c)
+
+    assert "best_phase_a.pt" in phase_b
+    assert "shutil.copy" in phase_b
+    # idempotent, or a Phase B resume would overwrite the snapshot with Phase B's
+    # own weights and lose the thing it exists to protect
+    assert "if not phase_a_best.is_file():" in phase_b
+
+
+def test_the_sanity_cell_raises_on_a_cpu_runtime(notebook):
+    """It used to print a warning. Phase A on CPU is ~100x slower, and a printed
+    warning scrolls away - a whole session would be wasted before anyone noticed."""
+    sanity = next(c for c in _cells(notebook, "code") if "ms/step" in c)
+
+    assert "raise RuntimeError(" in sanity
+    assert "if not torch.cuda.is_available():" in sanity
+
+
+def test_the_progress_cell_survives_a_first_run(notebook):
+    """It reads progress.json, which does not exist until Phase A has written to
+    Drive. Crashing there would look like a training failure."""
+    progress = next(c for c in _cells(notebook, "code") if "Completed chunks" in c)
+
+    assert "is_file()" in progress

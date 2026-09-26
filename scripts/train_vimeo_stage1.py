@@ -159,7 +159,20 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
     parser.add_argument("--rate-enabled", action="store_true",
                         help="Phase B: train on D + lambda*R instead of distortion alone. "
                              "Requires --rate-calibration.")
-    parser.add_argument("--rate-lambda", type=float, default=0.0)
+    parser.add_argument(
+        "--rate-lambda", type=float, default=0.0,
+        help=(
+            "Rate weight in D + lambda*R, which chooses WHERE ON THE RD CURVE the "
+            "model sits rather than being a value training reveals. 0.0 (the default) "
+            "reproduces the distortion-only objective exactly. For Phase B, 3e-4 is "
+            "this project's own swept value - M10D/M10E/M10F covered 0 to 6e-4 on this "
+            "same objective form and selected it, and the deployed checkpoint is "
+            "lambda_3.0e-04_seed42 - so it keeps Stage 1 at the baseline's operating "
+            "point. Do not copy a lambda from a paper: the scale depends on D and R's "
+            "units, and most papers put lambda on the distortion term with a 255^2 "
+            "factor, which inverts it."
+        ),
+    )
     parser.add_argument("--rate-lr", type=float, default=defaults.rate_lr)
     parser.add_argument("--rate-calibration", type=Path, default=None,
                         help="calibrate_quantizer.py output from the TRAIN split, supplying the "
