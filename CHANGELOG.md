@@ -91,6 +91,44 @@ only once Stage 1 clears that gate.
 10 tests, including a bit-exact intra round trip on a miniature model and a
 negative control that the decoder refuses a stream containing a P-frame.
 
+### The training schedule: a final LR decay, and early stopping made relative
+
+Two things in `scripts/train_vimeo_stage1.py` that would each have cost a 20-hour
+re-run to correct, found by reviewing the settings before launching rather than after.
+
+**There was no learning-rate decay at all.** `1e-4` with Adam is the right starting
+rate — it is the standard for this architecture class — but every reference recipe
+for these models *ends* with a decay to `1e-5`, worth a few tenths of a dB that no
+amount of extra epochs at the undecayed rate recovers. New `--lr-decay-chunks`
+(default 2) and `--lr-decay-factor` (default 0.1) run the last chunks of the
+schedule at the decayed rate.
+
+It is keyed to the chunk's **position in the schedule** rather than to a torch
+scheduler's state, for two reasons. This script is built to be interrupted and
+resumed, and a position-derived rate is correct after a resume with no scheduler
+state to checkpoint. And a plateau scheduler would be the wrong instrument here:
+validation loss is measured on each chunk's own held-out split, so it is a different
+dataset every chunk — "no improvement" often means "harder chunk", not "converged".
+Only the model's parameter group is decayed; the rate estimator keeps `--rate-lr`,
+whose 2*C scalars are fitting a density and need O(1) movement (M9C.1).
+
+**Early stopping used an absolute threshold on a metric that shrinks by orders of
+magnitude.** `--early-stop-min-delta 1e-5` was ~1% of the validation MSE after one
+epoch (measured at 0.000969 in the chunk-1 trial) but ~5% once MSE reached 2e-4, so
+late chunks would stop at the patience floor whether or not they were still
+learning — the metric's scale deciding rather than convergence. Replaced by
+`--early-stop-min-improvement`, a fraction of the chunk's current best, default
+0.002. The first epoch's `inf` best is special-cased, because `inf * 0.0` is NaN and
+every comparison against NaN is False, which would have counted the opening epoch as
+a stall.
+
+Each epoch's learning rate is now recorded in `history.json`, so the decay is
+visible rather than something to infer from the chunk schedule.
+
+8 new tests. One consequence worth noting: with the easier relative bar, chunks are
+more likely to use the full epoch ceiling, so a ten-chunk Phase A is nearer the
+upper end of its time estimate than before.
+
 ### `colab_train_stage1.ipynb` corrected
 
 The notebook's section 7 told the reader to measure the gate with

@@ -59,6 +59,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import math
 import shutil
 import sys
 from pathlib import Path
@@ -115,13 +116,38 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
     parser.add_argument("--epochs-per-chunk-max", type=int, default=4,
                         help="Ceiling per chunk; early stopping usually stops sooner.")
     parser.add_argument("--early-stop-patience", type=int, default=2)
-    parser.add_argument("--early-stop-min-delta", type=float, default=1e-5)
+    parser.add_argument(
+        "--early-stop-min-improvement", type=float, default=0.002,
+        help=(
+            "Fractional improvement in validation loss that counts as progress, "
+            "RELATIVE to the chunk's best so far (0.002 = 0.2%%). Relative rather "
+            "than absolute on purpose: an absolute threshold is a different bar at "
+            "every scale. The previous 1e-5 absolute default was ~1%% of the val MSE "
+            "after one epoch but ~5%% once MSE reached 2e-4, so late chunks stopped at "
+            "the patience floor whether or not they were still learning - the metric's "
+            "scale decided, not convergence."
+        ),
+    )
     parser.add_argument("--batch-size", type=int, default=16,
                         help="16 rather than the baseline's 32: the Stage 1 model is 14x larger "
                              "and peaks near 3 GiB at this batch and crop size.")
     parser.add_argument("--crop-size", type=int, default=256,
                         help="Vimeo frames are 448x256; must be divisible by 16.")
-    parser.add_argument("--learning-rate", type=float, default=1e-4)
+    parser.add_argument("--learning-rate", type=float, default=1e-4,
+                        help="Adam's rate for the transform's own weights. 1e-4 is the "
+                             "standard starting rate for this architecture class.")
+    parser.add_argument(
+        "--lr-decay-chunks", type=int, default=2,
+        help=(
+            "Run the LAST this-many chunks of the schedule at the decayed rate "
+            "(--learning-rate * --lr-decay-factor). This is the final decay the "
+            "reference recipes for this architecture class all end with - typically "
+            "1e-4 down to 1e-5 - and it is worth a few tenths of a dB that no amount "
+            "of extra epochs at the undecayed rate recovers. 0 disables it."
+        ),
+    )
+    parser.add_argument("--lr-decay-factor", type=float, default=0.1,
+                        help="Multiplier applied during --lr-decay-chunks.")
     parser.add_argument("--latent-channels", type=int, default=192)
     parser.add_argument("--base-channels", type=int, default=192)
     parser.add_argument("--residual-blocks", type=int, default=1)
@@ -261,6 +287,38 @@ def build_optimizer(model, rate_estimator, args) -> torch.optim.Optimizer:
     )
 
 
+def learning_rate_for_chunk(chunk_number: int, chunks: list[int], args) -> float:
+    """The transform's learning rate while training on this chunk.
+
+    Derived from the chunk's POSITION in the schedule rather than from a
+    torch scheduler's internal state, for one practical reason: this script is
+    built to be interrupted and resumed, and a position-derived rate is correct
+    after a resume without any scheduler state to checkpoint or restore.
+
+    A plateau scheduler would also be the wrong instrument here. Validation loss
+    is measured on each chunk's OWN held-out split, so it is a different dataset
+    every chunk and not comparable across them - "no improvement" would often
+    mean "harder chunk", not "converged".
+    """
+    if args.lr_decay_chunks <= 0 or chunk_number not in chunks:
+        return args.learning_rate
+    position = chunks.index(chunk_number)
+    if position >= max(0, len(chunks) - args.lr_decay_chunks):
+        return args.learning_rate * args.lr_decay_factor
+    return args.learning_rate
+
+
+def set_transform_learning_rate(optimizer: torch.optim.Optimizer, rate: float) -> None:
+    """Set the rate on the model's parameter group only.
+
+    The rate estimator, when present, lives in its own group at --rate-lr and is
+    left alone: its 2*C scalars are fitting a density and need O(1) movement
+    (M9C.1), which decaying them would take away for no benefit. `build_optimizer`
+    puts the model's group first.
+    """
+    optimizer.param_groups[0]["lr"] = rate
+
+
 def train_one_chunk(
     *, model, optimizer, rate_estimator, train_loader, val_loader, device, args,
     start_epoch: int, chunk_number: int, history: list[dict[str, Any]],
@@ -300,6 +358,9 @@ def train_one_chunk(
             "val_psnr": val_metrics["psnr"],
             "rate_enabled": rate_estimator is not None,
             "rate_lambda": args.rate_lambda if rate_estimator is not None else None,
+            # Recorded per epoch so the decay is visible in history.json rather
+            # than something you have to infer from the chunk schedule.
+            "learning_rate": optimizer.param_groups[0]["lr"],
         }
         # Only the rate loops report these; the distortion-only ones do not.
         for key in ("distortion", "rate"):
@@ -326,7 +387,13 @@ def train_one_chunk(
         (checkpoint_dir / "history.json").write_text(json.dumps(history, indent=2), encoding="utf-8")
 
         epoch += 1
-        if val_loss < best_chunk_val_loss - args.early_stop_min_delta:
+        # Relative, so the bar means the same thing at 1e-3 and at 1e-5. The
+        # first epoch's `inf` best is handled explicitly: inf * 0.0 is NaN, and
+        # every comparison against NaN is False, which would count the opening
+        # epoch as a stall.
+        threshold = (best_chunk_val_loss * (1.0 - args.early_stop_min_improvement)
+                     if math.isfinite(best_chunk_val_loss) else float("inf"))
+        if val_loss < threshold:
             best_chunk_val_loss = val_loss
             stalled = 0
         else:
@@ -404,6 +471,15 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Objective: {'D + %g*R' % args.rate_lambda if rate_estimator is not None else 'distortion only (Phase A)'}")
     print(f"Chunks: {args.chunks}   done already: {progress['completed_chunks']}")
     print(f"Device: {device}   batch {args.batch_size} at {args.crop_size}x{args.crop_size}")
+    if args.lr_decay_chunks > 0 and len(args.chunks) > args.lr_decay_chunks:
+        decayed = [c for c in args.chunks
+                   if learning_rate_for_chunk(c, list(args.chunks), args) != args.learning_rate]
+        print(f"Learning rate: {args.learning_rate:g}, decayed to "
+              f"{args.learning_rate * args.lr_decay_factor:g} on chunk(s) {decayed}")
+    else:
+        print(f"Learning rate: {args.learning_rate:g} throughout (no final decay)")
+    print(f"Early stop: patience {args.early_stop_patience}, needs "
+          f"{args.early_stop_min_improvement:.3%} relative improvement")
     print("=" * 70, flush=True)
 
     for chunk_number in args.chunks:
@@ -420,6 +496,12 @@ def main(argv: list[str] | None = None) -> int:
             vimeo_root, output_dir / "vimeo_manifest.json", args.seed)
 
         train_loader, val_loader = build_loaders(train_manifest, val_manifest, args)
+
+        chunk_lr = learning_rate_for_chunk(chunk_number, list(args.chunks), args)
+        set_transform_learning_rate(optimizer, chunk_lr)
+        if chunk_lr != args.learning_rate:
+            print(f"[chunk {chunk_number}] final decay: transform learning rate "
+                  f"{args.learning_rate:g} -> {chunk_lr:g}", flush=True)
 
         start_epoch, best_val_loss = train_one_chunk(
             model=model, optimizer=optimizer, rate_estimator=rate_estimator,

@@ -181,7 +181,7 @@ def test_early_stopping_cuts_a_chunk_short_when_validation_stalls(stage1, tmp_pa
     """Ten chunks times a full epoch ceiling is the difference between a run
     that finishes overnight and one that does not."""
     args = _args(stage1, epochs_per_chunk_max=5, early_stop_patience=1,
-                 early_stop_min_delta=1e9)  # nothing can count as an improvement
+                 early_stop_min_improvement=1.0)  # demands a 100% cut; impossible
 
     result = _run_chunk(stage1, args, tmp_path)
 
@@ -323,3 +323,93 @@ def test_reuse_chunk_falls_back_to_downloading_a_half_extracted_chunk(
     stage1.prepare_chunk(chunks, 1, chunk_dir, _args(stage1, reuse_chunk=True))
 
     assert len(calls) == 1
+
+
+# --- the learning-rate schedule ---------------------------------------------------
+
+
+def test_the_last_chunks_run_at_the_decayed_rate(stage1):
+    """The final decay every reference recipe for this architecture class ends
+    with. Without it the model plateaus above where it could, and no amount of
+    extra epochs at the undecayed rate recovers the difference."""
+    args = _args(stage1, learning_rate=1e-4, lr_decay_chunks=2, lr_decay_factor=0.1)
+    chunks = list(range(1, 11))
+
+    rates = [stage1.learning_rate_for_chunk(c, chunks, args) for c in chunks]
+
+    assert rates[:8] == [1e-4] * 8
+    assert rates[8:] == [1e-5, 1e-5]
+
+
+def test_the_decay_can_be_switched_off(stage1):
+    args = _args(stage1, learning_rate=1e-4, lr_decay_chunks=0)
+    chunks = list(range(1, 11))
+
+    assert {stage1.learning_rate_for_chunk(c, chunks, args) for c in chunks} == {1e-4}
+
+
+def test_the_decay_is_positional_so_a_short_schedule_still_decays(stage1):
+    """It keys off position in the schedule actually being run, not the chunk
+    number, so a two-chunk trial run still ends decayed rather than never
+    reaching the branch."""
+    args = _args(stage1, learning_rate=1e-4, lr_decay_chunks=1, lr_decay_factor=0.1)
+
+    assert stage1.learning_rate_for_chunk(3, [3, 7], args) == 1e-4
+    assert stage1.learning_rate_for_chunk(7, [3, 7], args) == 1e-5
+
+
+def test_the_decay_touches_the_model_group_only(stage1):
+    """The rate estimator's 2*C scalars are fitting a density and need O(1)
+    movement (M9C.1); decaying them would take that away for no benefit."""
+    args = _args(stage1, learning_rate=1e-4, rate_lr=0.5)
+    model = stage1.build_model(args)
+    estimator = torch.nn.Linear(2, 2)
+    optimizer = stage1.build_optimizer(model, estimator, args)
+
+    stage1.set_transform_learning_rate(optimizer, 1e-5)
+
+    assert [group["lr"] for group in optimizer.param_groups] == [1e-5, 0.5]
+
+
+def test_the_epoch_history_records_the_learning_rate(stage1, tmp_path):
+    """So the decay is visible in history.json rather than something you have to
+    infer from the chunk schedule afterwards."""
+    args = _args(stage1)
+    result = _run_chunk(stage1, args, tmp_path)
+
+    assert all("learning_rate" in record for record in result["history"])
+
+
+# --- relative early stopping ------------------------------------------------------
+
+
+def test_early_stopping_is_relative_not_absolute(stage1, tmp_path):
+    """The old 1e-5 absolute threshold was ~1% of the val MSE after one epoch but
+    ~5% once MSE reached 2e-4, so late chunks stopped at the patience floor
+    whether or not they were still learning. A 0.2% relative bar means the same
+    thing at every scale.
+
+    Checked on the loop's own arithmetic: a 1% improvement must count as progress
+    at both 1e-3 and 1e-5, which an absolute 1e-5 threshold fails at the smaller
+    scale.
+    """
+    args = _args(stage1, early_stop_min_improvement=0.002)
+
+    for best in (1e-3, 1e-5):
+        improved = best * 0.99          # a 1% cut
+        threshold = best * (1.0 - args.early_stop_min_improvement)
+        assert improved < threshold, f"a 1% cut must count as progress at {best}"
+        # and the old absolute rule does not agree at the smaller scale
+        if best == 1e-5:
+            assert not (improved < best - 1e-5)
+
+
+def test_the_first_epoch_always_counts_as_an_improvement(stage1, tmp_path):
+    """The chunk's best starts at inf, and inf * 0.0 is NaN - every comparison
+    against which is False, which would count the opening epoch as a stall."""
+    args = _args(stage1, epochs_per_chunk_max=1, early_stop_min_improvement=1.0)
+
+    result = _run_chunk(stage1, args, tmp_path)
+
+    assert len(result["history"]) == 1
+    assert result["best"] < float("inf"), "the first epoch did not set a best"
