@@ -13,6 +13,54 @@ the time.
 
 ---
 
+## 2026-09-30 — Where a C/C++ rewrite would pay: two hot spots, both measured (RESEARCH ONLY, NO PRODUCTION CHANGE)
+
+**Full report and exact steps for Aditya: [`C_REWRITE_REPORT.md`](C_REWRITE_REPORT.md).**
+Reproducible harnesses and prototype kernels: `docs/c_rewrite_prototypes/`.
+**Scope:** `src/nvc/` untouched; no codec, container or bundle change; no stream bytes change.
+
+The range coder was the one component rewritten in C (M8B). This asked where else a rewrite
+helps, and measured it: a per-stage profile of `nvc.video` encode and decode (256x256, real
+DAVIS frames, 64-channel latent, GOP 10, random weights - timing depends on shapes), on a
+CPU-only laptop, then AVX2 C prototypes of the two hot spots checked against the current code.
+
+| | encode | decode |
+|---|---:|---:|
+| Block-motion search (`estimate_block_motion`) | **85%** | - |
+| Codebook assignment (`assign_tensor`) | 7% | **47%** |
+| Range coder (already C) | 0.3% | 3% |
+| Everything else | networks, warp, quantiser | networks, warp, quantiser |
+
+- **Motion search:** a 1,089-iteration Python loop of full-frame tensor ops. The C kernel is
+  **25-31x faster** single-threaded (24-35 ms vs 610-985 ms per frame) and matched the torch
+  output on 24 frame pairs x 2 modes (18 real DAVIS pairs + 6 adversarial: flat, exact ties,
+  noise, known shift). **Encoder-only**, so it cannot affect decodability.
+- **Assignment:** builds a 33 MB [16384, 512] matrix for an argmin. The fused kernel is
+  **3.4-5.5x faster** and matched on 393,216 rows. **Riskier**: the decoder must reproduce the
+  encoder's assignment exactly, and float summation order matters - see below.
+- **Estimated** (Amdahl, not measured integrated): encode ~8x, decode ~1.6x.
+- **Not worth a rewrite (measured):** the range coder (2.7-4.3 ms), `warp_blocks`, the quantiser,
+  header packing. GDN elementwise ops were ~5% of a CPU forward/backward (GPU unmeasured).
+
+**A finding about bit-exactness that matters beyond this work:** two valid float32 summation
+orders differ from torch's matmul in 0.7% / 22.8% of cost entries, and the latter flipped 38 of
+196,608 argmins. Torch's own matmul also gives *identical* prototypes different last-bit costs
+when one sits in the final 8-column tile (k = 504-511). The assignment therefore depends on the
+BLAS library at the last bit; encode and decode have only ever been run on one machine, so
+**cross-machine safety of the current path is untested** (a hypothesis worth testing, not a
+finding of a bug).
+
+**Priority, stated honestly:** this does not change the BD-rate against H.264 (PARITY_ROADMAP
+rule 6) - it shortens experiment turnaround only. Stage 1 training stays the critical path.
+Stage 3 replaces block search with learned flow, and the K=512 codebook is on the roadmap's
+"Retire" list, so the assignment kernel may be short-lived.
+
+**Limits:** CPU only, one laptop (~35% run-to-run timing variation; shares are stable); random
+weights; 256x256; the CUDA path of the profile harness is untested; prototypes are
+single-threaded and AVX2-only. Nothing was integrated.
+
+---
+
 ## 2026-09-27 — The Stage 1 gate harness: measuring a new transform without retraining the entropy stack
 
 `scripts/benchmark_intra_gate.py` measures intra-only BD-rate for **any**
