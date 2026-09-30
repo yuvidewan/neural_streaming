@@ -12,6 +12,16 @@ codebook assignment is **~47% of decode time**. Both were prototyped in AVX2 C a
 against the current PyTorch code. The range coder that motivated the exercise is now only
 0.2-3% of a frame.
 
+> **STATUS UPDATE (branch `c-motion-search`, not merged): step 1 is implemented.** The native
+> motion-search kernel below is built into `nvc.video` and tested; the projections in section 3
+> are replaced by measurements. **Measured end to end on a CPU-only laptop: encode 463 -> 96
+> ms/frame (4.8x)**, motion search 85% -> 15% of encode, **0 mismatches on 720 real DAVIS pairs**
+> plus 34 tests and six mutation-based negative controls (see CHANGELOG 2026-09-30 "Native
+> block-motion search"). **Still open, and only you can do them:** run
+> `scripts/verify_promoted_codec.py` with `NVC_MOTION_BACKEND=torch` and `=native` (both must
+> report 54/54 byte-identical; needs the bundles), run the profile on your GPU, and see CI's first
+> Linux result. **Step 2 (codebook assignment) is not started**; it is now the top encode cost (44%).
+
 ---
 
 ## 0. For Aditya: what to do, in order
@@ -120,10 +130,14 @@ gives the gate that would make it one.
 the decoder never runs this. If a rare tie ever resolved differently, streams would still
 decode correctly - the only thing that could change is byte-identity with old streams.
 
-**Projected effect** (Amdahl estimate from the measured shares and kernel speed-ups, not a
-measurement of an integrated kernel): encode goes from 781-1070 ms/frame to about **140-190
-ms/frame with this kernel alone (~5.5x)**, and to about **100-130 ms/frame (~8x) once the
-assignment kernel of section 4 is also in**. For scale: a full DAVIS TEST encode has roughly 650
+**Effect - projected, then measured.** *Projected* (Amdahl, from the shares and the prototype
+speed-ups): 140-190 ms/frame with this kernel alone (~5.5x), and about 100-130 ms/frame (~8x) once
+the assignment kernel of section 4 is also in. *Measured after integrating step 1* (branch
+`c-motion-search`, idle laptop, 4 threads): **463 -> 96 ms/frame, 4.8x**; the motion stage went from
+437 to 16 ms per P-frame (27x) and from 85% to 15% of encode. The measured ratio is a little under the
+projection, and both runs were made on a quieter machine than the earlier profile, so compare the
+ratio and the shares, not the absolute milliseconds with section 1's. The ~8x figure for both kernels
+is still a projection. For scale: a full DAVIS TEST encode has roughly 650
 P-frames; at 0.6-1.0 s each that is **about 7-10 minutes of pure motion search per rate point on
 this laptop, versus roughly 15-25 seconds** with the kernel. **28 scripts** reference
 `estimate_block_motion` through their own frozen copy (`scripts/m10h_motion_compensation.py:182`
@@ -229,11 +243,18 @@ f. **Tests** (negative-controlled: show each fails against a deliberately broken
    known shift, all-zero), early exit on and off, scalar path vs SIMD path, dispatcher.
    `tests/test_video_codec.py` already pins `nvc.video` against the frozen research script;
    keep that passing.
-g. **Merge gates.** (1) full `pytest` green; (2) **`scripts/verify_promoted_codec.py` still
-   reports 54/54 streams byte-identical on all of DAVIS TEST** - this is what turns the 24-pair
-   test in this report into evidence (needs the codec bundles, which only you have; they are
+g. **Merge gates.** (1) full `pytest` green; (2) **`scripts/verify_promoted_codec.py` reports
+   54/54 streams byte-identical on all of DAVIS TEST, run twice** - once with
+   `NVC_MOTION_BACKEND=torch` and once with `NVC_MOTION_BACKEND=native` (PowerShell:
+   `$env:NVC_MOTION_BACKEND="native"; python scripts/verify_promoted_codec.py`). This is what
+   turns the 720-pair check into proof; it needs the codec bundles, which only you have (they are
    gitignored); (3) the profile harness on your machine shows the speed-up; (4) a CHANGELOG
    entry with the numbers.
+
+   **Status on branch `c-motion-search`:** a-f done (kernel with scalar + AVX2 paths and run-time
+   dispatch, loader, packaging, dispatcher, threads, tests with mutation controls). Gate (1) is run
+   before each commit; (2) is **not** done - it is yours; (3) measured on a CPU-only laptop
+   (463 -> 96 ms/frame), GPU not measured; (4) done.
 
 ### Step 2 - codebook-assignment kernel (only if decode speed matters)
 

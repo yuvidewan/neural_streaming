@@ -14,6 +14,8 @@ dist/
 # only the .c source) ---
 src/nvc/compression/_native/*.dll
 src/nvc/compression/_native/*.dylib
+src/nvc/video/_native/*.dll
+src/nvc/video/_native/*.dylib
 
 # --- Virtual environment ---
 .venv/

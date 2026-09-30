@@ -45,3 +45,6 @@ where = ["src"]
 # would have no arithmetic coder and no fallback.
 [tool.setuptools.package-data]
 "nvc.compression._native" = ["*.c"]
+# The native motion search is optional at run time, but a wheel without its source could
+# never build it - see src/nvc/video/_native/__init__.py.
+"nvc.video._native" = ["*.c"]

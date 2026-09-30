@@ -9,7 +9,8 @@ Or, without holding a codec object, `nvc.encode(frames, bundle)` and
 `nvc.decode(data, bundle)`.
 
 Modules:
-- motion:    block motion estimation, integer warping, motion-payload coding
+- motion:    block motion estimation (PyTorch reference + optional native C kernel, bit-identical),
+             integer warping, motion-payload coding
 - container: the `.nvct` v2 stream format
 - entropy:   causal channel-context entropy model, shared codebook, residual coding
 - bundle:    `CodecBundle`, the frozen, self-verifying state of one operating point

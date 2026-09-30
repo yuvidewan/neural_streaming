@@ -5,7 +5,7 @@ and the rule this project follows going forward - **any change to code gets
 a matching change to tests in the same commit**, not a follow-up "add tests
 later" that never happens.
 
-1165 tests under `tests/`, ~260s on a laptop CPU. No test needs a GPU, a real
+1714 tests under `tests/`, ~8-18 minutes on a 4-core laptop CPU (it depends on load). No test needs a GPU, a real
 Kaggle download, or an external dataset - everything runs on synthetic data
 generated in-process (`tests/helpers.py`), so the full suite runs
 identically in CI, on a fresh clone, or on a machine with no internet
@@ -125,6 +125,7 @@ table, either extend the closest existing file or start a new
 | `test_m11_reproducibility.py` | the permanent cross-process regression: two independent Python processes must produce identical calibration, z_ref, residual symbols, stream bytes, reconstruction and M11 probabilities / frequency tables / payload; plus a check that the fingerprint is not vacuous (a different seed must change every output field) |
 | `test_m11_causal_context.py` | M11's causal contexts: that the coder's order is C-major raster (pinned against the codec), that every candidate context depends only on symbols before it - and that the checker catches planted leaks (right, down, self, next channel) - explicit not-available levels at frame and channel edges, and that a per-frame shuffle is NOT a valid random control (it leaks frame activity) while a whole-split shuffle is |
 | `test_m11_ar_entropy.py` | the channel-autoregressive model: warm start reproduces M10K exactly, planes and outputs are causal for every group size, encoder and decoder derive identical tables group by group, a sample is independent of the others in its batch, bit-exact round trips (per-position and codebook, every G, every rate point, adversarial symbols), and an identity that binds weights, context definition, calibration, bit depth, base model and codebook |
+| `test_native_motion.py` | the native block-motion search (`video/_native/block_search.c`, `video/motion.py`): bit-identical to the PyTorch reference across shapes, block sizes, ranges, both SIMD paths, early exit on/off and thread counts; byte-identical `.nvct` streams through the real codec; the dispatcher's fallbacks (float64, one channel, NaN, missing library); the loader (ABI check, atomic build, no partial file on failure); and six deliberately broken copies of the C source that the same data must catch - which needs frames built from the same values in different accumulation orders, since random frames miss three of the six. Fails rather than skips in CI if the library cannot be built |
 | `test_m11_deployment.py` | that the M11 arms change only bytes on real `.nvct` v2 streams - identical motion, symbols and reconstruction alongside M10H/M10J/M10K/M10L, short sequences and GOP boundaries included - and that a wrong model, calibration, bit depth, group size, context definition or base model is rejected rather than silently decoded |
 
 **Script contract** every `scripts/*.py` file follows, which is what makes

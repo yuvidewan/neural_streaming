@@ -13,6 +13,58 @@ the time.
 
 ---
 
+## 2026-09-30 — Native block-motion search: encode 4.8x faster, bit-identical to the reference (STEP 1 OF C_REWRITE_REPORT; ON BRANCH `c-motion-search`, NOT MERGED)
+
+**Scope:** `src/nvc/video/motion.py` and a new `src/nvc/video/_native/` (C kernel + loader).
+No container, bundle, entropy-model or range-coder change. **No stream byte changes** - the native
+result is bit-identical to the PyTorch reference, which is what the tests pin. Decoding never
+depends on it: only the encoder estimates motion, and the vectors are transmitted.
+
+`estimate_block_motion` is now a dispatcher over two implementations of the same function:
+`estimate_block_motion_torch` (the unchanged reference, plus shared input checks) and
+`estimate_block_motion_native` (`block_search.c`: AVX2 with a scalar path, chosen at run time;
+threaded from Python in chunks of blocks; padding done in C). `backend="auto"` (default) uses the
+native kernel for CPU float32 3-channel finite inputs and otherwise the reference, with a one-time
+`RuntimeWarning` if the library could not be built. `NVC_MOTION_BACKEND=torch|native|auto`
+overrides it. GPU tensors keep the PyTorch path (not changed, not measured). The library is
+optional - unlike the range coder it has a fallback - and is built atomically on first use.
+
+### Measured (CPU-only laptop, i5-8350U, 4 threads, 256x256, random-weight codec, idle machine)
+
+| | PyTorch reference | native |
+|---|---:|---:|
+| encode, ms/frame (1 I + 9 P) | 463 | **96** (**4.8x**) |
+| motion stage, ms per P-frame | 437 | 16 (27x) |
+| motion share of encode | 85% | 15% |
+| one search on a real reconstruction pair | 461 ms | 8.8 ms (53x) |
+
+**Bit-identical, checked at scale:** **720 real DAVIS frame pairs** (all 90 sequences), reference =
+a real trained autoencoder's reconstruction, both native code paths: **0 mismatches**
+(`docs/c_rewrite_prototypes/verify_native_motion.py`). Plus **34 new tests**
+(`tests/test_native_motion.py`) over shapes, block sizes 8/12/16/20/24/32, ranges 0-16, both SIMD
+paths, early exit on/off and 1-7 threads, and byte-identical `.nvct` streams through the real codec.
+
+**The tests can fail, and that mattered.** Six deliberately broken copies of the C source (inverted
+tie-break, early exit skipping ties, missing `(sum / B*B) * B*B` step, different channel-sum order,
+wrong edge padding, row-wise partial sums) are built and run in the suite. **Three of the six were
+NOT caught by random, shifted, quantised or flat frames** - the exact float-order properties the
+kernel's contract rests on. Random frames essentially never contain candidates whose costs are
+mathematically equal but differ in float rounding. Frames built from the same values in a different
+accumulation order (row-permuted patterns, tiled textures) catch all six. Anyone writing an
+equivalence test for float code should do the same check.
+
+**Not done / not verified - read before merging:**
+- **The proof-grade gate has not been run:** `scripts/verify_promoted_codec.py` (byte-identical
+  streams on all of DAVIS TEST) needs the codec bundles, which are gitignored and only Aditya has.
+  Run it once with `NVC_MOTION_BACKEND=torch` and once with `native`; both must report 54/54.
+- **No Linux/macOS run.** Torch's reduction order is an implementation detail; CI (Ubuntu) will be the
+  first check of the equality tests there. In CI a missing native library fails, not skips.
+- **GPU untouched.** Codec inputs on CUDA still use the PyTorch loop. The GPU profile is unknown.
+- **Step 2 (codebook assignment, ~44% of encode / ~47% of decode now) not started;** it needs the
+  bundles for its acceptance test. See `C_REWRITE_REPORT.md` section 5-6.
+
+---
+
 ## 2026-09-30 — Where a C/C++ rewrite would pay: two hot spots, both measured (RESEARCH ONLY, NO PRODUCTION CHANGE)
 
 **Full report and exact steps for Aditya: [`C_REWRITE_REPORT.md`](C_REWRITE_REPORT.md).**

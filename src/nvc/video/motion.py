@@ -8,12 +8,24 @@ equivalence against the frozen script.
 
 Motion is estimated and applied in PIXEL space with integer-pixel vectors, so the
 warp is pure indexing (no interpolation) and identical on every backend.
+
+`estimate_block_motion` has two implementations that return bit-identical results: the
+PyTorch reference (`estimate_block_motion_torch`) and a native C kernel
+(`estimate_block_motion_native`, ~25-30x faster on a CPU). Only the ENCODER estimates
+motion - the vectors are transmitted - so the choice never affects decodability. The
+dispatcher picks native when it can and falls back to the reference otherwise; see
+C_REWRITE_REPORT.md for the measurements.
 """
 
 from __future__ import annotations
 
+import concurrent.futures
 import contextlib
+import ctypes
 import math
+import os
+import threading
+import warnings
 
 import numpy as np
 import torch
@@ -21,6 +33,7 @@ import torch.nn.functional as F
 
 from nvc.compression.entropy_model import EmpiricalEntropyModel
 from nvc.compression.range_coder import decode_symbols, encode_symbols
+from nvc.video import _native
 
 DEFAULT_BLOCK_SIZE = 16
 DEFAULT_SEARCH_RANGE = 16
@@ -54,17 +67,9 @@ def motion_alphabet_bits(search_range: int) -> int:
     return max(1, math.ceil(math.log2(2 * search_range + 1)))
 
 
-@torch.no_grad()
-def estimate_block_motion(reference: torch.Tensor, current: torch.Tensor, *,
-                          block_size: int = DEFAULT_BLOCK_SIZE,
-                          search_range: int = DEFAULT_SEARCH_RANGE) -> torch.Tensor:
-    """Full-search block matching, SAD criterion, integer pixels.
-
-    `reference` and `current` are [1, C, H, W] in [0, 1]. Returns a LongTensor
-    [2, blocks_y, blocks_x] of (dy, dx) per block, each in [-search_range,
-    +search_range]. Candidates are visited in a fixed order and ties break toward
-    zero motion, so the same inputs give the same field on any machine.
-    """
+def _validate_motion_inputs(reference: torch.Tensor, current: torch.Tensor, block_size: int) -> None:
+    """The input checks every implementation shares, so every backend rejects the same
+    inputs with the same message."""
     if reference.shape != current.shape:
         raise ValueError(
             f"reference {tuple(reference.shape)} and current {tuple(current.shape)} "
@@ -75,6 +80,174 @@ def estimate_block_motion(reference: torch.Tensor, current: torch.Tensor, *,
     if height % block_size or width % block_size:
         raise ValueError(
             f"frame {height}x{width} must divide evenly into {block_size}x{block_size} blocks")
+
+
+# --- native backend ---------------------------------------------------------------------
+
+_BACKENDS = ("auto", "native", "torch")
+_warned_unavailable = False
+_pool_lock = threading.Lock()
+_pool: concurrent.futures.ThreadPoolExecutor | None = None
+_pool_workers = 0
+
+
+def _default_threads() -> int:
+    """As many threads as PyTorch is currently allowed, so `torch.set_num_threads` also
+    bounds this. The result never depends on the thread count."""
+    return max(1, torch.get_num_threads())
+
+
+def _thread_pool(workers: int) -> concurrent.futures.ThreadPoolExecutor:
+    global _pool, _pool_workers
+    with _pool_lock:
+        if _pool is None or _pool_workers != workers:
+            if _pool is not None:
+                _pool.shutdown(wait=False)
+            _pool = concurrent.futures.ThreadPoolExecutor(
+                max_workers=workers, thread_name_prefix="nvc-motion")
+            _pool_workers = workers
+        return _pool
+
+
+def _native_ineligible(reference: torch.Tensor, current: torch.Tensor, block_size: int,
+                       search_range: int) -> str | None:
+    """Why the native kernel cannot take this call, or None if it can. Everything it does
+    not handle goes to the reference, so this list is what "bit-identical" is scoped to."""
+    if reference.device.type != "cpu" or current.device.type != "cpu":
+        return "tensors are not on the CPU"
+    if reference.dtype != torch.float32 or current.dtype != torch.float32:
+        return "tensors are not float32"
+    if reference.shape[1] != 3:
+        return "the native kernel is specialised for 3 channels"
+    if block_size < 1 or search_range < 0:
+        return "block_size must be >= 1 and search_range >= 0"
+    # NaN comparisons behave differently in the two implementations; pixels are finite in [0, 1].
+    if not (bool(torch.isfinite(reference).all()) and bool(torch.isfinite(current).all())):
+        return "non-finite pixel values"
+    return None
+
+
+def _run_native(lib, reference: torch.Tensor, current: torch.Tensor, *, block_size: int,
+                search_range: int, threads: int, early_exit: bool, mode: int) -> torch.Tensor:
+    """Run the kernel. `lib`, `early_exit` and `mode` are parameters so tests can drive a
+    deliberately broken kernel, force the scalar path, or turn the early exit off."""
+    height, width = reference.shape[2], reference.shape[3]
+    float_ptr = ctypes.POINTER(ctypes.c_float)
+    int_ptr = ctypes.POINTER(ctypes.c_int32)
+    reference_np = np.ascontiguousarray(reference.detach().numpy()[0])
+    current_np = np.ascontiguousarray(current.detach().numpy()[0])
+    pad = np.empty((3, lib.nvc_bs_padded_height(height, search_range),
+                    lib.nvc_bs_padded_width(width, search_range)), dtype=np.float32)
+    status = lib.nvc_bs_pad(reference_np.ctypes.data_as(float_ptr), height, width, search_range,
+                            pad.ctypes.data_as(float_ptr))
+    if status != 0:
+        raise RuntimeError(f"native motion padding rejected its arguments (status {status})")
+
+    grid = (height // block_size, width // block_size)
+    blocks = grid[0] * grid[1]
+    out_dy = np.zeros(blocks, dtype=np.int32)
+    out_dx = np.zeros(blocks, dtype=np.int32)
+    current_ptr = current_np.ctypes.data_as(float_ptr)
+    pad_ptr = pad.ctypes.data_as(float_ptr)
+    dy_ptr = out_dy.ctypes.data_as(int_ptr)
+    dx_ptr = out_dx.ctypes.data_as(int_ptr)
+
+    def search(bounds: tuple[int, int]) -> int:
+        return lib.nvc_bs_search(current_ptr, pad_ptr, height, width, search_range, block_size,
+                                 bounds[0], bounds[1], dy_ptr, dx_ptr, int(early_exit), mode)
+
+    # Blocks are independent and each range writes only its own outputs, so chunks can run on
+    # threads (ctypes drops the GIL for the call). Many small chunks balance the load, since
+    # early exit makes some blocks much cheaper than others.
+    chunk = max(1, -(-blocks // (threads * 4)))
+    ranges = [(begin, min(begin + chunk, blocks)) for begin in range(0, blocks, chunk)]
+    if threads <= 1 or len(ranges) == 1:
+        statuses = [search(bounds) for bounds in ranges]
+    else:
+        statuses = list(_thread_pool(threads).map(search, ranges))
+    for status in statuses:
+        if status == -2:
+            raise RuntimeError("the native motion kernel was asked for AVX2, which this CPU lacks")
+        if status != 0:
+            raise RuntimeError(f"native motion search rejected its arguments (status {status})")
+    return torch.from_numpy(np.stack([out_dy.reshape(grid), out_dx.reshape(grid)]).astype(np.int64))
+
+
+@torch.no_grad()
+def estimate_block_motion_native(reference: torch.Tensor, current: torch.Tensor, *,
+                                 block_size: int = DEFAULT_BLOCK_SIZE,
+                                 search_range: int = DEFAULT_SEARCH_RANGE,
+                                 threads: int | None = None) -> torch.Tensor:
+    """`estimate_block_motion_torch`'s result, computed by the native kernel. Strict: raises
+    ValueError for an input the kernel does not handle (CPU float32, 3 channels, finite)
+    and RuntimeError if the native library is unavailable. Most callers want
+    `estimate_block_motion`, which falls back instead. `threads` defaults to
+    `torch.get_num_threads()`; the result does not depend on it."""
+    _validate_motion_inputs(reference, current, block_size)
+    reason = _native_ineligible(reference, current, block_size, search_range)
+    if reason is not None:
+        raise ValueError(f"native motion search cannot take this input: {reason}")
+    lib = _native.load()
+    if lib is None:
+        raise RuntimeError(f"native motion search unavailable: {_native.last_error()}")
+    return _run_native(lib, reference, current, block_size=block_size, search_range=search_range,
+                       threads=threads if threads is not None else _default_threads(),
+                       early_exit=True, mode=_native.MODE_AUTO)
+
+
+@torch.no_grad()
+def estimate_block_motion(reference: torch.Tensor, current: torch.Tensor, *,
+                          block_size: int = DEFAULT_BLOCK_SIZE,
+                          search_range: int = DEFAULT_SEARCH_RANGE,
+                          backend: str | None = None) -> torch.Tensor:
+    """Full-search block matching, SAD criterion, integer pixels.
+
+    `reference` and `current` are [1, C, H, W] in [0, 1]. Returns a LongTensor
+    [2, blocks_y, blocks_x] of (dy, dx) per block, each in [-search_range,
+    +search_range]. Candidates are visited in a fixed order and ties break toward
+    zero motion, so the same inputs give the same field on any machine.
+
+    `backend` is "auto" (default), "native" or "torch"; when None it is read from the
+    NVC_MOTION_BACKEND environment variable, else "auto". "auto" uses the native kernel
+    when the tensors are CPU float32 with 3 finite channels and the library builds, and
+    otherwise the PyTorch reference - with a one-time RuntimeWarning if the library was
+    the problem, since the fallback is ~25x slower. Both return bit-identical results.
+    """
+    global _warned_unavailable
+    if backend is None:
+        backend = os.environ.get("NVC_MOTION_BACKEND", "auto")
+    if backend not in _BACKENDS:
+        raise ValueError(f"backend must be one of {_BACKENDS}, got {backend!r}")
+    if backend == "native":
+        return estimate_block_motion_native(reference, current, block_size=block_size,
+                                            search_range=search_range)
+    if backend == "auto":
+        _validate_motion_inputs(reference, current, block_size)
+        if _native_ineligible(reference, current, block_size, search_range) is None:
+            lib = _native.load()
+            if lib is not None:
+                return _run_native(lib, reference, current, block_size=block_size,
+                                   search_range=search_range, threads=_default_threads(),
+                                   early_exit=True, mode=_native.MODE_AUTO)
+            if not _warned_unavailable:
+                _warned_unavailable = True
+                warnings.warn(
+                    f"nvc.video: native motion search unavailable ({_native.last_error()}); "
+                    f"using the PyTorch reference, which is roughly 25x slower on a CPU. "
+                    f"Results are identical.", RuntimeWarning, stacklevel=2)
+    return estimate_block_motion_torch(reference, current, block_size=block_size,
+                                       search_range=search_range)
+
+
+@torch.no_grad()
+def estimate_block_motion_torch(reference: torch.Tensor, current: torch.Tensor, *,
+                                block_size: int = DEFAULT_BLOCK_SIZE,
+                                search_range: int = DEFAULT_SEARCH_RANGE) -> torch.Tensor:
+    """The PyTorch reference implementation, unchanged from `scripts/m10h_motion_compensation.py`
+    apart from sharing its input checks. This is the definition the native kernel is tested
+    against, and the only implementation on GPUs and for non-float32 inputs."""
+    _validate_motion_inputs(reference, current, block_size)
+    _, _, height, width = reference.shape
 
     blocks_y, blocks_x = height // block_size, width // block_size
     padded = F.pad(reference, (search_range,) * 4, mode="replicate")
