@@ -137,6 +137,17 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
                         help="Adam's rate for the transform's own weights. 1e-4 is the "
                              "standard starting rate for this architecture class.")
     parser.add_argument(
+        "--grad-clip-norm", type=float, default=1.0,
+        help=(
+            "Clip the global gradient norm to this before each step. NOT optional "
+            "for this architecture: the first full Vimeo run had no clipping, "
+            "diverged at epoch 3 of chunk 1 (train 0.00066 -> 0.102) and then "
+            "produced NaN for all nine remaining chunks. GDN divides by a sqrt "
+            "whose gradient is unbounded near the LowerBound floor, so a single "
+            "bad batch is enough. 0 or negative disables it."
+        ),
+    )
+    parser.add_argument(
         "--lr-decay-chunks", type=int, default=2,
         help=(
             "Run the LAST this-many chunks of the schedule at the decayed rate "
@@ -345,12 +356,14 @@ def train_one_chunk(
     epoch = start_epoch
     best_chunk_val_loss = float("inf")
     stalled = 0
+    clip = args.grad_clip_norm if args.grad_clip_norm > 0 else None
 
     for step in range(args.epochs_per_chunk_max):
         if rate_estimator is None:
             train_metrics = train_one_epoch(
                 model, train_loader, optimizer, device, max_batches=args.max_batches,
-                progress_desc=f"chunk {chunk_number} epoch {epoch} train")
+                progress_desc=f"chunk {chunk_number} epoch {epoch} train",
+                grad_clip_norm=clip)
             val_metrics = validate_one_epoch(
                 model, val_loader, device, max_batches=args.max_batches,
                 progress_desc=f"chunk {chunk_number} epoch {epoch} val")
@@ -358,7 +371,8 @@ def train_one_chunk(
             train_metrics = train_one_epoch_with_rate(
                 model, train_loader, optimizer, device, rate_estimator=rate_estimator,
                 lambda_rate=args.rate_lambda, max_batches=args.max_batches,
-                progress_desc=f"chunk {chunk_number} epoch {epoch} train")
+                progress_desc=f"chunk {chunk_number} epoch {epoch} train",
+                grad_clip_norm=clip)
             val_metrics = validate_one_epoch_with_rate(
                 model, val_loader, device, rate_estimator=rate_estimator,
                 lambda_rate=args.rate_lambda, max_batches=args.max_batches,
@@ -388,6 +402,35 @@ def train_one_chunk(
         print(f"  chunk {chunk_number} epoch {epoch} (step {step + 1}/{args.epochs_per_chunk_max}): "
               f"train={train_metrics['loss']:.6f} val={val_loss:.6f} "
               f"val_psnr={val_metrics['psnr']:.2f} dB{extra_note}", flush=True)
+
+        # Diverged: stop the whole run here, before anything is written.
+        #
+        # The first full Vimeo run is why this exists. It lost the transform at
+        # epoch 3 of chunk 1 and then spent eighteen epochs across nine chunks
+        # training NaN into NaN, because nothing checked. Two details make that
+        # worse than wasted time, and both are handled by refusing to write:
+        #
+        #   - `latest.pt` is what a resume loads. Saving NaN weights there means
+        #     every later resume starts from NaN too, so the run cannot recover
+        #     even though `best.pt` is still intact on disk.
+        #   - the caller appends to `completed_chunks` when this returns, so
+        #     returning normally marks a NaN chunk as done and a re-run skips it.
+        #
+        # Raising keeps `best.pt` as the last finite epoch and leaves every
+        # unfinished chunk genuinely unfinished.
+        if not (math.isfinite(train_metrics["loss"]) and math.isfinite(val_loss)):
+            (checkpoint_dir / "history.json").write_text(
+                json.dumps(history, indent=2), encoding="utf-8")
+            raise SystemExit(
+                f"\nDIVERGED on chunk {chunk_number} epoch {epoch}: "
+                f"train={train_metrics['loss']} val={val_loss}\n"
+                f"Nothing was written for this epoch, so {checkpoint_dir / 'best.pt'} is "
+                f"still the last finite one and chunk {chunk_number} is still unfinished.\n"
+                "Resume with a smaller --grad-clip-norm (currently "
+                f"{args.grad_clip_norm:g}) or a lower --learning-rate "
+                f"(currently {optimizer.param_groups[0]['lr']:g}); the weights in "
+                "best.pt are kept either way."
+            )
 
         extra = checkpoint_extra()
         save_checkpoint(checkpoint_dir / "latest.pt", model=model, optimizer=optimizer,
@@ -455,6 +498,22 @@ def main(argv: list[str] | None = None) -> int:
     latest = checkpoint_dir / "latest.pt"
     if latest.is_file():
         checkpoint = load_checkpoint(latest, map_location=device)
+        # A latest.pt from before the divergence guard above can hold NaN in
+        # every tensor. Loading it silently turns a recoverable run into an
+        # unrecoverable one, so say so instead and leave best.pt to resume from.
+        poisoned = [name for name, tensor in checkpoint["model_state_dict"].items()
+                    if torch.is_floating_point(tensor) and not torch.isfinite(tensor).all()]
+        if poisoned:
+            raise SystemExit(
+                f"{latest} holds non-finite weights ({len(poisoned)} of "
+                f"{len(checkpoint['model_state_dict'])} tensors), so this run diverged "
+                "before the divergence guard existed.\nResuming from it would train NaN "
+                "into NaN. Move it aside and restart from the last finite checkpoint:\n"
+                f"  mv {latest} {latest.with_suffix('.pt.nan')}\n"
+                f"  cp {checkpoint_dir / 'best.pt'} {latest}\n"
+                "then re-run with --reset-progress so the chunks it never really "
+                "trained on are attempted again."
+            )
         model.load_state_dict(checkpoint["model_state_dict"])
         history = checkpoint["history"]
         start_epoch = checkpoint["epoch"] + 1

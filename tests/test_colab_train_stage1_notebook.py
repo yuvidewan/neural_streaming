@@ -199,3 +199,18 @@ def test_the_progress_cell_survives_a_first_run(notebook):
     progress = next(c for c in _cells(notebook, "code") if "Completed chunks" in c)
 
     assert "is_file()" in progress
+
+
+def test_the_notebook_sets_gradient_clipping(notebook):
+    """The first full run had none and lost the transform at epoch 3 of chunk 1,
+    then trained NaN for eighteen epochs across the nine remaining chunks. The
+    flag existing in the script is not enough - the notebook has to pass it."""
+    import re
+
+    config = _cells(notebook, "code")[0]
+    launch = next(c for c in _cells(notebook, "code") if "train_vimeo_stage1.py" in c)
+
+    match = re.search(r"^GRAD_CLIP_NORM\s*=\s*([0-9.e-]+)", config, re.MULTILINE)
+    assert match, "GRAD_CLIP_NORM not found in the config cell"
+    assert float(match.group(1)) > 0, "clipping disabled - this is what diverged"
+    assert "'--grad-clip-norm'" in launch, "configured but never passed to the script"

@@ -105,7 +105,23 @@ outputs/qat_combined/
 # progress.json, history.json, and the per-chunk Vimeo manifests - which are
 # ~170k lines of regenerable run artifact, not an analysis product. All of it
 # is rebuilt by re-running the script, so none of it belongs in git.
-outputs/stage1_vimeo/
+# Matches the contents rather than the directory itself: git will not descend
+# into an excluded directory, so excluding `outputs/stage1_vimeo/` would make
+# the re-inclusions below dead letters.
+outputs/stage1_vimeo/**
+# Kept, because they are the record of what a run actually produced and are a
+# few KB each: the write-up, the loss history, and any gate report measured on
+# that run's checkpoint. The checkpoints themselves (~100MB) stay out.
+!outputs/stage1_vimeo/*/
+!outputs/stage1_vimeo/*/README.md
+!outputs/stage1_vimeo/*/history.json
+!outputs/stage1_vimeo/*/gate_*
+outputs/stage1_vimeo/*/*.pt
+outputs/stage1_vimeo/*/*.log
+# The bare checkpoints/ dir is whatever the last ad-hoc local run left
+# behind, with no README saying what it was. Run records live in a named
+# subdirectory per run.
+outputs/stage1_vimeo/checkpoints/
 
 # Per-step training telemetry from the Milestone 10 experiments
 # (scripts/m10*.py). One record per optimizer step x 18,120 steps ~= 9 MB per

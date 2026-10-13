@@ -39,6 +39,7 @@ def train_one_epoch(
     *,
     max_batches: int | None = None,
     progress_desc: str | None = None,
+    grad_clip_norm: float | None = None,
 ) -> dict[str, float]:
     """Run one training epoch with real gradient updates.
 
@@ -47,6 +48,14 @@ def train_one_epoch(
     (e.g. "chunk 3 epoch 2") to get a live tqdm bar with a running-loss
     postfix and an ETA for this epoch; omit it (the default) for the
     original silent behavior every existing caller relies on.
+
+    grad_clip_norm is opt-in for the same reason: `None` (the default) leaves
+    the update rule exactly as every milestone before Stage 1 ran it, so their
+    checkpoints stay reproducible. Pass a float to clip the global gradient
+    norm before the step. Stage 1's GDN layers need it - they divide by a
+    `sqrt` whose gradient is unbounded as the denominator approaches its
+    floor, which is how the first Vimeo run diverged at epoch 3 and then
+    produced 18 straight epochs of NaN.
     """
     model.train()
     total_loss = 0.0
@@ -64,6 +73,8 @@ def train_one_epoch(
         reconstruction = model(batch)
         loss = mse(reconstruction, batch)
         loss.backward()
+        if grad_clip_norm is not None:
+            torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip_norm)
         optimizer.step()
 
         total_loss += loss.item()
@@ -142,6 +153,7 @@ def train_one_epoch_with_rate(
     lambda_rate: float,
     max_batches: int | None = None,
     progress_desc: str | None = None,
+    grad_clip_norm: float | None = None,
 ) -> dict[str, float]:
     """Milestone 9A: one training epoch under `D + lambda * R`.
 
@@ -192,6 +204,13 @@ def train_one_epoch_with_rate(
         distortion = mse(reconstruction, batch)
         loss = distortion + lambda_rate * rate
         loss.backward()
+        if grad_clip_norm is not None:
+            # Both parameter groups: the estimator's loc/log_scale sit in the
+            # same optimizer and a blown-up gradient there poisons the model
+            # through the next step's rate term just as surely.
+            torch.nn.utils.clip_grad_norm_(
+                [p for group in optimizer.param_groups for p in group["params"]],
+                grad_clip_norm)
         optimizer.step()
         # After the step, not before: this batch's rate was scored against
         # the bin width as of the start of the step. No-op unless
