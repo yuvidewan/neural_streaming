@@ -89,21 +89,88 @@ def test_it_trains_the_stage_1_architecture(notebook):
     assert "BaselineAutoencoder" not in text
 
 
-def test_the_output_directory_cannot_collide_with_the_baseline_runs(notebook):
-    """The baseline notebook keeps its progress.json in the Drive project root.
-    Sharing it would make this run skip chunks it never trained on, and quietly
-    overwrite the baseline checkpoints while it was at it."""
+def test_the_output_directory_cannot_collide_with_an_earlier_run(notebook):
+    """Two collisions to avoid, both of which silently train nothing.
+
+    The baseline notebook keeps its progress.json in the Drive project root, so
+    sharing that would skip chunks and overwrite the baseline checkpoints.
+
+    And since c38ecc3 there is a second one: the 192-channel Stage 1 run owns
+    `stage1_vimeo`, and its progress.json lists all ten chunks as completed even
+    though nine of them produced only NaN. Pointing the 64-channel run at that
+    directory would skip every chunk. The directory must therefore be under the
+    project dir, and must not be the bare `stage1_vimeo`.
+    """
     config = _cells(notebook, "code")[0]
 
-    assert re.search(r"OUTPUT_DIR\s*=\s*DRIVE_PROJECT_DIR\s*/\s*'stage1_vimeo'", config)
+    match = re.search(r"OUTPUT_DIR\s*=\s*DRIVE_PROJECT_DIR\s*/\s*'([^']+)'", config)
+    assert match, "OUTPUT_DIR is no longer a name under DRIVE_PROJECT_DIR"
+    name = match.group(1)
+    assert name != "stage1_vimeo", (
+        "this is the diverged 192-channel run's directory; its progress.json "
+        "claims all ten chunks are done and they would all be skipped")
+    assert name.startswith("stage1_vimeo"), (
+        f"{name!r} does not identify itself as a Stage 1 run")
+
+
+def test_the_output_directory_names_the_architecture_it_holds(notebook):
+    """Checkpoints from different latent widths are mutually unloadable, so the
+    directory name is the only thing standing between a future run and a
+    confusing shape mismatch. It should say which architecture lives there."""
+    config = _cells(notebook, "code")[0]
+
+    output = re.search(r"OUTPUT_DIR\s*=\s*DRIVE_PROJECT_DIR\s*/\s*'([^']+)'", config).group(1)
+    channels = re.search(r"^LATENT_CHANNELS\s*=\s*(\d+)", config, re.MULTILINE).group(1)
+
+    assert channels in output, (
+        f"OUTPUT_DIR {output!r} does not mention LATENT_CHANNELS={channels}")
 
 
 def test_the_architecture_settings_are_the_stage_1_ones(notebook):
+    """64 latent channels, not 192 - and the width is the only thing that changed.
+
+    `outputs/stage1_latent_shape/README.md` measured the 192-channel latent at
+    3.16-3.26x the baseline's coded bytes for +0.43 dB at the float ceiling, with
+    the cost decoupled from channel content so that rate training cannot recover
+    it. 64 channels restores exact symbol parity with the baseline while keeping
+    7,208,899 parameters, because the capacity is in the body - which is why
+    BASE_CHANNELS stays at 192.
+    """
     config = _cells(notebook, "code")[0]
 
-    assert re.search(r"LATENT_CHANNELS\s*=\s*192", config)
-    assert re.search(r"BASE_CHANNELS\s*=\s*192", config)
-    assert re.search(r"RESIDUAL_BLOCKS\s*=\s*1", config)
+    assert re.search(r"^LATENT_CHANNELS\s*=\s*64", config, re.MULTILINE)
+    assert re.search(r"^BASE_CHANNELS\s*=\s*192", config, re.MULTILINE)
+    assert re.search(r"^RESIDUAL_BLOCKS\s*=\s*1", config, re.MULTILINE)
+
+
+def test_the_latent_width_restores_symbol_parity_with_the_baseline():
+    """The reason for the number above, checked against the models rather than
+    taken on trust from a comment: at this width the Stage 1 latent carries
+    exactly as many symbols as the model it has to beat, so the gate measures the
+    transform and not the latent's size."""
+    import json as _json
+
+    import torch
+
+    from nvc.models import BaselineAutoencoder, ResidualGDNAutoencoder
+
+    notebook = _json.loads((ROOT / "colab_train_stage1.ipynb").read_text(encoding="utf-8"))
+    config = "".join(notebook["cells"][2]["source"])
+    settings = {
+        key: int(re.search(rf"^{key}\s*=\s*(\d+)", config, re.MULTILINE).group(1))
+        for key in ("LATENT_CHANNELS", "BASE_CHANNELS", "RESIDUAL_BLOCKS")
+    }
+
+    image = torch.zeros(1, 3, 128, 128)
+    stage1 = ResidualGDNAutoencoder(
+        latent_channels=settings["LATENT_CHANNELS"],
+        base_channels=settings["BASE_CHANNELS"],
+        residual_blocks=settings["RESIDUAL_BLOCKS"]).eval()
+    baseline = BaselineAutoencoder(latent_channels=64).eval()
+    with torch.no_grad():
+        assert stage1.encode(image).numel() == baseline.encode(image).numel()
+    # And the capacity is still there to make the comparison worth running.
+    assert stage1.num_parameters() > 10 * baseline.num_parameters()
 
 
 def test_phase_b_is_documented_as_needing_a_calibration_first(notebook):
@@ -127,14 +194,25 @@ def test_it_points_at_the_real_gate_and_its_denominator(notebook):
 
 def test_it_warns_against_the_parity_harness_for_a_stage_1_checkpoint(notebook):
     """`benchmark_parity.py --gop 1` produced the denominator, but it rebuilds the
-    deployed stack through prepare_rate_point, all of which is fitted to a
-    64-channel latent - against Stage 1's 192 it raises a provenance error instead
-    of producing a number. Someone reaching section 7 after a 13-hour run should
-    not have to rediscover that."""
+    deployed stack through prepare_rate_point, and every piece of that is tied to
+    the transform it was fitted on. Someone reaching section 7 after a 13-hour run
+    should not have to rediscover that.
+
+    The warning must give the reason that still holds - the calibration signature
+    over the residual grid, checked by `check_provenance` - and NOT the old
+    channel-count argument. Stage 1 ran at 192 channels until 2026-10-14, where the
+    harness also died on a shape mismatch in `ChannelContextEntropyModel`'s
+    `nn.Embedding(latent_channels, hidden)`. At 64 channels that shape now matches,
+    so the loud failure is gone and only provenance stands between the user and a
+    plausible-looking number computed with the wrong statistics. A warning still
+    citing the shape would read as obsolete and get ignored.
+    """
     text = "\n".join(_cells(notebook, "markdown"))
 
     assert "Do not use `benchmark_parity.py --gop 1`" in text
-    assert "64-channel" in text
+    assert "calibration signature" in text.lower(), (
+        "the warning does not give the reason that currently applies")
+    assert "provenance" in text.lower()
 
 
 def test_it_does_not_claim_the_gate_needs_the_entropy_stack_refitted(notebook):

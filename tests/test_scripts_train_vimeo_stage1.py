@@ -570,3 +570,39 @@ def test_resuming_from_a_nan_latest_is_refused(stage1, tmp_path, monkeypatch, ca
             "--chunks", "1",
             "--latent-channels", "4", "--base-channels", "8", "--residual-blocks", "1",
         ])
+
+
+def test_resuming_across_an_architecture_change_is_refused_by_name(
+        stage1, tmp_path, monkeypatch):
+    """Stage 1 moved from 192 latent channels to 64 (c38ecc3), so a run pointed at
+    an older output directory now meets a checkpoint of the wrong shape.
+    load_state_dict would raise on its own, but with a wall of per-tensor shape
+    mismatches that never mentions the architecture. The message has to say what
+    differs and that reusing the old directory would skip its chunks."""
+    def _must_not_download(*_args, **_kwargs):
+        raise AssertionError("main() reached the chunk loop - the guard did not fire")
+
+    monkeypatch.setattr(stage1, "prepare_chunk", _must_not_download)
+
+    checkpoint_dir = tmp_path / "checkpoints"
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    wide = _args(stage1, latent_channels=8, base_channels=8, residual_blocks=1)
+    model = stage1.build_model(wide)
+    from nvc.training.checkpoint import save_checkpoint
+    save_checkpoint(checkpoint_dir / "latest.pt", model=model,
+                    optimizer=stage1.build_optimizer(model, None, wide),
+                    epoch=3, history=[], model_config=model.config_dict(), extra=None)
+
+    # Same script, narrower latent - the 192 -> 64 move in miniature.
+    with pytest.raises(SystemExit) as error:
+        stage1.main([
+            "--output-dir", str(tmp_path), "--scratch-dir", str(tmp_path / "s"),
+            "--chunks", "1",
+            "--latent-channels", "4", "--base-channels", "8", "--residual-blocks", "1",
+        ])
+
+    message = str(error.value)
+    assert "different architecture" in message
+    assert "latent_channels" in message, "the message does not say what differs"
+    assert "progress.json" in message, (
+        "the message does not warn that reusing the directory skips its chunks")

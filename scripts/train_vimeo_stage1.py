@@ -514,6 +514,30 @@ def main(argv: list[str] | None = None) -> int:
                 "then re-run with --reset-progress so the chunks it never really "
                 "trained on are attempted again."
             )
+        # Architecture mismatch is now a real possibility rather than a
+        # hypothetical: the latent shape diagnostic (c38ecc3) moved Stage 1 from
+        # 192 latent channels to 64, so a run pointed at an older output
+        # directory would try to load a 192-channel checkpoint into a
+        # 64-channel model. load_state_dict would raise, but on a wall of
+        # per-tensor shape mismatches that says nothing about the cause.
+        saved_config = checkpoint.get("model_config")
+        if saved_config is not None and saved_config != model_config:
+            differing = sorted(
+                set(saved_config) | set(model_config),
+                key=str)
+            lines = [f"    {key}: checkpoint {saved_config.get(key)!r} "
+                     f"vs requested {model_config.get(key)!r}"
+                     for key in differing
+                     if saved_config.get(key) != model_config.get(key)]
+            raise SystemExit(
+                f"{latest} was trained with a different architecture:\n"
+                + "\n".join(lines)
+                + "\n\nResuming is impossible - the weights have different shapes. Either "
+                  "pass the architecture this checkpoint was trained with, or point "
+                  "--output-dir at a new directory so this run starts clean. Do not "
+                  "reuse the old directory: its progress.json already lists chunks as "
+                  "completed and they would be skipped."
+            )
         model.load_state_dict(checkpoint["model_state_dict"])
         history = checkpoint["history"]
         start_epoch = checkpoint["epoch"] + 1
