@@ -1,0 +1,222 @@
+[
+  {
+    "epoch": 1,
+    "chunk": 1,
+    "train_loss": 0.0026077468982126746,
+    "val_loss": 0.0012952306610338525,
+    "val_psnr": 29.730346255346177,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 0.0001
+  },
+  {
+    "epoch": 2,
+    "chunk": 1,
+    "train_loss": 0.0006608358199312589,
+    "val_loss": 0.00045947597771690764,
+    "val_psnr": 34.914231794689776,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 0.0001
+  },
+  {
+    "epoch": 3,
+    "chunk": 1,
+    "train_loss": 0.10230961023852968,
+    "val_loss": 0.21729210765024118,
+    "val_psnr": 7.1757408582836115,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 0.0001
+  },
+  {
+    "epoch": 4,
+    "chunk": 1,
+    "train_loss": 0.46413328181191976,
+    "val_loss": 0.46166958184827356,
+    "val_psnr": 3.554663665661024,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 0.0001
+  },
+  {
+    "epoch": 5,
+    "chunk": 2,
+    "train_loss": NaN,
+    "val_loss": NaN,
+    "val_psnr": NaN,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 0.0001
+  },
+  {
+    "epoch": 6,
+    "chunk": 2,
+    "train_loss": NaN,
+    "val_loss": NaN,
+    "val_psnr": NaN,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 0.0001
+  },
+  {
+    "epoch": 7,
+    "chunk": 3,
+    "train_loss": NaN,
+    "val_loss": NaN,
+    "val_psnr": NaN,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 0.0001
+  },
+  {
+    "epoch": 8,
+    "chunk": 3,
+    "train_loss": NaN,
+    "val_loss": NaN,
+    "val_psnr": NaN,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 0.0001
+  },
+  {
+    "epoch": 9,
+    "chunk": 4,
+    "train_loss": NaN,
+    "val_loss": NaN,
+    "val_psnr": NaN,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 0.0001
+  },
+  {
+    "epoch": 10,
+    "chunk": 4,
+    "train_loss": NaN,
+    "val_loss": NaN,
+    "val_psnr": NaN,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 0.0001
+  },
+  {
+    "epoch": 11,
+    "chunk": 5,
+    "train_loss": NaN,
+    "val_loss": NaN,
+    "val_psnr": NaN,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 0.0001
+  },
+  {
+    "epoch": 12,
+    "chunk": 5,
+    "train_loss": NaN,
+    "val_loss": NaN,
+    "val_psnr": NaN,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 0.0001
+  },
+  {
+    "epoch": 13,
+    "chunk": 6,
+    "train_loss": NaN,
+    "val_loss": NaN,
+    "val_psnr": NaN,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 0.0001
+  },
+  {
+    "epoch": 14,
+    "chunk": 6,
+    "train_loss": NaN,
+    "val_loss": NaN,
+    "val_psnr": NaN,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 0.0001
+  },
+  {
+    "epoch": 15,
+    "chunk": 7,
+    "train_loss": NaN,
+    "val_loss": NaN,
+    "val_psnr": NaN,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 0.0001
+  },
+  {
+    "epoch": 16,
+    "chunk": 7,
+    "train_loss": NaN,
+    "val_loss": NaN,
+    "val_psnr": NaN,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 0.0001
+  },
+  {
+    "epoch": 17,
+    "chunk": 8,
+    "train_loss": NaN,
+    "val_loss": NaN,
+    "val_psnr": NaN,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 0.0001
+  },
+  {
+    "epoch": 18,
+    "chunk": 8,
+    "train_loss": NaN,
+    "val_loss": NaN,
+    "val_psnr": NaN,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 0.0001
+  },
+  {
+    "epoch": 19,
+    "chunk": 9,
+    "train_loss": NaN,
+    "val_loss": NaN,
+    "val_psnr": NaN,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 1e-05
+  },
+  {
+    "epoch": 20,
+    "chunk": 9,
+    "train_loss": NaN,
+    "val_loss": NaN,
+    "val_psnr": NaN,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 1e-05
+  },
+  {
+    "epoch": 21,
+    "chunk": 10,
+    "train_loss": NaN,
+    "val_loss": NaN,
+    "val_psnr": NaN,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 1e-05
+  },
+  {
+    "epoch": 22,
+    "chunk": 10,
+    "train_loss": NaN,
+    "val_loss": NaN,
+    "val_psnr": NaN,
+    "rate_enabled": false,
+    "rate_lambda": null,
+    "learning_rate": 1e-05
+  }
+]

@@ -442,3 +442,167 @@ def test_the_deployed_checkpoint_confirms_that_lambda():
         .read_text(encoding="utf-8"))
 
     assert decision["final_lambda_decision"]["selected"] == 0.0003
+
+
+# --- divergence: the first full Vimeo run's actual failure -------------------------
+#
+# That run reached val 0.000459 / 34.91 dB at epoch 2 of chunk 1, blew up at
+# epoch 3 (train 0.00066 -> 0.102), and then recorded NaN for eighteen straight
+# epochs across chunks 2-10 while progress.json marked all ten "completed".
+# Each test below pins one link in that chain.
+
+
+def test_gradient_clipping_is_on_by_default(stage1):
+    """The run had none. GDN divides by a sqrt whose gradient is unbounded near
+    the LowerBound floor, so one bad batch is enough to lose the transform."""
+    args = _args(stage1)
+
+    assert args.grad_clip_norm > 0
+
+
+def test_clipping_is_actually_applied_to_the_step(stage1, tmp_path):
+    """Not just accepted as a flag. A tiny clip must visibly change the weights
+    the same batches produce, or it is being dropped on the way to the step."""
+    torch.manual_seed(0)
+    reference = _run_chunk(stage1, _args(stage1, epochs_per_chunk_max=1,
+                                         grad_clip_norm=0.0), tmp_path)
+    torch.manual_seed(0)
+    clipped = _run_chunk(stage1, _args(stage1, epochs_per_chunk_max=1,
+                                       grad_clip_norm=1e-8), tmp_path)
+
+    before = dict(reference["model"].named_parameters())
+    after = dict(clipped["model"].named_parameters())
+    assert any(not torch.allclose(before[name], after[name])
+               for name in before), "grad_clip_norm never reached the optimizer step"
+
+
+def test_a_diverged_epoch_aborts_instead_of_training_nan_into_nan(stage1, tmp_path):
+    """Eighteen of the run's twenty-two epochs were NaN. Nothing stopped it."""
+    args = _args(stage1, epochs_per_chunk_max=4)
+    train, val = _loaders(tmp_path, args)
+    model = stage1.build_model(args)
+    # Poison the transform the way epoch 3 did, so epoch 1 here is their epoch 3.
+    with torch.no_grad():
+        for parameter in model.parameters():
+            parameter.mul_(float("nan"))
+    checkpoint_dir = tmp_path / "checkpoints"
+    checkpoint_dir.mkdir(exist_ok=True)
+
+    with pytest.raises(SystemExit, match="DIVERGED"):
+        stage1.train_one_chunk(
+            model=model, optimizer=stage1.build_optimizer(model, None, args),
+            rate_estimator=None, train_loader=train, val_loader=val,
+            device=torch.device("cpu"), args=args, start_epoch=1, chunk_number=3,
+            history=[], checkpoint_dir=checkpoint_dir,
+            model_config=model.config_dict(), best_val_loss=float("inf"),
+            checkpoint_extra=lambda: None)
+
+
+def test_a_diverged_epoch_writes_no_checkpoint(stage1, tmp_path):
+    """`latest.pt` is what a resume loads. The run saved NaN into it every epoch,
+    which is why best.pt surviving on disk still could not rescue it."""
+    args = _args(stage1, epochs_per_chunk_max=2)
+    train, val = _loaders(tmp_path, args)
+    model = stage1.build_model(args)
+    with torch.no_grad():
+        for parameter in model.parameters():
+            parameter.mul_(float("nan"))
+    checkpoint_dir = tmp_path / "checkpoints"
+    checkpoint_dir.mkdir(exist_ok=True)
+
+    with pytest.raises(SystemExit):
+        stage1.train_one_chunk(
+            model=model, optimizer=stage1.build_optimizer(model, None, args),
+            rate_estimator=None, train_loader=train, val_loader=val,
+            device=torch.device("cpu"), args=args, start_epoch=1, chunk_number=3,
+            history=[], checkpoint_dir=checkpoint_dir,
+            model_config=model.config_dict(), best_val_loss=float("inf"),
+            checkpoint_extra=lambda: None)
+
+    assert not (checkpoint_dir / "latest.pt").is_file()
+    assert not (checkpoint_dir / "best.pt").is_file()
+    # The epoch is still recorded, or the user cannot see what happened.
+    assert (checkpoint_dir / "history.json").is_file()
+
+
+def test_a_diverged_chunk_is_not_marked_completed(stage1, tmp_path):
+    """progress.json listed all ten chunks as done when nine had produced only
+    NaN, so a plain re-run would skip every one of them. train_one_chunk raising
+    rather than returning is what prevents the caller appending to that list."""
+    import inspect
+
+    source = inspect.getsource(stage1.train_one_chunk)
+    assert "raise SystemExit" in source, (
+        "train_one_chunk must raise on divergence; returning normally lets main() "
+        "append the chunk to completed_chunks")
+
+
+def test_resuming_from_a_nan_latest_is_refused(stage1, tmp_path, monkeypatch, capsys):
+    """The checkpoint the first run left behind has NaN in all 44 tensors. Loading
+    it would restart training from NaN while looking like a normal resume.
+
+    This is the one test here that calls main(), so it is also the one that could
+    reach the Kaggle download if the guard regressed. prepare_chunk is stubbed to
+    fail loudly instead: a regression then shows up as this assertion rather than
+    as a 9GB download starting inside a test run.
+    """
+    def _must_not_download(*_args, **_kwargs):
+        raise AssertionError(
+            "main() reached the chunk loop - the non-finite latest.pt guard did not fire")
+
+    monkeypatch.setattr(stage1, "prepare_chunk", _must_not_download)
+
+    args = _args(stage1, chunks=[1], output_dir=tmp_path, scratch_dir=tmp_path / "s")
+    checkpoint_dir = tmp_path / "checkpoints"
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    model = stage1.build_model(args)
+    with torch.no_grad():
+        for parameter in model.parameters():
+            parameter.mul_(float("nan"))
+    from nvc.training.checkpoint import save_checkpoint
+    save_checkpoint(checkpoint_dir / "latest.pt", model=model,
+                    optimizer=stage1.build_optimizer(model, None, args),
+                    epoch=22, history=[], model_config=model.config_dict(), extra=None)
+
+    with pytest.raises(SystemExit, match="non-finite"):
+        stage1.main([
+            "--output-dir", str(tmp_path), "--scratch-dir", str(tmp_path / "s"),
+            "--chunks", "1",
+            "--latent-channels", "4", "--base-channels", "8", "--residual-blocks", "1",
+        ])
+
+
+def test_resuming_across_an_architecture_change_is_refused_by_name(
+        stage1, tmp_path, monkeypatch):
+    """Stage 1 moved from 192 latent channels to 64 (c38ecc3), so a run pointed at
+    an older output directory now meets a checkpoint of the wrong shape.
+    load_state_dict would raise on its own, but with a wall of per-tensor shape
+    mismatches that never mentions the architecture. The message has to say what
+    differs and that reusing the old directory would skip its chunks."""
+    def _must_not_download(*_args, **_kwargs):
+        raise AssertionError("main() reached the chunk loop - the guard did not fire")
+
+    monkeypatch.setattr(stage1, "prepare_chunk", _must_not_download)
+
+    checkpoint_dir = tmp_path / "checkpoints"
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    wide = _args(stage1, latent_channels=8, base_channels=8, residual_blocks=1)
+    model = stage1.build_model(wide)
+    from nvc.training.checkpoint import save_checkpoint
+    save_checkpoint(checkpoint_dir / "latest.pt", model=model,
+                    optimizer=stage1.build_optimizer(model, None, wide),
+                    epoch=3, history=[], model_config=model.config_dict(), extra=None)
+
+    # Same script, narrower latent - the 192 -> 64 move in miniature.
+    with pytest.raises(SystemExit) as error:
+        stage1.main([
+            "--output-dir", str(tmp_path), "--scratch-dir", str(tmp_path / "s"),
+            "--chunks", "1",
+            "--latent-channels", "4", "--base-channels", "8", "--residual-blocks", "1",
+        ])
+
+    message = str(error.value)
+    assert "different architecture" in message
+    assert "latent_channels" in message, "the message does not say what differs"
+    assert "progress.json" in message, (
+        "the message does not warn that reusing the directory skips its chunks")
