@@ -103,12 +103,21 @@ def test_the_output_directory_cannot_collide_with_an_earlier_run(notebook):
     """
     config = _cells(notebook, "code")[0]
 
+    # Every finished run keeps its directory, and every one of them holds a
+    # progress.json listing its chunks as completed. Reusing any of these skips
+    # every chunk and trains nothing, so each gets retired by name as it lands.
+    retired = {
+        "stage1_vimeo": "the diverged 192-channel run (NaN latest.pt, 18 NaN epochs)",
+        "stage1_vimeo_64ch": "the 64ch/1-block run that gated at +87.9%",
+    }
+
     match = re.search(r"OUTPUT_DIR\s*=\s*DRIVE_PROJECT_DIR\s*/\s*'([^']+)'", config)
     assert match, "OUTPUT_DIR is no longer a name under DRIVE_PROJECT_DIR"
     name = match.group(1)
-    assert name != "stage1_vimeo", (
-        "this is the diverged 192-channel run's directory; its progress.json "
-        "claims all ten chunks are done and they would all be skipped")
+    assert name not in retired, (
+        f"OUTPUT_DIR is {name!r}, which belongs to {retired[name]}; its "
+        "progress.json already lists its chunks as completed and they would all "
+        "be skipped")
     assert name.startswith("stage1_vimeo"), (
         f"{name!r} does not identify itself as a Stage 1 run")
 
@@ -138,9 +147,20 @@ def test_the_architecture_settings_are_the_stage_1_ones(notebook):
     """
     config = _cells(notebook, "code")[0]
 
+    # Rate-critical, so pinned hard. These two set the symbol count, and the
+    # 192-channel run's +560.6% is what happens when the first one drifts.
     assert re.search(r"^LATENT_CHANNELS\s*=\s*64", config, re.MULTILINE)
     assert re.search(r"^BASE_CHANNELS\s*=\s*192", config, re.MULTILINE)
-    assert re.search(r"^RESIDUAL_BLOCKS\s*=\s*1", config, re.MULTILINE)
+    # Free in rate, so deliberately a tunable rather than a fixed value: blocks
+    # change the parameter count at an identical latent shape, so they cannot
+    # affect the symbol count. 1 gated at +87.9%; 2 is the next increment.
+    # test_the_latent_width_restores_symbol_parity_with_the_baseline proves the
+    # parity claim for whichever value is set here.
+    blocks = re.search(r"^RESIDUAL_BLOCKS\s*=\s*(\d+)", config, re.MULTILINE)
+    assert blocks, "RESIDUAL_BLOCKS not found"
+    assert int(blocks.group(1)) in {1, 2}, (
+        f"RESIDUAL_BLOCKS={blocks.group(1)} is outside the range this project has "
+        "measured; add the measurement before widening it")
 
 
 def test_the_latent_width_restores_symbol_parity_with_the_baseline():
