@@ -35,11 +35,17 @@ environment-aware (`IN_COLAB`), so it also runs on a plain JupyterLab / GPU serv
 - **OpenCV.** `pip install` brings the desktop `opencv-python`, which needs `libxcb`/`libGL`; on a minimal GPU
   server `import cv2` fails and the trainer dies on its first import, before anything downloads (this is what
   the first JupyterLab attempt hit). A new cell swaps in `opencv-python-headless`, only if `cv2` does not import.
+  **The first version of this cell was wrong** and failed on its first real server: it uninstalled only
+  `opencv-python`, but every OpenCV package writes the same `cv2/` folder, and that image already had
+  `opencv-python-headless` registered, so the uninstall deleted the shared files while pip still called the
+  headless build "already satisfied" and left no `cv2` at all. It now removes every OpenCV build first and
+  installs the release pip had already chosen. Its tests had only checked which commands were issued, so they
+  could not see this; they now run against a small model of pip and the shared folder.
 - `src/` is put on the kernel's `sys.path` (an editable install is not visible to an already-running kernel).
 - The folder cell now says if `outputs/progress.json` already exists, so a folder left over from the
   diverged 192-channel run is noticed before a 9 GB download rather than after.
 
-**Tests:** 18 -> 35 test functions in `tests/test_colab_train_stage1_notebook.py`. The new ones execute the
+**Tests:** 18 -> 38 test functions in `tests/test_colab_train_stage1_notebook.py`. The new ones execute the
 config, Kaggle, OpenCV and zip cells in a temporary folder rather than only parsing them (paths, zip contents,
 no dataset or credentials in the archive, idempotent re-runs, the OpenCV swap with `subprocess` stubbed).
 Run against master's own code: 80 passed across the notebook, trainer and project-setup test files.

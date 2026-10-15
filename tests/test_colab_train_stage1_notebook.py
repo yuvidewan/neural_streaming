@@ -510,69 +510,146 @@ def test_a_headless_server_gets_a_working_opencv_before_anything_imports_it(note
     assert install < fix < first_nvc_use
     cell = code[fix]
     assert "'import cv2" in cell                                   # probes in a fresh process
-    assert "'pip', 'uninstall', '-y'" in cell                       # the two builds must not coexist
-    assert "opencv-python', 'opencv-contrib-python'" in cell
-    assert "raise RuntimeError(" in cell                            # and fails loudly if it did not help
+    assert "raise RuntimeError(" in cell                            # fails loudly if it did not help
     assert "if ok:" in cell and "nothing to do" in cell             # a working install is left alone
 
 
-def test_the_opencv_swap_is_skipped_when_cv2_already_imports(notebook, monkeypatch, capsys):
-    """Executed, with subprocess stubbed: a healthy environment must not be touched."""
+# --- the shared cv2/ folder: why uninstalling ONE OpenCV build is not enough ---------------------
+
+
+class _FakePip:
+    """Just enough of pip and the filesystem to reproduce the failure seen on a real server.
+
+    Every OpenCV distribution writes the SAME `cv2/` folder, but each keeps its own metadata. The
+    image started with `opencv-python-headless` registered; `pip install -e .` then installed
+    `opencv-python`, whose files overwrote the folder with the desktop build (needs libxcb).
+    """
+
+    def __init__(self, registered=("opencv-python", "opencv-python-headless")):
+        self.registered = set(registered)
+        self.cv2 = "gui"                       # None (folder gone) | "gui" | "headless"
+        self.commands: list[list[str]] = []
+
+    def run(self, command, **kwargs):
+        import subprocess
+
+        self.commands.append(list(command))
+        if command[1] == "-c":                 # the cv2 import probe
+            if self.cv2 == "headless":
+                return subprocess.CompletedProcess(command, 0, stdout="4.10.0\n", stderr="")
+            error = ("ImportError: libxcb.so.1: cannot open shared object file" if self.cv2 == "gui"
+                     else "ModuleNotFoundError: No module named 'cv2'")
+            return subprocess.CompletedProcess(command, 1, stdout="", stderr=f"Traceback...\n{error}\n")
+        if command[1:4] == ["-m", "pip", "uninstall"]:
+            removed = {name for name in command[5:] if name in self.registered}
+            self.registered -= removed
+            if removed:
+                self.cv2 = None                 # the shared folder is deleted
+            return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+        if command[1:4] == ["-m", "pip", "install"]:
+            name = command[-1].split("=")[0].split(">")[0].split("<")[0]
+            if name not in self.registered:     # an installed distribution is "already satisfied"
+                self.registered.add(name)
+                self.cv2 = "headless" if name == "opencv-python-headless" else "gui"
+            return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+        raise AssertionError(f"unexpected command: {command}")
+
+
+def _run_opencv_cell(notebook, monkeypatch, fake: _FakePip, versions=None):
+    import importlib.metadata
     import subprocess
 
-    calls = []
+    versions = versions or {}
 
-    def fake_run(command, **kwargs):
-        calls.append(command)
-        return subprocess.CompletedProcess(command, 0, stdout="4.10.0\n", stderr="")
+    def version(name):
+        if name in versions:
+            return versions[name]
+        raise importlib.metadata.PackageNotFoundError(name)
 
-    monkeypatch.setattr(subprocess, "run", fake_run)
+    monkeypatch.setattr(subprocess, "run", fake.run)
+    monkeypatch.setattr(importlib.metadata, "version", version)
     _run_cell(_code(notebook, "opencv-python-headless"), {})
 
-    assert len(calls) == 1 and calls[0][1:3] == ["-c", "import cv2; print(cv2.__version__)"]
+
+def test_the_old_uninstall_only_opencv_python_sequence_leaves_no_cv2_at_all():
+    """The model reproduces the real failure: uninstalling just `opencv-python` deletes the
+    shared folder, pip then calls the already-registered headless build 'satisfied', and cv2 is
+    simply gone. This is the negative control for the test below."""
+    fake = _FakePip()
+    fake.run(["python", "-m", "pip", "uninstall", "-y", "opencv-python", "opencv-contrib-python"])
+    fake.run(["python", "-m", "pip", "install", "-q", "opencv-python-headless>=4.9,<5.0"])
+
+    assert fake.cv2 is None
+    assert "No module named 'cv2'" in fake.run(["python", "-c", "import cv2"]).stderr
+
+
+def test_the_opencv_swap_recovers_when_headless_is_already_registered(notebook, monkeypatch, capsys):
+    """The exact situation that broke the first version of this cell on a real server."""
+    fake = _FakePip()
+
+    _run_opencv_cell(notebook, monkeypatch, fake, versions={"opencv-python": "4.10.0.84"})
+
+    assert fake.cv2 == "headless"
+    out = capsys.readouterr().out
+    assert "libxcb.so.1" in out and "imports fine now" in out        # says WHY, and that it worked
+
+
+def test_the_opencv_swap_removes_every_build_before_installing(notebook, monkeypatch):
+    fake = _FakePip()
+
+    _run_opencv_cell(notebook, monkeypatch, fake, versions={"opencv-python": "4.10.0.84"})
+
+    uninstall = next(c for c in fake.commands if c[1:4] == ["-m", "pip", "uninstall"])
+    assert {"opencv-python", "opencv-python-headless", "opencv-contrib-python",
+            "opencv-contrib-python-headless"} <= set(uninstall)
+    assert fake.commands.index(uninstall) < fake.commands.index(
+        next(c for c in fake.commands if c[1:4] == ["-m", "pip", "install"]))
+
+
+def test_the_opencv_swap_pins_the_release_pip_already_chose(notebook, monkeypatch):
+    """Same release as the desktop build, so the headless wheel has the same numpy requirement
+    and installing it cannot upgrade numpy under torch."""
+    fake = _FakePip()
+    _run_opencv_cell(notebook, monkeypatch, fake, versions={"opencv-python": "4.10.0.84"})
+    assert next(c for c in fake.commands if c[1:4] == ["-m", "pip", "install"])[-1] == \
+        "opencv-python-headless==4.10.0.84"
+
+    fake = _FakePip(registered=("opencv-python-headless",))        # only headless registered
+    _run_opencv_cell(notebook, monkeypatch, fake, versions={"opencv-python-headless": "4.9.0.80"})
+    assert next(c for c in fake.commands if c[1:4] == ["-m", "pip", "install"])[-1] == \
+        "opencv-python-headless==4.9.0.80"
+
+    fake = _FakePip(registered=())                                  # nothing registered: use the range
+    _run_opencv_cell(notebook, monkeypatch, fake)
+    assert next(c for c in fake.commands if c[1:4] == ["-m", "pip", "install"])[-1] == \
+        "opencv-python-headless>=4.9,<5.0"
+
+
+def test_the_opencv_swap_is_skipped_when_cv2_already_imports(notebook, monkeypatch, capsys):
+    """A healthy environment (Colab, a laptop) must not be touched."""
+    fake = _FakePip()
+    fake.cv2 = "headless"
+
+    _run_opencv_cell(notebook, monkeypatch, fake)
+
+    assert len(fake.commands) == 1 and fake.commands[0][1] == "-c"
     assert "nothing to do" in capsys.readouterr().out
 
 
-def test_the_opencv_swap_runs_when_cv2_does_not_import(notebook, monkeypatch, capsys):
+def test_the_opencv_swap_fails_loudly_if_it_still_cannot_import_cv2(notebook, monkeypatch):
     import subprocess
 
-    state = {"swapped": False}
-    calls = []
+    fake = _FakePip()
+    real_run = fake.run
 
-    def fake_run(command, **kwargs):
-        calls.append(command)
-        if command[1:3] == ["-c", "import cv2; print(cv2.__version__)"]:
-            if state["swapped"]:
-                return subprocess.CompletedProcess(command, 0, stdout="4.10.0\n", stderr="")
-            return subprocess.CompletedProcess(
-                command, 1, stdout="",
-                stderr="Traceback...\nImportError: libxcb.so.1: cannot open shared object file\n")
-        if command[1:4] == ["-m", "pip", "install"]:
-            state["swapped"] = True
-        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
-
-    monkeypatch.setattr(subprocess, "run", fake_run)
-    _run_cell(_code(notebook, "opencv-python-headless"), {})
-
-    flat = [" ".join(c) for c in calls]
-    assert any("pip uninstall -y opencv-python opencv-contrib-python" in c for c in flat)
-    assert any("pip install -q opencv-python-headless>=4.9,<5.0" in c for c in flat)
-    assert flat.index(next(c for c in flat if "pip uninstall" in c)) < flat.index(
-        next(c for c in flat if "pip install" in c))             # uninstall first
-    assert "libxcb.so.1" in capsys.readouterr().out               # says WHY it is swapping
-
-
-def test_the_opencv_swap_fails_loudly_if_the_headless_build_does_not_help(notebook, monkeypatch):
-    import subprocess
-
-    def fake_run(command, **kwargs):
-        if command[1:3] == ["-c", "import cv2; print(cv2.__version__)"]:
+    def never_fixed(command, **kwargs):
+        if command[1] == "-c":
             return subprocess.CompletedProcess(command, 1, stdout="", stderr="ImportError: still broken\n")
-        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+        return real_run(command, **kwargs)
 
-    monkeypatch.setattr(subprocess, "run", fake_run)
+    fake.run = never_fixed
     with pytest.raises(RuntimeError, match="still does not import"):
-        _run_cell(_code(notebook, "opencv-python-headless"), {})
+        _run_opencv_cell(notebook, monkeypatch, fake)
 
 
 def test_a_leftover_progress_file_is_called_out_before_anything_downloads(notebook, tmp_path, capsys):
