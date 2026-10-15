@@ -292,3 +292,302 @@ def test_the_notebook_sets_gradient_clipping(notebook):
     assert match, "GRAD_CLIP_NORM not found in the config cell"
     assert float(match.group(1)) > 0, "clipping disabled - this is what diverged"
     assert "'--grad-clip-norm'" in launch, "configured but never passed to the script"
+
+
+# --- JupyterLab / output-folder behaviour: executed, not just parsed ---------------------
+
+
+def _run_cell(source: str, namespace: dict) -> dict:
+    exec(compile(source, "<notebook cell>", "exec"), namespace)
+    return namespace
+
+
+def _code(notebook, marker: str) -> str:
+    return next(c for c in _cells(notebook, "code") if marker in c)
+
+
+def test_outside_colab_everything_is_created_next_to_the_notebook(notebook, tmp_path, monkeypatch):
+    """The config cell run in a plain Python process (no google.colab): all paths hang off
+    the folder the notebook was opened from, and the DATASET scratch is not inside the output
+    folder - so zipping the output folder can never sweep up 10 GB of frames."""
+    monkeypatch.chdir(tmp_path)
+    ns = _run_cell(_cells(notebook, "code")[0], {})
+
+    assert ns["IN_COLAB"] is False
+    assert ns["WORK_DIR"] == tmp_path.resolve()
+    assert ns["OUTPUT_DIR"] == tmp_path.resolve() / "outputs"
+    assert ns["ZIP_PATH"] == tmp_path.resolve() / "outputs.zip"
+    assert ns["SCRATCH_DIR"] == tmp_path.resolve() / "vimeo_scratch"
+    assert ns["REPO_DIR"] == tmp_path.resolve() / "neural_streaming"
+    assert ns["OUTPUT_DIR"] not in ns["SCRATCH_DIR"].parents
+    assert ns["SCRATCH_DIR"] not in ns["OUTPUT_DIR"].parents
+
+
+def test_rerunning_the_config_cell_after_the_repo_cd_does_not_move_the_output_folder(
+        notebook, tmp_path, monkeypatch):
+    """A later cell cd's into the cloned repo. If the config cell is run again in that
+    kernel, WORK_DIR must stay put - otherwise outputs/ would be created inside the repo."""
+    monkeypatch.chdir(tmp_path)
+    config = _cells(notebook, "code")[0]
+    ns = _run_cell(config, {})
+    (tmp_path / "neural_streaming").mkdir()
+    monkeypatch.chdir(tmp_path / "neural_streaming")
+    _run_cell(config, ns)
+
+    assert ns["OUTPUT_DIR"] == tmp_path.resolve() / "outputs"
+
+
+def test_google_colab_and_content_paths_are_only_reachable_on_colab(notebook):
+    """JupyterLab has no google.colab and no /content. Every import of it, and every
+    hard-coded /content path, must sit behind an IN_COLAB check (or an ImportError guard)."""
+    for index, source in enumerate(_cells(notebook, "code")):
+        if source.lstrip().startswith("!"):
+            continue
+        tree = ast.parse(source)
+        parents = {child: parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
+
+        def guarded(node) -> bool:
+            while node in parents:
+                node = parents[node]
+                if isinstance(node, (ast.If, ast.IfExp)) and "IN_COLAB" in ast.unparse(node.test):
+                    return True
+                if isinstance(node, ast.Try) and any(
+                        h.type is not None and "ImportError" in ast.unparse(h.type) for h in node.handlers):
+                    return True
+            return False
+
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("google.colab"):
+                assert guarded(node), f"code cell {index}: unguarded google.colab import"
+            if isinstance(node, ast.Import) and any(a.name.startswith("google.colab") for a in node.names):
+                assert guarded(node), f"code cell {index}: unguarded google.colab import"
+            if isinstance(node, ast.Constant) and isinstance(node.value, str) and "/content" in node.value:
+                assert guarded(node), f"code cell {index}: unguarded /content path {node.value!r}"
+
+
+def test_the_output_folder_is_created_first_and_holds_everything_generated(notebook):
+    """Everything the run generates is passed an OUTPUT_DIR-rooted path - the trainer's
+    --output-dir, the calibration file, and calibrate_quantizer's side files, which default to
+    the repo's own outputs/ and would otherwise be left out of the zip."""
+    code = _cells(notebook, "code")
+    text = "\n".join(code)
+
+    assert "'--output-dir', str(OUTPUT_DIR)" in text
+    assert "'--metrics-dir', str(OUTPUT_DIR / 'metrics')" in text
+    assert "'--visualizations-dir', str(OUTPUT_DIR / 'visualizations')" in text
+    assert "CALIBRATION_PATH = OUTPUT_DIR / 'calibration'" in text
+    # created before any download or training cell
+    mkdir_index = next(i for i, c in enumerate(code) if "OUTPUT_DIR.mkdir(" in c)
+    train_index = next(i for i, c in enumerate(code) if "train_vimeo_stage1.py" in c)
+    download_index = next(i for i, c in enumerate(code) if "'clone'" in c)
+    assert mkdir_index < download_index < train_index
+
+
+def test_the_kernel_can_import_nvc_without_a_restart(notebook):
+    """pip install -e only takes effect in processes started afterwards, and the sanity
+    cell imports nvc inside the kernel."""
+    clone = _code(notebook, "'clone'")
+
+    assert "sys.path.insert(0, src_dir)" in clone
+
+
+def _kaggle_namespace(work_dir: Path, in_colab: bool = False) -> dict:
+    return {"WORK_DIR": work_dir, "IN_COLAB": in_colab, "DRIVE_PROJECT_DIR": None}
+
+
+def _isolated_home(monkeypatch, home: Path) -> None:
+    for variable in ("HOME", "USERPROFILE"):
+        monkeypatch.setenv(variable, str(home))
+    monkeypatch.delenv("KAGGLE_USERNAME", raising=False)
+    monkeypatch.delenv("KAGGLE_KEY", raising=False)
+
+
+def test_kaggle_json_next_to_the_notebook_is_picked_up(notebook, tmp_path, monkeypatch):
+    home, work = tmp_path / "home", tmp_path / "work"
+    home.mkdir()
+    work.mkdir()
+    _isolated_home(monkeypatch, home)
+    (work / "kaggle.json").write_text('{"username": "u", "key": "k"}', encoding="utf-8")
+
+    _run_cell(_code(notebook, "kaggle_json_target"), _kaggle_namespace(work))
+
+    copied = home / ".kaggle" / "kaggle.json"
+    assert copied.read_text(encoding="utf-8") == '{"username": "u", "key": "k"}'
+    assert (work / "kaggle.json").is_file()          # the user's own copy is left alone
+
+
+def test_kaggle_credentials_in_the_environment_need_no_file(notebook, tmp_path, monkeypatch):
+    _isolated_home(monkeypatch, tmp_path / "home")
+    monkeypatch.setenv("KAGGLE_USERNAME", "u")
+    monkeypatch.setenv("KAGGLE_KEY", "k")
+
+    _run_cell(_code(notebook, "kaggle_json_target"), _kaggle_namespace(tmp_path))
+
+
+def test_missing_kaggle_credentials_stop_with_instructions_instead_of_hanging(notebook, tmp_path, monkeypatch):
+    _isolated_home(monkeypatch, tmp_path / "home")
+
+    with pytest.raises(RuntimeError, match="same folder as this notebook"):
+        _run_cell(_code(notebook, "kaggle_json_target"), _kaggle_namespace(tmp_path))
+
+
+def _fake_run(tmp_path: Path) -> dict:
+    outputs = tmp_path / "outputs"
+    (outputs / "checkpoints").mkdir(parents=True)
+    (outputs / "calibration").mkdir()
+    (outputs / "checkpoints" / "best.pt").write_bytes(b"best" * 1000)
+    (outputs / "checkpoints" / "latest.pt").write_bytes(b"latest" * 1000)
+    (outputs / "checkpoints" / "history.json").write_text("[]", encoding="utf-8")
+    (outputs / "progress.json").write_text('{"completed_chunks": [1]}', encoding="utf-8")
+    (outputs / "calibration" / "stage1_4bit_train.json").write_text("{}", encoding="utf-8")
+    (tmp_path / "vimeo_scratch").mkdir()
+    (tmp_path / "vimeo_scratch" / "frame.png").write_bytes(b"dataset")       # must NOT be zipped
+    (tmp_path / "kaggle.json").write_text("secret", encoding="utf-8")          # must NOT be zipped
+    return {"OUTPUT_DIR": outputs, "ZIP_PATH": tmp_path / "outputs.zip", "IN_COLAB": False}
+
+
+def test_the_last_cell_zips_the_output_folder_and_nothing_else(notebook, tmp_path, capsys):
+    import zipfile
+
+    final = _cells(notebook, "code")[-1]
+    assert "make_archive" in final
+
+    _run_cell(final, _fake_run(tmp_path))
+
+    archive = tmp_path / "outputs.zip"
+    assert archive.is_file()
+    with zipfile.ZipFile(archive) as bundle:
+        names = sorted(n for n in bundle.namelist() if not n.endswith("/"))
+    assert names == ["outputs/calibration/stage1_4bit_train.json", "outputs/checkpoints/best.pt",
+                     "outputs/checkpoints/history.json", "outputs/checkpoints/latest.pt",
+                     "outputs/progress.json"]
+    assert "5 files" in capsys.readouterr().out
+
+
+def test_running_the_zip_cell_twice_overwrites_instead_of_nesting(notebook, tmp_path):
+    import zipfile
+
+    final = _cells(notebook, "code")[-1]
+    namespace = _fake_run(tmp_path)
+    _run_cell(final, dict(namespace))
+    (namespace["OUTPUT_DIR"] / "checkpoints" / "best.pt").write_bytes(b"better" * 1000)
+    _run_cell(final, dict(namespace))
+
+    with zipfile.ZipFile(tmp_path / "outputs.zip") as bundle:
+        assert not any("outputs.zip" in n for n in bundle.namelist())
+        assert bundle.read("outputs/checkpoints/best.pt") == b"better" * 1000
+
+
+def test_the_zip_cell_works_on_its_own_after_a_kernel_restart(notebook, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _fake_run(tmp_path)
+
+    _run_cell(_cells(notebook, "code")[-1], {})      # no OUTPUT_DIR / ZIP_PATH defined
+
+    assert (tmp_path / "outputs.zip").is_file()
+
+
+def test_the_zip_cell_refuses_to_zip_a_folder_that_does_not_exist(notebook, tmp_path):
+    with pytest.raises(RuntimeError, match="Nothing to zip"):
+        _run_cell(_cells(notebook, "code")[-1],
+                  {"OUTPUT_DIR": tmp_path / "missing", "ZIP_PATH": tmp_path / "missing.zip"})
+
+
+# --- a headless GPU server has no libxcb: the desktop OpenCV build cannot be imported ---------
+
+
+def test_a_headless_server_gets_a_working_opencv_before_anything_imports_it(notebook):
+    """`pip install` brings in the desktop `opencv-python`, which needs libxcb/libGL. A minimal
+    GPU server has neither, so the trainer died on its very first import (`import cv2` ->
+    libxcb.so.1: cannot open shared object file) before downloading anything. The notebook
+    swaps in the headless build when - and only when - cv2 does not import, and does so
+    after the install cell and before any cell that imports nvc or runs the trainer."""
+    code = _cells(notebook, "code")
+    install = next(i for i, c in enumerate(code) if "pip install -q -r requirements.txt" in c)
+    fix = next(i for i, c in enumerate(code) if "opencv-python-headless" in c)
+    first_nvc_use = next(i for i, c in enumerate(code) if "import nvc" in c or "train_vimeo_stage1.py" in c)
+
+    assert install < fix < first_nvc_use
+    cell = code[fix]
+    assert "'import cv2" in cell                                   # probes in a fresh process
+    assert "'pip', 'uninstall', '-y'" in cell                       # the two builds must not coexist
+    assert "opencv-python', 'opencv-contrib-python'" in cell
+    assert "raise RuntimeError(" in cell                            # and fails loudly if it did not help
+    assert "if ok:" in cell and "nothing to do" in cell             # a working install is left alone
+
+
+def test_the_opencv_swap_is_skipped_when_cv2_already_imports(notebook, monkeypatch, capsys):
+    """Executed, with subprocess stubbed: a healthy environment must not be touched."""
+    import subprocess
+
+    calls = []
+
+    def fake_run(command, **kwargs):
+        calls.append(command)
+        return subprocess.CompletedProcess(command, 0, stdout="4.10.0\n", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    _run_cell(_code(notebook, "opencv-python-headless"), {})
+
+    assert len(calls) == 1 and calls[0][1:3] == ["-c", "import cv2; print(cv2.__version__)"]
+    assert "nothing to do" in capsys.readouterr().out
+
+
+def test_the_opencv_swap_runs_when_cv2_does_not_import(notebook, monkeypatch, capsys):
+    import subprocess
+
+    state = {"swapped": False}
+    calls = []
+
+    def fake_run(command, **kwargs):
+        calls.append(command)
+        if command[1:3] == ["-c", "import cv2; print(cv2.__version__)"]:
+            if state["swapped"]:
+                return subprocess.CompletedProcess(command, 0, stdout="4.10.0\n", stderr="")
+            return subprocess.CompletedProcess(
+                command, 1, stdout="",
+                stderr="Traceback...\nImportError: libxcb.so.1: cannot open shared object file\n")
+        if command[1:4] == ["-m", "pip", "install"]:
+            state["swapped"] = True
+        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    _run_cell(_code(notebook, "opencv-python-headless"), {})
+
+    flat = [" ".join(c) for c in calls]
+    assert any("pip uninstall -y opencv-python opencv-contrib-python" in c for c in flat)
+    assert any("pip install -q opencv-python-headless>=4.9,<5.0" in c for c in flat)
+    assert flat.index(next(c for c in flat if "pip uninstall" in c)) < flat.index(
+        next(c for c in flat if "pip install" in c))             # uninstall first
+    assert "libxcb.so.1" in capsys.readouterr().out               # says WHY it is swapping
+
+
+def test_the_opencv_swap_fails_loudly_if_the_headless_build_does_not_help(notebook, monkeypatch):
+    import subprocess
+
+    def fake_run(command, **kwargs):
+        if command[1:3] == ["-c", "import cv2; print(cv2.__version__)"]:
+            return subprocess.CompletedProcess(command, 1, stdout="", stderr="ImportError: still broken\n")
+        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    with pytest.raises(RuntimeError, match="still does not import"):
+        _run_cell(_code(notebook, "opencv-python-headless"), {})
+
+
+def test_a_leftover_progress_file_is_called_out_before_anything_downloads(notebook, tmp_path, capsys):
+    """A leftover progress.json makes the run skip the chunks it lists. Right after a disconnect
+    that is the point; if the folder is from the diverged 192-channel run it would skip chunks that
+    never trained. The folder cell says which situation this is, before a 9 GB download starts."""
+    outputs = tmp_path / "outputs"
+    outputs.mkdir()
+    cell = _code(notebook, "OUTPUT_DIR.mkdir(")
+    namespace = {"IN_COLAB": False, "OUTPUT_DIR": outputs, "SCRATCH_DIR": tmp_path / "scratch"}
+
+    _run_cell(cell, dict(namespace))
+    assert "NOTE" not in capsys.readouterr().out
+
+    (outputs / "progress.json").write_text("{}", encoding="utf-8")
+    _run_cell(cell, dict(namespace))
+    out = capsys.readouterr().out
+    assert "already exists" in out and "RESUME" in out and "192-channel" in out

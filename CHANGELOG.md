@@ -13,6 +13,42 @@ the time.
 
 ---
 
+## 2026-10-15 — Stage 1 notebook: runs on plain JupyterLab, everything generated goes in `outputs/`, last cell zips it (NOT YET RUN ON A REAL SERVER)
+
+**Scope:** `colab_train_stage1.ipynb` and its tests only. No file under `src/` or `scripts/` changed, and
+every Stage 1 setting from the 2026-10-14 commits is untouched (64 latent channels, `GRAD_CLIP_NORM = 1.0`,
+the new-output-directory rule, the NaN guards).
+
+The notebook assumed Colab: it mounted Drive, imported `google.colab`, and wrote to `/content`. It is now
+environment-aware (`IN_COLAB`), so it also runs on a plain JupyterLab / GPU server:
+
+- **One output folder.** Outside Colab, everything the run generates and needs goes in `outputs/` next to
+  the notebook: `checkpoints/` (`best.pt`, `latest.pt`, `best_phase_a.pt`), `history.json`, `progress.json`,
+  `vimeo_manifest.json`, `calibration/`, `metrics/`, `visualizations/`. The **dataset** is kept out of it
+  (`vimeo_scratch/`, wiped chunk by chunk). The trainer already wrote everything under `--output-dir`; the only
+  strays were `calibrate_quantizer.py`'s metrics and plot, now redirected with `--metrics-dir` and
+  `--visualizations-dir`. On Colab the folder is still `stage1_vimeo_64ch` on Drive.
+- **Last cell zips it** into `outputs.zip` next to the notebook (the dataset and `kaggle.json` are not in it),
+  checks the archive, and prints what it contains. Safe to run at any time; overwrites the previous zip.
+- **Kaggle credentials** come from the environment, `~/.kaggle/`, or a `kaggle.json` next to the notebook; if
+  none is found the cell stops with instructions instead of waiting for an upload that cannot happen.
+- **OpenCV.** `pip install` brings the desktop `opencv-python`, which needs `libxcb`/`libGL`; on a minimal GPU
+  server `import cv2` fails and the trainer dies on its first import, before anything downloads (this is what
+  the first JupyterLab attempt hit). A new cell swaps in `opencv-python-headless`, only if `cv2` does not import.
+- `src/` is put on the kernel's `sys.path` (an editable install is not visible to an already-running kernel).
+- The folder cell now says if `outputs/progress.json` already exists, so a folder left over from the
+  diverged 192-channel run is noticed before a 9 GB download rather than after.
+
+**Tests:** 18 -> 35 test functions in `tests/test_colab_train_stage1_notebook.py`. The new ones execute the
+config, Kaggle, OpenCV and zip cells in a temporary folder rather than only parsing them (paths, zip contents,
+no dataset or credentials in the archive, idempotent re-runs, the OpenCV swap with `subprocess` stubbed).
+Run against master's own code: 80 passed across the notebook, trainer and project-setup test files.
+
+**Not verified:** the notebook has not been run end to end on a real server (no GPU, Kaggle token or dataset
+where it was written). The first real run is the actual test.
+
+---
+
 ## 2026-09-30 — Where a C/C++ rewrite would pay: two hot spots, both measured (RESEARCH ONLY, NO PRODUCTION CHANGE)
 
 **Full report and exact steps for Aditya: [`C_REWRITE_REPORT.md`](C_REWRITE_REPORT.md).**
