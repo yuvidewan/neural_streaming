@@ -118,6 +118,12 @@ outputs/stage1_vimeo/**
 !outputs/stage1_vimeo/*/README.md
 !outputs/stage1_vimeo/*/history.json
 !outputs/stage1_vimeo/*/gate_*
+# A QAT run needs its source run's calibration file, which is 20KB of
+# quantization params and an entropy table, and regenerating it needs the
+# source checkpoint - which is not in git. Keeping it makes a QAT fine-tune
+# runnable from a fresh clone.
+!outputs/stage1_vimeo/*/calibration/
+!outputs/stage1_vimeo/*/calibration/*.json
 outputs/stage1_vimeo/*/*.pt
 outputs/stage1_vimeo/*/*.log
 # The bare checkpoints/ dir is whatever the last ad-hoc local run left

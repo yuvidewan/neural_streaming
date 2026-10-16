@@ -39,6 +39,42 @@ distortion-only, then M9+ rate):
 a frozen bin width the encoder can lower the proxy rate just by shrinking the
 latent, which the real quantizer (it recalibrates per model) does not reward.
 
+QAT (quantization-aware fine-tuning)
+------------------------------------
+`outputs/stage1_latent_shape/README_64ch_trained.md` measured the 64-channel
+transform leading the deployed baseline by a flat +2.450 dB at its float
+ceiling, while giving up +0.179/+0.627/+1.710 dB MORE than the baseline to
+5/4/3-bit quantization. Subtracting the two reproduces the gate's measured
++2.37/+1.88/+0.79 dB almost exactly: by 3-bit, quantization fragility takes 70%
+of what the transform earned. Phase A never shows the decoder a quantized latent;
+the deployed baseline trained with `--qat-enabled`.
+
+Like Phase B, this is a FINE-TUNE and not a run from scratch, because the noise
+scale is calibrated from a trained model's latents:
+
+  1. calibrate on the checkpoint you are fine-tuning FROM
+      python scripts/calibrate_quantizer.py --checkpoint <run>/checkpoints/best.pt \
+          --manifest <a Vimeo train manifest> --bits 4 --mode per_channel \
+          --output <run>/calibration/stage1_4bit_train.json
+
+  2. fine-tune into a NEW directory, warm-starting the weights
+      python scripts/train_vimeo_stage1.py --output-dir <new dir> \
+          --init-from <run>/checkpoints/best.pt \
+          --qat-enabled --qat-calibration <run>/calibration/stage1_4bit_train.json \
+          --qat-bits 4 --qat-mode per_channel
+
+A new directory, not the source run's: `--init-from` copies weights only and
+resets the epoch counter, optimizer, history and completed-chunk list, because
+noise on the latent is a different objective and the source run's best-loss
+tracker is not comparable to this one's. The trainer refuses to resume a
+checkpoint whose QAT settings differ from the ones requested - `model_config`
+cannot distinguish a QAT model from a full-precision one, so that check reads the
+fingerprint in `extra` instead.
+
+`--qat-bits`/`--qat-mode` are asserted against the calibration file rather than
+read from it: a run aimed at one bit depth silently training at another is the
+failure they exist to catch.
+
 RESUMING
 --------
 Interrupt and re-run at any time. `progress.json` records which chunks are done
@@ -137,6 +173,43 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
                         help="Adam's rate for the transform's own weights. 1e-4 is the "
                              "standard starting rate for this architecture class.")
     parser.add_argument(
+        "--qat-enabled", action="store_true",
+        help=(
+            "Train with quantization noise on the latent. Requires "
+            "--qat-calibration, and in practice --init-from, because the noise "
+            "scale is fitted to a trained model's latents. See "
+            "outputs/stage1_latent_shape/README_64ch_trained.md: the 64-channel "
+            "transform leads by a flat +2.450 dB at its float ceiling but gives "
+            "up +1.710 dB more than the baseline to 3-bit quantization, which is "
+            "where most of its gate advantage goes."
+        ),
+    )
+    parser.add_argument(
+        "--qat-calibration", type=Path, default=None,
+        help="Calibration file from scripts/calibrate_quantizer.py, computed on "
+             "the checkpoint being fine-tuned from.")
+    parser.add_argument(
+        "--qat-bits", type=int, default=4,
+        help="Asserted against the calibration file rather than read from it, so a "
+             "run aimed at one bit depth cannot silently train at another. 4 is the "
+             "middle of the gate's 5/4/3.")
+    parser.add_argument(
+        "--qat-mode", type=str, default="per_channel",
+        help="Also asserted against the file. Must match the mode the codec "
+             "actually quantizes in, which is per_channel throughout this project.")
+    parser.add_argument(
+        "--init-from", type=Path, default=None,
+        help=(
+            "Warm-start the WEIGHTS from this checkpoint and nothing else - no "
+            "optimizer state, no epoch counter, no history, no completed-chunk "
+            "list. For QAT fine-tuning, where the noise scale is fitted to the "
+            "latents of the model being started from, so training from scratch "
+            "would apply a scale that does not match the weights. Ignored if the "
+            "output directory already has a latest.pt, so a resumed run continues "
+            "from its own progress rather than restarting from the warm start."
+        ),
+    )
+    parser.add_argument(
         "--grad-clip-norm", type=float, default=1.0,
         help=(
             "Clip the global gradient norm to this before each step. NOT optional "
@@ -218,6 +291,54 @@ def build_model(args, quantization_noise=None) -> ResidualGDNAutoencoder:
         residual_blocks=args.residual_blocks,
         quantization_noise=quantization_noise,
     )
+
+
+def build_quantization_noise(args) -> QuantizationNoise | None:
+    """The QAT noise attached to the model, or None to train in full precision.
+
+    Why this exists: the diagnostic in
+    `outputs/stage1_latent_shape/README_64ch_trained.md` measured the 64-channel
+    transform holding a flat +2.450 dB over the deployed baseline at its float
+    ceiling, while losing +0.179/+0.627/+1.710 dB MORE than the baseline to
+    quantization at 5/4/3-bit. Subtracting the two reproduces the gate's
+    +2.37/+1.88/+0.79 dB almost exactly, so by 3-bit quantization fragility is
+    taking 70% of the transform's advantage. Stage 1 had never seen a quantized
+    latent in training; the deployed baseline trained with `--qat-enabled`.
+
+    `ResidualGDNAutoencoder.forward` applies this itself in training mode only
+    (see its `quantization_noise` contract), so attaching it here is the whole
+    change - both epoch loops go through `forward`/`encode`+`decode` and pick it
+    up without modification.
+    """
+    if not args.qat_enabled:
+        return None
+    if args.qat_calibration is None:
+        raise SystemExit(
+            "--qat-enabled requires --qat-calibration.\n"
+            "Generate one on the checkpoint you are fine-tuning FROM:\n"
+            "  python scripts/calibrate_quantizer.py --checkpoint <that checkpoint> ...\n"
+            "The noise has to match that model's own latent distribution, which is "
+            "why QAT here is a fine-tune rather than a run from scratch.")
+    if not args.qat_calibration.is_file():
+        raise SystemExit(f"--qat-calibration not found: {args.qat_calibration}")
+    # bits/mode are asserted against the file rather than taken from it: a QAT run
+    # that silently trains at a different bit depth from the one it is aimed at is
+    # the failure this flag pair exists to prevent.
+    return QuantizationNoise.from_calibration(
+        args.qat_calibration, bits=args.qat_bits, mode=args.qat_mode)
+
+
+def qat_fingerprint(args, noise: QuantizationNoise | None) -> dict[str, Any] | None:
+    """What a checkpoint records about the noise it was trained under.
+
+    Recorded so a resume can refuse a changed QAT setting, and so a reader of the
+    checkpoint can tell a QAT model from a full-precision one - `quantization_noise`
+    is deliberately not part of `config_dict()`, so `model_config` cannot say.
+    """
+    if noise is None:
+        return None
+    return {"qat_bits": noise.bits, "qat_mode": noise.mode,
+            "qat_calibration": str(args.qat_calibration)}
 
 
 def build_rate_estimator(args) -> RateEstimator | None:
@@ -481,21 +602,48 @@ def main(argv: list[str] | None = None) -> int:
     rate_estimator = build_rate_estimator(args)
     if rate_estimator is not None:
         rate_estimator = rate_estimator.to(device)
-    model = build_model(args).to(device)
+    quantization_noise = build_quantization_noise(args)
+    model = build_model(args, quantization_noise=quantization_noise).to(device)
     optimizer = build_optimizer(model, rate_estimator, args)
     model_config = model.config_dict()
+    qat = qat_fingerprint(args, quantization_noise)
 
     def checkpoint_extra():
-        if rate_estimator is None:
-            return None
-        return {"rate_estimator_state_dict": rate_estimator.state_dict(),
-                "rate_lambda": args.rate_lambda,
-                "rate_track_scale": args.rate_track_scale}
+        # `quantization_noise` is deliberately absent from config_dict(), so
+        # without this a QAT checkpoint is indistinguishable from a
+        # full-precision one on disk.
+        extra = dict(qat) if qat is not None else {}
+        if rate_estimator is not None:
+            extra.update({"rate_estimator_state_dict": rate_estimator.state_dict(),
+                          "rate_lambda": args.rate_lambda,
+                          "rate_track_scale": args.rate_track_scale})
+        return extra or None
 
     history: list[dict[str, Any]] = []
     start_epoch = 1
     best_val_loss = float("inf")
     latest = checkpoint_dir / "latest.pt"
+    if args.init_from is not None and not latest.is_file():
+        # Weights only. A warm start is not a resume: the epoch counter, history,
+        # optimizer state and completed-chunk list all stay empty, because the
+        # objective has changed (noise is now on the latent) and carrying the old
+        # run's best-loss tracker would compare two different objectives.
+        if not args.init_from.is_file():
+            raise SystemExit(f"--init-from not found: {args.init_from}")
+        warm = load_checkpoint(args.init_from, map_location=device)
+        warm_config = warm.get("model_config")
+        if warm_config is not None and warm_config != model_config:
+            raise SystemExit(
+                f"--init-from {args.init_from} has a different architecture:\n"
+                f"    checkpoint {warm_config}\n    requested  {model_config}\n"
+                "A warm start copies weights, so the shapes have to agree.")
+        model.load_state_dict(warm["model_state_dict"])
+        print(f"[init] weights from {args.init_from} (epoch {warm.get('epoch')}); "
+              f"optimizer, history and progress start fresh", flush=True)
+    elif args.init_from is not None:
+        print(f"[init] ignoring --init-from: {latest} exists, so this is a resume "
+              "of this run rather than a new warm start", flush=True)
+
     if latest.is_file():
         checkpoint = load_checkpoint(latest, map_location=device)
         # A latest.pt from before the divergence guard above can hold NaN in
@@ -538,6 +686,22 @@ def main(argv: list[str] | None = None) -> int:
                   "reuse the old directory: its progress.json already lists chunks as "
                   "completed and they would be skipped."
             )
+        # QAT settings are not in model_config, so the architecture check above
+        # cannot see them: a full-precision checkpoint and a QAT one are the same
+        # shape. Resuming across a change would silently continue under a
+        # different objective and make the loss history incomparable.
+        saved_qat = {key: value for key, value in (checkpoint.get("extra") or {}).items()
+                     if key.startswith("qat_")}
+        current_qat = dict(qat) if qat is not None else {}
+        if saved_qat != current_qat:
+            raise SystemExit(
+                f"{latest} was trained under different quantization-aware settings:\n"
+                f"    checkpoint {saved_qat or 'full precision (no QAT)'}\n"
+                f"    requested  {current_qat or 'full precision (no QAT)'}\n"
+                "Resuming would continue under a different objective and make the "
+                "loss history incomparable. Use --output-dir for a new directory "
+                "and --init-from to warm-start the weights from this checkpoint."
+            )
         model.load_state_dict(checkpoint["model_state_dict"])
         history = checkpoint["history"]
         start_epoch = checkpoint["epoch"] + 1
@@ -565,6 +729,12 @@ def main(argv: list[str] | None = None) -> int:
     print("=" * 70)
     print(f"Stage 1 transform: {type(model).__name__}, {model.num_parameters():,} parameters")
     print(f"Objective: {'D + %g*R' % args.rate_lambda if rate_estimator is not None else 'distortion only (Phase A)'}")
+    if quantization_noise is None:
+        print("Quantization: NONE in training - the decoder will first meet a "
+              "quantized latent at evaluation time")
+    else:
+        print(f"Quantization: QAT at {quantization_noise.bits}-bit/"
+              f"{quantization_noise.mode} from {args.qat_calibration}")
     print(f"Chunks: {args.chunks}   done already: {progress['completed_chunks']}")
     print(f"Device: {device}   batch {args.batch_size} at {args.crop_size}x{args.crop_size}")
     if args.lr_decay_chunks > 0 and len(args.chunks) > args.lr_decay_chunks:
