@@ -4,16 +4,21 @@ Phase A on Colab, 2026-10-18, `8b5baf6` config. Seven chunks, 28 epochs,
 **zero NaN**. `ResidualGDNAutoencoder`, **9,864,643 parameters** (vs 7,208,899),
 latent `(1, 64, 16, 16)` — identical symbol count, so this was free in rate.
 
-**Status: incomplete. One of two checkpoints gated; see "Tomorrow" below.**
+**Status: complete. Both checkpoints gated, 2026-10-19. 2 blocks is rejected.**
 
 ## The gate, so far
 
-| | 1 block (`colab_run2_64ch`) | **2 blocks, epoch 23** |
-|---|---|---|
-| parameters | 7,208,899 | 9,864,643 |
-| BD-rate vs `h264_intra` (sequence_mean/psnr) | **+87.9%** | **+102.8%** |
+| | 1 block (`colab_run2_64ch`) | 2 blocks, epoch 23 | 2 blocks, epoch 28 |
+|---|---|---|---|
+| parameters | 7,208,899 | 9,864,643 | 9,864,643 |
+| BD-rate vs `h264_intra` (sequence_mean/psnr) | **+87.9%** | +102.8% | **+101.5%** |
 
-**Worse by ~15 BD-rate points.** Not neutral — a regression.
+**Worse by ~14 BD-rate points on the better of the two.** Not neutral — a
+regression, and both checkpoints agree.
+
+Epoch 28 had 0.16 dB more Vimeo val PSNR than epoch 23 and that bought 1.3
+BD-rate points — real, consistent with the val-split wrinkle below, and nowhere
+near the 14-point gap to the 1-block model.
 
 | bits | 2-block bytes | PSNR | 1-block bytes | PSNR |
 |---|---|---|---|---|
@@ -89,7 +94,7 @@ best-checkpoint selection mean what it claims.
 ## Files
 
 - `best.pt` — epoch 23, chunk 6, lowest val loss. Gated: **+102.8%**
-- `epoch28.pt` — epoch 28, chunk 7, highest val PSNR. **Not yet gated**
+- `epoch28.pt` — epoch 28, chunk 7, highest val PSNR. Gated: **+101.5%**
 - `history.json` — all 28 epochs
-- `gate_2blk_epoch23` — gate report (JSON)
-- `gate_epoch23.log` — the run
+- `gate_2blk_epoch23`, `gate_2blk_epoch28` — gate reports (JSON)
+- `gate_epoch23.log`, `gate_epoch28.log` — the runs
