@@ -109,6 +109,7 @@ def test_the_output_directory_cannot_collide_with_an_earlier_run(notebook):
     retired = {
         "stage1_vimeo": "the diverged 192-channel run (NaN latest.pt, 18 NaN epochs)",
         "stage1_vimeo_64ch": "the 64ch/1-block run that gated at +87.9%",
+        "stage1_vimeo_64ch_2blk": "the 2-block run, rejected at +102.8%/+101.5%",
     }
 
     match = re.search(r"OUTPUT_DIR\s*=\s*DRIVE_PROJECT_DIR\s*/\s*'([^']+)'", config)
@@ -688,3 +689,86 @@ def test_a_leftover_progress_file_is_called_out_before_anything_downloads(notebo
     _run_cell(cell, dict(namespace))
     out = capsys.readouterr().out
     assert "already exists" in out and "RESUME" in out and "older run" in out
+
+
+# --- QAT: the fine-tune the notebook is now set up for ---------------------------
+
+
+def _qat_calibration_path(config):
+    """The repo-relative path QAT_CALIBRATION points at.
+
+    Written across two source lines in the notebook, so the literal is rejoined
+    rather than matched in one piece.
+    """
+    match = re.search(r"QAT_CALIBRATION\s*=\s*Path\((.+?)\)", config, re.DOTALL)
+    assert match, "QAT_CALIBRATION is not a Path literal any more"
+    return "".join(re.findall(r"'([^']*)'", match.group(1)))
+
+
+def test_qat_is_configured_and_its_flags_are_passed(notebook):
+    """QAT_ENABLED in the config cell does nothing unless the launch cell adds the
+    flags. Both halves have to be present, or the run silently trains in full
+    precision again - which is exactly the asymmetry QAT exists to fix."""
+    config = _cells(notebook, "code")[0]
+    launch = next(c for c in _cells(notebook, "code") if "train_vimeo_stage1.py" in c)
+
+    assert re.search(r"^QAT_ENABLED\s*=\s*True", config, re.MULTILINE)
+    for flag in ("'--qat-enabled'", "'--qat-calibration'", "'--qat-bits'",
+                 "'--qat-mode'", "'--init-from'"):
+        assert flag in launch, f"{flag} is never passed to the trainer"
+
+
+def test_qat_warm_starts_rather_than_training_from_scratch(notebook):
+    """The noise scale is calibrated from a trained model's own latents, so a cold
+    start would apply a scale that does not match the weights. INIT_FROM is not
+    optional for a QAT run."""
+    config = _cells(notebook, "code")[0]
+
+    assert re.search(r"^\s*INIT_FROM\s*=", config, re.MULTILINE), "no INIT_FROM"
+    assert "best.pt" in config, "INIT_FROM does not point at a checkpoint"
+
+
+def test_the_qat_calibration_it_points_at_exists_in_the_repo(notebook):
+    """It is committed precisely so the clone brings it along and the run needs no
+    uploads. A path that does not resolve would fail only after the install and
+    mount cells have already run."""
+    relative = _qat_calibration_path(_cells(notebook, "code")[0])
+
+    assert (ROOT / relative).is_file(), (
+        f"QAT_CALIBRATION points at {relative!r}, which is not in the repo")
+
+
+def test_the_qat_calibration_matches_the_configured_bits_and_mode(notebook):
+    """The trainer asserts --qat-bits/--qat-mode against the file rather than
+    reading them from it, so a mismatch here fails the run. Better to catch it
+    than to discover it after a 9GB download."""
+    config = _cells(notebook, "code")[0]
+    document = json.loads(
+        (ROOT / _qat_calibration_path(config)).read_text(encoding="utf-8"))
+
+    bits = int(re.search(r"^QAT_BITS\s*=\s*(\d+)", config, re.MULTILINE).group(1))
+    mode = re.search(r"^QAT_MODE\s*=\s*'([^']+)'", config, re.MULTILINE).group(1)
+
+    assert document["quantization"]["bits"] == bits
+    assert document["quantization"]["mode"] == mode
+
+
+def test_residual_blocks_matches_the_checkpoint_being_warm_started_from(notebook):
+    """--init-from copies weights, so the architectures have to agree. The warm
+    start is the 1-block run that gated at +87.9%; 2 blocks was measured and
+    rejected at +102.8%/+101.5%."""
+    config = _cells(notebook, "code")[0]
+
+    assert re.search(r"^RESIDUAL_BLOCKS\s*=\s*1", config, re.MULTILINE), (
+        "INIT_FROM points at the 1-block checkpoint, so blocks must be 1")
+    assert "stage1_vimeo_64ch" in config, "INIT_FROM is not the 1-block run"
+
+
+def test_it_records_that_two_blocks_was_rejected(notebook):
+    """The next person to reach for capacity should meet the measurement rather
+    than repeat the run: 2 blocks was free in rate and still lost at every
+    operating point, while training better on Vimeo."""
+    config = _cells(notebook, "code")[0]
+
+    assert "REJECTED" in config or "rejected" in config
+    assert "102.8" in config
