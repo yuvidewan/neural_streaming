@@ -97,6 +97,11 @@ outputs/benchmarks/*
 # And for the lean gate harness's verification run, which is the proof that the
 # harness reproduces that denominator exactly.
 !outputs/benchmarks/intra_gate_baseline/
+# And for the transform comparison: two arms through one fixed entropy stack,
+# which is the only measurement of what the Stage 1 transform is worth on full
+# video. Small (two JSON reports + log + README), and the control arm is what
+# makes the other arm interpretable, so both are kept.
+!outputs/benchmarks/fullvideo_transform/
 # QAT+control combined training output (Milestone 8B): checkpoints (already
 # caught by *.pt below) plus progress_*.json/history.json, which are not.
 # Auto-created by scripts/train_vimeo_qat_combined.py - no .gitkeep needed.
