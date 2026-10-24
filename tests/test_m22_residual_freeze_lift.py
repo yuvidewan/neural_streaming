@@ -818,3 +818,47 @@ def test_bd_rate_table_needs_at_least_two_rate_points():
     single = {"rate_points": [{"candidates": [_row("deployed/stale", 0.32, 27.9),
                                               _row("broad_p001/refit", 0.25, 27.3)]}]}
     assert analysis.bd_rate_table(single) == []
+
+
+# ----------------------------------------------------------------------------------------
+# Running the sweep against a REFITTED transform
+# ----------------------------------------------------------------------------------------
+
+
+@pytest.fixture(scope="module")
+def sweep():
+    return _load_script("m22_sweep")
+
+
+def test_the_sweep_does_not_demand_m14s_motion_identity_from_another_transform(sweep):
+    """M14's recorded `d7e7b237b6451885` belongs to the deployed transform. Held
+    against a refitted one it never matches, so the cache is rejected and the
+    motion table refit at EVERY rate point - three full motion passes for a
+    table that does not depend on the rate point at all."""
+    source = inspect.getsource(sweep.main)
+
+    assert "deployed_transform" in source
+    assert "motion_identity=(m21.DEPLOYED_MOTION_IDENTITY if deployed_transform else None)" \
+        in source
+    assert "motion_cache_key=checkpoint_digest" in source
+
+
+def test_the_sweep_records_which_transform_it_ran_against(sweep):
+    """The sweep's report is read months later next to the deployed one. Without
+    the transform in it, two reports with the same variant names and the same
+    arms are indistinguishable."""
+    source = inspect.getsource(sweep.main)
+
+    assert '"is_the_deployed_transform": deployed_transform' in source
+    assert '"digest": checkpoint_digest' in source
+
+
+def test_the_deployed_checkpoint_is_an_option_not_a_hidden_constant(sweep):
+    class _Defaults:
+        processed_data_dir = Path("outputs")
+
+    parser = sweep.build_arg_parser(_Defaults())
+
+    assert parser.parse_args([]).deployed_checkpoint == Path(
+        "outputs/m10f_lambda_boundary/lambda_3.0e-04_seed42/best.pt")
+    assert parser.parse_args(["--deployed-checkpoint", "x.pt"]).deployed_checkpoint == Path("x.pt")

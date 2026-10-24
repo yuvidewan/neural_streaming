@@ -44,12 +44,14 @@ transform. That the control reproduces the deployed codec's PSNR almost exactly
 at 11% more bytes (0.8007 bpp / 29.812 dB against 0.7211 / 29.82) is the check
 that this harness is measuring what it claims.
 
-**Projection, explicitly an estimate:** if the learned stack is worth a similar
-77.8 points on the new transform, the full deployed stack would land near
-**+170%** against x264, down from +450.7%. That is an extrapolation, not a
-measurement. The learned stack exploits residual structure, and this transform's
-residuals are not the ones it was designed against — the benefit could be larger
-or smaller. Measuring it means actually refitting the stack.
+**That projection has since been MEASURED, and it was optimistic by 44 points.**
+The estimate was that if the learned stack were worth a similar 77.8 points on
+the new transform, the full stack would land near **+170%** against x264. The
+refit was done and measured on the same single-pass harness: **+214.2%**
+(`outputs/benchmarks/parity_refit/README.md`). The stack transfers at only 48% of
+its old value, -33.9 points against -70.0 on the `nvc_deployed` arm, because a
+transform that decorrelates more leaves less redundancy for an entropy model to
+collect. **Do not quote the +170% figure**; it is superseded.
 
 ## A second finding: motion's share falls
 

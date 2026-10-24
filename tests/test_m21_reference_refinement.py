@@ -595,3 +595,120 @@ def test_refinements_are_reproducible_in_an_independent_process(tmp_path):
                            cwd=ROOT, check=True).stdout for _ in range(2)]
     assert json.loads(runs[0]) == json.loads(runs[1])
     assert len(json.loads(runs[0])) >= 8
+
+
+# ----------------------------------------------------------------------------------------
+# The motion-table cache: valid in two modes, loud in both
+# ----------------------------------------------------------------------------------------
+
+
+class _FakeM14:
+    """Counts refits, so a cache hit and a cache miss are distinguishable."""
+
+    def __init__(self, frequencies):
+        self.frequencies = np.asarray(frequencies, dtype=np.int64)
+        self.fits = 0
+
+    def collect_motion_symbols(self, *args, **kwargs):
+        return np.zeros((7, 2), dtype=np.int64)
+
+    def fit_empirical(self, symbols, *, bits, num_tables):
+        from nvc.compression.entropy_model import EmpiricalEntropyModel
+        self.fits += 1
+        return EmpiricalEntropyModel(self.frequencies, bits=bits)
+
+
+class _FakeMC:
+    @staticmethod
+    def motion_alphabet_bits(search_range):
+        return 6
+
+
+def _frequency_table(weight):
+    """Two valid 6-bit motion tables; `weight` changes the shape, and therefore
+    the table's identity, without breaking the normalisation invariant."""
+    from nvc.compression.entropy_model import TOTAL_FREQUENCY
+    table = np.full((2, 64), 1, dtype=np.int64)
+    table[:, 0] += TOTAL_FREQUENCY - 64 - weight
+    table[:, 1] += weight
+    return table
+
+
+def _write_cache(path, m21, frequencies, *, cache_key=None):
+    from nvc.compression.entropy_model import EmpiricalEntropyModel
+    table = EmpiricalEntropyModel(np.asarray(frequencies, dtype=np.int64), bits=6)
+    path.write_text(json.dumps({"frequencies": table.frequencies.tolist(),
+                                "identity": table.model_id().hex(),
+                                "cache_key": cache_key,
+                                "motion_train_p_frames": 7}), encoding="utf-8")
+    return table
+
+
+def _call(m21, m14, cache, **kwargs):
+    return m21.deployed_motion_model(
+        _FakeMC(), m14, object(), [], device=torch.device("cpu"), gop_size=10,
+        block_size=16, search_range=16, cache=cache, **kwargs)
+
+
+def test_a_cache_whose_identity_is_not_the_recorded_one_is_rejected_and_refitted(m21, tmp_path):
+    """The deployed mode's whole point: a stale cached table must be a loud
+    refit, not a silent rate difference."""
+    cache = tmp_path / "motion.json"
+    _write_cache(cache, m21, _frequency_table(10))
+    m14 = _FakeM14(_frequency_table(20))
+
+    _call(m21, m14, cache)
+
+    assert m14.fits == 1, "a cache with the wrong identity was trusted"
+
+
+def test_a_refit_cache_is_accepted_only_for_the_transform_that_wrote_it(m21, tmp_path):
+    """With no recorded identity to check against, the checkpoint digest is what
+    keeps another transform's motion table from being reused."""
+    cache = tmp_path / "motion.json"
+    frequencies = _frequency_table(10)
+    _write_cache(cache, m21, frequencies, cache_key="digest-A")
+
+    hit = _FakeM14(frequencies)
+    _call(m21, hit, cache, expected_identity=None, cache_key="digest-A")
+    assert hit.fits == 0, "the refit cache was not reused for its own transform"
+
+    miss = _FakeM14(frequencies)
+    _call(m21, miss, cache, expected_identity=None, cache_key="digest-B")
+    assert miss.fits == 1, "another transform's cached motion table was reused"
+
+
+def test_a_refit_without_a_cache_key_never_trusts_the_cache(m21, tmp_path):
+    """Belt and braces: `expected_identity=None` with no key must not degrade
+    into 'accept whatever is on disk'."""
+    cache = tmp_path / "motion.json"
+    _write_cache(cache, m21, _frequency_table(10), cache_key="digest-A")
+    m14 = _FakeM14(_frequency_table(10))
+
+    _call(m21, m14, cache, expected_identity=None, cache_key=None)
+
+    assert m14.fits == 1
+
+
+def test_a_refit_writes_its_cache_key_so_the_next_run_can_check_it(m21, tmp_path):
+    cache = tmp_path / "motion.json"
+    m14 = _FakeM14(_frequency_table(10))
+
+    _call(m21, m14, cache, expected_identity=None, cache_key="digest-A")
+
+    assert json.loads(cache.read_text(encoding="utf-8"))["cache_key"] == "digest-A"
+    second = _FakeM14(_frequency_table(10))
+    _call(m21, second, cache, expected_identity=None, cache_key="digest-A")
+    assert second.fits == 0
+
+
+def test_the_deployed_default_is_unchanged(m21):
+    """Every existing caller passes no identity at all and must keep validating
+    against M14's recorded table."""
+    import inspect as _inspect
+    signature = _inspect.signature(m21.deployed_motion_model)
+
+    assert signature.parameters["expected_identity"].default == m21.DEPLOYED_MOTION_IDENTITY
+    assert signature.parameters["cache_key"].default is None
+    assert _inspect.signature(m21.prepare_rate_point).parameters[
+        "motion_identity"].default == m21.DEPLOYED_MOTION_IDENTITY

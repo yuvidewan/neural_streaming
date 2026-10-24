@@ -83,11 +83,27 @@ PRIMARY_CONVENTION = "sequence_mean"
 CONVENTIONS = ("sequence_mean", "frame_mean", "sequence_pooled", "global_pooled")
 DEFAULT_CRFS = (20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44)
 M22_CANDIDATE = "symmetric_p01"
+NVC_ARMS = ("nvc_deployed", "nvc_m22")
+# The transform M22 measured. Its recorded DAVIS totals are a target only for
+# this checkpoint; against any other transform there is nothing to reproduce.
+DEPLOYED_CHECKPOINT = Path("outputs/m10f_lambda_boundary/lambda_3.0e-04_seed42/best.pt")
 FRAMERATE = 30
 # The GOP the deployed codec runs at, and therefore the one M22 recorded its
 # DAVIS totals at. Only a run at this GOP has anything to reproduce - see
 # run_nvc, and --gop 1 for the intra-only measurement.
 DEPLOYED_GOP = 10
+# Configuration keys that select WHICH operating points a run measures, not what
+# any one of them means. A point's label already carries its arm and its setting
+# ("nvc_deployed/4bit", "h264/crf28"), so a run that adds an arm or a rate point
+# must be able to resume the points an earlier run already measured instead of
+# discarding them. Every other key - the checkpoint, the entropy-stack
+# directories, the GOP, the calibration - changes what a measured point IS, and
+# a change in any of them still forces a fresh run.
+SELECTION_KEYS = ("arms", "rate_points", "crf")
+
+
+def comparable_configuration(configuration: dict[str, Any]) -> dict[str, Any]:
+    return {k: v for k, v in configuration.items() if k not in SELECTION_KEYS}
 
 
 def _load_script(name: str):
@@ -355,6 +371,12 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
     parser.add_argument("--m11-dir", type=Path, default=Path("outputs/m11_autoregressive_entropy"))
     parser.add_argument("--m10k-dir", type=Path, default=Path("outputs/m10k_learned_entropy"))
     parser.add_argument("--m22-dir", type=Path, default=Path("outputs/m22_residual_freeze_lift"))
+    parser.add_argument("--arms", nargs="+", choices=list(NVC_ARMS), default=list(NVC_ARMS),
+                        help="which NVC arms to measure; the m22 arm needs refit checkpoints "
+                             "under --m22-dir, which a newly refitted stack does not have")
+    parser.add_argument("--motion-cache", type=Path, default=None,
+                        help="M14 motion-table cache; defaults to the deployed one under "
+                             "--m22-dir. Point a refit somewhere else so it cannot overwrite it.")
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/benchmarks/parity_s0"))
     parser.add_argument("--output-name", type=str, default="parity.json")
     parser.add_argument("--rate-points", type=int, nargs="+", default=[5, 4, 3])
@@ -410,16 +432,26 @@ def run_nvc(args, device, sequences, frame_cache, report, persist) -> None:
     # configuration, so M22's recorded totals are not a target it could hit.
     # Reporting a mismatch there would read as a failure when it is the whole
     # point of the run, so the check is skipped and says why instead.
-    recorded = (recorded_nvc_totals(args.m22_dir) if args.gop == DEPLOYED_GOP
-                else {"nvc_deployed": {}, "nvc_m22": {}})
+    # M22's recorded totals are a target only for the transform and GOP it
+    # measured. Against a refitted stack they are a different codec's numbers,
+    # so the check is skipped with a stated reason rather than failing the run.
+    deployed_transform = (args.checkpoint.resolve() == DEPLOYED_CHECKPOINT.resolve()
+                          if DEPLOYED_CHECKPOINT.is_file() else False)
+    recorded = (recorded_nvc_totals(args.m22_dir)
+                if args.gop == DEPLOYED_GOP and deployed_transform
+                else {arm: {} for arm in NVC_ARMS})
     calibration_gop = DEPLOYED_GOP if args.gop == 1 else args.gop
     train_full = discover_sequences(args.manifest, split="train")
     motion_train = m21.broad_train_sequences(
         args.manifest, frames_per_sequence=args.train_frames_per_sequence)
     stream_dir = Path(tempfile.mkdtemp(prefix="parity_nvct_"))
 
+    motion_cache = (args.motion_cache if args.motion_cache is not None
+                    else args.m22_dir / "m22_deployed_motion_table.json")
+    checkpoint_digest = md._file_digest(args.checkpoint)
+
     for bits in args.rate_points:
-        labels = {arm: f"{arm}/{bits}bit" for arm in ("nvc_deployed", "nvc_m22")}
+        labels = {arm: f"{arm}/{bits}bit" for arm in args.arms}
         if all(label in report["points"] for label in labels.values()):
             print(f"  [resume] NVC {bits}-bit already measured", flush=True)
             continue
@@ -439,14 +471,18 @@ def run_nvc(args, device, sequences, frame_cache, report, persist) -> None:
             cache_dir=args.cache_dir or md.DEFAULT_CACHE_DIR, train_full=train_full,
             motion_train=motion_train, calibration_frames=args.calibration_frames,
             gop_size=calibration_gop, block_size=args.block_size,
-            search_range=args.search_range,
-            motion_cache=args.m22_dir / "m22_deployed_motion_table.json")
-        checkpoint = args.m22_dir / "checkpoints" / f"m22_{M22_CANDIDATE}_{bits}bit.pt"
-        loaded = mech.load_refit_checkpoint(checkpoint, device=device, m22=m22, ma=ma, ml=ml,
-                                            cx=cx)
-        arms = {"nvc_deployed": (rig["spec"], rig["residual_params"], None),
-                "nvc_m22": (loaded["spec"], loaded["residual_params"],
-                            loaded["record"]["sha256"])}
+            search_range=args.search_range, motion_cache=motion_cache,
+            motion_identity=m21.DEPLOYED_MOTION_IDENTITY if deployed_transform else None,
+            motion_cache_key=checkpoint_digest)
+        arms = {}
+        if "nvc_deployed" in args.arms:
+            arms["nvc_deployed"] = (rig["spec"], rig["residual_params"], None)
+        if "nvc_m22" in args.arms:
+            checkpoint = args.m22_dir / "checkpoints" / f"m22_{M22_CANDIDATE}_{bits}bit.pt"
+            loaded = mech.load_refit_checkpoint(checkpoint, device=device, m22=m22, ma=ma, ml=ml,
+                                                cx=cx)
+            arms["nvc_m22"] = (loaded["spec"], loaded["residual_params"],
+                               loaded["record"]["sha256"])
 
         for arm, (spec, residual_params, sha) in arms.items():
             label = labels[arm]
@@ -501,11 +537,17 @@ def run_nvc(args, device, sequences, frame_cache, report, persist) -> None:
                          float_quality["sequence_mean"]["msssim"]}
             if expected is None:
                 check["reproduces"] = None
-                check["reason"] = (
-                    f"GOP {args.gop} is not the deployed GOP {DEPLOYED_GOP} that M22 "
-                    "recorded its DAVIS totals at, so there is nothing to reproduce"
-                    if args.gop != DEPLOYED_GOP else "no recorded total for this arm and bit depth"
-                )
+                if args.gop != DEPLOYED_GOP:
+                    check["reason"] = (
+                        f"GOP {args.gop} is not the deployed GOP {DEPLOYED_GOP} that M22 "
+                        "recorded its DAVIS totals at, so there is nothing to reproduce")
+                elif not deployed_transform:
+                    check["reason"] = (
+                        f"{args.checkpoint} is not the transform M22 measured "
+                        f"({DEPLOYED_CHECKPOINT}), so its recorded totals are a different "
+                        "codec's numbers and there is nothing to reproduce")
+                else:
+                    check["reason"] = "no recorded total for this arm and bit depth"
             else:
                 check["bytes_match"] = point["total_bytes"] == expected["total_container_bytes"]
                 check["psnr_abs_diff_db"] = abs(float_quality["sequence_pooled"]["psnr"]
@@ -558,7 +600,7 @@ def compare(report: dict[str, Any]) -> dict[str, Any]:
     # Taken from the report rather than hardcoded, so the forced arms are picked
     # up under whichever name this GOP gave them (see classical_arms).
     classical_names = sorted(name for name in by_arm if not name.startswith("nvc_"))
-    for nvc in ("nvc_deployed", "nvc_m22"):
+    for nvc in NVC_ARMS:
         if len(by_arm.get(nvc, [])) < 2:
             continue
         for classical in classical_names:
@@ -596,6 +638,8 @@ def main(argv: list[str] | None = None) -> int:
                      "block_size": args.block_size, "search_range": args.search_range,
                      "calibration_frames": args.calibration_frames,
                      "checkpoint": str(args.checkpoint), "m22_candidate": M22_CANDIDATE,
+                     "arms": list(args.arms), "m11_dir": str(args.m11_dir),
+                     "m10k_dir": str(args.m10k_dir),
                      "primary_convention": PRIMARY_CONVENTION,
                      "max_sequences": args.max_sequences, "max_frames": args.max_frames}
     intra_only = args.gop == 1
@@ -611,7 +655,10 @@ def main(argv: list[str] | None = None) -> int:
     }
     if report_path.is_file() and not args.no_resume:
         previous = json.loads(report_path.read_text(encoding="utf-8"))
-        if previous.get("configuration") == configuration:
+        if (comparable_configuration(previous.get("configuration", {}))
+                == comparable_configuration(configuration)):
+            # Only the points this run actually asks for; a resumed report may
+            # hold arms or rate points that are not in this run's selection.
             report["points"] = previous.get("points", {})
             print(f"[resume] {len(report['points'])} operating points already measured",
                   flush=True)

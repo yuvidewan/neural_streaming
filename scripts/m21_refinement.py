@@ -604,7 +604,9 @@ def aggregate(name: str, bits: int, rows: list[dict[str, Any]]) -> dict[str, Any
 def prepare_rate_point(model, *, bits: int, manifest: Path, checkpoint: Path, m11_dir: Path,
                        m10k_dir: Path, device, cache_dir, train_full, motion_train,
                        calibration_frames: int, gop_size: int, block_size: int,
-                       search_range: int, motion_cache: Path | None = None) -> dict[str, Any]:
+                       search_range: int, motion_cache: Path | None = None,
+                       motion_identity: str | None = DEPLOYED_MOTION_IDENTITY,
+                       motion_cache_key: str | None = None) -> dict[str, Any]:
     """Rebuild the DEPLOYED arm for one bit depth: M13-recalibrated residual
     tables plus M14's recalibrated motion table.
 
@@ -666,7 +668,8 @@ def prepare_rate_point(model, *, bits: int, manifest: Path, checkpoint: Path, m1
 
     motion_entropy_model = deployed_motion_model(
         mc, m14, model, motion_train, device=device, gop_size=gop_size, block_size=block_size,
-        search_range=search_range, cache=motion_cache)
+        search_range=search_range, cache=motion_cache, expected_identity=motion_identity,
+        cache_key=motion_cache_key)
 
     return {
         "bits": bits, "calibration": calibration, "signature": signature,
@@ -688,13 +691,23 @@ def prepare_rate_point(model, *, bits: int, manifest: Path, checkpoint: Path, m1
 
 
 def deployed_motion_model(mc, m14, model, motion_train, *, device, gop_size, block_size,
-                          search_range, cache: Path | None):
-    """M14's deployed recalibrated motion table, cached on disk.
+                          search_range, cache: Path | None,
+                          expected_identity: str | None = DEPLOYED_MOTION_IDENTITY,
+                          cache_key: str | None = None):
+    """M14's recalibrated motion table, cached on disk.
 
-    The cache is validated by IDENTITY, not by existence: a cached table whose
-    `model_id()` is not M14's recorded `d7e7b237b6451885` is rejected and
-    refitted, so a stale cache is a loud failure rather than a silent
-    rate difference.
+    For the deployed transform the cache is validated by IDENTITY, not by
+    existence: a cached table whose `model_id()` is not M14's recorded
+    `d7e7b237b6451885` is rejected and refitted, so a stale cache is a loud
+    failure rather than a silent rate difference.
+
+    A refit against a DIFFERENT transform has no recorded identity to check
+    against - its table is whatever M14 fits on that transform's reconstructed
+    references, which is a number nobody has written down yet. Callers in that
+    position pass `expected_identity=None` together with a `cache_key` (the
+    transform checkpoint's digest), and the cache is then accepted only for the
+    transform that wrote it. That is the same guarantee `m11_data` gives its
+    symbol cache, and it keeps the stale-cache failure loud in both modes.
     """
     from nvc.compression.entropy_model import EmpiricalEntropyModel
 
@@ -703,7 +716,10 @@ def deployed_motion_model(mc, m14, model, motion_train, *, device, gop_size, blo
         stored = json.loads(cache.read_text(encoding="utf-8"))
         table = EmpiricalEntropyModel(np.array(stored["frequencies"], dtype=np.int64),
                                       bits=motion_bits)
-        if table.model_id().hex() == DEPLOYED_MOTION_IDENTITY:
+        if expected_identity is not None:
+            if table.model_id().hex() == expected_identity:
+                return table
+        elif cache_key is not None and stored.get("cache_key") == cache_key:
             return table
     symbols = m14.collect_motion_symbols(
         mc, model, motion_train, block_size=block_size, search_range=search_range,
@@ -713,6 +729,7 @@ def deployed_motion_model(mc, m14, model, motion_train, *, device, gop_size, blo
         cache.parent.mkdir(parents=True, exist_ok=True)
         cache.write_text(json.dumps({"frequencies": table.frequencies.tolist(),
                                      "identity": table.model_id().hex(),
+                                     "cache_key": cache_key,
                                      "motion_train_p_frames": int(symbols.shape[0])}),
                          encoding="utf-8")
     return table

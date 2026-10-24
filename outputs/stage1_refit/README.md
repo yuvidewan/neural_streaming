@@ -19,8 +19,8 @@ Order, each step warm-starting or depending on the one above:
 | **M11** | channel-autoregressive context model (G16) | **done, gate passed** |
 | **M13** | codebook frequency recalibration | **done, gate passed** |
 | **M14** | motion-table recalibration | **done, motion passed, intra rejected** |
-| M22 | `symmetric_p01` residual grid | **blocked by ordering — see below** |
-| `benchmark_parity.py` | the real full-video number | ready for the pre-M22 arm |
+| `benchmark_parity.py` | the real full-video number | **done: +214.2% vs x264** |
+| M22 | `symmetric_p01` residual grid | running, as its own two-arm sweep |
 
 Nothing here overwrites the deployed artifacts: the deployed M10K lives in
 `outputs/m10k_learned_entropy/` and is untouched.
@@ -202,6 +202,26 @@ arm is **better** here than the deployed +9.2% on its channel. Motion is a small
 share of the stream (3.6–7.8% for this transform, per
 `outputs/benchmarks/fullvideo_transform/README.md`), so expect a few tenths of a
 percent of total bytes, as it was deployed.
+
+## The measurement the refit existed to produce: +214.2%
+
+`outputs/benchmarks/parity_refit/README.md`, 2026-10-25, full DAVIS TEST through
+`benchmark_parity.py` - the same harness and convention as the Stage 0
+scoreboard, so the numbers are directly comparable.
+
+| anchor | deployed codec | 64ch+QAT, fixed stack | **+ this refit** |
+|---|---|---|---|
+| x264 default, PSNR | +450.7% | +248.1% | **+214.2%** |
+| x265 default, PSNR | +485.0% | +269.8% | **+233.7%** |
+
+The refit itself is worth **-7.60 / -9.25 / -11.10% of bytes** at 5/4/3-bit, at
+PSNR and MS-SSIM identical to the fixed-stack run to every reported digit - the
+refit changes entropy coding only, and the measurement confirms it independently.
+
+Apples to apples, the learned stack is worth **-33.9 points** here against
+**-70.0** on the old transform: it transfers at **48%**. Each component said so
+on the way through, and this is the compound result. Still 3.07x the bits of x264
+at matched quality, so the remaining gap stays architectural.
 
 ## M22 cannot go last — an ordering mistake, found before it cost anything
 
