@@ -15,7 +15,7 @@ Order, each step warm-starting or depending on the one above:
 | step | what | status |
 |---|---|---|
 | **M10K** | z_ref-conditioned entropy model | **done, gate passed** |
-| M10L | refit the 512-prototype codebook | not started |
+| **M10L** | refit the 512-prototype codebook | **done, gate passed** |
 | M11 | channel-autoregressive context model (G16) | not started |
 | M13 / M14 / M22 | codebook, motion-table and residual-grid recalibrations | not started |
 | `benchmark_parity.py` | the real full-video number | not started |
@@ -76,3 +76,35 @@ equal *percentage* gains are a slightly better result than they look.
 - `m10k_64ch_qat/learned_entropy_{3,4,5}bit.pt` — the refitted models
 - `m10k_64ch_qat/offline_gate.json` — the gate report
 - `m10k_gate.log` — the run
+
+## M10L — gate passed, K=512 selected, 2026-10-24
+
+`m10l_64ch_qat/`, fitted on TRAIN predictions from the refitted M10K, selected on
+validation, 536 train / 179 validation P-frames. The codebook sizes 16 through
+512 were all swept and all passed; the pre-registered rule takes the best
+held-out rate among candidates clearing the runtime bar, and that is K=512 at
+every rate point — the same size the deployed codec uses.
+
+| bits | M10K ideal | K=512 | cost vs M10K | vs M10J | table time | prototypes used |
+|---|---|---|---|---|---|---|
+| 5 | 3.32987 | 3.33076 | **+0.03%** | +1.11% | **−94.0%** | 501 / 512 |
+| 4 | 2.37582 | 2.37693 | **+0.05%** | +1.31% | **−88.2%** | 503 / 512 |
+| 3 | 1.49574 | 1.49635 | **+0.04%** | +2.18% | **−79.3%** | 506 / 512 |
+
+`l1` was swept alongside `code_length` as the assignment metric and lost, so
+`code_length` is selected — again matching the deployed choice, and chosen on
+4-bit validation before any test data was read.
+
+### It behaves exactly as it does on the deployed transform
+
+On the old transform the codebook retained M10K's gain to within +0.02% while
+removing 70–88% of residual-coding time. Here it retains it to within
++0.03–0.05% and removes 79–94% of table time. The approximation is as tight on
+this transform's distributions as on the old one, so nothing about the wider,
+harder residuals defeats the prototype representation.
+
+Over 500 of the 512 prototypes are used at every rate point, so K=512 is not
+over-provisioned — the distributions genuinely occupy the codebook.
+
+Artifacts: `codebooks/codebook_{3,4,5}bit_K512_code_length.json` are the ones
+M11 and the deployed path consume.
