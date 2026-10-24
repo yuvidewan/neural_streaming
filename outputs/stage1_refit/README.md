@@ -17,8 +17,10 @@ Order, each step warm-starting or depending on the one above:
 | **M10K** | z_ref-conditioned entropy model | **done, gate passed** |
 | **M10L** | refit the 512-prototype codebook | **done, gate passed** |
 | **M11** | channel-autoregressive context model (G16) | **done, gate passed** |
-| M13 / M14 / M22 | codebook, motion-table and residual-grid recalibrations | not started |
-| `benchmark_parity.py` | the real full-video number | not started |
+| **M13** | codebook frequency recalibration | **done, gate passed** |
+| **M14** | motion-table recalibration | **done, motion passed, intra rejected** |
+| M22 | `symmetric_p01` residual grid | **blocked by ordering — see below** |
+| `benchmark_parity.py` | the real full-video number | ready for the pre-M22 arm |
 
 Nothing here overwrites the deployed artifacts: the deployed M10K lives in
 `outputs/m10k_learned_entropy/` and is untouched.
@@ -163,3 +165,75 @@ quoted.
 
 Artifacts: `m11_64ch_qat/m11_training.json`, plus the G16 entropy models and
 their K=512 codebooks.
+
+## M13 — gate passed, 2026-10-25
+
+Recalibrates the K=512 codebook's coding frequencies against TRAIN's true symbol
+histogram, with assignments held fixed, so symbols and reconstructions are
+unchanged and only coding cost falls. TRAIN fits counts, VAL-A selects the
+smoothing strength, VAL-B reports.
+
+| bits | H_old | H_new (integer table) | gain | verdict |
+|---|---|---|---|---|
+| 5 | 3.07555 | 3.04604 | +0.960% | marginal |
+| 4 | 2.19005 | 2.13296 | **+2.607%** | meaningful |
+| 3 | 1.39555 | 1.33688 | **+4.204%** | meaningful |
+
+Selected smoothing strength 256 at both lower rate points. The deployed M13 was
+worth +1.4–4.0% of real coded bytes, so this is the same order — with 5-bit
+landing just under the 1% "meaningful" bar rather than above it, which is the one
+place this refit is slightly weaker than the original.
+
+## M14 — motion passed, intra rejected, 2026-10-25
+
+Recalibrates the motion and intra symbol tables on broader TRAIN coverage (576
+frames across all 72 TRAIN sequences, against the deployed calibration's ~400
+from the first few sequences in manifest order).
+
+| bits | intra gain | verdict | motion gain | verdict |
+|---|---|---|---|---|
+| 5 | +0.2528% | weak | **+13.011%** | meaningful |
+| 4 | +0.2864% | weak | **+12.536%** | meaningful |
+| 3 | +0.2497% | weak | **+11.609%** | meaningful |
+
+The intra arm is correctly rejected as weak at every rate point — exactly as it
+was on the deployed transform, so that negative result reproduces. The motion
+arm is **better** here than the deployed +9.2% on its channel. Motion is a small
+share of the stream (3.6–7.8% for this transform, per
+`outputs/benchmarks/fullvideo_transform/README.md`), so expect a few tenths of a
+percent of total bytes, as it was deployed.
+
+## M22 cannot go last — an ordering mistake, found before it cost anything
+
+I sequenced this refit in milestone order: M10K, M10L, M11, M13, M14, M22. That
+is the wrong order, and `scripts/m22_residual.py` says why in its own docstring:
+
+> the residual quantizer has no interface at which it can be changed in
+> isolation. Changing it invalidates, in order, the M10K entropy model, the
+> M11-G16 model trained from it, the K=512 assignment codebook fitted to G16's
+> predictions, and the M13 coding frequencies fitted to that codebook's
+> assignments.
+
+`m10l_evaluate.calibration_signature` hashes the residual quantizer's scale and
+zero_point, and `m11_evaluate.check_provenance` refuses any M11 checkpoint whose
+digest does not match. So M22's `symmetric_p01` grid is not a sixth recalibration
+to append — it is a different grid that invalidates the four steps above it.
+
+### What that means for what is already done
+
+It is not wasted. `benchmark_parity.py` ships two arms, and they map cleanly:
+
+- **`nvc_deployed`** — the stack on `calibrate_grids`' plain percentile residual
+  grid. **This is exactly what the refit above has rebuilt**, and it is complete
+  and internally consistent.
+- **`nvc_m22`** — the same stack on the `symmetric_p01` grid, with M10K, M10L,
+  M11 and M13 refitted against it. The paper's Table I quotes this arm.
+
+So the refit so far is a complete `nvc_deployed` arm for the new transform, and
+`benchmark_parity.py` can measure it now. The M22 arm needs the residual grid
+changed first and then M10K → M10L → M11 → M13 re-run against it, which is
+roughly the same three hours again for the ~1.06–1.76% of bytes (BD-rate −2.47%)
+that M22 was worth.
+
+M14 is unaffected either way: M22 explicitly freezes the motion table, so the
+motion recalibration is independent of the residual grid.
