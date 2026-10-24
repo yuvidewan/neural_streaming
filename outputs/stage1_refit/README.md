@@ -16,7 +16,7 @@ Order, each step warm-starting or depending on the one above:
 |---|---|---|
 | **M10K** | z_ref-conditioned entropy model | **done, gate passed** |
 | **M10L** | refit the 512-prototype codebook | **done, gate passed** |
-| M11 | channel-autoregressive context model (G16) | not started |
+| **M11** | channel-autoregressive context model (G16) | **done, gate passed** |
 | M13 / M14 / M22 | codebook, motion-table and residual-grid recalibrations | not started |
 | `benchmark_parity.py` | the real full-video number | not started |
 
@@ -108,3 +108,58 @@ over-provisioned — the distributions genuinely occupy the codebook.
 
 Artifacts: `codebooks/codebook_{3,4,5}bit_K512_code_length.json` are the ones
 M11 and the deployed path consume.
+
+## M11 — gate passed, G=16 selected, 2026-10-24
+
+Two steps: `m11_offline_gate.py` establishes that causal residual context carries
+information M10K's z_ref did not already provide, then `m11_train.py` trains the
+networks and arithmetic-codes every VAL-B P-frame to check the gain survives in
+real bytes.
+
+### Offline gate
+
+Chosen context `neighbourhood_x_channel` — **the same one the deployed codec
+chose** — net of the random control, on VAL-B:
+
+| bits | net gain over M10L | random control |
+|---|---|---|
+| 5 | +1.774% | +0.001% |
+| 4 | +4.971% | +0.013% |
+| 3 | +8.032% | +0.000% |
+
+Controls at ~0.00% are the validity check: the gain is causal signal, not
+estimator bias. Threshold is 0.5% at every point.
+
+### Trained models, real coded bytes
+
+Both transforms select **G=16** under the pre-declared rule (largest group size
+keeping ≥50% of the G=1 VAL-A context gain), so the deployed four-step decode
+schedule carries over unchanged. Round-trip exact at every rate point, 13,536
+parameters, identical to the deployed model.
+
+| bits | old transform | new transform | change | decode ms/P |
+|---|---|---|---|---|
+| 5 | +6.408% | **+5.346%** | −1.06 | 6.73 |
+| 4 | +7.120% | **+5.953%** | −1.17 | 7.71 |
+| 3 | +6.856% | **+5.315%** | −1.54 | 6.40 |
+
+(coded bytes against M10L, through the codebook path)
+
+### The context is worth less here, and that is the expected direction
+
+M11 earns about 1.1–1.5 points less on the new transform, and the offline gate
+said the same thing more strongly (2–3 points less). Both point the same way: a
+better transform decorrelates more, so there is less cross-channel and spatial
+redundancy left for a causal context model to collect. The transform has taken
+some of what M11 used to.
+
+This matters for the projection in
+`outputs/benchmarks/fullvideo_transform/README.md`, which estimated the learned
+stack would be worth about 77.8 BD-rate points on the new transform because that
+is what it is worth on the old one. M11 is the largest single entropy
+contributor and it is down by roughly a fifth, so **that estimate is optimistic**
+and should be replaced by the `benchmark_parity.py` measurement rather than
+quoted.
+
+Artifacts: `m11_64ch_qat/m11_training.json`, plus the G16 entropy models and
+their K=512 codebooks.
