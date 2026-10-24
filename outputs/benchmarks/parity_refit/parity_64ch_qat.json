@@ -1,6 +1,6 @@
 {
   "stage": "PARITY_ROADMAP Stage 0 - single-pass scoreboard",
-  "started_utc": "2026-10-24T18:45:15.404331+00:00",
+  "started_utc": "2026-10-24T20:07:52.777891+00:00",
   "configuration": {
     "rate_points": [
       5,
@@ -29,7 +29,8 @@
     "checkpoint": "outputs\\stage1_vimeo\\colab_run4_64ch_qat\\best.pt",
     "m22_candidate": "symmetric_p01",
     "arms": [
-      "nvc_deployed"
+      "nvc_deployed",
+      "nvc_m22"
     ],
     "m11_dir": "outputs\\stage1_refit\\m11_64ch_qat",
     "m10k_dir": "outputs\\stage1_refit\\m10k_64ch_qat",
@@ -5559,6 +5560,321 @@
         "reproduces": null,
         "reason": "outputs\\stage1_vimeo\\colab_run4_64ch_qat\\best.pt is not the transform M22 measured (outputs\\m10f_lambda_boundary\\lambda_3.0e-04_seed42\\best.pt), so its recorded totals are a different codec's numbers and there is nothing to reproduce"
       }
+    },
+    "nvc_m22/5bit": {
+      "label": "nvc_m22/5bit",
+      "arm": "nvc_m22",
+      "setting": "5bit",
+      "total_bytes": 4595421,
+      "total_pixels": 47120384,
+      "frames": 719,
+      "bpp": 0.7802009423352747,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 32.86295292598352,
+          "msssim": 0.9862604514142345
+        },
+        "frame_mean": {
+          "psnr": 32.5266131052151,
+          "msssim": 0.985808783844217
+        },
+        "sequence_pooled": {
+          "psnr": 32.52567425903762,
+          "msssim": 0.9862604514142345
+        },
+        "global_pooled": {
+          "psnr": 31.156454116463827,
+          "msssim": 0.985808783844217
+        }
+      },
+      "encode_seconds": 216.33826639980543,
+      "decode_seconds": 9.130492900148965,
+      "per_sequence": [
+        {
+          "sequence": "bmx-bumps",
+          "bytes": 654536,
+          "bpp": 0.8877712673611111,
+          "mean_psnr": 32.72178994104303,
+          "mean_msssim": 0.9876784298155042
+        },
+        {
+          "sequence": "car-turn",
+          "bytes": 466557,
+          "bpp": 0.7119094848632812,
+          "mean_psnr": 32.51598070477011,
+          "mean_msssim": 0.9846186153590679
+        },
+        {
+          "sequence": "cat-girl",
+          "bytes": 681875,
+          "bpp": 0.9352437565835674,
+          "mean_psnr": 31.94945829116321,
+          "mean_msssim": 0.9910415953464722
+        },
+        {
+          "sequence": "cows",
+          "bytes": 731413,
+          "bpp": 0.8584982065054086,
+          "mean_psnr": 27.487869101369743,
+          "mean_msssim": 0.9738811157070674
+        },
+        {
+          "sequence": "drift-chicane",
+          "bytes": 228390,
+          "bpp": 0.5361468975360577,
+          "mean_psnr": 36.03459569882546,
+          "mean_msssim": 0.9896610837716323
+        },
+        {
+          "sequence": "drone",
+          "bytes": 611546,
+          "bpp": 0.8203473772321429,
+          "mean_psnr": 36.39700384758644,
+          "mean_msssim": 0.99255551807173
+        },
+        {
+          "sequence": "gold-fish",
+          "bytes": 469162,
+          "bpp": 0.7342404096554487,
+          "mean_psnr": 35.457210738389556,
+          "mean_msssim": 0.9884977631079845
+        },
+        {
+          "sequence": "schoolgirls",
+          "bytes": 471592,
+          "bpp": 0.71959228515625,
+          "mean_psnr": 28.416783698631697,
+          "mean_msssim": 0.97997315376997
+        },
+        {
+          "sequence": "surf",
+          "bytes": 280350,
+          "bpp": 0.6222256747159091,
+          "mean_psnr": 34.785884312072454,
+          "mean_msssim": 0.9884367877786809
+        }
+      ],
+      "bits": 5,
+      "decode_reconstruction_exact": true,
+      "checkpoint_sha256": "1426c8835db2023545b16a2be2cd8a0801a4e04fcb7e33ac1886929c906f4b7f",
+      "reproduction_check": {
+        "recorded": null,
+        "measured_bytes": 4595421,
+        "measured_float_sequence_pooled_psnr": 32.537766914808806,
+        "measured_float_sequence_mean_msssim": 0.986325923813051,
+        "reproduces": null,
+        "reason": "outputs\\stage1_vimeo\\colab_run4_64ch_qat\\best.pt is not the transform M22 measured (outputs\\m10f_lambda_boundary\\lambda_3.0e-04_seed42\\best.pt), so its recorded totals are a different codec's numbers and there is nothing to reproduce"
+      }
+    },
+    "nvc_m22/4bit": {
+      "label": "nvc_m22/4bit",
+      "arm": "nvc_m22",
+      "setting": "4bit",
+      "total_bytes": 3259996,
+      "total_pixels": 47120384,
+      "frames": 719,
+      "bpp": 0.5534752857701669,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 32.27229043687263,
+          "msssim": 0.9820128287111753
+        },
+        "frame_mean": {
+          "psnr": 31.954553098035547,
+          "msssim": 0.981755475838758
+        },
+        "sequence_pooled": {
+          "psnr": 31.98803358361392,
+          "msssim": 0.9820128287111753
+        },
+        "global_pooled": {
+          "psnr": 30.791338835428682,
+          "msssim": 0.981755475838758
+        }
+      },
+      "encode_seconds": 215.89404419984203,
+      "decode_seconds": 9.002966099884361,
+      "per_sequence": [
+        {
+          "sequence": "bmx-bumps",
+          "bytes": 474808,
+          "bpp": 0.6439995659722222,
+          "mean_psnr": 32.162335677185084,
+          "mean_msssim": 0.9836056364907159
+        },
+        {
+          "sequence": "car-turn",
+          "bytes": 325973,
+          "bpp": 0.49739532470703124,
+          "mean_psnr": 32.060682400155365,
+          "mean_msssim": 0.9793880522251129
+        },
+        {
+          "sequence": "cat-girl",
+          "bytes": 501313,
+          "bpp": 0.6875891524754213,
+          "mean_psnr": 31.48637092831274,
+          "mean_msssim": 0.9885916140642059
+        },
+        {
+          "sequence": "cows",
+          "bytes": 522675,
+          "bpp": 0.6134913517878606,
+          "mean_psnr": 27.297688612582682,
+          "mean_msssim": 0.9710315041817151
+        },
+        {
+          "sequence": "drift-chicane",
+          "bytes": 150974,
+          "bpp": 0.3544123722956731,
+          "mean_psnr": 35.179732579802696,
+          "mean_msssim": 0.9826152255901923
+        },
+        {
+          "sequence": "drone",
+          "bytes": 438099,
+          "bpp": 0.5876800201751373,
+          "mean_psnr": 35.24804310956289,
+          "mean_msssim": 0.98724662733602
+        },
+        {
+          "sequence": "gold-fish",
+          "bytes": 324704,
+          "bpp": 0.5081630608974359,
+          "mean_psnr": 34.63984029079239,
+          "mean_msssim": 0.9841972482510102
+        },
+        {
+          "sequence": "schoolgirls",
+          "bytes": 334670,
+          "bpp": 0.5106658935546875,
+          "mean_psnr": 28.204442722319005,
+          "mean_msssim": 0.9781084053218365
+        },
+        {
+          "sequence": "surf",
+          "bytes": 186780,
+          "bpp": 0.41455078125,
+          "mean_psnr": 34.17147761114085,
+          "mean_msssim": 0.9833311449397694
+        }
+      ],
+      "bits": 4,
+      "decode_reconstruction_exact": true,
+      "checkpoint_sha256": "63030c7aa1bcf4c41bb6c074acefed4d02fac32eb1e5d0133c919a7dfc0fa9c1",
+      "reproduction_check": {
+        "recorded": null,
+        "measured_bytes": 3259996,
+        "measured_float_sequence_pooled_psnr": 31.99841027998767,
+        "measured_float_sequence_mean_msssim": 0.9820767068107309,
+        "reproduces": null,
+        "reason": "outputs\\stage1_vimeo\\colab_run4_64ch_qat\\best.pt is not the transform M22 measured (outputs\\m10f_lambda_boundary\\lambda_3.0e-04_seed42\\best.pt), so its recorded totals are a different codec's numbers and there is nothing to reproduce"
+      }
+    },
+    "nvc_m22/3bit": {
+      "label": "nvc_m22/3bit",
+      "arm": "nvc_m22",
+      "setting": "3bit",
+      "total_bytes": 2080763,
+      "total_pixels": 47120384,
+      "frames": 719,
+      "bpp": 0.35326757948322324,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 30.503864082050093,
+          "msssim": 0.9655580901551288
+        },
+        "frame_mean": {
+          "psnr": 30.234478117399235,
+          "msssim": 0.9658381192011031
+        },
+        "sequence_pooled": {
+          "psnr": 30.256902163904353,
+          "msssim": 0.9655580901551288
+        },
+        "global_pooled": {
+          "psnr": 29.457305594425506,
+          "msssim": 0.9658381192011031
+        }
+      },
+      "encode_seconds": 264.5394787999103,
+      "decode_seconds": 10.061567099881358,
+      "per_sequence": [
+        {
+          "sequence": "bmx-bumps",
+          "bytes": 305866,
+          "bpp": 0.41485731336805554,
+          "mean_psnr": 30.440517171275932,
+          "mean_msssim": 0.9665788186921014
+        },
+        {
+          "sequence": "car-turn",
+          "bytes": 203041,
+          "bpp": 0.30981597900390623,
+          "mean_psnr": 30.52030837744251,
+          "mean_msssim": 0.9603365287184715
+        },
+        {
+          "sequence": "cat-girl",
+          "bytes": 333465,
+          "bpp": 0.457372772559691,
+          "mean_psnr": 29.831419245074763,
+          "mean_msssim": 0.9775008532438385
+        },
+        {
+          "sequence": "cows",
+          "bytes": 337756,
+          "bpp": 0.3964421198918269,
+          "mean_psnr": 26.50139861741517,
+          "mean_msssim": 0.9580145965401943
+        },
+        {
+          "sequence": "drift-chicane",
+          "bytes": 90038,
+          "bpp": 0.21136474609375,
+          "mean_psnr": 32.81049801215715,
+          "mean_msssim": 0.9571250516634721
+        },
+        {
+          "sequence": "drone",
+          "bytes": 275458,
+          "bpp": 0.3695081773695055,
+          "mean_psnr": 32.581698702483806,
+          "mean_msssim": 0.9685559908112327
+        },
+        {
+          "sequence": "gold-fish",
+          "bytes": 199213,
+          "bpp": 0.3117691431290064,
+          "mean_psnr": 32.170418110181274,
+          "mean_msssim": 0.9667319877025409
+        },
+        {
+          "sequence": "schoolgirls",
+          "bytes": 219436,
+          "bpp": 0.334832763671875,
+          "mean_psnr": 27.33940691966135,
+          "mean_msssim": 0.9695384293794632
+        },
+        {
+          "sequence": "surf",
+          "bytes": 116490,
+          "bpp": 0.258544921875,
+          "mean_psnr": 32.33911158275887,
+          "mean_msssim": 0.9656405546448448
+        }
+      ],
+      "bits": 3,
+      "decode_reconstruction_exact": true,
+      "checkpoint_sha256": "4a305b91b8c8be2607d928251cd9c7df624972bc1aafd036750e436e5e16cfc4",
+      "reproduction_check": {
+        "recorded": null,
+        "measured_bytes": 2080763,
+        "measured_float_sequence_pooled_psnr": 30.263490794541717,
+        "measured_float_sequence_mean_msssim": 0.9656181857564508,
+        "reproduces": null,
+        "reason": "outputs\\stage1_vimeo\\colab_run4_64ch_qat\\best.pt is not the transform M22 measured (outputs\\m10f_lambda_boundary\\lambda_3.0e-04_seed42\\best.pt), so its recorded totals are a different codec's numbers and there is nothing to reproduce"
+      }
     }
   },
   "dataset": {
@@ -6452,8 +6768,880 @@
           }
         ]
       }
+    },
+    "nvc_m22_vs_h264": {
+      "sequence_mean/psnr": {
+        "bd_rate_percent": 214.1196421241477,
+        "quality_overlap": [
+          30.503864082050093,
+          32.86295292598352
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 30.503864082050093,
+            "ratio": 3.0821669636748807
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 32.27229043687263,
+            "ratio": 3.054629746702994
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 32.86295292598352,
+            "ratio": 3.6820227316895147
+          }
+        ]
+      },
+      "sequence_mean/msssim": {
+        "bd_rate_percent": 204.59554671426665,
+        "quality_overlap": [
+          0.9655580901551288,
+          0.9862604514142345
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 0.9655580901551288,
+            "ratio": 3.394797013391785
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 0.9820128287111753,
+            "ratio": 2.6570377351356895
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 0.9862604514142345,
+            "ratio": 2.7516208243188807
+          }
+        ]
+      },
+      "frame_mean/psnr": {
+        "bd_rate_percent": 220.66125007445982,
+        "quality_overlap": [
+          30.234478117399235,
+          32.5266131052151
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 30.234478117399235,
+            "ratio": 3.1120813177985025
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 31.954553098035547,
+            "ratio": 3.134518756706194
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 32.5266131052151,
+            "ratio": 3.8016203601687986
+          }
+        ]
+      },
+      "frame_mean/msssim": {
+        "bd_rate_percent": 209.7214116238516,
+        "quality_overlap": [
+          0.9658381192011031,
+          0.985808783844217
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 0.9658381192011031,
+            "ratio": 3.3877165886998277
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 0.981755475838758,
+            "ratio": 2.741953125652183
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 0.985808783844217,
+            "ratio": 2.905658056691598
+          }
+        ]
+      },
+      "sequence_pooled/psnr": {
+        "bd_rate_percent": 223.36650877953832,
+        "quality_overlap": [
+          30.256902163904353,
+          32.52567425903762
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 30.256902163904353,
+            "ratio": 3.146489652487205
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 31.98803358361392,
+            "ratio": 3.1571737949778313
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 32.52567425903762,
+            "ratio": 3.864503031718073
+          }
+        ]
+      },
+      "sequence_pooled/msssim": {
+        "bd_rate_percent": 204.59554671426665,
+        "quality_overlap": [
+          0.9655580901551288,
+          0.9862604514142345
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 0.9655580901551288,
+            "ratio": 3.394797013391785
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 0.9820128287111753,
+            "ratio": 2.6570377351356895
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 0.9862604514142345,
+            "ratio": 2.7516208243188807
+          }
+        ]
+      },
+      "global_pooled/psnr": {
+        "bd_rate_percent": 275.2454661359842,
+        "quality_overlap": [
+          29.457305594425506,
+          31.156454116463827
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 29.457305594425506,
+            "ratio": 3.3924534710111818
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 30.791338835428682,
+            "ratio": 3.8248551068780516
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 31.156454116463827,
+            "ratio": 4.916665381095639
+          }
+        ]
+      },
+      "global_pooled/msssim": {
+        "bd_rate_percent": 209.7214116238516,
+        "quality_overlap": [
+          0.9658381192011031,
+          0.985808783844217
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 0.9658381192011031,
+            "ratio": 3.3877165886998277
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 0.981755475838758,
+            "ratio": 2.741953125652183
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 0.985808783844217,
+            "ratio": 2.905658056691598
+          }
+        ]
+      }
+    },
+    "nvc_m22_vs_h264_lowdelay": {
+      "sequence_mean/psnr": {
+        "bd_rate_percent": 127.72364845703912,
+        "quality_overlap": [
+          30.503864082050093,
+          32.86295292598352
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 30.503864082050093,
+            "ratio": 2.2203590296592246
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 32.27229043687263,
+            "ratio": 2.224672822663004
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 32.86295292598352,
+            "ratio": 2.6982134171806007
+          }
+        ]
+      },
+      "sequence_mean/msssim": {
+        "bd_rate_percent": 120.6092436539477,
+        "quality_overlap": [
+          0.9655580901551288,
+          0.9862604514142345
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 0.9655580901551288,
+            "ratio": 2.446152309271592
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 0.9820128287111753,
+            "ratio": 1.9467072395792906
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 0.9862604514142345,
+            "ratio": 2.0470795098148544
+          }
+        ]
+      },
+      "frame_mean/psnr": {
+        "bd_rate_percent": 132.30871000495517,
+        "quality_overlap": [
+          30.234478117399235,
+          32.5266131052151
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 30.234478117399235,
+            "ratio": 2.24246802614875
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 31.954553098035547,
+            "ratio": 2.281004088097478
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 32.5266131052151,
+            "ratio": 2.781870702283909
+          }
+        ]
+      },
+      "frame_mean/msssim": {
+        "bd_rate_percent": 123.79774844456878,
+        "quality_overlap": [
+          0.9658381192011031,
+          0.985808783844217
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 0.9658381192011031,
+            "ratio": 2.4391465190956034
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 0.981755475838758,
+            "ratio": 1.9923154127736125
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 0.985808783844217,
+            "ratio": 2.1374331310326844
+          }
+        ]
+      },
+      "sequence_pooled/psnr": {
+        "bd_rate_percent": 132.73194869392162,
+        "quality_overlap": [
+          30.256902163904353,
+          32.52567425903762
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 30.256902163904353,
+            "ratio": 2.2530248523695815
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 31.98803358361392,
+            "ratio": 2.2829674949040775
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 32.52567425903762,
+            "ratio": 2.8083370802946854
+          }
+        ]
+      },
+      "sequence_pooled/msssim": {
+        "bd_rate_percent": 120.6092436539477,
+        "quality_overlap": [
+          0.9655580901551288,
+          0.9862604514142345
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 0.9655580901551288,
+            "ratio": 2.446152309271592
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 0.9820128287111753,
+            "ratio": 1.9467072395792906
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 0.9862604514142345,
+            "ratio": 2.0470795098148544
+          }
+        ]
+      },
+      "global_pooled/psnr": {
+        "bd_rate_percent": 168.60170395940747,
+        "quality_overlap": [
+          29.457305594425506,
+          31.156454116463827
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 29.457305594425506,
+            "ratio": 2.427376179858691
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 30.791338835428682,
+            "ratio": 2.7425938343486806
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 31.156454116463827,
+            "ratio": 3.5370304845213134
+          }
+        ]
+      },
+      "global_pooled/msssim": {
+        "bd_rate_percent": 123.79774844456878,
+        "quality_overlap": [
+          0.9658381192011031,
+          0.985808783844217
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 0.9658381192011031,
+            "ratio": 2.4391465190956034
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 0.981755475838758,
+            "ratio": 1.9923154127736125
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 0.985808783844217,
+            "ratio": 2.1374331310326844
+          }
+        ]
+      }
+    },
+    "nvc_m22_vs_h265": {
+      "sequence_mean/psnr": {
+        "bd_rate_percent": 233.66161560949826,
+        "quality_overlap": [
+          30.503864082050093,
+          32.86295292598352
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 30.503864082050093,
+            "ratio": 3.2602272892228594
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 32.27229043687263,
+            "ratio": 3.2532768901429714
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 32.86295292598352,
+            "ratio": 3.9317680344340977
+          }
+        ]
+      },
+      "sequence_mean/msssim": {
+        "bd_rate_percent": 197.35143508394728,
+        "quality_overlap": [
+          0.9655580901551288,
+          0.9862604514142345
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 0.9655580901551288,
+            "ratio": 3.3320521523555677
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 0.9820128287111753,
+            "ratio": 2.604947325324718
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 0.9862604514142345,
+            "ratio": 2.7327897060595583
+          }
+        ]
+      },
+      "frame_mean/psnr": {
+        "bd_rate_percent": 240.74244461129152,
+        "quality_overlap": [
+          30.234478117399235,
+          32.5266131052151
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 30.234478117399235,
+            "ratio": 3.2947531066391003
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 31.954553098035547,
+            "ratio": 3.3382832294767266
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 32.5266131052151,
+            "ratio": 4.05853762352095
+          }
+        ]
+      },
+      "frame_mean/msssim": {
+        "bd_rate_percent": 202.39191061778246,
+        "quality_overlap": [
+          0.9658381192011031,
+          0.985808783844217
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 0.9658381192011031,
+            "ratio": 3.3238295591801608
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 0.981755475838758,
+            "ratio": 2.675452881777432
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 0.985808783844217,
+            "ratio": 2.870592341269632
+          }
+        ]
+      },
+      "sequence_pooled/psnr": {
+        "bd_rate_percent": 242.4501278562706,
+        "quality_overlap": [
+          30.256902163904353,
+          32.52567425903762
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 30.256902163904353,
+            "ratio": 3.3212572621752705
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 31.98803358361392,
+            "ratio": 3.3519060933213547
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 32.52567425903762,
+            "ratio": 4.112328168936894
+          }
+        ]
+      },
+      "sequence_pooled/msssim": {
+        "bd_rate_percent": 197.35143508394728,
+        "quality_overlap": [
+          0.9655580901551288,
+          0.9862604514142345
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 0.9655580901551288,
+            "ratio": 3.3320521523555677
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 0.9820128287111753,
+            "ratio": 2.604947325324718
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 0.9862604514142345,
+            "ratio": 2.7327897060595583
+          }
+        ]
+      },
+      "global_pooled/psnr": {
+        "bd_rate_percent": 296.7063798533906,
+        "quality_overlap": [
+          29.457305594425506,
+          31.156454116463827
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 29.457305594425506,
+            "ratio": 3.5908810858698947
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 30.791338835428682,
+            "ratio": 4.046243657969183
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 31.156454116463827,
+            "ratio": 5.200116090493986
+          }
+        ]
+      },
+      "global_pooled/msssim": {
+        "bd_rate_percent": 202.39191061778246,
+        "quality_overlap": [
+          0.9658381192011031,
+          0.985808783844217
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 0.9658381192011031,
+            "ratio": 3.3238295591801608
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 0.981755475838758,
+            "ratio": 2.675452881777432
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 0.985808783844217,
+            "ratio": 2.870592341269632
+          }
+        ]
+      }
+    },
+    "nvc_m22_vs_h265_lowdelay": {
+      "sequence_mean/psnr": {
+        "bd_rate_percent": 148.3019086414061,
+        "quality_overlap": [
+          30.503864082050093,
+          32.86295292598352
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 30.503864082050093,
+            "ratio": 2.417388132507094
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 32.27229043687263,
+            "ratio": 2.424153849123562
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 32.86295292598352,
+            "ratio": 2.9415758899480813
+          }
+        ]
+      },
+      "sequence_mean/msssim": {
+        "bd_rate_percent": 117.3143856412385,
+        "quality_overlap": [
+          0.9655580901551288,
+          0.9862604514142345
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 0.9655580901551288,
+            "ratio": 2.424565699597001
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 0.9820128287111753,
+            "ratio": 1.9007061330176311
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 0.9862604514142345,
+            "ratio": 1.9840879598924683
+          }
+        ]
+      },
+      "frame_mean/psnr": {
+        "bd_rate_percent": 153.32860816620465,
+        "quality_overlap": [
+          30.234478117399235,
+          32.5266131052151
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 30.234478117399235,
+            "ratio": 2.43989284233111
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 31.954553098035547,
+            "ratio": 2.486827736488689
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 32.5266131052151,
+            "ratio": 3.0345862269333703
+          }
+        ]
+      },
+      "frame_mean/msssim": {
+        "bd_rate_percent": 120.31542999001803,
+        "quality_overlap": [
+          0.9658381192011031,
+          0.985808783844217
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 0.9658381192011031,
+            "ratio": 2.4107278483521117
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 0.981755475838758,
+            "ratio": 1.9564736591297167
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 0.985808783844217,
+            "ratio": 2.089878270191822
+          }
+        ]
+      },
+      "sequence_pooled/psnr": {
+        "bd_rate_percent": 153.988496421548,
+        "quality_overlap": [
+          30.256902163904353,
+          32.52567425903762
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 30.256902163904353,
+            "ratio": 2.4541883911199593
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 31.98803358361392,
+            "ratio": 2.4905038377044924
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 32.52567425903762,
+            "ratio": 3.065878916956339
+          }
+        ]
+      },
+      "sequence_pooled/msssim": {
+        "bd_rate_percent": 117.3143856412385,
+        "quality_overlap": [
+          0.9655580901551288,
+          0.9862604514142345
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 0.9655580901551288,
+            "ratio": 2.424565699597001
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 0.9820128287111753,
+            "ratio": 1.9007061330176311
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 0.9862604514142345,
+            "ratio": 1.9840879598924683
+          }
+        ]
+      },
+      "global_pooled/psnr": {
+        "bd_rate_percent": 193.2812238360715,
+        "quality_overlap": [
+          29.457305594425506,
+          31.156454116463827
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 29.457305594425506,
+            "ratio": 2.6441774255929067
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 30.791338835428682,
+            "ratio": 2.9964286769936495
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 31.156454116463827,
+            "ratio": 3.8622657480089733
+          }
+        ]
+      },
+      "global_pooled/msssim": {
+        "bd_rate_percent": 120.31542999001803,
+        "quality_overlap": [
+          0.9658381192011031,
+          0.985808783844217
+        ],
+        "rate_ratio_at_nvc_points": [
+          {
+            "bits": 3,
+            "nvc_bpp": 0.35326757948322324,
+            "quality": 0.9658381192011031,
+            "ratio": 2.4107278483521117
+          },
+          {
+            "bits": 4,
+            "nvc_bpp": 0.5534752857701669,
+            "quality": 0.981755475838758,
+            "ratio": 1.9564736591297167
+          },
+          {
+            "bits": 5,
+            "nvc_bpp": 0.7802009423352747,
+            "quality": 0.985808783844217,
+            "ratio": 2.089878270191822
+          }
+        ]
+      }
     }
   },
-  "finished_utc": "2026-10-24T19:16:17.481167+00:00",
+  "finished_utc": "2026-10-24T20:27:18.054298+00:00",
   "valid": true
 }

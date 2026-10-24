@@ -19,8 +19,8 @@ Order, each step warm-starting or depending on the one above:
 | **M11** | channel-autoregressive context model (G16) | **done, gate passed** |
 | **M13** | codebook frequency recalibration | **done, gate passed** |
 | **M14** | motion-table recalibration | **done, motion passed, intra rejected** |
-| `benchmark_parity.py` | the real full-video number | **done: +214.2% vs x264** |
-| M22 | `symmetric_p01` residual grid | running, as its own two-arm sweep |
+| `benchmark_parity.py` | the real full-video number | **done: +214.17% (+214.12% with M22)** |
+| M22 | `symmetric_p01` residual grid | **done as its own sweep: marginal, -0.05 BD-rate points** |
 
 Nothing here overwrites the deployed artifacts: the deployed M10K lives in
 `outputs/m10k_learned_entropy/` and is untouched.
@@ -223,7 +223,7 @@ Apples to apples, the learned stack is worth **-33.9 points** here against
 on the way through, and this is the compound result. Still 3.07x the bits of x264
 at matched quality, so the remaining gap stays architectural.
 
-## M22 cannot go last — an ordering mistake, found before it cost anything
+## M22 could not go last, and once run it turned out not to matter
 
 I sequenced this refit in milestone order: M10K, M10L, M11, M13, M14, M22. That
 is the wrong order, and `scripts/m22_residual.py` says why in its own docstring:
@@ -257,3 +257,33 @@ that M22 was worth.
 
 M14 is unaffected either way: M22 explicitly freezes the motion table, so the
 motion recalibration is independent of the residual grid.
+
+### Run as its own sweep, 2026-10-25: marginal everywhere
+
+`m22_64ch_qat/m22_sweep.json`, VAL-B, both arms, round-trip exact at every point:
+
+| bits | stale | refit | dPSNR | dMS-SSIM | verdict |
+|---|---|---|---|---|---|
+| 5 | -4.6575% | +0.6029% | +0.0106 dB | -0.000001 | marginal |
+| 4 | -17.8409% | +0.6242% | -0.0090 dB | -0.000085 | marginal |
+| 3 | -53.7939% | +0.7913% | -0.0408 dB | -0.000363 | marginal |
+
+The distortion guard (-0.10 dB, -0.0010 MS-SSIM) clears at every point. But the
+bars are weak below 0.5% and meaningful above 1.0%, so every point is MARGINAL -
+where the old transform's screening point was +1.5158% and meaningful. A **52%
+transfer**, matching the 48% the rest of the stack showed.
+
+On full DAVIS TEST the arm is worth **-0.05 BD-rate points** against x264
+(+214.17% to +214.12%) and **+0.73 points WORSE** on MS-SSIM, against -7.78
+points on the deployed transform. The 0.61-1.05% of bytes it still saves is paid
+for by -0.017 to -0.056 dB, and BD-rate prices both.
+
+**So the two arms are the same codec, and the plain-grid one is the one to
+carry.** Worth having measured rather than assumed: the paper's Table I quotes
+the M22 arm, and on this transform that arm no longer has the gain its number
+was credited with. Full detail in
+`outputs/benchmarks/parity_refit/README.md`.
+
+The stale arm is why this had to be a sweep and not a flag: the coupling price is
+-4.66 / -17.84 / -53.79% of the stream, milder than the old transform's -75.16%
+at 3-bit but still catastrophic.
