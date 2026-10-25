@@ -480,3 +480,97 @@ milestone rather than a result that only closes a question.
 
 - `m23_learned_context.json` - five arms x three rate points, with h_a histories
 - `learned_context.log` - the run (not committed; `*.log` is ignored repo-wide)
+
+---
+
+# M23 Phase B2 step 2 - the v3 codec on held-out TEST: -3.46 BD-rate points
+
+2026-10-26. `scripts/m23_codec.py` + `scripts/m23_deploy_validation.py`, full
+DAVIS TEST (9 sequences, 719 frames), GOP 10, real `.nvct` v3 containers, every
+sequence round-tripped. `m23_deploy_test.json`, `m23_deploy_val.json`.
+
+The scale map is now in a real decodable bitstream, and it has been measured on
+the split that had never been opened.
+
+## Result
+
+| bits | baseline | candidate | side | TEST | VAL-B | side share | exact |
+|---|---|---|---|---|---|---|---|
+| 5 | 4,626,280 B | 4,557,425 B | 62,468 B | **+1.4883%** | +1.2003% | 1.37% | yes |
+| 4 | 3,279,938 B | 3,236,780 B | 62,468 B | **+1.3158%** | +1.0723% | 1.93% | yes |
+| 3 | 2,102,902 B | 2,088,365 B | 62,468 B | **+0.6913%** | +0.6470% | 2.99% | yes |
+
+| anchor | deployed (on record) | + scale map | worth |
+|---|---|---|---|
+| x264 default, PSNR | +214.17% | **+210.70%** | **-3.46** |
+| x264 I-10 no-B | +127.79% | **+125.28%** | -2.51 |
+| x265 default, PSNR | +233.74% | **+230.06%** | -3.68 |
+| x265 I-10 no-B | +148.38% | **+145.64%** | -2.74 |
+
+It generalised: TEST exceeds VAL-B at every rate point.
+
+## Three independent checks that this measures the right thing
+
+**The v2 path is byte-identical to the deployed arm.** 6 of 6 equivalence proofs
+- three rate points on each split - match `m21_refinement.encode_sequence_refined`
+at identity exactly. A reimplemented I/O path could have shifted the bytes for
+reasons unrelated to the map; it did not, and the run was built to stop if it had.
+
+**The baselines reproduce `benchmark_parity` to the byte**: 4,626,280 /
+3,279,938 / 2,102,902 B, the same totals committed in `0c49a79`, through a
+different script and a different container implementation. The VAL-B baselines
+likewise match the M22 sweep's controls (1,791,611 / 1,275,197 / 821,163 B).
+
+**PSNR is unchanged to four decimals at every point** (dPSNR +0.0000), because
+the map changes entropy coding and nothing else. So this is a pure rate move and
+the BD-rate is a clean rate shift rather than a quality trade.
+
+## My projection was optimistic again, for a locatable reason
+
+B2 step 1 projected ~5-6 BD-rate points from ~1.5% of bytes. Measured: **-3.46**.
+That is the third projection in this milestone to come in high, and the cause is
+specific rather than general: **the 3-bit point is weak** (+0.6913%, against
++1.49% at 5-bit) because the stride-1 map costs 2.99% of a cheap stream there,
+and BD-rate weights the low-rate end of the curve.
+
+The side payload is a flat 62,468 bytes at every rate point - 96 bytes of map
+plus the coder's flush, per P-frame, 647 P-frames - so its share of the stream
+rises from 1.37% to 2.99% as the quantizer coarsens while the gain it buys does
+not keep pace.
+
+## The stride was chosen on VAL-A, and that was the wrong split
+
+B1b swept the resolution and VAL-A picked stride 1 at all three rate points.
+Stride 1 was therefore pre-registered here, because picking stride 2 on the
+strength of VAL-B - which prefers it at 4- and 3-bit - would be selecting a
+hyperparameter on the split that reports it.
+
+The deployment measurement vindicates VAL-B, and there is now a mechanical
+explanation rather than a shrug about variance: **VAL-A is also the split the
+smoothing strength is tuned on**, and a finer map has four times as many joint
+tables for that tuning to exploit. Selecting stride on VAL-A is therefore
+systematically biased toward finer maps. It needs a selection split that is not
+the strength-tuning split.
+
+**The upside left on the table is quantifiable.** At 3-bit, stride 2 would cut
+the side cost from 2.99% to about 0.75% of the stream, and B1b's VAL-B put its
+P-residual gain at +1.7889% against stride 1's +1.3463%. Both move the same way,
+so a per-rate-point stride is worth roughly another 1 to 1.5 BD-rate points -
+most of the gap between the -3.46 measured and the -5 projected. That is the
+cheapest remaining improvement in this milestone, and it needs a clean selection
+split rather than another look at VAL-B.
+
+## What the v3 record cost in practice
+
+Ten header bytes and four per frame, as committed. The side payload is written
+last in the frame record and read first, and the encoder decodes its own map back
+before conditioning on it, so nothing in the measurement depends on information a
+decoder would lack. `src/nvc/` was not touched by this step: v3 landed in its own
+commit with its own compatibility proof, and the range coder already accepted the
+arbitrary per-symbol table index that 4,096 joint tables need.
+
+## Files
+
+- `m23_deploy_test.json` - the held-out measurement and its BD-rate
+- `m23_deploy_val.json` - the VAL-B confirmation
+- `deploy_test.log`, `deploy_val.log` - the runs (not committed; `*.log` is ignored)

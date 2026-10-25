@@ -118,6 +118,18 @@ grid and leaving the stack alone costs **-4.66 / -17.84 / -53.79%** of the
 stream (the old transform's 3-bit figure was -75.16%). The coupling is milder on
 this transform but still catastrophic.
 
+## Superseded on 2026-10-26: +210.70% with the M23 scale map
+
+`outputs/m23_hyperprior/README.md` measures a transmitted per-position scale map
+in a real `.nvct` v3 container on this same split and convention: **+214.17% ->
++210.70%** against x264, **-3.46 BD-rate points**, with PSNR unchanged and every
+round trip exact. The `nvc_deployed` baseline there reproduces this report's
+totals to the byte (4,626,280 / 3,279,938 / 2,102,902 B), which is what makes the
+two directly comparable.
+
+The +214.17% below remains the correct figure for the codec WITHOUT that side
+channel.
+
 ## Still not parity, and by how much
 
 | bits | bpp | PSNR | bits vs x264 at the same quality |
