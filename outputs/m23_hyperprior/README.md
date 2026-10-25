@@ -135,3 +135,147 @@ measurement changed - only the statistic derived from them - and
 
 - `m23_offline_gate.json` - the report, all arms, controls and training histories
 - `gate.log` - the run (not committed; `*.log` is ignored repo-wide)
+
+---
+
+# M23 Phase B1 - the hyperprior IS additive to the full deployed stack
+
+2026-10-25. `scripts/m23_phaseb_gate.py`, VAL-B, side channel charged, net of a
+whole-split permuted control. TEST never opened.
+
+Phase A's open question was whether its +1.57/+2.46/+2.16% survived once the
+parent was the real shipped stack - M11-G16's causal context plus the K=512
+codebook plus M13 - rather than M10K's family. **It does.**
+
+| bits | arm | full stack | net b/sym | side | gain | control | **NET** | verdict |
+|---|---|---|---|---|---|---|---|---|
+| 5 | **`scale_map`** | 3.04611 | 3.00347 | 0.39% | +1.3999% | -0.3847% | **+1.3999%** | **meaningful** |
+| 5 | `learned` | 3.04611 | 3.03951 | 0.02% | +0.2165% | -0.0241% | +0.2165% | weak |
+| 4 | **`scale_map`** | 2.13300 | 2.09526 | 0.56% | +1.7691% | -0.5494% | **+1.7691%** | **meaningful** |
+| 4 | `learned` | 2.13300 | 2.12704 | 0.03% | +0.2791% | -0.0340% | +0.2791% | weak |
+| 3 | **`scale_map`** | 1.33700 | 1.31308 | 0.89% | +1.7889% | -0.8765% | **+1.7889%** | **meaningful** |
+| 3 | `learned` | 1.33700 | 1.33204 | 0.05% | +0.3707% | -0.0543% | +0.3707% | weak |
+
+## How much of Phase A survived
+
+| bits | Phase A (over M10K) | Phase B1 (over the full stack) | retained |
+|---|---|---|---|
+| 5 | +1.5734% | **+1.3999%** | **89%** |
+| 4 | +2.4588% | **+1.7691%** | **72%** |
+| 3 | +2.1599% | **+1.7889%** | **83%** |
+
+So M11-G16's causal context was already capturing 11-28% of what the transmitted
+map carries, and the rest is genuinely new information. That was the one thing
+Phase A could not establish, and it is the result Phase B existed to produce.
+
+## The arm that passed needs no network at all
+
+`scale_map` is the hyperprior stripped to its mechanism: **mean |residual| per
+position, average-pooled to stride 2, binned on TRAIN quantiles, transmitted and
+charged.** 64 values per frame against 16,384 symbols, 8 bins, 4,096 joint
+contexts against the 512 prototypes. Nothing is learned.
+
+That matters for two reasons. It separates "does a transmitted scale map help"
+from "did our analysis transform learn a good one" - and it means the gain is
+reachable without any training at all, by a change to the container and the
+coder rather than to the model.
+
+**The charge can decide the verdict and is reported so it can be checked.**
+Pre-charge the gains are +1.78/+2.32/+2.67%; the flat 0.01172 bits/symbol map
+costs 0.38/0.55/0.88 percentage points. The charge is constant while the stream
+gets cheaper, so its relative weight grows as the quantizer coarsens - at lower
+rates it would eventually eat the gain, which makes stride and bin count
+rate-dependent levers rather than fixed choices.
+
+## The control validates the machinery exactly, not just the result
+
+Every control came out negative, so under M11's rule nothing is subtracted. But
+the numbers say something sharper: **the control's loss is precisely its side
+charge**, to seven digits.
+
+| bits | control measured | predicted from the charge alone | control symbol bits vs parent |
+|---|---|---|---|
+| 5 | -0.3847% | -0.3847% | 3.046109 vs 3.046109 (6e-7) |
+| 4 | -0.5494% | -0.5494% | 2.132996 vs 2.132996 (2e-8) |
+| 3 | -0.8765% | -0.8765% | 1.336996 vs 1.336996 (1e-7) |
+
+A permuted context carries no information, the hierarchical smoothing therefore
+selects the maximum strength in the grid (1.05e6) and the child distribution
+collapses all the way back to its parent - so the control pays the charge and
+gets nothing for it, which is exactly what it should do. Both halves of the gate
+are confirmed at once: the fallback works, and the charge is applied identically
+to both arms.
+
+## The `learned` arm is a construction failure, not a finding about h_a
+
++0.22/+0.28/+0.37%, weak at every point. **This does not show that Phase A's h_a
+learned nothing**, and must not be read that way. The tell is the side cost:
+
+| | side bits/symbol | at 5-bit | at 4-bit | at 3-bit |
+|---|---|---|---|---|
+| `scale_map` | | 0.01172 | 0.01172 | 0.01172 |
+| `learned` | | 0.00073 | 0.00073 | 0.00073 |
+
+**16x cheaper, and identical at every rate point.** A transmitted map whose cost
+does not change at all between rate points is a nearly constant map - it is
+transmitting almost nothing. The reduction is why: `learned_signal` quantizes
+h_a's 8-channel 4x4 hyper-latent and then averages it to a single scalar per
+position, discarding seven of the eight dimensions Phase A charged for and
+trained.
+
+So this arm tests "h_a collapsed to one scalar map", not "h_a". The honest
+reading is that the reduction is inadequate, and the fix is a multi-channel
+discrete context (one context axis per hyper-channel, or a product-quantized
+index) or keeping Phase A's network predictor and adding the prototype index to
+its conditioning. Logged for Phase B2 rather than reported as a negative result.
+
+## What this is worth on the stream, as a projection
+
+The residual is 79.6-84.2% of the bytes, so +1.77% of it is **~1.5% of the total
+stream**. At the ~3.7 BD-rate points per percent of bytes measured in
+`outputs/benchmarks/parity_refit/README.md`, that projects to roughly **5-6
+BD-rate points**: +214.2% to about +209%.
+
+**That is a projection from VAL-B ideal bits, not a measurement.** Two things
+stand between it and a claim: ideal bits have to be realised in coded bytes
+(M13's realisation ratio was ~100%, so the precedent is good), and it has to hold
+on DAVIS TEST. Neither has been done.
+
+It also needs a **container change**, which is a frozen item in every milestone
+so far: the coarse map is side information the `.nvct` v2 format has nowhere to
+put. That is a deliberate scope decision for Phase B2, not an oversight.
+
+## Phase B2, in order
+
+1. **Coded validation of `scale_map`** - real arithmetic-coded bytes on VAL-B,
+   with the map in a real side-information block, to check the ideal-bits gain
+   realises. This is the step that turns ~1.5% of bytes from a projection into a
+   number.
+2. **Then TEST, once.**
+3. **Fix the `learned` arm** with a multi-channel context, to find out whether a
+   learned analysis beats the hand-made magnitude summary. If it does not, the
+   hand-made map is the better engineering answer anyway - it needs no training
+   and no network at inference.
+4. **Joint R-D training** remains the larger prize and is now better founded: the
+   mechanism is confirmed additive to the real stack, not just to M10K.
+
+## Files
+
+- `m23_phaseb_gate.json` - the report, both arms, controls, h_a histories
+- `phaseb.log` - the run (not committed; `*.log` is ignored repo-wide)
+
+## A harness check worth recording
+
+Phase B1 rebuilds the M13-recalibrated baseline from scratch through a different
+script, and it reproduces the M13 refit gate run earlier the same day:
+
+| bits | deployed, here | M13 gate | recalibrated, here | M13 gate | diff |
+|---|---|---|---|---|---|
+| 5 | 3.07555 | 3.07555 | 3.04611 | 3.04604 | 6.9e-5 |
+| 4 | 2.19005 | 2.19005 | 2.13300 | 2.13296 | 3.6e-5 |
+| 3 | 1.39555 | 1.39555 | 1.33700 | 1.33688 | 1.2e-4 |
+
+The deployed figures are identical and the recalibrated ones agree to ~1e-4,
+which is the independent check that this gate's parent really is the shipped
+stack. The 4-bit `scale_map` row also reproduced bit-for-bit between a smoke run
+and the full run in separate processes.
