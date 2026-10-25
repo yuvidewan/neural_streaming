@@ -222,13 +222,20 @@ def test_the_scale_map_arm_is_the_mechanism_with_nothing_learned(pb):
     assert signal[0, 0, 0, 1] == pytest.approx(1.0)      # mean(|2|, |0|)
 
 
-def test_the_learned_arm_quantizes_before_averaging(pb):
-    """The decoder only ever has the quantized hyper-latent, so averaging the
-    continuous values first would use precision that was never sent."""
-    source = inspect.getsource(pb.learned_signal)
+def test_the_learned_arms_quantize_before_reducing(pb):
+    """The decoder only ever has the quantized hyper-latent, so a reduction
+    applied to the continuous values would use precision never transmitted.
 
-    assert source.index("quantize_hyper_latent") < source.index("mean(dim=1")
-    assert "only ever has the quantized values" in source
+    Both learned arms now draw from `learned_hyper_latent`, which quantizes and
+    keeps every channel; the reductions happen downstream of it.
+    """
+    source = inspect.getsource(pb.learned_hyper_latent)
+
+    assert "quantize_hyper_latent" in source
+    assert "only ever has the" in source and "quantized values" in source
+    # and the scalar reduction is built ON TOP of it, not instead of it
+    assert "learned_hyper_latent(" in inspect.getsource(pb.learned_signal)
+    assert "mean(dim=1" in inspect.getsource(pb.learned_signal)
 
 
 # ----------------------------------------------------------------------------------------
@@ -259,4 +266,137 @@ def test_pre_registration_is_recorded_in_the_report(pb):
     for key in ("arms", "baseline", "weak_below_percent", "meaningful_above_percent",
                 "control_tolerance_percent", "net_of_control_rule", "split_discipline"):
         assert f'"{key}"' in source
-    assert pb.ARMS == ("scale_map", "learned")
+    assert pb.ARMS == ("scale_map_fine", "scale_map", "scale_map_coarse",
+                       "learned", "learned_vq")
+    assert pb.LEARNED_ARMS == ("learned", "learned_vq")
+
+
+# ----------------------------------------------------------------------------------------
+# The learned arm's fix: vector quantisation instead of a channel mean
+# ----------------------------------------------------------------------------------------
+
+
+def test_vq_preserves_what_the_channel_mean_destroys(pb):
+    """The defect, in one assertion. Two hyper-latent vectors with IDENTICAL
+    means but opposite signs are indistinguishable after averaging and distinct
+    under vector quantisation - and the sign structure is exactly the kind of
+    thing a scale predictor encodes."""
+    positive = torch.tensor([[[[1.0]], [[-1.0]]]])
+    negative = torch.tensor([[[[-1.0]], [[1.0]]]])
+    latent = torch.cat([positive, negative, positive, negative], dim=0)
+
+    assert latent.mean(dim=1).reshape(-1).tolist() == [0.0, 0.0, 0.0, 0.0]
+
+    codes, _ = pb.vector_quantize_context(latent, latent, codes=2, seed=3)
+
+    flat = codes.reshape(-1).tolist()
+    assert flat[0] == flat[2] and flat[1] == flat[3]
+    assert flat[0] != flat[1]
+
+
+def test_vq_is_deterministic_and_seed_dependent(pb):
+    """Encoder and decoder must derive the same codebook, and a run must be
+    reproducible across processes - the discipline M11 found a real bug under."""
+    rng = np.random.default_rng(0)
+    vectors = np.repeat(np.array([[0.0] * 8, [10.0] * 8, [-10.0] * 8]), 200, axis=0)
+    vectors = vectors + rng.normal(0, 0.3, size=vectors.shape)
+
+    first = pb.fit_vector_codebook(vectors, codes=4, seed=1)
+    again = pb.fit_vector_codebook(vectors, codes=4, seed=1)
+    other = pb.fit_vector_codebook(vectors, codes=4, seed=2)
+
+    assert np.array_equal(first, again)
+    assert not np.array_equal(first, other)
+
+
+def test_vq_separates_well_separated_clusters(pb):
+    rng = np.random.default_rng(0)
+    centres = np.array([[0.0] * 8, [10.0] * 8, [-10.0] * 8])
+    vectors = np.repeat(centres, 200, axis=0) + rng.normal(0, 0.3, size=(600, 8))
+
+    assignment = pb.assign_vectors(vectors, pb.fit_vector_codebook(vectors, codes=4, seed=1))
+
+    groups = [set(assignment[i * 200:(i + 1) * 200].tolist()) for i in range(3)]
+    assert groups[0].isdisjoint(groups[1])
+    assert groups[0].isdisjoint(groups[2])
+    assert groups[1].isdisjoint(groups[2])
+
+
+def test_vq_does_not_reuse_m10ls_distribution_codebook(pb):
+    """`m10l_shared_codebook.fit_codebook` clusters probability DISTRIBUTIONS
+    under KL or L1 and renormalises each centroid to sum to one. Correct there,
+    wrong here: these are arbitrary real-valued hyper-latent vectors, and
+    renormalising them would destroy the magnitude information the side channel
+    exists to carry."""
+    source = inspect.getsource(pb.fit_vector_codebook)
+
+    assert "ml.fit_codebook" not in source
+    assert "renormalis" in source
+    centroids = pb.fit_vector_codebook(
+        np.array([[5.0, 5.0], [100.0, 100.0], [-7.0, 1.0], [0.0, 0.0]]), codes=2, seed=0)
+    assert not np.allclose(centroids.sum(axis=1), 1.0), "centroids must not be normalised"
+
+
+def test_vq_refuses_a_bad_alphabet_or_too_few_vectors(pb):
+    vectors = np.random.default_rng(0).normal(size=(40, 8))
+
+    with pytest.raises(ValueError, match="power of two"):
+        pb.fit_vector_codebook(vectors, codes=6, seed=0)
+    with pytest.raises(ValueError, match="at least 8 vectors"):
+        pb.fit_vector_codebook(vectors[:4], codes=8, seed=0)
+
+
+def test_an_empty_cluster_keeps_its_centroid_rather_than_being_reseeded(pb):
+    """Reseeding an empty cluster from a random row would make the fit
+    non-deterministic across runs for data with fewer distinct points than
+    codes."""
+    source = inspect.getsource(pb.fit_vector_codebook)
+
+    assert "keeps its" in source
+    identical = np.zeros((16, 4))
+    first = pb.fit_vector_codebook(identical, codes=8, seed=0)
+    assert np.array_equal(first, pb.fit_vector_codebook(identical, codes=8, seed=0))
+
+
+def test_assign_ties_go_to_the_lowest_index(pb):
+    """Encoder and decoder must break ties the same way."""
+    centroids = np.array([[0.0], [2.0]])
+    exactly_between = np.array([[1.0]])
+
+    assert pb.assign_vectors(exactly_between, centroids).tolist() == [0]
+
+
+def test_a_learned_arm_is_not_coarsened_a_second_time(pb):
+    """Defect 2 from B1: h_a's output is already at its own stride-4 resolution,
+    and coarsening it again by --context-stride left 4 values per frame against
+    scale_map's 64. `learned_vq` must use the hyper-latent's own grid."""
+    source = inspect.getsource(pb.main)
+
+    vq_at = source.index('if "learned_vq" in args.arms:')
+    vq_block = source[vq_at:vq_at + 700]
+    assert "vector_quantize_context(" in vq_block
+    assert "coarsen(" not in vq_block, "learned_vq must not coarsen h_a's output again"
+    # and the defective arm is kept, explicitly labelled, for comparison
+    assert "DEFECTIVE" in source
+    assert pb.HYPER_ANALYSIS_STRIDE == 4
+
+
+def test_the_hand_made_arm_at_h_as_resolution_exists_for_a_fair_comparison(pb):
+    """Without it, "learned loses" is confounded with "learned had 4x fewer
+    positions"."""
+    source = inspect.getsource(pb.main)
+
+    assert 'if "scale_map_coarse" in args.arms:' in source
+    assert "handmade_map(HYPER_ANALYSIS_STRIDE)" in source
+    assert "learned_vq must beat" in source
+
+
+def test_every_arm_declares_the_map_it_transmits(pb):
+    """Resolution and reduction are per-arm facts. Sharing one pipeline is what
+    silently coarsened B1's learned arm twice."""
+    source = inspect.getsource(pb.main)
+
+    assert "maps: dict[str, tuple[np.ndarray, np.ndarray, int, int, str]] = {}" in source
+    assert "train_binned, val_binned, card, values_per_frame, note = maps[arm]" in source
+    assert '"coarse_values_per_frame": values_per_frame' in source
+    assert '"definition": note' in source

@@ -34,10 +34,34 @@ THE ARMS
               transmitted and charged. No network, nothing learned, fully
               interpretable - and a clean reference for what the mechanism is
               worth before any analysis transform is credited for it.
-  learned     the same pipeline fed by Phase A's own trained h_a, so the arm that
-              scored +2.46% there is the arm tested here. Retrained in-process
-              from the same config and seed rather than loaded, so this gate
-              depends on no saved artefact.
+  scale_map_coarse
+              the same hand-made signal at h_a's OWN resolution, so "learned"
+              cannot be confounded with "more positions". This is the arm
+              `learned_vq` has to beat.
+  learned     h_a reduced to one scalar per position. KEPT, and kept failing, so
+              the correction below is visible beside the defect rather than
+              quietly replacing it.
+  learned_vq  h_a with every channel retained, vector-quantised to the same
+              alphabet. The arm `learned` should always have been.
+
+Phase A's h_a is retrained in-process from the same config and seed rather than
+loaded, so this gate depends on no saved artefact.
+
+WHAT WAS WRONG WITH `learned` IN B1, AND WHY IT IS STILL HERE
+-------------------------------------------------------------
+It scored +0.22/+0.28/+0.37% and looked like evidence against a learned
+hyperprior. It was not. Two defects, both in the reduction and neither in h_a:
+
+  1 h_a's 8 hyper-channels were averaged into one scalar, discarding seven
+    dimensions that Phase A had trained and charged for;
+  2 the result - already at h_a's own stride-4 resolution - was coarsened AGAIN
+    by `--context-stride`, leaving **4 values per frame** against `scale_map`'s
+    64. A 16x difference in positional resolution, which is the larger half of
+    the defect and was missed when only the channel collapse was named.
+
+Its side cost gave it away: 0.00073 bits/symbol, identical at all three rate
+points, is 4 values x 3 bits x 144 frames and nothing else. `learned_vq` keeps
+all 8 channels and stops the second coarsening.
 
 Both transmit exactly the context they use - the binned, coarsened map - not the
 full hyper-latent, so the charge matches what the arm consumes.
@@ -88,7 +112,12 @@ from nvc.utils.config import load_default_config
 from nvc.utils.device import get_device
 from nvc.utils.seed import seed_everything
 
-ARMS = ("scale_map", "learned")
+ARMS = ("scale_map_fine", "scale_map", "scale_map_coarse", "learned", "learned_vq")
+LEARNED_ARMS = ("learned", "learned_vq")
+# h_a downsamples by two stride-2 convolutions, so its own map is 1/4 the
+# latent per axis. An arm fed by h_a is already coarse and must not be
+# coarsened a second time - that was defect 2 above.
+HYPER_ANALYSIS_STRIDE = 4
 DEFAULT_CONTEXT_BINS = 8
 DEFAULT_CONTEXT_STRIDE = 2
 
@@ -200,14 +229,13 @@ def scale_map_signal(residual: torch.Tensor) -> torch.Tensor:
     return residual.abs().mean(dim=1, keepdim=True)
 
 
-def learned_signal(m23, model, signals: torch.Tensor, *, device, hyper_bits: int,
-                   batch_size: int = 16) -> torch.Tensor:
-    """Phase A's trained h_a, reduced to one value per coarse position.
+def learned_hyper_latent(m23, model, signals: torch.Tensor, *, device, hyper_bits: int,
+                         batch_size: int = 16) -> torch.Tensor:
+    """Phase A's trained h_a, quantized as Phase A charged it, ALL channels kept.
 
-    The hyper-latent is quantized exactly as Phase A charged it, then averaged
-    over its channels: the arm transmits a scalar map, so it is charged for a
-    scalar map. Averaging after quantization, not before, because the decoder
-    only ever has the quantized values.
+    Quantizing before anything else, because the decoder only ever has the
+    quantized values; a reduction applied to the continuous hyper-latent would
+    use precision that was never transmitted.
     """
     out = []
     model = model.to(device).eval()
@@ -216,8 +244,88 @@ def learned_signal(m23, model, signals: torch.Tensor, *, device, hyper_bits: int
             batch = signals[start:start + batch_size].to(device)
             raw = model.analysis(batch)
             _, dequantized, _ = m23.quantize_hyper_latent(raw, bits=hyper_bits)
-            out.append(dequantized.mean(dim=1, keepdim=True).cpu())
+            out.append(dequantized.cpu())
     return torch.cat(out, dim=0)
+
+
+def learned_signal(m23, model, signals: torch.Tensor, *, device, hyper_bits: int,
+                   batch_size: int = 16) -> torch.Tensor:
+    """B1's scalar reduction: the mean over h_a's channels.
+
+    Kept deliberately. It is the defective arm, and reporting it beside its
+    replacement is how the correction stays visible.
+    """
+    latent = learned_hyper_latent(m23, model, signals, device=device,
+                                  hyper_bits=hyper_bits, batch_size=batch_size)
+    return latent.mean(dim=1, keepdim=True)
+
+
+def fit_vector_codebook(vectors: np.ndarray, *, codes: int, seed: int,
+                        iterations: int = 25) -> np.ndarray:
+    """Deterministic Euclidean Lloyd's over the hyper-latent's channel vectors.
+
+    Deliberately NOT `m10l_shared_codebook.fit_codebook`: that clusters
+    probability DISTRIBUTIONS under KL or L1 and renormalises each centroid to
+    sum to one. Correct there, wrong here - these are arbitrary real-valued
+    hyper-latent vectors, and renormalising them would destroy the magnitude
+    information the whole side channel exists to carry.
+
+    Deterministic in both places it could drift: the initial centroids are drawn
+    by a seeded generator from TRAIN rows, and an empty cluster keeps its
+    previous centroid rather than being reseeded.
+    """
+    if codes & (codes - 1):
+        raise ValueError(f"codes must be a power of two, got {codes}")
+    if vectors.shape[0] < codes:
+        raise ValueError(f"need at least {codes} vectors to fit {codes} codes, "
+                         f"got {vectors.shape[0]}")
+    generator = np.random.default_rng(seed)
+    chosen = generator.choice(vectors.shape[0], size=codes, replace=False)
+    centroids = vectors[chosen].astype(np.float64).copy()
+    for _ in range(iterations):
+        assignment = assign_vectors(vectors, centroids)
+        moved = False
+        for code in range(codes):
+            members = vectors[assignment == code]
+            if members.shape[0] == 0:
+                continue
+            mean = members.astype(np.float64).mean(axis=0)
+            if not np.array_equal(mean, centroids[code]):
+                centroids[code] = mean
+                moved = True
+        if not moved:
+            break
+    return centroids
+
+
+def assign_vectors(vectors: np.ndarray, centroids: np.ndarray,
+                   chunk: int = 65536) -> np.ndarray:
+    """Nearest centroid by squared Euclidean distance, ties to the lowest index."""
+    out = np.empty(vectors.shape[0], dtype=np.int64)
+    for start in range(0, vectors.shape[0], chunk):
+        block = vectors[start:start + chunk].astype(np.float64)
+        distances = ((block[:, None, :] - centroids[None, :, :]) ** 2).sum(axis=2)
+        out[start:start + chunk] = distances.argmin(axis=1)
+    return out
+
+
+def vector_quantize_context(train_latent: torch.Tensor, val_latent: torch.Tensor, *,
+                            codes: int, seed: int) -> tuple[np.ndarray, np.ndarray]:
+    """[N, C_h, h, w] hyper-latents -> [N, h, w] code indices, fitted on TRAIN.
+
+    One code per POSITION, carrying all C_h channels of that position, so the
+    transmitted alphabet stays small while the information does not collapse.
+    """
+    def as_vectors(latent: torch.Tensor) -> np.ndarray:
+        return (latent.permute(0, 2, 3, 1)
+                .reshape(-1, latent.shape[1]).cpu().numpy())
+
+    centroids = fit_vector_codebook(as_vectors(train_latent), codes=codes, seed=seed)
+    shape = lambda latent: (latent.shape[0], latent.shape[2], latent.shape[3])
+    train_codes = assign_vectors(as_vectors(train_latent), centroids).reshape(
+        *shape(train_latent))
+    val_codes = assign_vectors(as_vectors(val_latent), centroids).reshape(*shape(val_latent))
+    return train_codes, val_codes
 
 
 # --------------------------------------------------------------------------------------------
@@ -394,13 +502,40 @@ def main(argv: list[str] | None = None) -> int:
         val_residual = m23.dequantized_residual(
             val_symbols, residual_params, shape=(channels, height, width))
 
-        signals: dict[str, tuple[torch.Tensor, torch.Tensor]] = {}
+        # Each arm's transmitted map, built explicitly: (train, val, cardinality,
+        # values per frame, note). Resolution and reduction are per-arm facts -
+        # sharing one pipeline is what silently coarsened B1's learned arm twice.
+        maps: dict[str, tuple[np.ndarray, np.ndarray, int, int, str]] = {}
+
+        def handmade_map(stride: int) -> tuple[np.ndarray, np.ndarray]:
+            train_coarse = coarsen(scale_map_signal(train_residual), stride=stride)
+            val_coarse = coarsen(scale_map_signal(val_residual), stride=stride)
+            edges = train_bin_edges(train_coarse, bins=args.context_bins)
+            return to_bins(train_coarse, edges), to_bins(val_coarse, edges)
+
+        if "scale_map_fine" in args.arms:
+            # Full latent resolution. B1 chose stride 2 before it was known that
+            # 64 positions beat 16; this tests whether the map is still
+            # under-provisioned at the cost of 4x the charge.
+            t, v = handmade_map(1)
+            maps["scale_map_fine"] = (t, v, args.context_bins, int(t[0].size),
+                                      f"mean |residual| at full latent resolution, "
+                                      f"{args.context_bins} quantile bins")
         if "scale_map" in args.arms:
-            signals["scale_map"] = (scale_map_signal(train_residual),
-                                    scale_map_signal(val_residual))
+            t, v = handmade_map(args.context_stride)
+            maps["scale_map"] = (t, v, args.context_bins, int(t[0].size),
+                                 f"mean |residual|, stride {args.context_stride}, "
+                                 f"{args.context_bins} quantile bins")
+        if "scale_map_coarse" in args.arms:
+            t, v = handmade_map(HYPER_ANALYSIS_STRIDE)
+            maps["scale_map_coarse"] = (
+                t, v, args.context_bins, int(t[0].size),
+                f"mean |residual| at h_a's own stride {HYPER_ANALYSIS_STRIDE}, "
+                f"{args.context_bins} quantile bins - the arm learned_vq must beat")
+
         learned_history = None
-        if "learned" in args.arms:
-            print("    training Phase A's h_a for the learned arm ...", flush=True)
+        if any(arm in args.arms for arm in LEARNED_ARMS):
+            print("    training Phase A's h_a for the learned arms ...", flush=True)
             config = {"latent_channels": channels, "alphabet": alphabet,
                       "hidden": args.hidden, "hyper_channels": args.hyper_channels,
                       "hyper_hidden": args.hyper_hidden}
@@ -417,29 +552,46 @@ def main(argv: list[str] | None = None) -> int:
                 learning_rate=args.learning_rate, device=device,
                 hyper_bits=args.hyper_bits, seed=args.seed,
                 log=lambda m: print(m, flush=True))
-            signals["learned"] = (
-                learned_signal(m23, hyper_model, train_residual, device=device,
-                               hyper_bits=args.hyper_bits),
-                learned_signal(m23, hyper_model, val_residual, device=device,
-                               hyper_bits=args.hyper_bits))
+            train_latent = learned_hyper_latent(m23, hyper_model, train_residual,
+                                                device=device, hyper_bits=args.hyper_bits)
+            val_latent = learned_hyper_latent(m23, hyper_model, val_residual,
+                                              device=device, hyper_bits=args.hyper_bits)
+            print(f"      h_a hyper-latent: {tuple(train_latent.shape[1:])} per frame "
+                  f"({train_latent.shape[1]} channels x "
+                  f"{train_latent.shape[2]}x{train_latent.shape[3]})", flush=True)
+
+            if "learned" in args.arms:
+                # B1's reduction, reproduced exactly - including the second
+                # coarsening - so the defect and its fix sit side by side.
+                train_scalar = train_latent.mean(dim=1, keepdim=True)
+                val_scalar = val_latent.mean(dim=1, keepdim=True)
+                train_coarse = coarsen(train_scalar, stride=args.context_stride)
+                val_coarse = coarsen(val_scalar, stride=args.context_stride)
+                edges = train_bin_edges(train_coarse, bins=args.context_bins)
+                t = to_bins(train_coarse, edges)
+                v = to_bins(val_coarse, edges)
+                maps["learned"] = (
+                    t, v, args.context_bins, int(t[0].size),
+                    "B1's DEFECTIVE reduction: h_a's channels averaged to a scalar AND "
+                    f"coarsened again by stride {args.context_stride}")
+            if "learned_vq" in args.arms:
+                t, v = vector_quantize_context(train_latent, val_latent,
+                                               codes=args.context_bins, seed=args.seed)
+                maps["learned_vq"] = (
+                    t, v, args.context_bins, int(t[0].size),
+                    f"h_a's full {train_latent.shape[1]}-channel hyper-latent, vector "
+                    f"quantised to {args.context_bins} codes at its own resolution")
 
         # ---- each arm: bin, charge, fit, control ------------------------------------
         rng = np.random.default_rng(args.seed)
         rows = []
         for arm in args.arms:
-            train_signal, val_signal = signals[arm]
-            train_coarse = coarsen(train_signal, stride=args.context_stride)
-            val_coarse = coarsen(val_signal, stride=args.context_stride)
-            edges = train_bin_edges(train_coarse, bins=args.context_bins)
-            train_binned = to_bins(train_coarse, edges)
-            val_binned = to_bins(val_coarse, edges)
+            train_binned, val_binned, card, values_per_frame, note = maps[arm]
 
-            # What the arm transmits is the coarse binned map, so that is what it
-            # is charged for - not the full hyper-latent it may have come from.
-            side_b = context_map_bits(train_binned, val_binned[report_mask],
-                                      bins=args.context_bins)
-            side_a = context_map_bits(train_binned, val_binned[select_mask],
-                                      bins=args.context_bins)
+            # What the arm transmits is the map above, so that is what it is
+            # charged for - not the hyper-latent it may have been derived from.
+            side_b = context_map_bits(train_binned, val_binned[report_mask], bins=card)
+            side_a = context_map_bits(train_binned, val_binned[select_mask], bins=card)
             side_b_per_symbol = side_b / b_sym.size
             side_a_per_symbol = side_a / a_sym.size
 
@@ -452,10 +604,10 @@ def main(argv: list[str] | None = None) -> int:
             v_perm[select_mask] = cx.permuted_context(v_ctx[select_mask], rng)
             v_perm[report_mask] = cx.permuted_context(v_ctx[report_mask], rng)
 
-            card = args.context_bins
             result: dict[str, Any] = {
                 "arm": arm, "cardinality": card, "joint_contexts": groups * card,
-                "coarse_values_per_frame": int(train_binned[0].size),
+                "definition": note,
+                "coarse_values_per_frame": values_per_frame,
                 "side_bits_per_symbol_val_b": side_b_per_symbol,
                 "side_share_of_net": None,
                 "transmitted_not_causal": True,
@@ -496,6 +648,7 @@ def main(argv: list[str] | None = None) -> int:
             result["symbol_only_gain_percent"] = _percent(
                 baseline, result["real"]["symbol_bits_val_b"])
             rows.append(result)
+            print(f"    {arm:<17} {values_per_frame:>3} values/frame", flush=True)
             print(f"    {arm:<10} symbols {result['real']['symbol_bits_val_b']:.5f} "
                   f"+ side {side_b_per_symbol:.5f} = {result['real']['net_bits_val_b']:.5f}"
                   f"   gain {result['gain_percent']:+.4f}%  ctrl "

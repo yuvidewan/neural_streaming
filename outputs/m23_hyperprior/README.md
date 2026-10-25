@@ -385,3 +385,98 @@ The BD-rate figure is still a projection - it needs the container, then TEST, th
 
 - `m23_coded_validation.json` - the report, per-arm byte totals and round trips
 - `coded_validation.log` - the run (not committed; `*.log` is ignored repo-wide)
+
+---
+
+# M23 Phase B1b - the hand-made map beats the learned one, and B1's learned arm was broken twice
+
+2026-10-26. `scripts/m23_phaseb_gate.py --arms scale_map_fine scale_map
+scale_map_coarse learned learned_vq`, VAL-B, charged, net of control.
+`m23_learned_context.json`.
+
+B1 reported `learned` at +0.22/+0.28/+0.37% and flagged it as a construction
+failure rather than a finding. This settles it properly, and finds a second
+defect that was the larger half.
+
+## What was actually wrong with B1's learned arm
+
+1. h_a's 8 hyper-channels were averaged into one scalar, discarding seven
+   dimensions Phase A had trained and charged for. **Named in B1.**
+2. The result - already at h_a's own stride-4 resolution - was coarsened AGAIN
+   by `--context-stride`, leaving **4 values per frame** against `scale_map`'s
+   64. A 16x difference in positional resolution. **Missed in B1**, and the
+   bigger of the two.
+
+The side cost gave it away and the arithmetic is exact: 4 values x 3 bits x 144
+frames = 216 bytes = 0.00073 bits/symbol, identical at all three rate points
+because the map barely varied.
+
+## The result, with both defects fixed
+
+| arm | values/frame | 5-bit | 4-bit | 3-bit |
+|---|---|---|---|---|
+| `scale_map_fine` | 256 | **+1.6919%** | +1.7043% | +1.3463% |
+| `scale_map` | 64 | +1.3999% | **+1.7691%** | **+1.7889%** |
+| `scale_map_coarse` | 16 | +0.9098% | +1.3267% | +1.2606% |
+| `learned` (B1's defect) | 4 | +0.2409% | +0.3036% | +0.3331% |
+| **`learned_vq`** (fixed) | 16 | +0.3401% | +0.5564% | +0.4394% |
+
+B1's committed `scale_map` figures reproduce **exactly** (+1.3999 / +1.7691 /
++1.7889%), confirming the per-arm restructure left the unchanged arms unchanged.
+
+## The matched comparison: hand-made wins by 2.4-2.9x
+
+Same 16 positions, same 8-symbol alphabet, same charge accounting - only the
+signal differs:
+
+| bits | hand-made | learned (VQ) | ratio | the fix was worth |
+|---|---|---|---|---|
+| 5 | +0.9098% | +0.3401% | **2.7x** | 1.41x over B1's arm |
+| 4 | +1.3267% | +0.5564% | **2.4x** | 1.83x |
+| 3 | +1.2606% | +0.4394% | **2.9x** | 1.32x |
+
+**The fix was real** - `learned_vq` beats the defective arm at every rate point,
+so B1's number was understating it by a third to four fifths. **And it does not
+change the verdict.** A trained analysis transform, forced through the same
+discrete bottleneck, carries less than half of what `mean |residual|` carries.
+
+The honest limit on that: this h_a is small - 8 hyper-channels, hidden 32, 20
+epochs, 536 TRAIN frames, trained against a per-channel Laplace rate proxy. A
+larger or longer-trained one might win. What the gate establishes is that at this
+capacity the hand-made statistic is better, and that is the capacity the
+milestone has measured everything else at.
+
+## A second finding: the map's optimal resolution depends on the rate
+
+| bits | 256 values | 64 values | 16 values | best | raw gain @256 | charge @256 |
+|---|---|---|---|---|---|---|
+| 5 | **+1.6919%** | +1.3999% | +0.9098% | **256** | +3.2307% | 1.54 pts |
+| 4 | +1.7043% | **+1.7691%** | +1.3267% | **64** | +3.9019% | 2.20 pts |
+| 3 | +1.3463% | **+1.7889%** | +1.2606% | **64** | +4.8523% | 3.51 pts |
+
+Two opposing trends cross. The map gets **more informative** as the quantizer
+coarsens - raw gain +3.23% -> +3.90% -> +4.85% - while its charge stays flat at
+0.04688 bits/symbol, so it becomes a larger share of a cheaper stream and eats
+72% of the gain at 3-bit against 48% at 5-bit.
+
+**B1's stride-2 choice was right at 4- and 3-bit and leaves ~0.29 points on the
+table at 5-bit.** Stride should be chosen per rate point, not fixed - the same
+conclusion the per-frame flush and the bin count both pointed at, now measured.
+
+## What this decides
+
+**For deployment:** the hand-made map, at a per-rate-point stride. No network to
+train, nothing to ship but a table and a few lines of arithmetic. That was
+already the leading option; it is now the measured one.
+
+**For joint R-D training**, which is what this question was really for: the rate
+term should be built on the hand-made scale statistic. `mean |residual|` is
+differentiable, so it goes into a training loss directly, and it beat a learned
+analysis at equal cost. That removes h_a from the joint-training design and makes
+the rate model simpler than expected - a real simplification of the next
+milestone rather than a result that only closes a question.
+
+## Files
+
+- `m23_learned_context.json` - five arms x three rate points, with h_a histories
+- `learned_context.log` - the run (not committed; `*.log` is ignored repo-wide)

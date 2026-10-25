@@ -1,0 +1,973 @@
+{
+  "phase": "M23 Phase B1 - is the hyperprior additive to the full deployed stack?",
+  "question": "Phase A measured +1.57/+2.46/+2.16% against zref_only (M10K's family). Does any of it survive once the parent is M11-G16 + K=512 + M13, which adds a further +5.3-6.0%?",
+  "methodology": "M12's, with the context swapped: same prototype-index helper, same hierarchical P(s|k,ctx) fitting, same two baselines, so the numbers are comparable to M12's spatial-context result",
+  "differs_from_prior_context_gates": "every earlier context gate (M10J/M11/M12) tested CAUSAL contexts - free to the decoder, hence a causality check and no charge. A hyperprior is TRANSMITTED: no causality check is needed, and the gate is worthless unless its bits are charged. Both are reflected here - no check_causality call, and side_bits_per_symbol added to every arm INCLUDING the control.",
+  "started_utc": "2026-10-25T18:44:35.512776+00:00",
+  "configuration": {
+    "checkpoint": "outputs\\stage1_vimeo\\colab_run4_64ch_qat\\best.pt",
+    "m11_dir": "outputs\\stage1_refit\\m11_64ch_qat",
+    "rate_points": [
+      5,
+      4,
+      3
+    ],
+    "arms": [
+      "scale_map_fine",
+      "scale_map",
+      "scale_map_coarse",
+      "learned",
+      "learned_vq"
+    ],
+    "context_bins": 8,
+    "context_stride": 2,
+    "hyper_bits": 8,
+    "hyper_channels": 8,
+    "hyper_hidden": 32,
+    "hidden": 32,
+    "epochs": 20,
+    "batch_size": 8,
+    "learning_rate": 0.001,
+    "calibration_frames": 400,
+    "seed": 42
+  },
+  "pre_registered": {
+    "arms": [
+      "scale_map_fine",
+      "scale_map",
+      "scale_map_coarse",
+      "learned",
+      "learned_vq"
+    ],
+    "baseline": "m11_g16_recalibrated (the full deployed stack: G16 + K=512 + M13)",
+    "weak_below_percent": 0.5,
+    "meaningful_above_percent": 1.0,
+    "control_tolerance_percent": 0.1,
+    "net_of_control_rule": "gain - max(control, 0) (M11's rule)",
+    "split_discipline": "TRAIN fits tables and h_a, VAL-A selects the smoothing strength, VAL-B reports, TEST never opened"
+  },
+  "environment": {
+    "python": "3.11.9",
+    "torch": "2.13.0+cu130",
+    "device": "cuda",
+    "platform": "Windows-10-10.0.26300-SP0"
+  },
+  "rate_points": [
+    {
+      "bits": 5,
+      "alphabet": 32,
+      "channels": 64,
+      "height": 16,
+      "width": 16,
+      "groups": 512,
+      "train_p_frames": 536,
+      "val_a_p_frames": 180,
+      "val_b_p_frames": 144,
+      "baselines_val_b_bits": {
+        "m11_g16_deployed": 3.0755531846503157,
+        "m11_g16_recalibrated": 3.0461087401311424
+      },
+      "recalibration_strength": 1024.0,
+      "learned_h_a_history": [
+        {
+          "epoch": 1,
+          "train_bits": 3.6421918726679103,
+          "val_a_bits": 3.944437344868978,
+          "val_loss": 3.944437344868978,
+          "elapsed_seconds": 1.4359962940216064
+        },
+        {
+          "epoch": 2,
+          "train_bits": 3.2307030798783942,
+          "val_a_bits": 3.733917956882053,
+          "val_loss": 3.733917956882053,
+          "elapsed_seconds": 0.8652267456054688
+        },
+        {
+          "epoch": 3,
+          "train_bits": 3.1408114895891788,
+          "val_a_bits": 3.712609354654948,
+          "val_loss": 3.712609354654948,
+          "elapsed_seconds": 0.8833932876586914
+        },
+        {
+          "epoch": 4,
+          "train_bits": 3.097459134770863,
+          "val_a_bits": 3.6688309563530814,
+          "val_loss": 3.6688309563530814,
+          "elapsed_seconds": 0.813723087310791
+        },
+        {
+          "epoch": 5,
+          "train_bits": 3.0717945988498516,
+          "val_a_bits": 3.632113456726074,
+          "val_loss": 3.632113456726074,
+          "elapsed_seconds": 0.8048148155212402
+        },
+        {
+          "epoch": 6,
+          "train_bits": 3.055763518632348,
+          "val_a_bits": 3.6037871254814995,
+          "val_loss": 3.6037871254814995,
+          "elapsed_seconds": 0.8330891132354736
+        },
+        {
+          "epoch": 7,
+          "train_bits": 3.04876212931391,
+          "val_a_bits": 3.5722211625840927,
+          "val_loss": 3.5722211625840927,
+          "elapsed_seconds": 0.8203115463256836
+        },
+        {
+          "epoch": 8,
+          "train_bits": 3.039365764874131,
+          "val_a_bits": 3.5876363118489585,
+          "val_loss": 3.5876363118489585,
+          "elapsed_seconds": 0.7988255023956299
+        },
+        {
+          "epoch": 9,
+          "train_bits": 3.0317183857533467,
+          "val_a_bits": 3.5869987699720594,
+          "val_loss": 3.5869987699720594,
+          "elapsed_seconds": 0.8376114368438721
+        },
+        {
+          "epoch": 10,
+          "train_bits": 3.0259291947777593,
+          "val_a_bits": 3.5675022019280327,
+          "val_loss": 3.5675022019280327,
+          "elapsed_seconds": 0.8606245517730713
+        },
+        {
+          "epoch": 11,
+          "train_bits": 3.021732070552769,
+          "val_a_bits": 3.5664300600687664,
+          "val_loss": 3.5664300600687664,
+          "elapsed_seconds": 0.806814432144165
+        },
+        {
+          "epoch": 12,
+          "train_bits": 3.0173315219025114,
+          "val_a_bits": 3.544643285539415,
+          "val_loss": 3.544643285539415,
+          "elapsed_seconds": 0.8244719505310059
+        },
+        {
+          "epoch": 13,
+          "train_bits": 3.0143589404091906,
+          "val_a_bits": 3.50520682864719,
+          "val_loss": 3.50520682864719,
+          "elapsed_seconds": 0.8440132141113281
+        },
+        {
+          "epoch": 14,
+          "train_bits": 3.0110748632630306,
+          "val_a_bits": 3.536758878495958,
+          "val_loss": 3.536758878495958,
+          "elapsed_seconds": 0.8477599620819092
+        },
+        {
+          "epoch": 15,
+          "train_bits": 3.0087576446248523,
+          "val_a_bits": 3.4969978014628094,
+          "val_loss": 3.4969978014628094,
+          "elapsed_seconds": 0.8341400623321533
+        },
+        {
+          "epoch": 16,
+          "train_bits": 3.0061817169189453,
+          "val_a_bits": 3.521350203620063,
+          "val_loss": 3.521350203620063,
+          "elapsed_seconds": 0.8527605533599854
+        },
+        {
+          "epoch": 17,
+          "train_bits": 3.0021551189137927,
+          "val_a_bits": 3.495471911960178,
+          "val_loss": 3.495471911960178,
+          "elapsed_seconds": 0.8274857997894287
+        },
+        {
+          "epoch": 18,
+          "train_bits": 3.0013206965887727,
+          "val_a_bits": 3.4660278956095376,
+          "val_loss": 3.4660278956095376,
+          "elapsed_seconds": 0.8452064990997314
+        },
+        {
+          "epoch": 19,
+          "train_bits": 2.999262838221308,
+          "val_a_bits": 3.483338695102268,
+          "val_loss": 3.483338695102268,
+          "elapsed_seconds": 0.9742271900177002
+        },
+        {
+          "epoch": 20,
+          "train_bits": 2.998242613094956,
+          "val_a_bits": 3.486861239539252,
+          "val_loss": 3.486861239539252,
+          "elapsed_seconds": 0.8789198398590088
+        }
+      ],
+      "candidates": [
+        {
+          "arm": "scale_map_fine",
+          "cardinality": 8,
+          "joint_contexts": 4096,
+          "definition": "mean |residual| at full latent resolution, 8 quantile bins",
+          "coarse_values_per_frame": 256,
+          "side_bits_per_symbol_val_b": 0.046875,
+          "side_share_of_net": 0.01565332051296295,
+          "transmitted_not_causal": true,
+          "real": {
+            "strength": 16.0,
+            "symbol_bits_val_b": 2.9476972992882886,
+            "net_bits_val_b": 2.9945722992882886,
+            "net_bits_val_a": 3.220752220100375
+          },
+          "control": {
+            "strength": 1048576.0,
+            "symbol_bits_val_b": 3.0461095208945967,
+            "net_bits_val_b": 3.0929845208945967,
+            "net_bits_val_a": 3.3392632219250062
+          },
+          "gain_percent": 1.6918779084897355,
+          "control_gain_percent": -1.5388741756289441,
+          "net_gain_percent": 1.6918779084897355,
+          "control_interpretation": "control LOSES: a mismatched hyper-latent actively misleads the predictor, which confirms the arm's gain is content-specific. Not added back - the arm is not credited for its control being bad",
+          "verdict": "meaningful",
+          "selection_net_percent": 2.1757638418520138,
+          "symbol_only_gain_percent": 3.2307264526156394
+        },
+        {
+          "arm": "scale_map",
+          "cardinality": 8,
+          "joint_contexts": 4096,
+          "definition": "mean |residual|, stride 2, 8 quantile bins",
+          "coarse_values_per_frame": 64,
+          "side_bits_per_symbol_val_b": 0.01171875,
+          "side_share_of_net": 0.003901739930126557,
+          "transmitted_not_causal": true,
+          "real": {
+            "strength": 64.0,
+            "symbol_bits_val_b": 2.9917489874357677,
+            "net_bits_val_b": 3.0034677374357677,
+            "net_bits_val_a": 3.2398474845297542
+          },
+          "control": {
+            "strength": 1048576.0,
+            "symbol_bits_val_b": 3.0461092873651223,
+            "net_bits_val_b": 3.0578280373651223,
+            "net_bits_val_a": 3.3041073748141354
+          },
+          "gain_percent": 1.3998516249140516,
+          "control_gain_percent": -0.3847301010493593,
+          "net_gain_percent": 1.3998516249140516,
+          "control_interpretation": "control LOSES: a mismatched hyper-latent actively misleads the predictor, which confirms the arm's gain is content-specific. Not added back - the arm is not credited for its control being bad",
+          "verdict": "meaningful",
+          "selection_net_percent": 1.5957814248923896,
+          "symbol_only_gain_percent": 1.7845637609455276
+        },
+        {
+          "arm": "scale_map_coarse",
+          "cardinality": 8,
+          "joint_contexts": 4096,
+          "definition": "mean |residual| at h_a's own stride 4, 8 quantile bins - the arm learned_vq must beat",
+          "coarse_values_per_frame": 16,
+          "side_bits_per_symbol_val_b": 0.0029296875,
+          "side_share_of_net": 0.0009706106053598005,
+          "transmitted_not_causal": true,
+          "real": {
+            "strength": 256.0,
+            "symbol_bits_val_b": 3.0154666537536374,
+            "net_bits_val_b": 3.0183963412536374,
+            "net_bits_val_a": 3.2563220185262045
+          },
+          "control": {
+            "strength": 1048576.0,
+            "symbol_bits_val_b": 3.0461097254118914,
+            "net_bits_val_b": 3.0490394129118914,
+            "net_bits_val_a": 3.295318088472651
+          },
+          "gain_percent": 0.9097639395602107,
+          "control_gain_percent": -0.0962103795619199,
+          "net_gain_percent": 0.9097639395602107,
+          "control_interpretation": "control is approximately zero: the arm's gain stands as measured",
+          "verdict": "marginal",
+          "selection_net_percent": 1.0953987210611826,
+          "symbol_only_gain_percent": 1.0059419735680797
+        },
+        {
+          "arm": "learned",
+          "cardinality": 8,
+          "joint_contexts": 4096,
+          "definition": "B1's DEFECTIVE reduction: h_a's channels averaged to a scalar AND coarsened again by stride 2",
+          "coarse_values_per_frame": 4,
+          "side_bits_per_symbol_val_b": 0.0007306495396693885,
+          "side_share_of_net": 0.00024044258234106244,
+          "transmitted_not_causal": true,
+          "real": {
+            "strength": 1024.0,
+            "symbol_bits_val_b": 3.0380386589390524,
+            "net_bits_val_b": 3.038769308478722,
+            "net_bits_val_a": 3.27973401136365
+          },
+          "control": {
+            "strength": 1048576.0,
+            "symbol_bits_val_b": 3.0461094043089454,
+            "net_bits_val_b": 3.046840053848615,
+            "net_bits_val_a": 3.2931212369230582
+          },
+          "gain_percent": 0.24094450587816107,
+          "control_gain_percent": -0.024008129054545725,
+          "net_gain_percent": 0.24094450587816107,
+          "control_interpretation": "control is approximately zero: the arm's gain stands as measured",
+          "verdict": "weak",
+          "selection_net_percent": 0.3843038712401194,
+          "symbol_only_gain_percent": 0.26493083079307683
+        },
+        {
+          "arm": "learned_vq",
+          "cardinality": 8,
+          "joint_contexts": 4096,
+          "definition": "h_a's full 8-channel hyper-latent, vector quantised to 8 codes at its own resolution",
+          "coarse_values_per_frame": 16,
+          "side_bits_per_symbol_val_b": 0.00275165622518134,
+          "side_share_of_net": 0.0009064176223891658,
+          "transmitted_not_causal": true,
+          "real": {
+            "strength": 1024.0,
+            "symbol_bits_val_b": 3.032997161111835,
+            "net_bits_val_b": 3.035748817337016,
+            "net_bits_val_a": 3.2809768615709456
+          },
+          "control": {
+            "strength": 1048576.0,
+            "symbol_bits_val_b": 3.046109141903631,
+            "net_bits_val_b": 3.0488607981288123,
+            "net_bits_val_a": 3.2952640792131076
+          },
+          "gain_percent": 0.34010351165862224,
+          "control_gain_percent": -0.09034667611870556,
+          "net_gain_percent": 0.34010351165862224,
+          "control_interpretation": "control is approximately zero: the arm's gain stands as measured",
+          "verdict": "weak",
+          "selection_net_percent": 0.3465546549455784,
+          "symbol_only_gain_percent": 0.43043699808113217
+        }
+      ]
+    },
+    {
+      "bits": 4,
+      "alphabet": 16,
+      "channels": 64,
+      "height": 16,
+      "width": 16,
+      "groups": 512,
+      "train_p_frames": 536,
+      "val_a_p_frames": 180,
+      "val_b_p_frames": 144,
+      "baselines_val_b_bits": {
+        "m11_g16_deployed": 2.190046831910545,
+        "m11_g16_recalibrated": 2.132995778419793
+      },
+      "recalibration_strength": 256.0,
+      "learned_h_a_history": [
+        {
+          "epoch": 1,
+          "train_bits": 2.7834943799830194,
+          "val_a_bits": 2.989023764928182,
+          "val_loss": 2.989023764928182,
+          "elapsed_seconds": 0.942108154296875
+        },
+        {
+          "epoch": 2,
+          "train_bits": 2.3814250106242167,
+          "val_a_bits": 2.7883808453877768,
+          "val_loss": 2.7883808453877768,
+          "elapsed_seconds": 0.9569306373596191
+        },
+        {
+          "epoch": 3,
+          "train_bits": 2.268918222455836,
+          "val_a_bits": 2.754786597357856,
+          "val_loss": 2.754786597357856,
+          "elapsed_seconds": 0.8647415637969971
+        },
+        {
+          "epoch": 4,
+          "train_bits": 2.209973164458773,
+          "val_a_bits": 2.7327007717556424,
+          "val_loss": 2.7327007717556424,
+          "elapsed_seconds": 0.7811415195465088
+        },
+        {
+          "epoch": 5,
+          "train_bits": 2.181464084938391,
+          "val_a_bits": 2.693840334150526,
+          "val_loss": 2.693840334150526,
+          "elapsed_seconds": 0.8442592620849609
+        },
+        {
+          "epoch": 6,
+          "train_bits": 2.1668405123610994,
+          "val_a_bits": 2.6673622873094347,
+          "val_loss": 2.6673622873094347,
+          "elapsed_seconds": 0.8367741107940674
+        },
+        {
+          "epoch": 7,
+          "train_bits": 2.156952142715454,
+          "val_a_bits": 2.6267079247368708,
+          "val_loss": 2.6267079247368708,
+          "elapsed_seconds": 0.7994780540466309
+        },
+        {
+          "epoch": 8,
+          "train_bits": 2.149771784668538,
+          "val_a_bits": 2.6372709380255803,
+          "val_loss": 2.6372709380255803,
+          "elapsed_seconds": 0.9025275707244873
+        },
+        {
+          "epoch": 9,
+          "train_bits": 2.144731265395435,
+          "val_a_bits": 2.613928858439128,
+          "val_loss": 2.613928858439128,
+          "elapsed_seconds": 0.8010482788085938
+        },
+        {
+          "epoch": 10,
+          "train_bits": 2.1394115846548507,
+          "val_a_bits": 2.5916685422261554,
+          "val_loss": 2.5916685422261554,
+          "elapsed_seconds": 0.812708854675293
+        },
+        {
+          "epoch": 11,
+          "train_bits": 2.134777585072304,
+          "val_a_bits": 2.5842123879326713,
+          "val_loss": 2.5842123879326713,
+          "elapsed_seconds": 0.8459091186523438
+        },
+        {
+          "epoch": 12,
+          "train_bits": 2.1317463561670102,
+          "val_a_bits": 2.561127021577623,
+          "val_loss": 2.561127021577623,
+          "elapsed_seconds": 0.8064026832580566
+        },
+        {
+          "epoch": 13,
+          "train_bits": 2.128013139340415,
+          "val_a_bits": 2.5758102999793158,
+          "val_loss": 2.5758102999793158,
+          "elapsed_seconds": 0.785275936126709
+        },
+        {
+          "epoch": 14,
+          "train_bits": 2.1256121112339534,
+          "val_a_bits": 2.560862938563029,
+          "val_loss": 2.560862938563029,
+          "elapsed_seconds": 0.7837674617767334
+        },
+        {
+          "epoch": 15,
+          "train_bits": 2.123769900692043,
+          "val_a_bits": 2.5413795895046656,
+          "val_loss": 2.5413795895046656,
+          "elapsed_seconds": 0.8423495292663574
+        },
+        {
+          "epoch": 16,
+          "train_bits": 2.1211344928883795,
+          "val_a_bits": 2.5420575671725802,
+          "val_loss": 2.5420575671725802,
+          "elapsed_seconds": 0.8236274719238281
+        },
+        {
+          "epoch": 17,
+          "train_bits": 2.1195175807867477,
+          "val_a_bits": 2.5244964334699844,
+          "val_loss": 2.5244964334699844,
+          "elapsed_seconds": 0.8060834407806396
+        },
+        {
+          "epoch": 18,
+          "train_bits": 2.117588034316675,
+          "val_a_bits": 2.5111722310384113,
+          "val_loss": 2.5111722310384113,
+          "elapsed_seconds": 0.8021571636199951
+        },
+        {
+          "epoch": 19,
+          "train_bits": 2.1165464137917134,
+          "val_a_bits": 2.5362171649932863,
+          "val_loss": 2.5362171649932863,
+          "elapsed_seconds": 1.0470068454742432
+        },
+        {
+          "epoch": 20,
+          "train_bits": 2.1153527035642026,
+          "val_a_bits": 2.5174182573954265,
+          "val_loss": 2.5174182573954265,
+          "elapsed_seconds": 0.8245837688446045
+        }
+      ],
+      "candidates": [
+        {
+          "arm": "scale_map_fine",
+          "cardinality": 8,
+          "joint_contexts": 4096,
+          "definition": "mean |residual| at full latent resolution, 8 quantile bins",
+          "coarse_values_per_frame": 256,
+          "side_bits_per_symbol_val_b": 0.046875,
+          "side_share_of_net": 0.022357168573457462,
+          "transmitted_not_causal": true,
+          "real": {
+            "strength": 16.0,
+            "symbol_bits_val_b": 2.049767955747546,
+            "net_bits_val_b": 2.096642955747546,
+            "net_bits_val_a": 2.2925189653114897
+          },
+          "control": {
+            "strength": 1048576.0,
+            "symbol_bits_val_b": 2.1329959797028217,
+            "net_bits_val_b": 2.1798709797028217,
+            "net_bits_val_a": 2.391796241043607
+          },
+          "gain_percent": 1.7043082335201953,
+          "control_gain_percent": -2.1976227875029317,
+          "net_gain_percent": 1.7043082335201953,
+          "control_interpretation": "control LOSES: a mismatched hyper-latent actively misleads the predictor, which confirms the arm's gain is content-specific. Not added back - the arm is not credited for its control being bad",
+          "verdict": "meaningful",
+          "selection_net_percent": 2.234689906257383,
+          "symbol_only_gain_percent": 3.901921584387999
+        },
+        {
+          "arm": "scale_map",
+          "cardinality": 8,
+          "joint_contexts": 4096,
+          "definition": "mean |residual|, stride 2, 8 quantile bins",
+          "coarse_values_per_frame": 64,
+          "side_bits_per_symbol_val_b": 0.01171875,
+          "side_share_of_net": 0.005592980776803422,
+          "transmitted_not_causal": true,
+          "real": {
+            "strength": 64.0,
+            "symbol_bits_val_b": 2.0835414462450625,
+            "net_bits_val_b": 2.0952601962450625,
+            "net_bits_val_a": 2.297995449609239
+          },
+          "control": {
+            "strength": 1048576.0,
+            "symbol_bits_val_b": 2.1329957843328464,
+            "net_bits_val_b": 2.1447145343328464,
+            "net_bits_val_a": 2.3566402333361145
+          },
+          "gain_percent": 1.769135342719069,
+          "control_gain_percent": -0.5494036149352024,
+          "net_gain_percent": 1.769135342719069,
+          "control_interpretation": "control LOSES: a mismatched hyper-latent actively misleads the predictor, which confirms the arm's gain is content-specific. Not added back - the arm is not credited for its control being bad",
+          "verdict": "meaningful",
+          "selection_net_percent": 2.0011432295692697,
+          "symbol_only_gain_percent": 2.3185386804360197
+        },
+        {
+          "arm": "scale_map_coarse",
+          "cardinality": 8,
+          "joint_contexts": 4096,
+          "definition": "mean |residual| at h_a's own stride 4, 8 quantile bins - the arm learned_vq must beat",
+          "coarse_values_per_frame": 16,
+          "side_bits_per_symbol_val_b": 0.0029296875,
+          "side_share_of_net": 0.0013919751133147763,
+          "transmitted_not_causal": true,
+          "real": {
+            "strength": 256.0,
+            "symbol_bits_val_b": 2.101768501408993,
+            "net_bits_val_b": 2.104698188908993,
+            "net_bits_val_a": 2.309277161229481
+          },
+          "control": {
+            "strength": 1048576.0,
+            "symbol_bits_val_b": 2.1329956102292664,
+            "net_bits_val_b": 2.1359252977292664,
+            "net_bits_val_a": 2.347850749154669
+          },
+          "gain_percent": 1.326659424134629,
+          "control_gain_percent": -0.1373429492506501,
+          "net_gain_percent": 1.326659424134629,
+          "control_interpretation": "control LOSES: a mismatched hyper-latent actively misleads the predictor, which confirms the arm's gain is content-specific. Not added back - the arm is not credited for its control being bad",
+          "verdict": "meaningful",
+          "selection_net_percent": 1.520030509617881,
+          "symbol_only_gain_percent": 1.4640102585638666
+        },
+        {
+          "arm": "learned",
+          "cardinality": 8,
+          "joint_contexts": 4096,
+          "definition": "B1's DEFECTIVE reduction: h_a's channels averaged to a scalar AND coarsened again by stride 2",
+          "coarse_values_per_frame": 4,
+          "side_bits_per_symbol_val_b": 0.0007285585256335445,
+          "side_share_of_net": 0.0003426058543063609,
+          "transmitted_not_causal": true,
+          "real": {
+            "strength": 256.0,
+            "symbol_bits_val_b": 2.125792388142317,
+            "net_bits_val_b": 2.1265209466679504,
+            "net_bits_val_a": 2.329331807049229
+          },
+          "control": {
+            "strength": 1048576.0,
+            "symbol_bits_val_b": 2.132995735703597,
+            "net_bits_val_b": 2.1337242942292303,
+            "net_bits_val_a": 2.345646659897575
+          },
+          "gain_percent": 0.3035557696527271,
+          "control_gain_percent": -0.034154582808277274,
+          "net_gain_percent": 0.3035557696527271,
+          "control_interpretation": "control is approximately zero: the arm's gain stands as measured",
+          "verdict": "weak",
+          "selection_net_percent": 0.6647928007680279,
+          "symbol_only_gain_percent": 0.3377123550995631
+        },
+        {
+          "arm": "learned_vq",
+          "cardinality": 8,
+          "joint_contexts": 4096,
+          "definition": "h_a's full 8-channel hyper-latent, vector quantised to 8 codes at its own resolution",
+          "coarse_values_per_frame": 16,
+          "side_bits_per_symbol_val_b": 0.0028666852291413534,
+          "side_share_of_net": 0.0013514910973443767,
+          "transmitted_not_causal": true,
+          "real": {
+            "strength": 256.0,
+            "symbol_bits_val_b": 2.118261034201841,
+            "net_bits_val_b": 2.1211277194309823,
+            "net_bits_val_a": 2.3310628982468193
+          },
+          "control": {
+            "strength": 1048576.0,
+            "symbol_bits_val_b": 2.1329956415489204,
+            "net_bits_val_b": 2.135862326778062,
+            "net_bits_val_a": 2.347869547655129
+          },
+          "gain_percent": 0.5564033041641938,
+          "control_gain_percent": -0.13439071878485861,
+          "net_gain_percent": 0.5564033041641938,
+          "control_interpretation": "control LOSES: a mismatched hyper-latent actively misleads the predictor, which confirms the arm's gain is content-specific. Not added back - the arm is not credited for its control being bad",
+          "verdict": "marginal",
+          "selection_net_percent": 0.5909697832515869,
+          "symbol_only_gain_percent": 0.6908004397865257
+        }
+      ]
+    },
+    {
+      "bits": 3,
+      "alphabet": 8,
+      "channels": 64,
+      "height": 16,
+      "width": 16,
+      "groups": 512,
+      "train_p_frames": 536,
+      "val_a_p_frames": 180,
+      "val_b_p_frames": 144,
+      "baselines_val_b_bits": {
+        "m11_g16_deployed": 1.3955540062158458,
+        "m11_g16_recalibrated": 1.3369959289672078
+      },
+      "recalibration_strength": 256.0,
+      "learned_h_a_history": [
+        {
+          "epoch": 1,
+          "train_bits": 1.9720718949588376,
+          "val_a_bits": 2.0894189145829944,
+          "val_loss": 2.0894189145829944,
+          "elapsed_seconds": 0.8217754364013672
+        },
+        {
+          "epoch": 2,
+          "train_bits": 1.6627938409349812,
+          "val_a_bits": 1.8930408265855578,
+          "val_loss": 1.8930408265855578,
+          "elapsed_seconds": 0.8264021873474121
+        },
+        {
+          "epoch": 3,
+          "train_bits": 1.4961590713529445,
+          "val_a_bits": 1.781534194946289,
+          "val_loss": 1.781534194946289,
+          "elapsed_seconds": 0.8484835624694824
+        },
+        {
+          "epoch": 4,
+          "train_bits": 1.421548145920483,
+          "val_a_bits": 1.7621370633443196,
+          "val_loss": 1.7621370633443196,
+          "elapsed_seconds": 0.7892501354217529
+        },
+        {
+          "epoch": 5,
+          "train_bits": 1.3931632878175422,
+          "val_a_bits": 1.737788110309177,
+          "val_loss": 1.737788110309177,
+          "elapsed_seconds": 0.9665775299072266
+        },
+        {
+          "epoch": 6,
+          "train_bits": 1.379893521764385,
+          "val_a_bits": 1.702037591404385,
+          "val_loss": 1.702037591404385,
+          "elapsed_seconds": 0.8562161922454834
+        },
+        {
+          "epoch": 7,
+          "train_bits": 1.3723880550754604,
+          "val_a_bits": 1.6884212228986952,
+          "val_loss": 1.6884212228986952,
+          "elapsed_seconds": 0.8097119331359863
+        },
+        {
+          "epoch": 8,
+          "train_bits": 1.3652146841163066,
+          "val_a_bits": 1.6939521974987455,
+          "val_loss": 1.6939521974987455,
+          "elapsed_seconds": 0.7980427742004395
+        },
+        {
+          "epoch": 9,
+          "train_bits": 1.3600498170995001,
+          "val_a_bits": 1.6892974032296075,
+          "val_loss": 1.6892974032296075,
+          "elapsed_seconds": 0.8935835361480713
+        },
+        {
+          "epoch": 10,
+          "train_bits": 1.3571080930197417,
+          "val_a_bits": 1.6690999348958333,
+          "val_loss": 1.6690999348958333,
+          "elapsed_seconds": 0.7647345066070557
+        },
+        {
+          "epoch": 11,
+          "train_bits": 1.3543329897211558,
+          "val_a_bits": 1.6521692196528117,
+          "val_loss": 1.6521692196528117,
+          "elapsed_seconds": 0.9575622081756592
+        },
+        {
+          "epoch": 12,
+          "train_bits": 1.3510931410006624,
+          "val_a_bits": 1.6404293219248454,
+          "val_loss": 1.6404293219248454,
+          "elapsed_seconds": 0.8424875736236572
+        },
+        {
+          "epoch": 13,
+          "train_bits": 1.3493666079506945,
+          "val_a_bits": 1.6448474221759373,
+          "val_loss": 1.6448474221759373,
+          "elapsed_seconds": 0.8205206394195557
+        },
+        {
+          "epoch": 14,
+          "train_bits": 1.3471003094715859,
+          "val_a_bits": 1.6340581178665161,
+          "val_loss": 1.6340581178665161,
+          "elapsed_seconds": 0.8546724319458008
+        },
+        {
+          "epoch": 15,
+          "train_bits": 1.3445827765251273,
+          "val_a_bits": 1.633760889371236,
+          "val_loss": 1.633760889371236,
+          "elapsed_seconds": 0.8996026515960693
+        },
+        {
+          "epoch": 16,
+          "train_bits": 1.3429907346839336,
+          "val_a_bits": 1.6186524709065755,
+          "val_loss": 1.6186524709065755,
+          "elapsed_seconds": 0.8715224266052246
+        },
+        {
+          "epoch": 17,
+          "train_bits": 1.3424720194802355,
+          "val_a_bits": 1.6296495490603977,
+          "val_loss": 1.6296495490603977,
+          "elapsed_seconds": 0.8203511238098145
+        },
+        {
+          "epoch": 18,
+          "train_bits": 1.341032332448817,
+          "val_a_bits": 1.6202702813678318,
+          "val_loss": 1.6202702813678318,
+          "elapsed_seconds": 0.8529937267303467
+        },
+        {
+          "epoch": 19,
+          "train_bits": 1.3397585046825125,
+          "val_a_bits": 1.6070495208104452,
+          "val_loss": 1.6070495208104452,
+          "elapsed_seconds": 0.9032747745513916
+        },
+        {
+          "epoch": 20,
+          "train_bits": 1.3383178408466168,
+          "val_a_bits": 1.6054554515414767,
+          "val_loss": 1.6054554515414767,
+          "elapsed_seconds": 0.8239154815673828
+        }
+      ],
+      "candidates": [
+        {
+          "arm": "scale_map_fine",
+          "cardinality": 8,
+          "joint_contexts": 4096,
+          "definition": "mean |residual| at full latent resolution, 8 quantile bins",
+          "coarse_values_per_frame": 256,
+          "side_bits_per_symbol_val_b": 0.046875,
+          "side_share_of_net": 0.03553840981018788,
+          "transmitted_not_causal": true,
+          "real": {
+            "strength": 16.0,
+            "symbol_bits_val_b": 1.2721204263671706,
+            "net_bits_val_b": 1.3189954263671706,
+            "net_bits_val_a": 1.4588000714360996
+          },
+          "control": {
+            "strength": 1048576.0,
+            "symbol_bits_val_b": 1.3369960249974473,
+            "net_bits_val_b": 1.3838710249974473,
+            "net_bits_val_a": 1.5353286661983103
+          },
+          "gain_percent": 1.3463393724722894,
+          "control_gain_percent": -3.506001403194193,
+          "net_gain_percent": 1.3463393724722894,
+          "control_interpretation": "control LOSES: a mismatched hyper-latent actively misleads the predictor, which confirms the arm's gain is content-specific. Not added back - the arm is not credited for its control being bad",
+          "verdict": "meaningful",
+          "selection_net_percent": 1.9922159687283039,
+          "symbol_only_gain_percent": 4.852333593128566
+        },
+        {
+          "arm": "scale_map",
+          "cardinality": 8,
+          "joint_contexts": 4096,
+          "definition": "mean |residual|, stride 2, 8 quantile bins",
+          "coarse_values_per_frame": 64,
+          "side_bits_per_symbol_val_b": 0.01171875,
+          "side_share_of_net": 0.00892463556821798,
+          "transmitted_not_causal": true,
+          "real": {
+            "strength": 64.0,
+            "symbol_bits_val_b": 1.301360076628204,
+            "net_bits_val_b": 1.313078826628204,
+            "net_bits_val_a": 1.45960383602665
+          },
+          "control": {
+            "strength": 1048576.0,
+            "symbol_bits_val_b": 1.3369958409456046,
+            "net_bits_val_b": 1.3487145909456046,
+            "net_bits_val_a": 1.500172270608342
+          },
+          "gain_percent": 1.7888687482750212,
+          "control_gain_percent": -0.8764919716284569,
+          "net_gain_percent": 1.7888687482750212,
+          "control_interpretation": "control LOSES: a mismatched hyper-latent actively misleads the predictor, which confirms the arm's gain is content-specific. Not added back - the arm is not credited for its control being bad",
+          "verdict": "meaningful",
+          "selection_net_percent": 1.938215980693556,
+          "symbol_only_gain_percent": 2.6653673034390906
+        },
+        {
+          "arm": "scale_map_coarse",
+          "cardinality": 8,
+          "joint_contexts": 4096,
+          "definition": "mean |residual| at h_a's own stride 4, 8 quantile bins - the arm learned_vq must beat",
+          "coarse_values_per_frame": 16,
+          "side_bits_per_symbol_val_b": 0.0029296875,
+          "side_share_of_net": 0.002219222067185062,
+          "transmitted_not_causal": true,
+          "real": {
+            "strength": 256.0,
+            "symbol_bits_val_b": 1.3172119708407162,
+            "net_bits_val_b": 1.3201416583407162,
+            "net_bits_val_a": 1.468665307420096
+          },
+          "control": {
+            "strength": 1048576.0,
+            "symbol_bits_val_b": 1.3369962329028842,
+            "net_bits_val_b": 1.3399259204028842,
+            "net_bits_val_a": 1.4913832484492395
+          },
+          "gain_percent": 1.2606074754102685,
+          "control_gain_percent": -0.21914737152114902,
+          "net_gain_percent": 1.2606074754102685,
+          "control_interpretation": "control LOSES: a mismatched hyper-latent actively misleads the predictor, which confirms the arm's gain is content-specific. Not added back - the arm is not credited for its control being bad",
+          "verdict": "meaningful",
+          "selection_net_percent": 1.3294315771802416,
+          "symbol_only_gain_percent": 1.4797321142012858
+        },
+        {
+          "arm": "learned",
+          "cardinality": 8,
+          "joint_contexts": 4096,
+          "definition": "B1's DEFECTIVE reduction: h_a's channels averaged to a scalar AND coarsened again by stride 2",
+          "coarse_values_per_frame": 4,
+          "side_bits_per_symbol_val_b": 0.000725095685204724,
+          "side_share_of_net": 0.0005441444001138536,
+          "transmitted_not_causal": true,
+          "real": {
+            "strength": 1024.0,
+            "symbol_bits_val_b": 1.3318176724715736,
+            "net_bits_val_b": 1.3325427681567783,
+            "net_bits_val_a": 1.4819172102931524
+          },
+          "control": {
+            "strength": 1048576.0,
+            "symbol_bits_val_b": 1.336995922505157,
+            "net_bits_val_b": 1.3377210181903618,
+            "net_bits_val_a": 1.489159696970884
+          },
+          "gain_percent": 0.33307212938706554,
+          "control_gain_percent": -0.05423271735121693,
+          "net_gain_percent": 0.33307212938706554,
+          "control_interpretation": "control is approximately zero: the arm's gain stands as measured",
+          "verdict": "weak",
+          "selection_net_percent": 0.4391179144537751,
+          "symbol_only_gain_percent": 0.3873053300644118
+        },
+        {
+          "arm": "learned_vq",
+          "cardinality": 8,
+          "joint_contexts": 4096,
+          "definition": "h_a's full 8-channel hyper-latent, vector quantised to 8 codes at its own resolution",
+          "coarse_values_per_frame": 16,
+          "side_bits_per_symbol_val_b": 0.002892498233171919,
+          "side_share_of_net": 0.002172978049197769,
+          "transmitted_not_causal": true,
+          "real": {
+            "strength": 1024.0,
+            "symbol_bits_val_b": 1.3282292009665904,
+            "net_bits_val_b": 1.3311216991997623,
+            "net_bits_val_a": 1.4830720153543355
+          },
+          "control": {
+            "strength": 1048576.0,
+            "symbol_bits_val_b": 1.3369959279027224,
+            "net_bits_val_b": 1.3398884261358943,
+            "net_bits_val_a": 1.4914077841752527
+          },
+          "gain_percent": 0.4393603331300439,
+          "control_gain_percent": -0.21634300494250064,
+          "net_gain_percent": 0.4393603331300439,
+          "control_interpretation": "control LOSES: a mismatched hyper-latent actively misleads the predictor, which confirms the arm's gain is content-specific. Not added back - the arm is not credited for its control being bad",
+          "verdict": "weak",
+          "selection_net_percent": 0.36153368118510043,
+          "symbol_only_gain_percent": 0.6557034176902431
+        }
+      ]
+    }
+  ],
+  "finished_utc": "2026-10-25T18:46:33.785117+00:00"
+}
