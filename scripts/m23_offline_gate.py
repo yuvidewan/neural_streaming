@@ -72,6 +72,31 @@ CHANNEL_BASELINE = {
 # The arm whose control decides whether a gain is content adaptation at all.
 CHANNEL_CONTROL_ARM = {"intra": "hyper_only", "residual": "hyper_plus_zref"}
 
+# M11's rule, and its comment is the reason: "A negative control (the cost of a
+# useless context) is NOT added back". A control that LOSES is a harmed model,
+# not a null one - a mismatched hyper-latent is actively misleading rather than
+# merely uninformative - so it confirms the signal is content-specific and must
+# not be subtracted, or an arm would be credited for its control being bad.
+# Only a POSITIVE control is spurious gain to remove.
+# `CONTROL_TOLERANCE_PERCENT` is M11's too: a control is "approximately zero" if
+# it gains at most this much.
+CONTROL_TOLERANCE_PERCENT = 0.1
+
+
+def net_of_control(gain_percent: float, control_percent: float) -> float:
+    return gain_percent - max(control_percent, 0.0)
+
+
+def control_interpretation(control_percent: float) -> str:
+    if control_percent > CONTROL_TOLERANCE_PERCENT:
+        return ("control gains: that much of the arm's gain is capacity or a better "
+                "marginal, not content adaptation, and is subtracted")
+    if control_percent < -CONTROL_TOLERANCE_PERCENT:
+        return ("control LOSES: a mismatched hyper-latent actively misleads the "
+                "predictor, which confirms the arm's gain is content-specific. Not "
+                "added back - the arm is not credited for its control being bad")
+    return "control is approximately zero: the arm's gain stands as measured"
+
 
 def _load_script(name: str):
     spec = importlib.util.spec_from_file_location(name, Path(__file__).parent / f"{name}.py")
@@ -339,6 +364,10 @@ def main(argv: list[str] | None = None) -> int:
             "control_arm_per_channel": dict(CHANNEL_CONTROL_ARM),
             "weak_below_percent": m23.WEAK_BELOW_PERCENT,
             "meaningful_above_percent": m23.MEANINGFUL_ABOVE_PERCENT,
+            "control_tolerance_percent": CONTROL_TOLERANCE_PERCENT,
+            "net_of_control_rule": ("gain - max(control, 0), M11's rule: a negative "
+                                    "control is the cost of a useless signal and is "
+                                    "not added back"),
             "side_channel_is_charged": True,
             "split_discipline": ("TRAIN fits models and tables, VAL-A selects the epoch, "
                                  "VAL-B reports once per arm, TEST never opened"),
@@ -446,10 +475,11 @@ def main(argv: list[str] | None = None) -> int:
                                     - control["net_bits_per_symbol"]) / baseline[
                                         "net_bits_per_symbol"]
             control["gain_percent_vs_baseline"] = control_gain
-            net_of_control = arms[control_arm]["gain_percent_vs_baseline"] - control_gain
+            net = net_of_control(arms[control_arm]["gain_percent_vs_baseline"],
+                                 control_gain)
             print(f"        -> control gain {control_gain:+.4f}%   "
-                  f"NET OF CONTROL {net_of_control:+.4f}%  "
-                  f"{m23.verdict(net_of_control)}", flush=True)
+                  f"NET OF CONTROL {net:+.4f}%  {m23.verdict(net)}", flush=True)
+            print(f"           {control_interpretation(control_gain)}", flush=True)
 
             entry["channels"][channel] = {
                 "baseline": {k: v for k, v in baseline.items() if k != "history"},
@@ -457,8 +487,13 @@ def main(argv: list[str] | None = None) -> int:
                          for k, v in arms.items()},
                 "control": {k: v for k, v in control.items() if k != "history"},
                 "control_arm": control_arm,
-                "net_of_control_percent": net_of_control,
-                "net_of_control_verdict": m23.verdict(net_of_control),
+                "control_gain_percent": control_gain,
+                "control_within_tolerance": abs(control_gain) <= CONTROL_TOLERANCE_PERCENT,
+                "control_interpretation": control_interpretation(control_gain),
+                "net_of_control_percent": net,
+                "net_of_control_verdict": m23.verdict(net),
+                "net_of_control_rule": ("gain - max(control, 0); a negative control is "
+                                        "not added back (M11's rule)"),
                 "histories": {k: v["history"] for k, v in arms.items()},
             }
             if channel == "residual":

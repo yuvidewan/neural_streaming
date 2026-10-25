@@ -493,3 +493,52 @@ def test_evaluation_is_deterministic(m23):
 
     assert first["net_bits_per_symbol"] == second["net_bits_per_symbol"]
     assert first["side_bits_total"] == second["side_bits_total"]
+
+
+# ----------------------------------------------------------------------------------------
+# How the control is credited - M11's rule, not a plain subtraction
+# ----------------------------------------------------------------------------------------
+
+
+def test_a_negative_control_is_not_added_back(gate):
+    """The defect this replaced: a plain `gain - control` credits an arm for its
+    control being BAD. The 5-bit residual control lost 8.53%, which a plain
+    subtraction turned into "+10.10% net" from a +1.57% measurement.
+
+    M11 settled this already, in `m11_offline_gate.py`: "A negative control (the
+    cost of a useless context) is NOT added back". A control that loses is a
+    harmed model, not a null one.
+    """
+    assert gate.net_of_control(1.5734, -8.5301) == pytest.approx(1.5734)
+    assert gate.net_of_control(6.6870, 6.0248) == pytest.approx(0.6622, abs=1e-4)
+    assert gate.net_of_control(2.0, 0.0) == pytest.approx(2.0)
+    # never inflates, never ignores a positive control
+    for gain in (-3.0, 0.0, 1.0, 9.0):
+        for control in (-9.0, -0.05, 0.0, 0.4, 12.0):
+            net = gate.net_of_control(gain, control)
+            assert net <= gain + 1e-12
+            if control > 0:
+                assert net == pytest.approx(gain - control)
+
+
+def test_the_rule_matches_m11s_implementation(gate):
+    """Not a new convention invented for M23 - the same expression M11 uses, so
+    every gate in the project credits its control identically."""
+    m11 = _load_script("m11_offline_gate")
+    source = inspect.getsource(m11)
+
+    assert 'max(result["control_gain_percent"], 0.0)' in source
+    assert "max(control_percent, 0.0)" in inspect.getsource(gate.net_of_control)
+    assert gate.CONTROL_TOLERANCE_PERCENT == m11.CONTROL_TOLERANCE_PERCENT
+
+
+def test_the_control_is_interpreted_not_just_subtracted(gate):
+    """A reader has to be able to tell the three cases apart: a control that
+    gains (spurious), one that loses (confirms content specificity), and one that
+    is ~zero (clean)."""
+    assert "subtracted" in gate.control_interpretation(5.0)
+    assert "actively misleads" in gate.control_interpretation(-8.5)
+    assert "not credited" in gate.control_interpretation(-8.5)
+    assert "approximately zero" in gate.control_interpretation(0.0)
+    assert "approximately zero" in gate.control_interpretation(
+        gate.CONTROL_TOLERANCE_PERCENT)
