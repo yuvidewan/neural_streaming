@@ -279,3 +279,109 @@ The deployed figures are identical and the recalibrated ones agree to ~1e-4,
 which is the independent check that this gate's parent really is the shipped
 stack. The 4-bit `scale_map` row also reproduced bit-for-bit between a smoke run
 and the full run in separate processes.
+
+---
+
+# M23 Phase B2 step 1 - it realises in real coded bytes, and it decodes
+
+2026-10-25. `scripts/m23_coded_validation.py`, VAL-B, the real range coder, every
+frame round-tripped. TEST never opened.
+
+B1 measured ideal bits. Ideal bits are not bytes, and a context the decoder
+cannot rebuild is not a codec. Both are now settled.
+
+| bits | baseline | candidate | map | gain | control | **NET** | B1 ideal | **realised** | exact |
+|---|---|---|---|---|---|---|---|---|---|
+| 5 | 898,398 B | 885,661 B | 3,600 B | +1.4177% | -3.7802% | **+1.4177%** | +1.3999% | **101.3%** | yes |
+| 4 | 629,114 B | 618,011 B | 3,600 B | +1.7649% | -4.4289% | **+1.7649%** | +1.7691% | **99.8%** | yes |
+| 3 | 394,341 B | 387,356 B | 3,600 B | +1.7713% | -5.6839% | **+1.7713%** | +1.7889% | **99.0%** | yes |
+
+**Realisation 99.0-101.3%.** The ideal-bits gain transfers to bytes essentially
+one for one, which is what the entropy-coding literature predicts for a
+well-conditioned range coder and what M13 found before it. All round trips exact
+at every rate point, map included.
+
+## It decodes, and that is the part that needed proving
+
+The candidate codes the scale map, **decodes it back from its own payload**, and
+derives the residual's table indices from the decoded values only. The encoder's
+copy of the map never reaches the coder. So this is not a byte count that assumes
+decodability - it is a measurement taken through the decode path.
+
+The negative control for that claim is a test, not a hope: hand the decoder a map
+that differs from the encoder's by one bin and the symbols come back corrupted
+(`test_a_mismatched_map_would_break_the_residual_decode`). The context is
+genuinely steering the coder.
+
+The one thing still missing is container plumbing, which is deliberately out of
+scope here - see below.
+
+## The coder's own overhead, measured in passing
+
+| bits | baseline ideal | baseline real | overhead |
+|---|---|---|---|
+| 5 | 3.04611 | 3.04633 | **+0.0071%** |
+| 4 | 2.13300 | 2.13323 | **+0.0108%** |
+| 3 | 1.33700 | 1.33715 | **+0.0114%** |
+
+Comfortably inside the 0.026% the project has quoted since M10, independently
+reconfirmed here on 4096-table coding it had never been exercised on.
+
+## One real engineering finding: the per-frame flush
+
+The map costs **exactly 25 bytes per frame** at every rate point. 64 coarse
+values at 3 bits is 24 bytes of payload, so each frame pays **1 byte of
+range-coder flush** on top - a 4% overhead on the map, purely from coding 144
+tiny payloads instead of fewer large ones.
+
+Coding the map once per GOP rather than once per frame would recover it. Worth
+doing when the container work happens, and worth knowing now because it is the
+kind of cost that only appears once the bytes are real.
+
+Its share of the stream grows as the quantizer coarsens - 0.41% / 0.58% / 0.93%
+at 5/4/3-bit - because the map's cost is flat while the stream gets cheaper. At
+rates below 3-bit it would eventually eat the gain, which keeps stride and bin
+count rate-dependent levers rather than fixed choices.
+
+## What is still out of scope, and why that was deliberate
+
+**The container.** `.nvct` v2's per-frame record is a fixed `uint8 frame_type,
+uint32 motion_length, uint32 residual_length`, so a third payload needs a format
+version. That is a real change to an item frozen in every milestone so far, and
+it should be spent only on a gain known to realise - which is what this step was
+for. Step 2 is the v3 record with v2 reading preserved and tested.
+
+**Nothing under `src/nvc/` was modified.** The range coder already accepts an
+arbitrary per-symbol `table_index`, which is what let 512 x 8 = 4096 joint tables
+be coded without touching it.
+
+**TEST.** Still unopened, and it should stay that way until the container exists,
+so it is read once against the real thing rather than twice.
+
+## Where that leaves the number
+
++1.42 / +1.76 / +1.77% of the P-residual stream, in real bytes. The residual is
+79.6-84.2% of the stream, so this is **~1.4-1.5% of total bytes**, projecting to
+**~5-6 BD-rate points** at the 3.7-points-per-percent measured in
+`outputs/benchmarks/parity_refit/README.md`: +214.2% to about +209%.
+
+The BD-rate figure is still a projection - it needs the container, then TEST, then
+`benchmark_parity`. What is no longer a projection is the byte saving itself.
+
+## Phase B2, remaining
+
+1. **The `.nvct` v3 record** - a third per-frame payload, v2 reading preserved
+   and tested, and the map coded per GOP rather than per frame to recover the
+   flush overhead.
+2. **TEST once**, then `benchmark_parity` for the BD-rate number.
+3. **Fix the `learned` arm's reduction** (multi-channel discrete context) to find
+   out whether a learned analysis beats the hand-made magnitude summary. If it
+   does not, the hand-made map is the better engineering answer anyway: no
+   training, no network at inference.
+4. **Joint R-D training**, now resting on a mechanism confirmed additive to the
+   real stack and realised in real bytes.
+
+## Files
+
+- `m23_coded_validation.json` - the report, per-arm byte totals and round trips
+- `coded_validation.log` - the run (not committed; `*.log` is ignored repo-wide)
