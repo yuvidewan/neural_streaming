@@ -106,6 +106,9 @@ outputs/benchmarks/*
 # P-frame refit exists to produce, which `fullvideo_transform`'s +170% figure was
 # only an extrapolation of. Same shape and size as parity_s0.
 !outputs/benchmarks/parity_refit/
+# And for the learned intra anchor the NCC paper cites: CompressAI's pretrained
+# bmshj2018 models scored by this harness. One JSON report + log + README.
+!outputs/benchmarks/compressai_anchor/
 # QAT+control combined training output (Milestone 8B): checkpoints (already
 # caught by *.pt below) plus progress_*.json/history.json, which are not.
 # Auto-created by scripts/train_vimeo_qat_combined.py - no .gitkeep needed.
