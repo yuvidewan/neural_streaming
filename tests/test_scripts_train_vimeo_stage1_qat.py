@@ -305,3 +305,124 @@ def test_init_from_is_ignored_once_the_run_has_its_own_checkpoint(
     output = capsys.readouterr().out
     assert "ignoring --init-from" in output
     assert "resume" in output
+
+
+# ----------------------------------------------------------------------------------------
+# M24 Phase B: the unit-step quantizer
+# ----------------------------------------------------------------------------------------
+
+
+class _UnitStepArgs:
+    """The smallest argument set the two builders read."""
+
+    quantizer = "unit_step"
+    unit_step = 1.0
+    qat_enabled = True
+    qat_bits = 4
+    qat_mode = "per_channel"
+    qat_calibration = None
+    rate_enabled = True
+    rate_track_scale = False
+    rate_scale_momentum = 0.9
+    rate_calibration = None
+
+
+def test_unit_step_needs_no_calibration_file(stage1):
+    """The whole point of a declared step: nothing has to be measured first, so
+    Phase B no longer depends on a Phase A calibration pass."""
+    noise = stage1.build_quantization_noise(_UnitStepArgs())
+
+    assert noise is not None
+    assert noise.scale.shape == (1, 1, 1, 1)
+    assert float(noise.scale) == 1.0
+    assert noise.mode == "global"
+
+
+def test_the_unit_step_rate_proxy_uses_that_same_step_as_its_bin_width(stage1):
+    """The proxy's bin width and the quantizer's step have to be the same number,
+    or the rate term is modelling a quantizer that is not the one in the loop."""
+    estimator = stage1.build_rate_estimator(_UnitStepArgs())
+
+    assert estimator is not None
+    assert float(estimator.bin_width) == 1.0
+    assert estimator.track_scale is False
+
+
+def test_scale_tracking_is_refused_with_a_unit_step(stage1):
+    """The inversion that matters. Scale tracking exists because the PERCENTILE
+    grid recalibrates to each model's latent range (M9F.5), which makes a frozen
+    bin width exploitable. A fixed step does not recalibrate, so the frozen bin
+    width is the CORRECT model and tracking would put the invariance back - the
+    very thing M24 found caps the codec."""
+    args = _UnitStepArgs()
+    args.rate_track_scale = True
+
+    with pytest.raises(SystemExit) as error:
+        stage1.build_rate_estimator(args)
+
+    message = str(error.value)
+    assert "refused with --quantizer unit_step" in message
+    assert "M9F.5" in message
+    assert "scale-sensitive" in message
+
+
+@pytest.mark.parametrize("step", [0.0, -1.0, float("inf"), float("nan")])
+def test_a_malformed_unit_step_is_refused_by_both_builders(stage1, step):
+    args = _UnitStepArgs()
+    args.unit_step = step
+
+    with pytest.raises(SystemExit, match="--unit-step must be finite and > 0"):
+        stage1.build_quantization_noise(args)
+    with pytest.raises(SystemExit, match="--unit-step must be finite and > 0"):
+        stage1.build_rate_estimator(args)
+
+
+def test_the_checkpoint_records_the_quantization_RULE_not_just_its_depth(stage1):
+    """A percentile latent and a unit-step latent are not the same object, so a
+    resume across that change must be refused. `model_config` cannot tell, which
+    is why the fingerprint carries it."""
+    args = _UnitStepArgs()
+    noise = stage1.build_quantization_noise(args)
+
+    fingerprint = stage1.qat_fingerprint(args, noise)
+
+    assert fingerprint["quantizer"] == "unit_step"
+    assert fingerprint["unit_step"] == 1.0
+
+
+def test_the_percentile_fingerprint_records_no_unit_step(stage1, tmp_path):
+    real = _args(stage1, qat_enabled=True, qat_bits=4, qat_mode="per_channel")
+    args = _UnitStepArgs()
+    args.quantizer = "percentile"
+    args.qat_calibration, _ = _calibration(tmp_path, stage1, real)
+
+    noise = stage1.build_quantization_noise(args)
+    fingerprint = stage1.qat_fingerprint(args, noise)
+
+    assert fingerprint["quantizer"] == "percentile"
+    assert fingerprint["unit_step"] is None
+
+
+def test_percentile_remains_the_default_and_still_demands_its_calibration(stage1):
+    """Every existing Stage 1 command must behave exactly as before."""
+    defaults = _args(stage1)
+
+    assert defaults.quantizer == "percentile"
+    assert defaults.unit_step == 1.0
+
+    args = _UnitStepArgs()
+    args.quantizer = "percentile"
+    args.qat_calibration = None
+    with pytest.raises(SystemExit, match="--qat-enabled requires --qat-calibration"):
+        stage1.build_quantization_noise(args)
+
+
+def test_the_docstring_explains_why_the_track_scale_advice_inverts(stage1):
+    """A reader following the old Phase B instructions would turn on exactly the
+    flag that defeats the new quantizer, so the reason has to be written down."""
+    doc = stage1.__doc__
+
+    assert "THE UNIT-STEP QUANTIZER" in doc
+    assert "must be OFF" in doc
+    assert "9.7%" in doc, "the sweep that failed, and why this one should not"
+    assert "escape route" in doc

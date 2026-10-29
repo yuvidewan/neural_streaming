@@ -1,0 +1,517 @@
+{
+  "phase": "M24 Phase A - the quantizer at frozen weights",
+  "question": "the CompressAI anchor found bmshj2018-factorized at ~half our all-intra bits, differing in the quantizer, the density and rate-aware training at once. How much is reachable WITHOUT retraining?",
+  "arms": {
+    "grid_histogram": "our intra codec: percentile grid, fixed depth, per-channel histogram",
+    "grid_laplace": "the same grid with a discretised Laplace - isolates the DENSITY",
+    "unit_step_laplace": "rounding at a swept step - isolates the GRID RULE"
+  },
+  "cannot_answer": "how much rate-aware training would add on top; that is Phase B and needs Vimeo and a GPU",
+  "split_discipline": "TRAIN fits grids and densities, VAL-B reports, TEST never opened",
+  "started_utc": "2026-10-28T12:57:10.680398+00:00",
+  "configuration": {
+    "manifest": "C:\\Users\\Aditya\\OneDrive\\Desktop\\Github\\Real-Time Neural Video Compression\\data\\processed\\manifest.json",
+    "checkpoint": "outputs\\stage1_vimeo\\colab_run4_64ch_qat\\best.pt",
+    "output_dir": "outputs\\m24_quantizer",
+    "output_name": "m24_offline_gate.json",
+    "arms": [
+      "grid_histogram",
+      "grid_laplace",
+      "unit_step_laplace"
+    ],
+    "grid_bits": [
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "step_multipliers": [
+      0.125,
+      0.1875,
+      0.25,
+      0.375,
+      0.5,
+      0.75,
+      1.0,
+      1.5,
+      2.0,
+      3.0
+    ],
+    "train_frames": 400,
+    "val_frames_per_sequence": 20,
+    "batch": 8,
+    "seed": 42,
+    "device": "auto"
+  },
+  "reference_step": 4.004733085632324,
+  "environment": {
+    "python": "3.11.9",
+    "torch": "2.13.0+cu130",
+    "device": "cuda",
+    "platform": "Windows-10-10.0.26300-SP0"
+  },
+  "train_frames": 400,
+  "val_b_frames": 80,
+  "val_b_sequences": [
+    "car-roundabout",
+    "drift-straight",
+    "pigs",
+    "stunt"
+  ],
+  "points": [
+    {
+      "arm": "grid_histogram",
+      "setting": 3,
+      "density": "per-channel add-one histogram",
+      "total_ideal_bits": 2458094.5558231035,
+      "bpp": 0.4688443290373046,
+      "bits_per_symbol": 1.8753773161492184,
+      "psnr": 28.0874847849753,
+      "msssim": 0.9527042269706726,
+      "symbols": 1310720,
+      "pixels": 5242880,
+      "bits": 3,
+      "alphabet": 8,
+      "step_median": 8.581570625305176,
+      "at_alphabet_edge_fraction": 0.0095611572265625
+    },
+    {
+      "arm": "grid_histogram",
+      "setting": 4,
+      "density": "per-channel add-one histogram",
+      "total_ideal_bits": 3826502.11841015,
+      "bpp": 0.7298473584003735,
+      "bits_per_symbol": 2.919389433601494,
+      "psnr": 31.124278577060863,
+      "msssim": 0.9818704068660736,
+      "symbols": 1310720,
+      "pixels": 5242880,
+      "bits": 4,
+      "alphabet": 16,
+      "step_median": 4.004733085632324,
+      "at_alphabet_edge_fraction": 0.004703521728515625
+    },
+    {
+      "arm": "grid_histogram",
+      "setting": 5,
+      "density": "per-channel add-one histogram",
+      "total_ideal_bits": 5175108.485738495,
+      "bpp": 0.9870736094929686,
+      "bits_per_symbol": 3.9482944379718745,
+      "psnr": 32.198671545610594,
+      "msssim": 0.9895490296185017,
+      "symbols": 1310720,
+      "pixels": 5242880,
+      "bits": 5,
+      "alphabet": 32,
+      "step_median": 1.9377740621566772,
+      "at_alphabet_edge_fraction": 0.00352325439453125
+    },
+    {
+      "arm": "grid_histogram",
+      "setting": 6,
+      "density": "per-channel add-one histogram",
+      "total_ideal_bits": 6506603.599303576,
+      "bpp": 1.2410361479384568,
+      "bits_per_symbol": 4.964144591753827,
+      "psnr": 32.49978792746059,
+      "msssim": 0.9913671135902404,
+      "symbols": 1310720,
+      "pixels": 5242880,
+      "bits": 6,
+      "alphabet": 64,
+      "step_median": 0.9535078406333923,
+      "at_alphabet_edge_fraction": 0.003105926513671875
+    },
+    {
+      "arm": "grid_histogram",
+      "setting": 7,
+      "density": "per-channel add-one histogram",
+      "total_ideal_bits": 7828218.895715841,
+      "bpp": 1.4931142608100587,
+      "bits_per_symbol": 5.972457043240235,
+      "psnr": 32.57323672732007,
+      "msssim": 0.9918032839894295,
+      "symbols": 1310720,
+      "pixels": 5242880,
+      "bits": 7,
+      "alphabet": 128,
+      "step_median": 0.4729999601840973,
+      "at_alphabet_edge_fraction": 0.002916717529296875
+    },
+    {
+      "arm": "grid_laplace",
+      "setting": 3,
+      "density": "per-channel discretised Laplace",
+      "total_ideal_bits": 2470021.381213996,
+      "bpp": 0.47111919044761585,
+      "bits_per_symbol": 1.8844767617904634,
+      "psnr": 28.08748493526889,
+      "msssim": 0.9527042299509049,
+      "symbols": 1310720,
+      "pixels": 5242880,
+      "bits": 3,
+      "alphabet": 8,
+      "step_median": 8.581570625305176,
+      "at_alphabet_edge_fraction": 0.0095611572265625
+    },
+    {
+      "arm": "grid_laplace",
+      "setting": 4,
+      "density": "per-channel discretised Laplace",
+      "total_ideal_bits": 3838833.4521724503,
+      "bpp": 0.7321993736596013,
+      "bits_per_symbol": 2.928797494638405,
+      "psnr": 31.124278583328483,
+      "msssim": 0.9818704061210155,
+      "symbols": 1310720,
+      "pixels": 5242880,
+      "bits": 4,
+      "alphabet": 16,
+      "step_median": 4.004733085632324,
+      "at_alphabet_edge_fraction": 0.004703521728515625
+    },
+    {
+      "arm": "grid_laplace",
+      "setting": 5,
+      "density": "per-channel discretised Laplace",
+      "total_ideal_bits": 5190175.252399492,
+      "bpp": 0.9899473671721444,
+      "bits_per_symbol": 3.9597894686885775,
+      "psnr": 32.19867135886356,
+      "msssim": 0.9895490311086178,
+      "symbols": 1310720,
+      "pixels": 5242880,
+      "bits": 5,
+      "alphabet": 32,
+      "step_median": 1.9377740621566772,
+      "at_alphabet_edge_fraction": 0.00352325439453125
+    },
+    {
+      "arm": "grid_laplace",
+      "setting": 6,
+      "density": "per-channel discretised Laplace",
+      "total_ideal_bits": 6525983.301998628,
+      "bpp": 1.2447325328824288,
+      "bits_per_symbol": 4.978930131529715,
+      "psnr": 32.49978800671299,
+      "msssim": 0.9913671121001244,
+      "symbols": 1310720,
+      "pixels": 5242880,
+      "bits": 6,
+      "alphabet": 64,
+      "step_median": 0.9535078406333923,
+      "at_alphabet_edge_fraction": 0.003105926513671875
+    },
+    {
+      "arm": "grid_laplace",
+      "setting": 7,
+      "density": "per-channel discretised Laplace",
+      "total_ideal_bits": 7849064.851539753,
+      "bpp": 1.4970903113440996,
+      "bits_per_symbol": 5.988361245376399,
+      "psnr": 32.57323644115345,
+      "msssim": 0.9918032832443714,
+      "symbols": 1310720,
+      "pixels": 5242880,
+      "bits": 7,
+      "alphabet": 128,
+      "step_median": 0.4729999601840973,
+      "at_alphabet_edge_fraction": 0.002916717529296875
+    },
+    {
+      "arm": "unit_step_laplace",
+      "setting": 0.5005916357040405,
+      "density": "per-channel discretised Laplace",
+      "total_ideal_bits": 7813941.553650502,
+      "bpp": 1.4903910739232067,
+      "bits_per_symbol": 5.961564295692827,
+      "psnr": 32.70686149459317,
+      "msssim": 0.9920441284775734,
+      "symbols": 1310720,
+      "pixels": 5242880,
+      "step": 0.5005916357040405,
+      "symbol_span": 169,
+      "effective_bits": 8.405141463136344,
+      "distinct_symbols": 277
+    },
+    {
+      "arm": "unit_step_laplace",
+      "setting": 0.7508874535560608,
+      "density": "per-channel discretised Laplace",
+      "total_ideal_bits": 7048977.8535394585,
+      "bpp": 1.3444858271674076,
+      "bits_per_symbol": 5.37794330866963,
+      "psnr": 32.679058487933034,
+      "msssim": 0.991880489140749,
+      "symbols": 1310720,
+      "pixels": 5242880,
+      "step": 0.7508874535560608,
+      "symbol_span": 113,
+      "effective_bits": 7.826548487290915,
+      "distinct_symbols": 188
+    },
+    {
+      "arm": "unit_step_laplace",
+      "setting": 1.001183271408081,
+      "density": "per-channel discretised Laplace",
+      "total_ideal_bits": 6506678.930878803,
+      "bpp": 1.2410505162961585,
+      "bits_per_symbol": 4.964202065184634,
+      "psnr": 32.64108534947506,
+      "msssim": 0.991655207425356,
+      "symbols": 1310720,
+      "pixels": 5242880,
+      "step": 1.001183271408081,
+      "symbol_span": 85,
+      "effective_bits": 7.417852514885898,
+      "distinct_symbols": 143
+    },
+    {
+      "arm": "unit_step_laplace",
+      "setting": 1.5017749071121216,
+      "density": "per-channel discretised Laplace",
+      "total_ideal_bits": 5742502.190351972,
+      "bpp": 1.0952953701690622,
+      "bits_per_symbol": 4.381181480676249,
+      "psnr": 32.533609383559394,
+      "msssim": 0.9909975089132785,
+      "symbols": 1310720,
+      "pixels": 5242880,
+      "step": 1.5017749071121216,
+      "symbol_span": 56,
+      "effective_bits": 6.820178962415188,
+      "distinct_symbols": 98
+    },
+    {
+      "arm": "unit_step_laplace",
+      "setting": 2.002366542816162,
+      "density": "per-channel discretised Laplace",
+      "total_ideal_bits": 5200686.2207467025,
+      "bpp": 0.9919521752828031,
+      "bits_per_symbol": 3.9678087011312124,
+      "psnr": 32.38644808589214,
+      "msssim": 0.9900834791362285,
+      "symbols": 1310720,
+      "pixels": 5242880,
+      "step": 2.002366542816162,
+      "symbol_span": 42,
+      "effective_bits": 6.409390936137702,
+      "distinct_symbols": 75
+    },
+    {
+      "arm": "unit_step_laplace",
+      "setting": 3.003549814224243,
+      "density": "per-channel discretised Laplace",
+      "total_ideal_bits": 4445698.295698159,
+      "bpp": 0.8479496566196746,
+      "bits_per_symbol": 3.3917986264786983,
+      "psnr": 31.998238682400608,
+      "msssim": 0.9875479012727737,
+      "symbols": 1310720,
+      "pixels": 5242880,
+      "step": 3.003549814224243,
+      "symbol_span": 28,
+      "effective_bits": 5.832890014164741,
+      "distinct_symbols": 52
+    },
+    {
+      "arm": "unit_step_laplace",
+      "setting": 4.004733085632324,
+      "density": "per-channel discretised Laplace",
+      "total_ideal_bits": 3914197.8006931758,
+      "bpp": 0.7465739823709823,
+      "bits_per_symbol": 2.986295929483929,
+      "psnr": 31.5158418748903,
+      "msssim": 0.9840747997164726,
+      "symbols": 1310720,
+      "pixels": 5242880,
+      "step": 4.004733085632324,
+      "symbol_span": 21,
+      "effective_bits": 5.426264754702098,
+      "distinct_symbols": 39
+    },
+    {
+      "arm": "unit_step_laplace",
+      "setting": 6.007099628448486,
+      "density": "per-channel discretised Laplace",
+      "total_ideal_bits": 3178167.139810433,
+      "bpp": 0.6061872748967043,
+      "bits_per_symbol": 2.4247490995868173,
+      "psnr": 30.405597045916203,
+      "msssim": 0.9752253495156765,
+      "symbols": 1310720,
+      "pixels": 5242880,
+      "step": 6.007099628448486,
+      "symbol_span": 14,
+      "effective_bits": 4.857980995127572,
+      "distinct_symbols": 28
+    },
+    {
+      "arm": "unit_step_laplace",
+      "setting": 8.009466171264648,
+      "density": "per-channel discretised Laplace",
+      "total_ideal_bits": 2671806.8915915606,
+      "bpp": 0.5096067221816178,
+      "bits_per_symbol": 2.0384268887264714,
+      "psnr": 29.241756832998,
+      "msssim": 0.964741949737072,
+      "symbols": 1310720,
+      "pixels": 5242880,
+      "step": 8.009466171264648,
+      "symbol_span": 11,
+      "effective_bits": 4.523561956057013,
+      "distinct_symbols": 22
+    },
+    {
+      "arm": "unit_step_laplace",
+      "setting": 12.014199256896973,
+      "density": "per-channel discretised Laplace",
+      "total_ideal_bits": 2000786.3939945842,
+      "bpp": 0.3816197193135422,
+      "bits_per_symbol": 1.5264788772541689,
+      "psnr": 27.060957529132388,
+      "msssim": 0.9390070550143719,
+      "symbols": 1310720,
+      "pixels": 5242880,
+      "step": 12.014199256896973,
+      "symbol_span": 7,
+      "effective_bits": 3.9068905956085187,
+      "distinct_symbols": 15
+    }
+  ],
+  "curves": {
+    "grid_histogram": [
+      [
+        0.4688443290373046,
+        28.0874847849753
+      ],
+      [
+        0.7298473584003735,
+        31.124278577060863
+      ],
+      [
+        0.9870736094929686,
+        32.198671545610594
+      ],
+      [
+        1.2410361479384568,
+        32.49978792746059
+      ],
+      [
+        1.4931142608100587,
+        32.57323672732007
+      ]
+    ],
+    "grid_laplace": [
+      [
+        0.47111919044761585,
+        28.08748493526889
+      ],
+      [
+        0.7321993736596013,
+        31.124278583328483
+      ],
+      [
+        0.9899473671721444,
+        32.19867135886356
+      ],
+      [
+        1.2447325328824288,
+        32.49978800671299
+      ],
+      [
+        1.4970903113440996,
+        32.57323644115345
+      ]
+    ],
+    "unit_step_laplace": [
+      [
+        0.3816197193135422,
+        27.060957529132388
+      ],
+      [
+        0.5096067221816178,
+        29.241756832998
+      ],
+      [
+        0.6061872748967043,
+        30.405597045916203
+      ],
+      [
+        0.7465739823709823,
+        31.5158418748903
+      ],
+      [
+        0.8479496566196746,
+        31.998238682400608
+      ],
+      [
+        0.9919521752828031,
+        32.38644808589214
+      ],
+      [
+        1.0952953701690622,
+        32.533609383559394
+      ],
+      [
+        1.2410505162961585,
+        32.64108534947506
+      ],
+      [
+        1.3444858271674076,
+        32.679058487933034
+      ],
+      [
+        1.4903910739232067,
+        32.70686149459317
+      ]
+    ]
+  },
+  "comparisons": {
+    "grid_laplace_vs_grid_histogram": {
+      "bd_rate_percent": 0.3711367873222349,
+      "quality_overlap": [
+        28.08748493526889,
+        32.57323644115345
+      ]
+    },
+    "unit_step_laplace_vs_grid_histogram": {
+      "bd_rate_percent": -7.964067709338096,
+      "quality_overlap": [
+        28.0874847849753,
+        32.57323672732007
+      ]
+    },
+    "grid_histogram_vs_grid_laplace": {
+      "bd_rate_percent": -0.3697644554017887,
+      "quality_overlap": [
+        28.08748493526889,
+        32.57323644115345
+      ]
+    },
+    "unit_step_laplace_vs_grid_laplace": {
+      "bd_rate_percent": -8.304382855754389,
+      "quality_overlap": [
+        28.08748493526889,
+        32.57323644115345
+      ]
+    },
+    "grid_histogram_vs_unit_step_laplace": {
+      "bd_rate_percent": 8.653215663841474,
+      "quality_overlap": [
+        28.0874847849753,
+        32.57323672732007
+      ]
+    },
+    "grid_laplace_vs_unit_step_laplace": {
+      "bd_rate_percent": 9.056466507762128,
+      "quality_overlap": [
+        28.08748493526889,
+        32.57323644115345
+      ]
+    }
+  },
+  "finished_utc": "2026-10-28T12:57:51.065424+00:00"
+}

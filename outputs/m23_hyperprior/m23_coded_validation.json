@@ -1,0 +1,189 @@
+{
+  "phase": "M23 Phase B2 step 1 - coded validation of the transmitted scale map",
+  "question": "B1 measured +1.3999/+1.7691/+1.7889% of IDEAL BITS against the full deployed stack. Does it realise in real coded bytes, and is the context rebuildable from the bitstream alone?",
+  "decodability": "the candidate codes the map, DECODES it back from its own payload, and derives the residual's table indices from the decoded values only - never from the encoder's copy",
+  "out_of_scope": ".nvct v2's per-frame record is a fixed (frame_type, motion_length, residual_length), so carrying a third payload needs a format version. That is step 2, and it should only be spent on a gain known to realise.",
+  "started_utc": "2026-10-25T15:35:35.843635+00:00",
+  "configuration": {
+    "checkpoint": "outputs\\stage1_vimeo\\colab_run4_64ch_qat\\best.pt",
+    "m11_dir": "outputs\\stage1_refit\\m11_64ch_qat",
+    "rate_points": [
+      5,
+      4,
+      3
+    ],
+    "arms": [
+      "baseline",
+      "candidate",
+      "control"
+    ],
+    "context_bins": 8,
+    "context_stride": 2,
+    "calibration_frames": 400,
+    "seed": 42
+  },
+  "pre_registered": {
+    "arms": [
+      "baseline",
+      "candidate",
+      "control"
+    ],
+    "baseline": "M11-G16 K=512 + M13 recalibrated frequencies, coded for real",
+    "primary_metric": "real coded bytes on VAL-B, map payload included",
+    "weak_below_percent": 0.5,
+    "meaningful_above_percent": 1.0,
+    "net_of_control_rule": "gain - max(control, 0) (M11's rule)",
+    "round_trip_required": true
+  },
+  "environment": {
+    "python": "3.11.9",
+    "torch": "2.13.0+cu130",
+    "device": "cuda",
+    "platform": "Windows-10-10.0.26300-SP0"
+  },
+  "rate_points": [
+    {
+      "bits": 5,
+      "alphabet": 32,
+      "groups": 512,
+      "card": 8,
+      "val_b_p_frames": 144,
+      "symbols_scored": 2359296,
+      "strength_parent": 1024.0,
+      "strength_child": 64.0,
+      "arms": {
+        "baseline": {
+          "residual_bytes": 898398,
+          "map_bytes": 0,
+          "total_bytes": 898398,
+          "exact": true,
+          "frames": 144,
+          "bits_per_symbol": 3.04632568359375,
+          "map_share_of_total": 0.0
+        },
+        "candidate": {
+          "residual_bytes": 882061,
+          "map_bytes": 3600,
+          "total_bytes": 885661,
+          "exact": true,
+          "frames": 144,
+          "bits_per_symbol": 3.0031365288628473,
+          "map_share_of_total": 0.004064760670279034,
+          "gain_percent_vs_baseline": 1.4177458097636015
+        },
+        "control": {
+          "residual_bytes": 928759,
+          "map_bytes": 3600,
+          "total_bytes": 932359,
+          "exact": true,
+          "frames": 144,
+          "bits_per_symbol": 3.1614820692274304,
+          "map_share_of_total": 0.003861173646631823,
+          "gain_percent_vs_baseline": -3.7801731526561726
+        }
+      },
+      "coding_seconds": 0.5683952999534085,
+      "net_gain_percent": 1.4177458097636015,
+      "control_interpretation": "control LOSES: a mismatched hyper-latent actively misleads the predictor, which confirms the arm's gain is content-specific. Not added back - the arm is not credited for its control being bad",
+      "verdict": "meaningful",
+      "b1_ideal_bits_gain_percent": 1.3998516249140516,
+      "realisation_ratio": 1.012782915368369
+    },
+    {
+      "bits": 4,
+      "alphabet": 16,
+      "groups": 512,
+      "card": 8,
+      "val_b_p_frames": 144,
+      "symbols_scored": 2359296,
+      "strength_parent": 256.0,
+      "strength_child": 64.0,
+      "arms": {
+        "baseline": {
+          "residual_bytes": 629114,
+          "map_bytes": 0,
+          "total_bytes": 629114,
+          "exact": true,
+          "frames": 144,
+          "bits_per_symbol": 2.1332261827256946,
+          "map_share_of_total": 0.0
+        },
+        "candidate": {
+          "residual_bytes": 614411,
+          "map_bytes": 3600,
+          "total_bytes": 618011,
+          "exact": true,
+          "frames": 144,
+          "bits_per_symbol": 2.095577663845486,
+          "map_share_of_total": 0.0058251390347421,
+          "gain_percent_vs_baseline": 1.7648629660125192
+        },
+        "control": {
+          "residual_bytes": 653377,
+          "map_bytes": 3600,
+          "total_bytes": 656977,
+          "exact": true,
+          "frames": 144,
+          "bits_per_symbol": 2.2277052137586804,
+          "map_share_of_total": 0.00547964388403247,
+          "gain_percent_vs_baseline": -4.428927030713035
+        }
+      },
+      "coding_seconds": 0.46753410005476326,
+      "net_gain_percent": 1.7648629660125192,
+      "control_interpretation": "control LOSES: a mismatched hyper-latent actively misleads the predictor, which confirms the arm's gain is content-specific. Not added back - the arm is not credited for its control being bad",
+      "verdict": "meaningful",
+      "b1_ideal_bits_gain_percent": 1.769135342719069,
+      "realisation_ratio": 0.9975850481286619
+    },
+    {
+      "bits": 3,
+      "alphabet": 8,
+      "groups": 512,
+      "card": 8,
+      "val_b_p_frames": 144,
+      "symbols_scored": 2359296,
+      "strength_parent": 256.0,
+      "strength_child": 64.0,
+      "arms": {
+        "baseline": {
+          "residual_bytes": 394341,
+          "map_bytes": 0,
+          "total_bytes": 394341,
+          "exact": true,
+          "frames": 144,
+          "bits_per_symbol": 1.3371480305989583,
+          "map_share_of_total": 0.0
+        },
+        "candidate": {
+          "residual_bytes": 383756,
+          "map_bytes": 3600,
+          "total_bytes": 387356,
+          "exact": true,
+          "frames": 144,
+          "bits_per_symbol": 1.3134629991319444,
+          "map_share_of_total": 0.009293776267825979,
+          "gain_percent_vs_baseline": 1.7713096026028234
+        },
+        "control": {
+          "residual_bytes": 413155,
+          "map_bytes": 3600,
+          "total_bytes": 416755,
+          "exact": true,
+          "frames": 144,
+          "bits_per_symbol": 1.4131503634982638,
+          "map_share_of_total": 0.008638168708233855,
+          "gain_percent_vs_baseline": -5.683913161451637
+        }
+      },
+      "coding_seconds": 0.3678668000502512,
+      "net_gain_percent": 1.7713096026028234,
+      "control_interpretation": "control LOSES: a mismatched hyper-latent actively misleads the predictor, which confirms the arm's gain is content-specific. Not added back - the arm is not credited for its control being bad",
+      "verdict": "meaningful",
+      "b1_ideal_bits_gain_percent": 1.7888687482750212,
+      "realisation_ratio": 0.9901842179930027
+    }
+  ],
+  "finished_utc": "2026-10-25T15:35:48.886563+00:00",
+  "all_round_trips_exact": true
+}

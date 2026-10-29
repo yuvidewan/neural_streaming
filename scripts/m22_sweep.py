@@ -201,6 +201,11 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
         "outputs/m10f_lambda_boundary/lambda_3.0e-04_seed42/best.pt"))
     parser.add_argument("--m11-dir", type=Path, default=Path("outputs/m11_autoregressive_entropy"))
     parser.add_argument("--m10k-dir", type=Path, default=Path("outputs/m10k_learned_entropy"))
+    parser.add_argument("--deployed-checkpoint", type=Path, default=Path(
+        "outputs/m10f_lambda_boundary/lambda_3.0e-04_seed42/best.pt"),
+        help="the transform M14 recorded its motion-table identity against; when "
+             "--checkpoint is a different one, the motion table is refit and its "
+             "cache keyed by checkpoint digest instead")
     parser.add_argument("--output-dir", type=Path,
                         default=Path("outputs/m22_residual_freeze_lift"))
     parser.add_argument("--output-name", type=str, default="m22_sweep.json")
@@ -255,6 +260,14 @@ def main(argv: list[str] | None = None) -> int:
     model, _ = load_model_from_checkpoint(args.checkpoint, device=device)
     model.eval()
 
+    # M14's recorded motion-table identity belongs to one transform. Against any
+    # other, the table is whatever M14 fits on that transform's references, so
+    # the cache is keyed by the checkpoint digest instead - see
+    # m21_refinement.deployed_motion_model.
+    deployed_transform = (args.checkpoint.resolve() == args.deployed_checkpoint.resolve()
+                          if args.deployed_checkpoint.is_file() else False)
+    checkpoint_digest = md._file_digest(args.checkpoint)
+
     val_b = m21.val_b_sequences(args.manifest, count=args.val_sequences,
                                 max_frames=args.val_frames_per_sequence)
     train_full = discover_sequences(args.manifest, split="train")
@@ -287,6 +300,9 @@ def main(argv: list[str] | None = None) -> int:
         "val_b_sequence_ids": [s.sequence_id for s in val_b],
         "grid_variants": [v.to_dict() for v in variants],
         "arms": list(args.arms), "rate_points": [],
+        "transform": {"checkpoint": str(args.checkpoint), "digest": checkpoint_digest,
+                      "is_the_deployed_transform": deployed_transform,
+                      "m11_dir": str(args.m11_dir), "m10k_dir": str(args.m10k_dir)},
         "declared_screen_bits": m22.SCREEN_BITS,
         "declared_confirm_bits": list(m22.CONFIRM_BITS),
         "declared_stage2_admission_percent": m22.STAGE2_ADMISSION_PERCENT,
@@ -310,7 +326,9 @@ def main(argv: list[str] | None = None) -> int:
             train_full=train_full, motion_train=motion_train,
             calibration_frames=args.calibration_frames, gop_size=args.gop,
             block_size=args.block_size, search_range=args.search_range,
-            motion_cache=args.output_dir / "m22_deployed_motion_table.json")
+            motion_cache=args.output_dir / "m22_deployed_motion_table.json",
+            motion_identity=(m21.DEPLOYED_MOTION_IDENTITY if deployed_transform else None),
+            motion_cache_key=checkpoint_digest)
         residuals = m22.collect_train_residuals(
             mc, model, train_full, bits=bits,
             intra_params=deployed_rig["intra_params"],

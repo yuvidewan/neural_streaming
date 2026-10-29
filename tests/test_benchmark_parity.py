@@ -220,3 +220,85 @@ def test_intra_only_runs_calibrate_at_the_deployed_gop(parity):
     # the encode/decode calls must still use the requested GOP, not the
     # calibration one, or --gop 1 would silently measure the GOP-10 codec
     assert "gop_size=args.gop" in source
+
+
+def test_an_arm_can_be_deselected_so_a_refit_without_m22_checkpoints_can_run(parity):
+    """A newly refitted stack has no `m22_<candidate>_<n>bit.pt` checkpoints, so
+    loading the m22 arm unconditionally made the deployed arm unmeasurable
+    against a new transform. The checkpoint load must sit behind the selection."""
+    source = inspect.getsource(parity.run_nvc)
+
+    assert 'if "nvc_m22" in args.arms:' in source
+    load_at = source.index("load_refit_checkpoint")
+    guard_at = source.index('if "nvc_m22" in args.arms:')
+    assert guard_at < load_at, "the m22 checkpoint is still loaded before the arm is selected"
+    # and the labels/resume keys follow the selection too
+    assert 'labels = {arm: f"{arm}/{bits}bit" for arm in args.arms}' in source
+
+
+def test_the_reproduction_check_is_skipped_against_a_different_transform(parity):
+    """M22's recorded DAVIS totals belong to one checkpoint. Against a refitted
+    stack on a different transform they are a different codec's numbers: the
+    bytes cannot match, and reporting that as a failed reproduction would mark a
+    perfectly good run invalid."""
+    source = inspect.getsource(parity.run_nvc)
+
+    assert "deployed_transform" in source
+    assert "and deployed_transform" in source, "recorded totals are still loaded unconditionally"
+    assert "elif not deployed_transform:" in source, "no stated reason for the skip"
+    assert parity.DEPLOYED_CHECKPOINT == Path(
+        "outputs/m10f_lambda_boundary/lambda_3.0e-04_seed42/best.pt")
+
+
+def test_the_motion_cache_is_a_separate_option_so_a_refit_cannot_overwrite_it(parity):
+    """`deployed_motion_model` rewrites its cache whenever the stored table is
+    rejected. The deployed table lives under --m22-dir, so a refit pointed at
+    the default path would silently replace the production motion table."""
+    source = inspect.getsource(parity.run_nvc)
+
+    assert "motion_cache=motion_cache" in source
+    assert 'args.m22_dir / "m22_deployed_motion_table.json"' in source  # still the default
+    assert "motion_cache_key=checkpoint_digest" in source
+    parser = parity.build_arg_parser(_FakeDefaults())
+    assert parser.parse_args([]).motion_cache is None
+    assert parser.parse_args(["--motion-cache", "x.json"]).motion_cache == Path("x.json")
+
+
+def test_arms_defaults_to_both_and_rejects_an_unknown_name(parity):
+    parser = parity.build_arg_parser(_FakeDefaults())
+
+    assert parser.parse_args([]).arms == list(parity.NVC_ARMS)
+    assert parser.parse_args(["--arms", "nvc_deployed"]).arms == ["nvc_deployed"]
+    with pytest.raises(SystemExit):
+        parser.parse_args(["--arms", "nvc_future"])
+
+
+class _FakeDefaults:
+    processed_data_dir = Path("outputs")
+
+
+def test_resume_survives_adding_an_arm_but_not_changing_the_stack(parity):
+    """Measuring the m22 arm after the deployed one must not discard the 52
+    classical points the first run measured - they do not depend on which NVC
+    arms ran. A different entropy stack or checkpoint still forces a fresh run,
+    because that changes what every NVC point IS."""
+    base = {"checkpoint": "a.pt", "m11_dir": "m11", "gop": 10,
+            "arms": ["nvc_deployed"], "rate_points": [5, 4, 3], "crf": [28]}
+    added_arm = {**base, "arms": ["nvc_deployed", "nvc_m22"]}
+    added_rate = {**base, "rate_points": [5, 4, 3, 2]}
+    other_stack = {**base, "m11_dir": "m11_refit"}
+    other_gop = {**base, "gop": 1}
+
+    assert parity.comparable_configuration(added_arm) == parity.comparable_configuration(base)
+    assert parity.comparable_configuration(added_rate) == parity.comparable_configuration(base)
+    assert parity.comparable_configuration(other_stack) != parity.comparable_configuration(base)
+    assert parity.comparable_configuration(other_gop) != parity.comparable_configuration(base)
+
+
+def test_the_resume_check_goes_through_comparable_configuration(parity):
+    """A direct `previous == current` comparison is what made an added arm throw
+    the report away; the guard has to stay routed through the filter."""
+    source = inspect.getsource(parity.main)
+
+    assert "comparable_configuration(previous.get" in source
+    assert 'previous.get("configuration") == configuration' not in source

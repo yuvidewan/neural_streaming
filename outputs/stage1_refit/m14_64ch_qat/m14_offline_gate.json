@@ -1,0 +1,110 @@
+{
+  "phase": "M14 Phase B offline gate",
+  "weak_below_percent": 0.5,
+  "meaningful_above_percent": 1.0,
+  "val_a_sequence_ids": [
+    "bmx-trees",
+    "dogs-scale",
+    "mallard-water",
+    "skate-park",
+    "upside-down"
+  ],
+  "val_b_sequence_ids": [
+    "car-roundabout",
+    "drift-straight",
+    "pigs",
+    "stunt"
+  ],
+  "train_frames_per_sequence": 8,
+  "train_total_frames": 576,
+  "calibration_frames": 400,
+  "rate_points": [
+    {
+      "bits": 5,
+      "candidates": {
+        "intra": {
+          "train_frames": 576,
+          "val_a_frames": 200,
+          "val_b_frames": 160,
+          "val_a_gain_percent": 0.21974095184807726,
+          "val_b_h_old_bits_per_symbol": 3.9444628015154337,
+          "val_b_h_new_bits_per_symbol": 3.9344909824212353,
+          "val_b_gain_percent": 0.2528055047284847,
+          "verdict": "weak",
+          "current_identity": "433c8a7be60413f4",
+          "new_identity": "77834db6df454876"
+        },
+        "motion": {
+          "train_p_frames": 504,
+          "val_a_p_frames": 180,
+          "val_b_p_frames": 144,
+          "val_a_gain_percent": 15.816388855947979,
+          "val_b_h_old_bits_per_symbol": 4.416719323360257,
+          "val_b_h_new_bits_per_symbol": 3.842054480337753,
+          "val_b_gain_percent": 13.011124342519842,
+          "verdict": "meaningful",
+          "current_identity": "b85cfc753c5518ae",
+          "new_identity": "7af92fecca1c9fcb"
+        }
+      }
+    },
+    {
+      "bits": 4,
+      "candidates": {
+        "intra": {
+          "train_frames": 576,
+          "val_a_frames": 200,
+          "val_b_frames": 160,
+          "val_a_gain_percent": 0.2511965818646911,
+          "val_b_h_old_bits_per_symbol": 2.915290411934949,
+          "val_b_h_new_bits_per_symbol": 2.9069405861039135,
+          "val_b_gain_percent": 0.2864148901547518,
+          "verdict": "weak",
+          "current_identity": "074db7f4489870ed",
+          "new_identity": "8011eed386fc56a0"
+        },
+        "motion": {
+          "train_p_frames": 504,
+          "val_a_p_frames": 180,
+          "val_b_p_frames": 144,
+          "val_a_gain_percent": 15.338538490219713,
+          "val_b_h_old_bits_per_symbol": 4.392726624430569,
+          "val_b_h_new_bits_per_symbol": 3.842054480337753,
+          "val_b_gain_percent": 12.53599850785615,
+          "verdict": "meaningful",
+          "current_identity": "8a839c8a6befee49",
+          "new_identity": "7af92fecca1c9fcb"
+        }
+      }
+    },
+    {
+      "bits": 3,
+      "candidates": {
+        "intra": {
+          "train_frames": 576,
+          "val_a_frames": 200,
+          "val_b_frames": 160,
+          "val_a_gain_percent": 0.300159054470266,
+          "val_b_h_old_bits_per_symbol": 1.871224077989882,
+          "val_b_h_new_bits_per_symbol": 1.8665517944400647,
+          "val_b_gain_percent": 0.24969129057149064,
+          "verdict": "weak",
+          "current_identity": "5a4c2f39ab794ebc",
+          "new_identity": "2f5b977bf3093fbb"
+        },
+        "motion": {
+          "train_p_frames": 504,
+          "val_a_p_frames": 180,
+          "val_b_p_frames": 144,
+          "val_a_gain_percent": 14.228964486023699,
+          "val_b_h_old_bits_per_symbol": 4.346644162177049,
+          "val_b_h_new_bits_per_symbol": 3.842054480337753,
+          "val_b_gain_percent": 11.608718427656346,
+          "verdict": "meaningful",
+          "current_identity": "00e7b9cca0c3707c",
+          "new_identity": "7af92fecca1c9fcb"
+        }
+      }
+    }
+  ]
+}

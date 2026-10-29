@@ -1,0 +1,93 @@
+{
+  "phase": "M13 Phase C offline gate",
+  "checkpoint": "outputs\\stage1_vimeo\\colab_run4_64ch_qat\\best.pt",
+  "weak_below_percent": 0.5,
+  "meaningful_above_percent": 1.0,
+  "rate_points": [
+    {
+      "bits": 5,
+      "alphabet": 32,
+      "codebook_size": 512,
+      "train_p_frames": 536,
+      "val_a_p_frames": 180,
+      "val_b_p_frames": 144,
+      "val_sequence_ids": [
+        "bmx-trees",
+        "car-roundabout",
+        "dogs-scale",
+        "drift-straight",
+        "mallard-water",
+        "pigs",
+        "skate-park",
+        "stunt",
+        "upside-down"
+      ],
+      "smoothing_strength": 1024.0,
+      "val_a_baseline_bits_per_symbol": 3.315867017785121,
+      "val_a_recalibrated_bits_per_symbol": 3.2923867812200767,
+      "val_b_h_old_bits_per_symbol": 3.0755531846503157,
+      "val_b_h_new_bits_per_symbol": 3.04604311024647,
+      "val_b_gain_percent": 0.9595046039563493,
+      "verdict": "marginal",
+      "old_codebook_id": "a4ab7cceac85b319",
+      "new_codebook_id": "349cfddc48d4666d"
+    },
+    {
+      "bits": 4,
+      "alphabet": 16,
+      "codebook_size": 512,
+      "train_p_frames": 536,
+      "val_a_p_frames": 180,
+      "val_b_p_frames": 144,
+      "val_sequence_ids": [
+        "bmx-trees",
+        "car-roundabout",
+        "dogs-scale",
+        "drift-straight",
+        "mallard-water",
+        "pigs",
+        "skate-park",
+        "stunt",
+        "upside-down"
+      ],
+      "smoothing_strength": 256.0,
+      "val_a_baseline_bits_per_symbol": 2.398656998189098,
+      "val_a_recalibrated_bits_per_symbol": 2.3449206708527797,
+      "val_b_h_old_bits_per_symbol": 2.190046831910545,
+      "val_b_h_new_bits_per_symbol": 2.1329590919409736,
+      "val_b_gain_percent": 2.606690374733654,
+      "verdict": "meaningful",
+      "old_codebook_id": "e8e3d9b19ec283e4",
+      "new_codebook_id": "02a4bde4420fa7c7"
+    },
+    {
+      "bits": 3,
+      "alphabet": 8,
+      "codebook_size": 512,
+      "train_p_frames": 536,
+      "val_a_p_frames": 180,
+      "val_b_p_frames": 144,
+      "val_sequence_ids": [
+        "bmx-trees",
+        "car-roundabout",
+        "dogs-scale",
+        "drift-straight",
+        "mallard-water",
+        "pigs",
+        "skate-park",
+        "stunt",
+        "upside-down"
+      ],
+      "smoothing_strength": 256.0,
+      "val_a_baseline_bits_per_symbol": 1.5524100915507586,
+      "val_a_recalibrated_bits_per_symbol": 1.4884532752731507,
+      "val_b_h_old_bits_per_symbol": 1.3955540062158458,
+      "val_b_h_new_bits_per_symbol": 1.3368815334306157,
+      "val_b_gain_percent": 4.204242367110187,
+      "verdict": "meaningful",
+      "old_codebook_id": "dae79a3841a9b770",
+      "new_codebook_id": "ad665c9c4201d93c"
+    }
+  ],
+  "all_meaningful": false
+}

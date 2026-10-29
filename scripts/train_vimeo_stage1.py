@@ -35,9 +35,46 @@ distortion-only, then M9+ rate):
           --rate-calibration <dir>/calibration/stage1_4bit_train.json \
           --rate-lambda <value> --rate-track-scale --reset-progress
 
-`--rate-track-scale` is recommended for Phase B for the reason M9F.5 found: with
-a frozen bin width the encoder can lower the proxy rate just by shrinking the
-latent, which the real quantizer (it recalibrates per model) does not reward.
+`--rate-track-scale` is recommended for Phase B ON THE PERCENTILE QUANTIZER, for
+the reason M9F.5 found: with a frozen bin width the encoder can lower the proxy
+rate just by shrinking the latent, which the real quantizer (it recalibrates per
+model) does not reward.
+
+THE UNIT-STEP QUANTIZER (`--quantizer unit_step`), AND WHY THAT ADVICE INVERTS
+------------------------------------------------------------------------------
+M24 measured the percentile grid from the other side and found the same
+mechanism. The grid fits its step to each channel's 0.1/99.9 range, so it
+rescales itself to whatever latent the model produces: cost is decoupled from
+content, a channel at 1/20 of peak energy still pays ~68% of full depth, and the
+grid caps reconstruction near 32.6 dB whatever the bit depth because it clips the
+tails (`outputs/m24_quantizer/README.md`).
+
+`--quantizer unit_step` replaces it with bmshj2018's rule: round at a FIXED step
+on an unbounded integer alphabet, and let the transform learn its own scale. Two
+consequences for this script:
+
+  * the noise width and the rate proxy's bin width both become that fixed step,
+    taken from `--unit-step` rather than from a calibration file. Nothing has to
+    be calibrated first, so Phase B no longer needs a Phase A calibration pass;
+  * **`--rate-track-scale` must be OFF**, and the run refuses it. Scale tracking
+    existed because the percentile grid recalibrates, which made a frozen bin
+    width mis-specified. A fixed step does not recalibrate, so the codec is
+    genuinely scale-sensitive and a frozen bin width is now the CORRECT model
+    rather than an exploitable one. Tracking the scale here would re-introduce
+    the very invariance the unit step removes.
+
+That is also why the lambda sweep is expected to work this time where the one on
+the old codec moved the 4-bit point by at most 9.7%
+(`outputs/benchmarks/compressai_anchor/README.md`): under the percentile grid a
+model could shrink its latent and the grid shrank with it, so lambda had almost
+nothing to push against. The unit step closes that escape route.
+
+  Phase B, unit step   D + lambda*R with the quantizer replaced.
+      python scripts/train_vimeo_stage1.py --output-dir <dir> \
+          --quantizer unit_step --unit-step 1.0 \
+          --qat-enabled --rate-enabled --rate-lambda <value> --reset-progress
+
+  One run per lambda; `colab_train_stage1.ipynb` sweeps them.
 
 QAT (quantization-aware fine-tuning)
 ------------------------------------
@@ -240,6 +277,16 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
                         help="Colab is Linux, so >0 is safe; use 0 on Windows.")
     parser.add_argument("--device", choices=["auto", "cpu", "cuda"], default="auto")
 
+    parser.add_argument(
+        "--quantizer", choices=("percentile", "unit_step"), default="percentile",
+        help="percentile: the deployed per-channel range-fitted grid (unchanged "
+             "default). unit_step: bmshj2018's fixed-step rounding on an unbounded "
+             "alphabet, which needs no calibration file and makes the rate term "
+             "meaningful - see this script's docstring and outputs/m24_quantizer/")
+    parser.add_argument(
+        "--unit-step", type=float, default=1.0,
+        help="the fixed quantization step for --quantizer unit_step. 1.0 is "
+             "bmshj2018's own choice; the transform learns its scale against it")
     parser.add_argument("--rate-enabled", action="store_true",
                         help="Phase B: train on D + lambda*R instead of distortion alone. "
                              "Requires --rate-calibration.")
@@ -312,6 +359,14 @@ def build_quantization_noise(args) -> QuantizationNoise | None:
     """
     if not args.qat_enabled:
         return None
+    if args.quantizer == "unit_step":
+        # No calibration file: the step is declared, not measured, which is the
+        # point of the rule. "global" mode because one step covers every channel -
+        # the per-channel adaptation is exactly what is being removed.
+        if args.unit_step <= 0 or not math.isfinite(args.unit_step):
+            raise SystemExit(f"--unit-step must be finite and > 0, got {args.unit_step}")
+        scale = torch.full((1, 1, 1, 1), float(args.unit_step), dtype=torch.float32)
+        return QuantizationNoise(scale, bits=args.qat_bits, mode="global")
     if args.qat_calibration is None:
         raise SystemExit(
             "--qat-enabled requires --qat-calibration.\n"
@@ -338,7 +393,13 @@ def qat_fingerprint(args, noise: QuantizationNoise | None) -> dict[str, Any] | N
     if noise is None:
         return None
     return {"qat_bits": noise.bits, "qat_mode": noise.mode,
-            "qat_calibration": str(args.qat_calibration)}
+            "qat_calibration": str(args.qat_calibration),
+            # Recorded so the resume guard refuses a run that changes the
+            # quantization RULE, not just its bit depth - the two produce
+            # different latents and must not share a checkpoint.
+            "quantizer": args.quantizer,
+            "unit_step": (float(args.unit_step) if args.quantizer == "unit_step"
+                          else None)}
 
 
 def build_rate_estimator(args) -> RateEstimator | None:
@@ -351,6 +412,22 @@ def build_rate_estimator(args) -> RateEstimator | None:
     """
     if not args.rate_enabled:
         return None
+    if args.quantizer == "unit_step":
+        if args.rate_track_scale:
+            raise SystemExit(
+                "--rate-track-scale is refused with --quantizer unit_step.\n"
+                "Scale tracking exists because the PERCENTILE grid recalibrates to "
+                "each model's latent range (M9F.5), which makes a frozen bin width "
+                "mis-specified and lets the encoder cheat by shrinking the latent.\n"
+                "A fixed step does not recalibrate, so the codec is genuinely "
+                "scale-sensitive and the frozen bin width is the CORRECT model. "
+                "Tracking the scale here would put back the invariance the unit step "
+                "is there to remove.")
+        if args.unit_step <= 0 or not math.isfinite(args.unit_step):
+            raise SystemExit(f"--unit-step must be finite and > 0, got {args.unit_step}")
+        bin_width = torch.full((1, 1, 1, 1), float(args.unit_step), dtype=torch.float32)
+        return RateEstimator(bin_width, bits=args.qat_bits, mode="global",
+                             track_scale=False)
     if args.rate_calibration is None:
         raise SystemExit("--rate-enabled requires --rate-calibration (see this script's docstring)")
     if not args.rate_calibration.is_file():
