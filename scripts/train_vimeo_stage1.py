@@ -402,6 +402,29 @@ def qat_fingerprint(args, noise: QuantizationNoise | None) -> dict[str, Any] | N
                           else None)}
 
 
+RULE_KEYS = ("quantizer", "unit_step")
+
+
+def saved_qat_fingerprint(extra: dict[str, Any] | None) -> dict[str, Any]:
+    """The QAT fingerprint a checkpoint was saved with, in `qat_fingerprint`'s shape.
+
+    Reads back every key `qat_fingerprint` writes - the `qat_*` ones AND the
+    quantization rule. Filtering on the `qat_` prefix alone dropped `quantizer` and
+    `unit_step`, so every resume of a run that recorded them was refused against a
+    fingerprint the run itself had written.
+
+    A QAT checkpoint saved before the rule was recorded predates the unit step, so it
+    was trained on the percentile grid; it is read as exactly that, which lets those
+    runs resume under the same rule and still refuses them under a different one.
+    """
+    extra = extra or {}
+    saved = {key: value for key, value in extra.items()
+             if key.startswith("qat_") or key in RULE_KEYS}
+    if saved and "quantizer" not in saved:
+        saved.update(quantizer="percentile", unit_step=None)
+    return saved
+
+
 def build_rate_estimator(args) -> RateEstimator | None:
     """The rate proxy for Phase B, or None for Phase A.
 
@@ -767,8 +790,7 @@ def main(argv: list[str] | None = None) -> int:
         # cannot see them: a full-precision checkpoint and a QAT one are the same
         # shape. Resuming across a change would silently continue under a
         # different objective and make the loss history incomparable.
-        saved_qat = {key: value for key, value in (checkpoint.get("extra") or {}).items()
-                     if key.startswith("qat_")}
+        saved_qat = saved_qat_fingerprint(checkpoint.get("extra"))
         current_qat = dict(qat) if qat is not None else {}
         if saved_qat != current_qat:
             raise SystemExit(

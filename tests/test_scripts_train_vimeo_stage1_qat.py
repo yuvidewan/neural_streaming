@@ -426,3 +426,76 @@ def test_the_docstring_explains_why_the_track_scale_advice_inverts(stage1):
     assert "must be OFF" in doc
     assert "9.7%" in doc, "the sweep that failed, and why this one should not"
     assert "escape route" in doc
+
+
+# --- resuming a run under its own fingerprint ----------------------------------------
+
+
+def _resume_until_training(stage1, tmp_path, monkeypatch, extra, flags):
+    """Save a latest.pt with `extra`, then resume with `flags`; return what happened.
+
+    "stop" from the stubbed train_one_chunk means the resume guard let the run
+    through; any other SystemExit is the guard's refusal message.
+    """
+    args = _args(stage1)
+    from nvc.training.checkpoint import save_checkpoint
+
+    checkpoint_dir = tmp_path / "checkpoints"
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    model = stage1.build_model(args)
+    save_checkpoint(checkpoint_dir / "latest.pt", model=model,
+                    optimizer=stage1.build_optimizer(model, None, args), epoch=3,
+                    history=[], model_config=model.config_dict(), extra=extra)
+    _stub_chunk_pipeline(stage1, monkeypatch, tmp_path)
+    monkeypatch.setattr(stage1, "train_one_chunk",
+                        lambda **kwargs: (_ for _ in ()).throw(SystemExit("stop")))
+    with pytest.raises(SystemExit) as outcome:
+        stage1.main([
+            "--output-dir", str(tmp_path), "--scratch-dir", str(tmp_path / "s"),
+            "--chunks", "1",
+            "--latent-channels", str(args.latent_channels),
+            "--base-channels", str(args.base_channels), "--residual-blocks", "1",
+            "--device", "cpu", *flags,
+        ])
+    return str(outcome.value)
+
+
+UNIT_STEP_FLAGS = ["--quantizer", "unit_step", "--unit-step", "1.0", "--qat-enabled"]
+
+
+def test_an_interrupted_unit_step_run_resumes(stage1, tmp_path, monkeypatch):
+    """The Phase B sweep on JupyterLab died mid-run and could never resume: the guard
+    read back only the `qat_*` keys, dropped the `quantizer`/`unit_step` the run had
+    itself written, and refused the mismatch. The checkpoint here is saved with
+    exactly the fingerprint the same flags produce."""
+    noise = stage1.build_quantization_noise(_UnitStepArgs())
+    fingerprint = stage1.qat_fingerprint(_UnitStepArgs(), noise)
+    assert fingerprint["quantizer"] == "unit_step"
+
+    outcome = _resume_until_training(stage1, tmp_path, monkeypatch, fingerprint,
+                                     UNIT_STEP_FLAGS)
+    assert outcome == "stop", f"the resume was refused:\n{outcome}"
+
+
+def test_a_pre_rule_qat_checkpoint_resumes_under_the_percentile_rule(
+        stage1, tmp_path, monkeypatch):
+    """Checkpoints saved before the rule was recorded (the QAT fine-tune that gated at
+    +46.5%) were all trained on the percentile grid, so they resume under it."""
+    args = _args(stage1)
+    path, _ = _calibration(tmp_path, stage1, args)
+    old = {"qat_bits": 4, "qat_mode": "per_channel", "qat_calibration": str(path)}
+
+    outcome = _resume_until_training(
+        stage1, tmp_path, monkeypatch, old,
+        ["--qat-enabled", "--qat-calibration", str(path)])
+    assert outcome == "stop", f"the resume was refused:\n{outcome}"
+
+
+def test_a_pre_rule_checkpoint_is_still_refused_under_the_unit_step(
+        stage1, tmp_path, monkeypatch):
+    """Reading an old fingerprint as `percentile` must not open the door to resuming
+    it under a different rule - that is the change the guard exists to catch."""
+    old = {"qat_bits": 4, "qat_mode": "global", "qat_calibration": "None"}
+
+    outcome = _resume_until_training(stage1, tmp_path, monkeypatch, old, UNIT_STEP_FLAGS)
+    assert "quantization-aware" in outcome
