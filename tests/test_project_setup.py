@@ -70,17 +70,31 @@ _DISTRIBUTION_FOR = {
     "numpy": "numpy",
     "pytorch_msssim": "pytorch-msssim",
     "tqdm": "tqdm",
+    "fastapi": "fastapi",
 }
 
+# Optional subpackages, and the extra that supplies their third-party imports.
+# Importing `nvc` never loads them, so what they import belongs to that extra
+# rather than to every install.
+_OPTIONAL_SUBPACKAGES = {"demo": "demo"}
 
-def _package_imports() -> set[str]:
-    """Every third-party top-level module imported anywhere under src/nvc."""
+
+def _package_imports(subpackage: str | None = None) -> set[str]:
+    """Every third-party top-level module imported under src/nvc - the core
+    package by default (optional subpackages excluded), or one subpackage."""
     import ast
     import sys
 
     stdlib = set(sys.stdlib_module_names)
     found: set[str] = set()
-    for path in (ROOT / "src" / "nvc").rglob("*.py"):
+    base = ROOT / "src" / "nvc"
+    if subpackage is not None:
+        paths = list((base / subpackage).rglob("*.py"))
+    else:
+        optional = [base / name for name in _OPTIONAL_SUBPACKAGES]
+        paths = [path for path in base.rglob("*.py")
+                 if not any(path.is_relative_to(root) for root in optional)]
+    for path in paths:
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
             if isinstance(node, ast.Import):
                 names = [alias.name.split(".")[0] for alias in node.names]
@@ -99,6 +113,13 @@ def _declared_dependencies() -> list[str]:
     return data["project"]["dependencies"]
 
 
+def _declared_extra(name: str) -> list[str]:
+    import tomllib
+
+    data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    return data["project"]["optional-dependencies"].get(name, [])
+
+
 def test_every_module_the_package_imports_is_a_declared_dependency():
     """BUG-02: pyproject declared no dependencies at all, so `pip install nvc`
     produced a package that raised ImportError on first use. This asserts the
@@ -112,6 +133,38 @@ def test_every_module_the_package_imports_is_a_declared_dependency():
         f"src/nvc imports {missing} but pyproject.toml does not declare them; "
         "an install would fail at runtime"
     )
+
+
+def test_every_optional_subpackage_import_is_in_its_extra():
+    """`nvc.demo` imports FastAPI; that has to come from `pip install -e .[demo]`,
+    and the extra has to actually provide it."""
+    for subpackage, extra in _OPTIONAL_SUBPACKAGES.items():
+        declared = " ".join(_dependencies_including(extra)).lower()
+        missing = [
+            name for name in sorted(_package_imports(subpackage))
+            if _DISTRIBUTION_FOR.get(name, name).lower() not in declared
+        ]
+        assert not missing, (
+            f"src/nvc/{subpackage} imports {missing} but neither the core dependencies "
+            f"nor the [{extra}] extra declare them"
+        )
+
+
+def test_importing_nvc_does_not_load_an_optional_subpackage():
+    """What makes it fair to keep their imports out of the core dependencies."""
+    import subprocess
+    import sys
+
+    probe = ("import sys, nvc, nvc.video, nvc.compression; "
+             "print(sorted(m for m in sys.modules if m.split('.')[0] == 'fastapi' "
+             "or m.startswith('nvc.demo')))")
+    result = subprocess.run([sys.executable, "-c", probe], capture_output=True, text=True,
+                            check=True)
+    assert result.stdout.strip() == "[]"
+
+
+def _dependencies_including(extra: str) -> list[str]:
+    return _declared_dependencies() + _declared_extra(extra)
 
 
 def test_declared_dependencies_are_actually_imported():

@@ -36,6 +36,10 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8.0,<9.0"]
 research = ["matplotlib>=3.8,<4.0"]
+# The local web demo (src/nvc/demo, scripts/run_demo.py). python-multipart is what
+# FastAPI needs for the upload form; httpx is only for its TestClient in the tests.
+demo = ["fastapi>=0.110,<1.0", "uvicorn>=0.29,<1.0", "python-multipart>=0.0.9,<1.0",
+        "httpx>=0.27,<1.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -45,3 +49,5 @@ where = ["src"]
 # would have no arithmetic coder and no fallback.
 [tool.setuptools.package-data]
 "nvc.compression._native" = ["*.c"]
+# The demo page is served from the package itself (nvc.demo.server mounts static/).
+"nvc.demo" = ["static/*"]

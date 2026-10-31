@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neural video codec demo</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <div>
+      <h1>Neural video codec</h1>
+      <p>Real-Time Neural Video Compression and Streaming Engine</p>
+    </div>
+  </div>
+  <div class="controls">
+    <label>Clip
+      <select id="clip-select" aria-label="Clip"></select>
+    </label>
+    <label>Codec
+      <select id="bundle-select" aria-label="Codec"></select>
+    </label>
+    <button id="upload-button" class="primary" type="button">Upload a clip</button>
+    <input id="upload-input" type="file" accept="video/*,.mp4,.mov,.avi,.mkv,.webm,.m4v" hidden>
+  </div>
+</header>
+
+<main>
+  <div id="standin-banner" class="banner warn" hidden></div>
+  <div id="message" class="banner" hidden></div>
+
+  <section id="job" class="job" hidden aria-live="polite">
+    <div class="job-row">
+      <strong id="job-title">Working</strong>
+      <span id="job-detail"></span>
+    </div>
+    <div class="bar"><div id="job-bar"></div></div>
+  </section>
+
+  <section id="pending" class="pending" hidden>
+    <p id="pending-text"></p>
+    <button id="pending-button" class="primary" type="button">Encode now</button>
+  </section>
+
+  <div id="viewer" hidden>
+    <section class="panes" aria-label="Side by side comparison">
+      <figure class="pane">
+        <canvas id="pane-original" width="256" height="256"></canvas>
+        <figcaption>
+          <h2>Original</h2>
+          <p id="meta-original"></p>
+        </figcaption>
+      </figure>
+      <figure class="pane accent">
+        <canvas id="pane-nvc" width="256" height="256"></canvas>
+        <figcaption>
+          <h2>Neural codec</h2>
+          <p id="meta-nvc"></p>
+          <p class="sub" id="frame-nvc"></p>
+        </figcaption>
+      </figure>
+      <figure class="pane">
+        <canvas id="pane-h264" width="256" height="256"></canvas>
+        <figcaption>
+          <h2>H.264 at the same bitrate</h2>
+          <p id="meta-h264"></p>
+          <p class="sub" id="frame-h264"></p>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section class="transport">
+      <button id="play" type="button" aria-label="Play or pause">Play</button>
+      <button id="prev" type="button" aria-label="Previous frame">&#9664;</button>
+      <button id="next" type="button" aria-label="Next frame">&#9654;</button>
+      <input id="scrub" type="range" min="0" max="0" value="0" step="1" aria-label="Frame">
+      <span id="frame-label" class="frame-label"></span>
+    </section>
+
+    <section class="stats" id="stats"></section>
+
+    <section class="block">
+      <div class="block-head">
+        <h2>Bytes per frame</h2>
+        <div class="legend">
+          <span><i class="sw sw-i"></i>I-frame</span>
+          <span><i class="sw sw-p"></i>P-frame residual</span>
+          <span><i class="sw sw-m"></i>Motion vectors</span>
+        </div>
+      </div>
+      <canvas id="bars" height="150"></canvas>
+      <p class="hint">Click a bar to jump to that frame.</p>
+    </section>
+
+    <section class="block">
+      <div class="block-head">
+        <h2 id="inside-title">Inside this frame</h2>
+        <p id="inside-summary" class="hint"></p>
+      </div>
+      <div class="steps">
+        <figure>
+          <canvas id="step-motion" width="256" height="256"></canvas>
+          <figcaption><h3>1. Motion</h3><p>Where each 16&times;16 block was found in the previous decoded frame.</p></figcaption>
+        </figure>
+        <figure>
+          <canvas id="step-prediction" width="256" height="256"></canvas>
+          <figcaption><h3>2. Prediction</h3><p>The previous frame, shifted block by block. Nothing is sent for this picture.</p></figcaption>
+        </figure>
+        <figure>
+          <canvas id="step-residual" width="256" height="256"></canvas>
+          <figcaption><h3>3. Residual</h3><p>How far the prediction missed in latent space. Brighter costs more bits.</p></figcaption>
+        </figure>
+        <figure>
+          <canvas id="step-error" width="256" height="256"></canvas>
+          <figcaption><h3>4. Error</h3><p>Difference between the decoded frame and the original, amplified 8&times;.</p></figcaption>
+        </figure>
+      </div>
+    </section>
+  </div>
+
+  <section id="empty" class="pending" hidden>
+    <p id="empty-text"></p>
+  </section>
+</main>
+
+<footer>
+  <span id="footer-status"></span>
+</footer>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
