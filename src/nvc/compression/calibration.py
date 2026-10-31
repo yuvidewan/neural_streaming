@@ -31,11 +31,27 @@ min/max calibration exactly, so that option is retained rather than removed.
 
 The percentile choice is NOT tuned against the validation or test split -
 it is a fixed, documented default.
+
+THE UNIT STEP (`unit_step_quantization_params`)
+-----------------------------------------------
+M24 Phase B trains the transform for bmshj2018's rule instead: round at a FIXED
+step and let the model learn its own scale. That rule needs no new grid code -
+it is this same affine grid with `scale = step` and an INTEGER zero point, so
+dequantization gives back exactly `round(x / step) * step`. What calibration
+has to supply is only the alphabet: the integer range each channel's symbols
+span on TRAIN, which sets `zero_point` (the channel's lowest symbol) and `bits`
+(the widest channel's span). Nothing is clipped at a percentile.
+
+`bits` is kept as small as the widest span allows, because every one of the
+2**bits symbols holds at least one count of `TOTAL_FREQUENCY` in the entropy
+tables whether or not it ever occurs. At 10 bits that floor is already 1.6% of
+each table's mass, which is why wider alphabets are refused rather than built.
 """
 
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -47,6 +63,10 @@ from nvc.compression.quantization import QuantizationParams, _compand
 CALIBRATION_METHOD = "per_channel_percentile"
 DEFAULT_LOWER_PERCENTILE = 0.1
 DEFAULT_UPPER_PERCENTILE = 99.9
+
+# The widest alphabet `unit_step_quantization_params` will build (see the
+# module docstring's "THE UNIT STEP").
+UNIT_STEP_MAX_BITS = 10
 
 # torch.quantile refuses any input above 2**24 (16,777,216) elements
 # (confirmed on PyTorch 2.13.0 - see OPTIMIZATION_ANALYSIS.md, B1). At the
@@ -262,6 +282,45 @@ def _rebalance_to_target_total(
             break  # every channel is already at the ceiling - cannot raise further
         bits_per_channel[index] += 1
         total += 1
+
+
+@torch.no_grad()
+def unit_step_quantization_params(
+    latents: torch.Tensor, *, step: float, max_bits: int = UNIT_STEP_MAX_BITS,
+) -> QuantizationParams:
+    """Fixed-step rounding (M24 Phase B's quantizer) as per-channel affine params.
+
+    `scale` is `step` for every channel and `zero_point` is minus the channel's
+    lowest TRAIN symbol, so `UniformQuantizer` maps `round(x / step)` onto
+    `[0, 2**bits)` and dequantizes it back to exactly `round(x / step) * step`.
+    A value outside the TRAIN span is clamped, which costs distortion but never
+    breaks decoding; `count_clipped` measures how often that happens.
+    """
+    if latents.dim() != 4:
+        raise ValueError(
+            f"Expected a 4D [N, C, H, W] calibration tensor, got shape {tuple(latents.shape)}"
+        )
+    if not math.isfinite(step) or step <= 0:
+        raise ValueError(f"step must be finite and > 0, got {step}")
+
+    num_channels = latents.shape[1]
+    scale = torch.full((1, num_channels, 1, 1), float(step), dtype=torch.float32)
+    # Divide by the same tensor the quantizer will, so the symbols counted here
+    # are bit-for-bit the ones it produces.
+    symbols = torch.round(latents.to(torch.float32) / scale)
+    low = symbols.amin(dim=(0, 2, 3))
+    high = symbols.amax(dim=(0, 2, 3))
+    span = int((high - low).max().item()) + 1
+    bits = max(1, math.ceil(math.log2(span)))
+    if bits > max_bits:
+        raise ValueError(
+            f"the widest channel spans {span} symbols at step {step}, which needs "
+            f"{bits}-bit tables (limit {max_bits}). Every symbol holds a floor "
+            "frequency, so a table that wide spends its mass on symbols that never "
+            "occur; a step this small is not an operating point this coder can price."
+        )
+    return QuantizationParams(scale=scale, zero_point=(-low).reshape(1, -1, 1, 1),
+                              bits=bits, mode="per_channel")
 
 
 def _quantile_safe(values: torch.Tensor, q: float) -> float:

@@ -130,6 +130,11 @@ outputs/stage1_vimeo/**
 !outputs/stage1_vimeo/*/README.md
 !outputs/stage1_vimeo/*/history.json
 !outputs/stage1_vimeo/*/gate_*
+# A Phase B lambda sweep keeps one sub-run per lambda, laid out the way the
+# notebook writes them; their loss histories are the same few-KB record.
+!outputs/stage1_vimeo/*/phase_b_*/
+!outputs/stage1_vimeo/*/phase_b_*/checkpoints/
+!outputs/stage1_vimeo/*/phase_b_*/checkpoints/history.json
 # A QAT run needs its source run's calibration file, which is 20KB of
 # quantization params and an entropy table, and regenerating it needs the
 # source checkpoint - which is not in git. Keeping it makes a QAT fine-tune

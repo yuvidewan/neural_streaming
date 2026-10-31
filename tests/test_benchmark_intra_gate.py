@@ -164,6 +164,91 @@ def test_a_stream_with_a_p_frame_is_refused_by_the_decoder(gate, tmp_path):
         gate.decode_intra_sequence(model, bad, rig)
 
 
+# --- the unit step (M24 Phase B) --------------------------------------------------
+
+
+class _FakeSequence:
+    def __init__(self, frames):
+        self._frames = frames
+
+    def load_frames(self):
+        return self._frames
+
+
+def _unit_step_model_and_rig(gate, step=1.0):
+    from nvc.models import BaselineAutoencoder
+
+    torch.manual_seed(0)
+    model = BaselineAutoencoder(latent_channels=8, base_channels=4).eval()
+    train = [_FakeSequence(torch.rand(3, 3, 32, 32)), _FakeSequence(torch.rand(3, 3, 32, 32))]
+    rig = gate.unit_step_rig(model, train, step=step, calibration_frames=5)
+    return model, rig
+
+
+def test_the_unit_step_rig_calibrates_on_exactly_the_frames_asked_for(gate):
+    _, rig = _unit_step_model_and_rig(gate)
+
+    assert rig["provenance"]["calibration_frames"] == 5
+    assert rig["provenance"]["split"] == "train"
+    assert rig["intra_entropy_model"].bits == rig["intra_params"].bits == rig["bits"]
+    # The header gives intra and residual one bit depth, so the filler must match.
+    assert rig["residual_params"].bits == rig["bits"]
+
+
+def test_a_unit_step_stream_decodes_bit_exactly(gate, tmp_path):
+    model, rig = _unit_step_model_and_rig(gate)
+    frames = torch.rand(4, 3, 32, 32)
+    path = tmp_path / "unit.nvct"
+
+    encoded = gate.encode_intra_sequence(model, frames, rig, path, block_size=16, search_range=4)
+    decoded = gate.decode_intra_sequence(model, path, rig)
+
+    assert torch.equal(decoded, encoded["reconstructions"])
+    assert encoded["clipped_values"] >= 0
+
+
+def test_a_unit_step_stream_reconstructs_the_rounded_latent(gate, tmp_path):
+    """What the decoder feeds the synthesis transform is round(z / step) * step -
+    the rule the Phase B models were trained for, not a percentile grid."""
+    model, rig = _unit_step_model_and_rig(gate, step=0.5)
+    frame = torch.rand(1, 3, 32, 32)
+    path = tmp_path / "unit.nvct"
+
+    encoded = gate.encode_intra_sequence(model, frame, rig, path, block_size=16, search_range=4)
+    if encoded["clipped_values"]:
+        pytest.skip("a clamped value would make the comparison meaningless")
+    with torch.no_grad():
+        expected = model.decode(torch.round(model.encode(frame) / 0.5) * 0.5)
+
+    assert torch.allclose(encoded["reconstructions"], expected, atol=1e-6)
+
+
+def test_a_rig_without_a_motion_table_writes_an_honest_header(gate, tmp_path):
+    from nvc.video.container import TemporalStreamReader
+    from nvc.video.motion import motion_alphabet_bits
+
+    model, rig = _unit_step_model_and_rig(gate)
+    path = tmp_path / "unit.nvct"
+    gate.encode_intra_sequence(model, torch.rand(2, 3, 32, 32), rig, path,
+                               block_size=16, search_range=4)
+
+    header = TemporalStreamReader(path).header
+    assert header.motion_entropy_model_id == bytes(8)
+    assert header.motion_bits == motion_alphabet_bits(4)
+    assert header.quantization_bits == rig["bits"]
+
+
+def test_several_checkpoints_need_the_unit_step(gate):
+    """A percentile curve is the bit depths of ONE transform."""
+    with pytest.raises(SystemExit, match="unit_step"):
+        gate.main(["--checkpoint", "a.pt", "b.pt"])
+
+
+def test_verify_is_refused_under_the_unit_step(gate):
+    with pytest.raises(SystemExit, match="verify"):
+        gate.main(["--quantizer", "unit_step", "--verify", "--checkpoint", "a.pt"])
+
+
 # --- the reference curve ----------------------------------------------------------
 
 
