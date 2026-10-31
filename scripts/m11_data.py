@@ -61,6 +61,7 @@ def cache_key(*, checkpoint: Path, bits: int, quant_mode: str, gop: int, block_s
         "search_range": search_range, "calibration_frames": calibration_frames,
         "train_frames": train_frames, "val_frames_per_sequence": val_frames_per_sequence,
         "train_ids": list(train_ids), "val_ids": list(val_ids),
+        **_load_script("unit_step_grids").cache_identity(checkpoint),
     }
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
@@ -96,8 +97,9 @@ def load_or_collect(model, *, checkpoint: Path, manifest: Path, bits: int, devic
 
     started = time.perf_counter()
     log(f"    {bits}-bit data: collecting closed-loop symbols (no cache) ...")
-    calibration = mc.calibrate_grids(
-        model, train_sequences, bits=bits, mode=quant_mode, gop_size=gop,
+    calibration = _load_script("unit_step_grids").calibrate_grids(
+        mc, model, train_sequences, checkpoint=checkpoint, bits=bits, mode=quant_mode,
+        gop_size=gop,
         block_size=block_size, search_range=search_range, reference_mode="mc",
         max_frames=calibration_frames)
     train_symbols, train_references = ce.collect_training_symbols(

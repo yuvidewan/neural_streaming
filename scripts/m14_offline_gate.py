@@ -112,6 +112,7 @@ def main(argv: list[str] | None = None) -> int:
             return 1
 
     mc = _load_script("m10h_motion_compensation")
+    grids = _load_script("unit_step_grids")
     m14 = _load_script("m14_recalibration")
 
     seed_everything(args.seed)
@@ -163,8 +164,9 @@ def main(argv: list[str] | None = None) -> int:
 
     for bits in args.rate_points:
         print(f"\n  ---- {bits}-bit ----", flush=True)
-        calibration = mc.calibrate_grids(
-            model, calibration_sequences, bits=bits, mode="per_channel", gop_size=args.gop,
+        calibration = grids.calibrate_grids(
+            mc, model, calibration_sequences, checkpoint=args.checkpoint, bits=bits,
+            mode="per_channel", gop_size=args.gop,
             block_size=args.block_size, search_range=args.search_range, reference_mode="mc",
             max_frames=args.calibration_frames)
         current_intra = calibration["intra_entropy_model"]

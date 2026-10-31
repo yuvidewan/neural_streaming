@@ -628,9 +628,9 @@ def prepare_rate_point(model, *, bits: int, manifest: Path, checkpoint: Path, m1
     ev_m11 = _load_script("m11_evaluate")
     gate_script = _load_script("m12_spatial_offline_gate")
 
-    calibration = mc.calibrate_grids(
-        model, train_full, bits=bits, mode="per_channel", gop_size=gop_size,
-        block_size=block_size, search_range=search_range, reference_mode="mc",
+    calibration = _load_script("unit_step_grids").calibrate_grids(
+        mc, model, train_full, checkpoint=checkpoint, bits=bits, mode="per_channel",
+        gop_size=gop_size, block_size=block_size, search_range=search_range, reference_mode="mc",
         max_frames=calibration_frames)
     signature = ev.calibration_signature(calibration, bits=bits,
                                          calibration_frames=calibration_frames,

@@ -1,0 +1,525 @@
+{
+  "phase": "M24 Phase A2 - the residual quantizer at frozen weights",
+  "question": "Phase A found the INTRA percentile grid caps quality near 32.6 dB whatever the depth. The residual path uses the same scheme and is 79.6-84.2% of the stream. Does it cap too?",
+  "would_reinterpret": "M17-M21 probed this path and came back negative five times; a clipping ceiling is a plausible common cause none of them measured, and M18's 'aggregate MSE does not transfer to bytes' is what clipping looks like from outside",
+  "walk_check": {
+    "skipped": false,
+    "m22_shape": [
+      358,
+      64,
+      16,
+      16
+    ],
+    "ours_shape": [
+      358,
+      64,
+      16,
+      16
+    ],
+    "identical": true,
+    "max_abs_difference": 0.0,
+    "seconds": 106.40851280000061
+  },
+  "split_discipline": "TRAIN fits grids and densities, VAL-B reports, TEST never opened",
+  "started_utc": "2026-10-31T15:35:26.427135+00:00",
+  "configuration": {
+    "manifest": "C:\\Users\\Aditya\\OneDrive\\Desktop\\Github\\Real-Time Neural Video Compression\\data\\processed\\manifest.json",
+    "checkpoint": "outputs\\stage1_vimeo\\colab_run5_phase_b\\phase_b_unitstep_lambda3e-4\\checkpoints\\best.pt",
+    "output_dir": "outputs\\stage1_refit\\phase_b_lambda3e-4",
+    "output_name": "m24_residual_gate.json",
+    "arms": [
+      "grid_histogram",
+      "grid_laplace",
+      "unit_step_laplace"
+    ],
+    "grid_bits": [
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "step_multipliers": [
+      0.125,
+      0.1875,
+      0.25,
+      0.375,
+      0.5,
+      0.75,
+      1.0,
+      1.5,
+      2.0,
+      3.0
+    ],
+    "calibration_bits": 4,
+    "train_frames": 400,
+    "val_frames_per_sequence": 20,
+    "gop": 10,
+    "block_size": 16,
+    "search_range": 16,
+    "batch": 8,
+    "skip_walk_check": false,
+    "seed": 42,
+    "device": "auto"
+  },
+  "reference_step": 0.6650235652923584,
+  "train_p_frames": 358,
+  "val_b_p_frames": 72,
+  "val_b_sequences": [
+    "car-roundabout",
+    "drift-straight",
+    "pigs",
+    "stunt"
+  ],
+  "environment": {
+    "python": "3.11.9",
+    "torch": "2.13.0+cu130",
+    "device": "cuda",
+    "platform": "Windows-10-10.0.26300-SP0"
+  },
+  "points": [
+    {
+      "arm": "grid_histogram",
+      "setting": 3,
+      "total_ideal_bits": 1434999.2571164,
+      "bpp": 0.30411598568310205,
+      "bits_per_symbol": 1.2164639427324082,
+      "latent_residual_mse": 0.17063720524311066,
+      "psnr": 30.99867036953657,
+      "msssim": 0.9838252406981256,
+      "symbols": 1179648,
+      "pixels": 4718592,
+      "bits": 3,
+      "alphabet": 8,
+      "step_median": 1.4250504970550537,
+      "at_alphabet_edge_fraction": 0.00511932373046875
+    },
+    {
+      "arm": "grid_histogram",
+      "setting": 4,
+      "total_ideal_bits": 2574645.4259837368,
+      "bpp": 0.5456384925807819,
+      "bits_per_symbol": 2.1825539703231276,
+      "latent_residual_mse": 0.056358177214860916,
+      "psnr": 32.02187917591136,
+      "msssim": 0.9887530530492464,
+      "symbols": 1179648,
+      "pixels": 4718592,
+      "bits": 4,
+      "alphabet": 16,
+      "step_median": 0.6650235652923584,
+      "at_alphabet_edge_fraction": 0.003108554416232639
+    },
+    {
+      "arm": "grid_histogram",
+      "setting": 5,
+      "total_ideal_bits": 3749233.1878992855,
+      "bpp": 0.794566088337217,
+      "bits_per_symbol": 3.178264353348868,
+      "latent_residual_mse": 0.022673102095723152,
+      "psnr": 32.37569556722509,
+      "msssim": 0.9903320223093033,
+      "symbols": 1179648,
+      "pixels": 4718592,
+      "bits": 5,
+      "alphabet": 32,
+      "step_median": 0.3217855989933014,
+      "at_alphabet_edge_fraction": 0.0025770399305555555
+    },
+    {
+      "arm": "grid_histogram",
+      "setting": 6,
+      "total_ideal_bits": 4932166.490044617,
+      "bpp": 1.0452623346211363,
+      "bits_per_symbol": 4.181049338484545,
+      "latent_residual_mse": 0.01406216248869896,
+      "psnr": 32.47270344124192,
+      "msssim": 0.9907167330384254,
+      "symbols": 1179648,
+      "pixels": 4718592,
+      "bits": 6,
+      "alphabet": 64,
+      "step_median": 0.15833893418312073,
+      "at_alphabet_edge_fraction": 0.0023863050672743055
+    },
+    {
+      "arm": "grid_histogram",
+      "setting": 7,
+      "total_ideal_bits": 6117598.577750181,
+      "bpp": 1.296488142596389,
+      "bits_per_symbol": 5.185952570385556,
+      "latent_residual_mse": 0.01197725534439087,
+      "psnr": 32.49628450857432,
+      "msssim": 0.9908121882213486,
+      "symbols": 1179648,
+      "pixels": 4718592,
+      "bits": 7,
+      "alphabet": 128,
+      "step_median": 0.07854609191417694,
+      "at_alphabet_edge_fraction": 0.0022939046223958335
+    },
+    {
+      "arm": "grid_laplace",
+      "setting": 3,
+      "total_ideal_bits": 1565717.4863899352,
+      "bpp": 0.33181878967071854,
+      "bits_per_symbol": 1.3272751586828742,
+      "latent_residual_mse": 0.17063720524311066,
+      "psnr": 30.99867012068637,
+      "msssim": 0.9838252398702834,
+      "symbols": 1179648,
+      "pixels": 4718592,
+      "bits": 3,
+      "alphabet": 8,
+      "step_median": 1.4250504970550537,
+      "at_alphabet_edge_fraction": 0.00511932373046875
+    },
+    {
+      "arm": "grid_laplace",
+      "setting": 4,
+      "total_ideal_bits": 2632326.0160997645,
+      "bpp": 0.55786260310274,
+      "bits_per_symbol": 2.23145041241096,
+      "latent_residual_mse": 0.056358177214860916,
+      "psnr": 32.02187958311002,
+      "msssim": 0.988753054704931,
+      "symbols": 1179648,
+      "pixels": 4718592,
+      "bits": 4,
+      "alphabet": 16,
+      "step_median": 0.6650235652923584,
+      "at_alphabet_edge_fraction": 0.003108554416232639
+    },
+    {
+      "arm": "grid_laplace",
+      "setting": 5,
+      "total_ideal_bits": 3797443.385368363,
+      "bpp": 0.8047831610294688,
+      "bits_per_symbol": 3.219132644117875,
+      "latent_residual_mse": 0.022673102095723152,
+      "psnr": 32.37569566959378,
+      "msssim": 0.9903320223093033,
+      "symbols": 1179648,
+      "pixels": 4718592,
+      "bits": 5,
+      "alphabet": 32,
+      "step_median": 0.3217855989933014,
+      "at_alphabet_edge_fraction": 0.0025770399305555555
+    },
+    {
+      "arm": "grid_laplace",
+      "setting": 6,
+      "total_ideal_bits": 4981681.065813108,
+      "bpp": 1.0557558411096166,
+      "bits_per_symbol": 4.2230233644384665,
+      "latent_residual_mse": 0.01406216248869896,
+      "psnr": 32.47270363756377,
+      "msssim": 0.9907167355219523,
+      "symbols": 1179648,
+      "pixels": 4718592,
+      "bits": 6,
+      "alphabet": 64,
+      "step_median": 0.15833893418312073,
+      "at_alphabet_edge_fraction": 0.0023863050672743055
+    },
+    {
+      "arm": "grid_laplace",
+      "setting": 7,
+      "total_ideal_bits": 6168697.046381982,
+      "bpp": 1.30731731973902,
+      "bits_per_symbol": 5.22926927895608,
+      "latent_residual_mse": 0.01197725534439087,
+      "psnr": 32.49628456950448,
+      "msssim": 0.9908121907048755,
+      "symbols": 1179648,
+      "pixels": 4718592,
+      "bits": 7,
+      "alphabet": 128,
+      "step_median": 0.07854609191417694,
+      "at_alphabet_edge_fraction": 0.0022939046223958335
+    },
+    {
+      "arm": "unit_step_laplace",
+      "setting": 0.0831279456615448,
+      "total_ideal_bits": 6207176.197249128,
+      "bpp": 1.3154721148277129,
+      "bits_per_symbol": 5.2618884593108515,
+      "latent_residual_mse": 0.0005700967740267515,
+      "psnr": 32.70857026282977,
+      "msssim": 0.9911296533213722,
+      "symbols": 1179648,
+      "pixels": 4718592,
+      "step": 0.0831279456615448,
+      "symbol_span": 391,
+      "distinct_symbols": 397
+    },
+    {
+      "arm": "unit_step_laplace",
+      "setting": 0.1246919184923172,
+      "total_ideal_bits": 5518489.975039056,
+      "bpp": 1.1695204787866922,
+      "bits_per_symbol": 4.678081915146769,
+      "latent_residual_mse": 0.0012777902884408832,
+      "psnr": 32.70286542332573,
+      "msssim": 0.9911098008354505,
+      "symbols": 1179648,
+      "pixels": 4718592,
+      "step": 0.1246919184923172,
+      "symbol_span": 260,
+      "distinct_symbols": 281
+    },
+    {
+      "arm": "unit_step_laplace",
+      "setting": 0.1662558913230896,
+      "total_ideal_bits": 5032758.791740433,
+      "bpp": 1.066580622300134,
+      "bits_per_symbol": 4.266322489200536,
+      "latent_residual_mse": 0.0022635029163211584,
+      "psnr": 32.69477213416463,
+      "msssim": 0.991084159248405,
+      "symbols": 1179648,
+      "pixels": 4718592,
+      "step": 0.1662558913230896,
+      "symbol_span": 195,
+      "distinct_symbols": 218
+    },
+    {
+      "arm": "unit_step_laplace",
+      "setting": 0.2493838369846344,
+      "total_ideal_bits": 4349986.971423808,
+      "bpp": 0.9218824114108207,
+      "bits_per_symbol": 3.687529645643283,
+      "latent_residual_mse": 0.005081056617200375,
+      "psnr": 32.672134378808536,
+      "msssim": 0.9910120185878541,
+      "symbols": 1179648,
+      "pixels": 4718592,
+      "step": 0.2493838369846344,
+      "symbol_span": 130,
+      "distinct_symbols": 157
+    },
+    {
+      "arm": "unit_step_laplace",
+      "setting": 0.3325117826461792,
+      "total_ideal_bits": 3871033.006167044,
+      "bpp": 0.8203788346538636,
+      "bits_per_symbol": 3.2815153386154545,
+      "latent_residual_mse": 0.008989830501377583,
+      "psnr": 32.640189839743535,
+      "msssim": 0.9909039429492421,
+      "symbols": 1179648,
+      "pixels": 4718592,
+      "step": 0.3325117826461792,
+      "symbol_span": 98,
+      "distinct_symbols": 122
+    },
+    {
+      "arm": "unit_step_laplace",
+      "setting": 0.4987676739692688,
+      "total_ideal_bits": 3209622.770629183,
+      "bpp": 0.6802077337114933,
+      "bits_per_symbol": 2.7208309348459734,
+      "latent_residual_mse": 0.020067257806658745,
+      "psnr": 32.54919444346962,
+      "msssim": 0.9905872849954499,
+      "symbols": 1179648,
+      "pixels": 4718592,
+      "step": 0.4987676739692688,
+      "symbol_span": 65,
+      "distinct_symbols": 87
+    },
+    {
+      "arm": "unit_step_laplace",
+      "setting": 0.6650235652923584,
+      "total_ideal_bits": 2747089.561042745,
+      "bpp": 0.5821841687187078,
+      "bits_per_symbol": 2.3287366748748313,
+      "latent_residual_mse": 0.035176604986190796,
+      "psnr": 32.426177830568996,
+      "msssim": 0.9900891607006391,
+      "symbols": 1179648,
+      "pixels": 4718592,
+      "step": 0.6650235652923584,
+      "symbol_span": 49,
+      "distinct_symbols": 65
+    },
+    {
+      "arm": "unit_step_laplace",
+      "setting": 0.9975353479385376,
+      "total_ideal_bits": 2118866.5543072717,
+      "bpp": 0.4490463583855675,
+      "bits_per_symbol": 1.79618543354227,
+      "latent_residual_mse": 0.07447229325771332,
+      "psnr": 32.09274592950874,
+      "msssim": 0.9886013236310747,
+      "symbols": 1179648,
+      "pixels": 4718592,
+      "step": 0.9975353479385376,
+      "symbol_span": 33,
+      "distinct_symbols": 47
+    },
+    {
+      "arm": "unit_step_laplace",
+      "setting": 1.3300471305847168,
+      "total_ideal_bits": 1710539.129789014,
+      "bpp": 0.3625104967305955,
+      "bits_per_symbol": 1.450041986922382,
+      "latent_residual_mse": 0.12109006941318512,
+      "psnr": 31.708089104401697,
+      "msssim": 0.9868498403165076,
+      "symbols": 1179648,
+      "pixels": 4718592,
+      "step": 1.3300471305847168,
+      "symbol_span": 24,
+      "distinct_symbols": 36
+    },
+    {
+      "arm": "unit_step_laplace",
+      "setting": 1.9950706958770752,
+      "total_ideal_bits": 1259348.272775638,
+      "bpp": 0.2668906895903774,
+      "bits_per_symbol": 1.0675627583615095,
+      "latent_residual_mse": 0.22131814062595367,
+      "psnr": 30.923460379829457,
+      "msssim": 0.983503121468756,
+      "symbols": 1179648,
+      "pixels": 4718592,
+      "step": 1.9950706958770752,
+      "symbol_span": 16,
+      "distinct_symbols": 26
+    }
+  ],
+  "curves": {
+    "grid_histogram": [
+      [
+        0.30411598568310205,
+        30.99867036953657
+      ],
+      [
+        0.5456384925807819,
+        32.02187917591136
+      ],
+      [
+        0.794566088337217,
+        32.37569556722509
+      ],
+      [
+        1.0452623346211363,
+        32.47270344124192
+      ],
+      [
+        1.296488142596389,
+        32.49628450857432
+      ]
+    ],
+    "grid_laplace": [
+      [
+        0.33181878967071854,
+        30.99867012068637
+      ],
+      [
+        0.55786260310274,
+        32.02187958311002
+      ],
+      [
+        0.8047831610294688,
+        32.37569566959378
+      ],
+      [
+        1.0557558411096166,
+        32.47270363756377
+      ],
+      [
+        1.30731731973902,
+        32.49628456950448
+      ]
+    ],
+    "unit_step_laplace": [
+      [
+        0.2668906895903774,
+        30.923460379829457
+      ],
+      [
+        0.3625104967305955,
+        31.708089104401697
+      ],
+      [
+        0.4490463583855675,
+        32.09274592950874
+      ],
+      [
+        0.5821841687187078,
+        32.426177830568996
+      ],
+      [
+        0.6802077337114933,
+        32.54919444346962
+      ],
+      [
+        0.8203788346538636,
+        32.640189839743535
+      ],
+      [
+        0.9218824114108207,
+        32.672134378808536
+      ],
+      [
+        1.066580622300134,
+        32.69477213416463
+      ],
+      [
+        1.1695204787866922,
+        32.70286542332573
+      ],
+      [
+        1.3154721148277129,
+        32.70857026282977
+      ]
+    ]
+  },
+  "comparisons": {
+    "grid_laplace_vs_grid_histogram": {
+      "bd_rate_percent": 4.327109708717503,
+      "quality_overlap": [
+        30.99867036953657,
+        32.49628450857432
+      ]
+    },
+    "unit_step_laplace_vs_grid_histogram": {
+      "bd_rate_percent": -21.03123763043284,
+      "quality_overlap": [
+        30.99867036953657,
+        32.49628450857432
+      ]
+    },
+    "grid_histogram_vs_grid_laplace": {
+      "bd_rate_percent": -4.147636909331465,
+      "quality_overlap": [
+        30.99867036953657,
+        32.49628450857432
+      ]
+    },
+    "unit_step_laplace_vs_grid_laplace": {
+      "bd_rate_percent": -24.30657540186686,
+      "quality_overlap": [
+        30.99867012068637,
+        32.49628456950448
+      ]
+    },
+    "grid_histogram_vs_unit_step_laplace": {
+      "bd_rate_percent": 26.632350564148922,
+      "quality_overlap": [
+        30.99867036953657,
+        32.49628450857432
+      ]
+    },
+    "grid_laplace_vs_unit_step_laplace": {
+      "bd_rate_percent": 32.111871712653816,
+      "quality_overlap": [
+        30.99867012068637,
+        32.49628456950448
+      ]
+    }
+  },
+  "finished_utc": "2026-10-31T15:36:02.475200+00:00"
+}

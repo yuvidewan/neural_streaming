@@ -352,6 +352,7 @@ def main(argv: list[str] | None = None) -> int:
             return 1
 
     mc = _load_script("m10h_motion_compensation")
+    grids = _load_script("unit_step_grids")
     ce = _load_script("m10j_conditional_entropy")
     convention = _load_script("m10g_evaluation_convention")
     device = get_device() if args.device == "auto" else torch.device(args.device)
@@ -385,8 +386,9 @@ def main(argv: list[str] | None = None) -> int:
     for bits in args.rate_points:
         alphabet = 2 ** bits
         print(f"\n  collecting M10H symbols at {bits}-bit ...", flush=True)
-        calibration = mc.calibrate_grids(
-            model, train_sequences, bits=bits, mode=args.quant_mode, gop_size=args.gop,
+        calibration = grids.calibrate_grids(
+            mc, model, train_sequences, checkpoint=args.checkpoint, bits=bits,
+            mode=args.quant_mode, gop_size=args.gop,
             block_size=args.block_size, search_range=args.search_range,
             reference_mode="mc", max_frames=args.calibration_frames)
         train_symbols, train_references = ce.collect_training_symbols(
