@@ -48,6 +48,23 @@ blocks that follow are sized by the params' `numel`, which comes from the same
 `calibrate_grids` call either way. So total stream bytes are unchanged, and
 `--verify` checks exactly that against the committed run.
 
+THE UNIT STEP (`--quantizer unit_step`)
+---------------------------------------
+M24 Phase B trains each transform for ONE fixed rounding step (bmshj2018's rule)
+and gets its rate from lambda, so its operating points are not bit depths of one
+model but one point per trained model. With `--quantizer unit_step`, every
+`--checkpoint` is coded at every `--unit-steps` value, and all of them form ONE
+curve - pass the whole lambda sweep at `--unit-steps 1.0` to gate it the way
+PHASE_B.md asks ("gate the sweep as a curve, never a single run").
+
+The quantizer is the same affine grid with `scale = step` and an integer zero
+point (`calibration.unit_step_quantization_params`), so the `.nvct` format, the
+range coder and the per-channel histogram tables are all unchanged and the
+stream stays self-contained. Only the alphabet is fitted on TRAIN, and no
+percentile clipping happens; any TEST value beyond the TRAIN span is clamped and
+counted in the point's `clipped_values`. There is no motion table in this rig, so
+the header's motion id is zero and its motion bits are the search range's own.
+
 Run:
   # reproduce the committed denominator with the lean path (the verification)
   ./.venv/Scripts/python.exe scripts/benchmark_intra_gate.py --verify
@@ -56,6 +73,13 @@ Run:
   ./.venv/Scripts/python.exe scripts/benchmark_intra_gate.py \
       --checkpoint outputs/stage1_vimeo/checkpoints/best.pt \
       --output-dir outputs/benchmarks/intra_gate_stage1
+
+  # gate a Phase B lambda sweep as one curve
+  ./.venv/Scripts/python.exe scripts/benchmark_intra_gate.py --quantizer unit_step \
+      --checkpoint <dir>_unitstep_lambda1e-4/checkpoints/best.pt \
+                   <dir>_unitstep_lambda3e-4/checkpoints/best.pt \
+                   <dir>_unitstep_lambda1e-3/checkpoints/best.pt \
+      --output-dir outputs/benchmarks/intra_gate_phase_b
 """
 
 from __future__ import annotations
@@ -71,9 +95,17 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import torch
 
-from nvc.compression.codec import decode_payload_to_latent, encode_latent_to_payload
+from nvc.compression.calibration import unit_step_quantization_params
+from nvc.compression.codec import (
+    decode_payload_to_latent,
+    encode_latent_to_payload,
+    latent_to_symbols,
+)
+from nvc.compression.entropy_model import EmpiricalEntropyModel
+from nvc.compression.quantization import count_clipped
 from nvc.evaluation.sequences import discover_sequences
 from nvc.training.checkpoint import load_model_from_checkpoint
 from nvc.utils.config import load_default_config
@@ -85,7 +117,7 @@ from nvc.video.container import (
     TemporalStreamReader,
     TemporalStreamWriter,
 )
-from nvc.video.motion import deterministic_kernels
+from nvc.video.motion import deterministic_kernels, motion_alphabet_bits
 
 # The committed intra-only run, whose x264 all-intra curve is the gate's
 # reference and whose NVC totals are what --verify reproduces.
@@ -120,14 +152,21 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
     )
     parser.add_argument("--manifest", type=Path,
                         default=defaults.processed_data_dir / "manifest.json")
-    parser.add_argument("--checkpoint", type=Path, default=DEPLOYED_CHECKPOINT,
+    parser.add_argument("--checkpoint", type=Path, nargs="+", default=DEPLOYED_CHECKPOINT,
                         help="Any checkpoint; the architecture comes from the checkpoint itself. "
                              "The default is the deployed M10F model, so --verify compares like "
-                             "with like.")
+                             "with like. Several only with --quantizer unit_step, one point "
+                             "each.")
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/benchmarks/intra_gate"))
     parser.add_argument("--output-name", type=str, default="intra_gate.json")
+    parser.add_argument("--quantizer", choices=("percentile", "unit_step"), default="percentile",
+                        help="percentile: the deployed grid, one point per --rate-points depth. "
+                             "unit_step: M24 Phase B's fixed-step rounding, one point per "
+                             "checkpoint and --unit-steps value.")
     parser.add_argument("--rate-points", type=int, nargs="+", default=[5, 4, 3],
-                        help="Quantizer bit depths, one operating point each.")
+                        help="Quantizer bit depths, one operating point each (percentile).")
+    parser.add_argument("--unit-steps", type=float, nargs="+", default=[1.0],
+                        help="Rounding steps (unit_step). 1.0 is the step Phase B trains at.")
     parser.add_argument("--calibration-frames", type=int, default=400)
     parser.add_argument("--block-size", type=int, default=16)
     parser.add_argument("--search-range", type=int, default=16)
@@ -170,6 +209,44 @@ def intra_rig(mc, model, train_sequences, *, bits: int, calibration_frames: int,
     }
 
 
+@torch.no_grad()
+def unit_step_rig(model, train_sequences, *, step: float,
+                  calibration_frames: int) -> dict[str, Any]:
+    """The unit-step counterpart of `intra_rig`: the alphabet and the per-channel
+    tables, both fitted on the first `calibration_frames` TRAIN frames.
+
+    There are no P-frames to fit a residual grid or a motion table on, so the
+    residual slot repeats the intra params (the header gives both one bit depth)
+    and the motion slot is empty.
+    """
+    model.eval()
+    device = next(model.parameters()).device
+    latents, seen = [], 0
+    for sequence in train_sequences:
+        frames = sequence.load_frames()
+        for index in range(min(frames.shape[0], calibration_frames - seen)):
+            latents.append(model.encode(frames[index:index + 1].to(device)).cpu())
+        seen = len(latents)
+        if seen >= calibration_frames:
+            break
+    stack = torch.cat(latents, dim=0)
+    params = unit_step_quantization_params(stack, step=step)
+    symbols = np.stack([latent_to_symbols(stack[i:i + 1], params).reshape(stack.shape[1], -1)
+                        for i in range(stack.shape[0])])
+    entropy_model = EmpiricalEntropyModel.from_symbols(
+        symbols, bits=params.bits, num_tables=stack.shape[1])
+    return {
+        "bits": params.bits,
+        "intra_params": params,
+        "intra_entropy_model": entropy_model,
+        "residual_params": params,
+        "residual_entropy_model": entropy_model,
+        "motion_entropy_model": None,
+        "provenance": {"quantizer": "unit_step", "step": step, "split": "train",
+                       "calibration_frames": int(stack.shape[0])},
+    }
+
+
 def encode_intra_sequence(model, frames: torch.Tensor, rig: dict[str, Any], path: Path,
                           *, block_size: int, search_range: int) -> dict[str, Any]:
     """Write every frame of `frames` as an I-frame to a `.nvct` v2 stream.
@@ -185,6 +262,7 @@ def encode_intra_sequence(model, frames: torch.Tensor, rig: dict[str, Any], path
     intra_params = rig["intra_params"]
     intra_entropy_model = rig["intra_entropy_model"]
     latent_shape = tuple(model.encode(frames[0:1].to(device)).shape[1:])
+    motion_model = rig["motion_entropy_model"]
 
     header = TemporalStreamHeader(
         gop_size=1, quantization_bits=intra_params.bits,
@@ -195,18 +273,23 @@ def encode_intra_sequence(model, frames: torch.Tensor, rig: dict[str, Any], path
         num_intra_quantization_params=intra_params.scale.numel(),
         num_residual_quantization_params=rig["residual_params"].scale.numel(),
         block_size=block_size, search_range=search_range,
-        motion_bits=rig["motion_entropy_model"].bits, reference_mode="mc",
+        motion_bits=(motion_model.bits if motion_model is not None
+                     else motion_alphabet_bits(search_range)),
+        reference_mode="mc",
         intra_entropy_model_id=intra_entropy_model.model_id(),
         residual_entropy_model_id=rig["residual_entropy_model"].model_id(),
-        motion_entropy_model_id=rig["motion_entropy_model"].model_id())
+        motion_entropy_model_id=(motion_model.model_id() if motion_model is not None
+                                 else bytes(8)))
 
     writer = TemporalStreamWriter(path, header, intra_params, rig["residual_params"])
     reconstructions = []
+    clipped = 0
     completed = False
     try:
         with deterministic_kernels():
             for index in range(frames.shape[0]):
                 latent = model.encode(frames[index:index + 1].to(device))
+                clipped += count_clipped(latent, intra_params.to(latent.device))["clipped_total"]
                 payload, _ = encode_latent_to_payload(
                     latent, params=intra_params, entropy_model=intra_entropy_model)
                 decoded, _ = decode_payload_to_latent(
@@ -223,7 +306,7 @@ def encode_intra_sequence(model, frames: torch.Tensor, rig: dict[str, Any], path
                 writer.close()
             except Exception:
                 pass
-    return {"reconstructions": torch.cat(reconstructions, dim=0)}
+    return {"reconstructions": torch.cat(reconstructions, dim=0), "clipped_values": clipped}
 
 
 def decode_intra_sequence(model, path: Path, rig: dict[str, Any]) -> torch.Tensor:
@@ -283,8 +366,18 @@ def main(argv: list[str] | None = None) -> int:
     parity = _load_script("benchmark_parity")
     mc = _load_script("m10h_motion_compensation")
 
-    model, checkpoint = load_model_from_checkpoint(args.checkpoint, device=device)
-    model.eval()
+    checkpoints = args.checkpoint if isinstance(args.checkpoint, list) else [args.checkpoint]
+    if args.quantizer == "percentile" and len(checkpoints) > 1:
+        raise SystemExit("several --checkpoint values need --quantizer unit_step: a percentile "
+                         "curve is the bit depths of ONE transform")
+    if args.verify and args.quantizer != "percentile":
+        raise SystemExit("--verify reproduces the committed percentile run; there is nothing "
+                         "for it to check under --quantizer unit_step")
+    loaded = []
+    for path in checkpoints:
+        unit_model, unit_checkpoint = load_model_from_checkpoint(path, device=device)
+        loaded.append((path, unit_model.eval(), unit_checkpoint))
+    _, model, checkpoint = loaded[0]
     architecture = checkpoint.get("architecture", "BaselineAutoencoder")
 
     sequences = discover_sequences(args.manifest, split="test",
@@ -298,10 +391,15 @@ def main(argv: list[str] | None = None) -> int:
         "stage": "PARITY_ROADMAP Stage 1 gate - intra-only BD-rate",
         "started_utc": datetime.now(timezone.utc).isoformat(),
         "configuration": {
-            "checkpoint": str(args.checkpoint), "architecture": architecture,
+            "checkpoint": (str(checkpoints[0]) if len(checkpoints) == 1
+                           else [str(c) for c in checkpoints]),
+            "architecture": architecture,
             "model_config": checkpoint.get("model_config"),
             "parameters": model.num_parameters(),
-            "rate_points": args.rate_points, "gop": 1,
+            "quantizer": args.quantizer,
+            "rate_points": args.rate_points if args.quantizer == "percentile" else None,
+            "unit_steps": args.unit_steps if args.quantizer == "unit_step" else None,
+            "gop": 1,
             "calibration_gop": CALIBRATION_GOP,
             "calibration_frames": args.calibration_frames,
             "block_size": args.block_size, "search_range": args.search_range,
@@ -317,33 +415,59 @@ def main(argv: list[str] | None = None) -> int:
     }
 
     print("=" * 100)
-    print(f"INTRA-ONLY GATE - {architecture}, {model.num_parameters():,} parameters")
+    print(f"INTRA-ONLY GATE - {architecture}, {model.num_parameters():,} parameters, "
+          f"{args.quantizer} quantizer")
     print(f"{len(sequences)} sequences, {report['dataset']['frames']} frames, "
           f"primary convention: {parity.PRIMARY_CONVENTION}")
     print("=" * 100, flush=True)
 
+    def operating_points():
+        """(model, rig, label, setting, extra) for every point on the curve."""
+        if args.quantizer == "percentile":
+            for bits in args.rate_points:
+                rig = intra_rig(mc, model, train_sequences, bits=bits,
+                                calibration_frames=args.calibration_frames,
+                                block_size=args.block_size, search_range=args.search_range)
+                yield model, rig, f"intra/{bits}bit", f"{bits}bit", {"bits": bits}
+            return
+        for path, unit_model, unit_checkpoint in loaded:
+            trained = unit_checkpoint.get("extra") or {}
+            for step in args.unit_steps:
+                rig = unit_step_rig(unit_model, train_sequences, step=step,
+                                    calibration_frames=args.calibration_frames)
+                tag = f"{path.parent.parent.name}/{path.stem}/step{step:g}"
+                yield unit_model, rig, f"intra/unit_step/{tag}", f"step{step:g}", {
+                    "bits": rig["bits"], "quantizer": "unit_step", "step": step,
+                    "checkpoint": str(path),
+                    # What the model was TRAINED for, so a point coded at a step it
+                    # never saw (or a percentile-trained model) reads as such.
+                    "trained_quantizer": trained.get("quantizer", "percentile"),
+                    "trained_unit_step": trained.get("unit_step"),
+                    "rate_lambda": trained.get("rate_lambda"),
+                }
+
     stream_dir = Path(tempfile.mkdtemp(prefix="intra_gate_"))
-    for bits in args.rate_points:
-        rig = intra_rig(mc, model, train_sequences, bits=bits,
-                        calibration_frames=args.calibration_frames,
-                        block_size=args.block_size, search_range=args.search_range)
-        rows, exact = [], True
+    for point_model, rig, label, setting, extra in operating_points():
+        if label in report["points"]:
+            raise SystemExit(f"two operating points share the label {label!r}")
+        rows, exact, clipped = [], True, 0
         for sequence in sequences:
             frames = frame_cache[sequence.sequence_id]
-            path = stream_dir / f"{bits}bit_{sequence.sequence_id}.nvct"
+            path = stream_dir / f"{setting}_{sequence.sequence_id}.nvct"
             started = time.perf_counter()
-            encoded = encode_intra_sequence(model, frames, rig, path,
+            encoded = encode_intra_sequence(point_model, frames, rig, path,
                                             block_size=args.block_size,
                                             search_range=args.search_range)
             encode_seconds = time.perf_counter() - started
             size = path.stat().st_size
             started = time.perf_counter()
-            decoded = decode_intra_sequence(model, path, rig)
+            decoded = decode_intra_sequence(point_model, path, rig)
             decode_seconds = time.perf_counter() - started
             path.unlink()
             # The decoder must reach the encoder's reconstruction from the file
             # alone; anything less means the stream is not self-contained.
             exact &= torch.equal(decoded, encoded["reconstructions"])
+            clipped += encoded["clipped_values"]
             scores = parity.score_frames(
                 parity.to_uint8_frames(decoded), frames, device=device)
             rows.append({"sequence": sequence.sequence_id, "bytes": size,
@@ -352,14 +476,15 @@ def main(argv: list[str] | None = None) -> int:
                          "decode_seconds": decode_seconds, **scores})
 
         point = parity.summarize_point(
-            f"intra/{bits}bit", "nvc_intra", f"{bits}bit", rows,
-            extra={"bits": bits, "decode_reconstruction_exact": exact,
+            label, "nvc_intra", setting, rows,
+            extra={**extra, "decode_reconstruction_exact": exact, "clipped_values": clipped,
                    "calibration_provenance": rig["provenance"]})
         report["points"][point["label"]] = point
         quality = point["quality"][parity.PRIMARY_CONVENTION]
-        print(f"  {bits}-bit  {point['total_bytes']:>10,} B  bpp {point['bpp']:.4f}  "
+        name = f"{rig['bits']}-bit" if args.quantizer == "percentile" else label
+        print(f"  {name}  {point['total_bytes']:>10,} B  bpp {point['bpp']:.4f}  "
               f"PSNR {quality['psnr']:.3f}  MS-SSIM {quality['msssim']:.4f}  "
-              f"decode-exact={exact}", flush=True)
+              f"clipped={clipped}  decode-exact={exact}", flush=True)
 
     nvc_points = list(report["points"].values())
     report["comparisons"] = {}
