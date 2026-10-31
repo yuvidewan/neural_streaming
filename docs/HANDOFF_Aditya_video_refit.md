@@ -137,6 +137,36 @@ bottleneck is P-frame coding, and we stop and report before refitting the other 
 Repeat steps 1-4 for lambda 1e-4 and 1e-3 (about three hours each) and measure all three together,
 as one curve (each model one point, or three points each if residuals stay on the grid).
 
+## Small, optional: the proof the native motion search is waiting for
+
+Yuvraj's native AVX2 block-motion search (`0d2b795`, branch `c-motion-search`, 30 Sep) makes CPU
+encoding 4.8x faster (463 -> 96 ms/frame) and is meant to be bit-identical. It was never merged
+because its own merge gate (2) in `C_REWRITE_REPORT.md` was never run: byte-identical streams on all
+of DAVIS TEST, which needs the codec bundles (`outputs/codec_bundles/*.pt`), and only you have
+those. Everything else is done: full pytest, 720 real DAVIS pairs with 0 mismatches, and 34 tests
+including six deliberately broken kernels that must be caught.
+
+It does not block the refit (on CUDA the encoder keeps the PyTorch search either way), so do it
+whenever there's a gap. On a checkout of `c-motion-search` (it builds with the same `gcc` the range
+coder already uses):
+
+```powershell
+git fetch origin
+git switch c-motion-search
+$env:NVC_MOTION_BACKEND="torch";  .venv/Scripts/python.exe scripts/verify_promoted_codec.py --device cpu --output outputs/codec_bundles/verification_torch.json
+$env:NVC_MOTION_BACKEND="native"; .venv/Scripts/python.exe scripts/verify_promoted_codec.py --device cpu --output outputs/codec_bundles/verification_native.json
+Remove-Item Env:NVC_MOTION_BACKEND
+git switch master
+```
+
+- **`--device cpu` is essential.** On CUDA tensors the dispatcher uses the PyTorch path, so a GPU
+  run would pass without ever executing the native kernel.
+- Both runs must report **54/54** byte-identical. The separate `--output` names keep the committed
+  `verification.json` untouched.
+- If both pass, tell Yuvraj and he'll bring `0d2b795` onto master. If the native run reports any
+  mismatch, don't debug it, just send him the JSON: decoding never depends on motion search, so
+  nothing shipped is affected.
+
 ## Later, not now (Yuvraj, on JupyterLab)
 
 Two more lambdas (3e-5 and 3e-3) to widen the intra curve and settle the 32.6 dB ceiling question,
@@ -144,8 +174,9 @@ then gating all five with `--quantizer unit_step`. Not blocking the refit.
 
 ## Repo state
 
-- `c-motion-search` and `master` both carry the unit-step gate (`55e875c` / `ab69244`) and the
-  trainer resume fix (`c0c4cbd` / `a72508a`).
+- **We work on `master` only from now on.** It carries the unit-step gate (`ab69244`) and the
+  trainer resume fix (`a72508a`). `c-motion-search` is retired except for the native motion search
+  above, its one commit not on master.
 - Uncommitted on Yuvraj's side, unrelated: demo code (`src/nvc/demo/`, `scripts/*_demo.py`, their
   tests) and paper material in `docs/`.
 - `tests/test_m18_intra_quantizer.py::test_m18_scripts_do_not_modify_any_production_source` fails
