@@ -38,6 +38,7 @@ from nvc.demo.bundles import (
     sort_bundles,
 )
 from nvc.demo.pipeline import process_clip
+from nvc.demo.scoreboard import load_scoreboard
 from nvc.video.bundle import BundleError
 from nvc.video.codec import VideoCodec
 
@@ -179,6 +180,13 @@ def create_app(repo_root: str | Path, *, demo_dir: str | Path | None = None,
             "clip_size": clip_store.CLIP_SIZE,
             "video_suffixes": list(clip_store.VIDEO_SUFFIXES),
         }
+
+    @app.get("/api/scoreboard")
+    def scoreboard() -> dict[str, Any]:
+        board = load_scoreboard(repo_root)
+        if board is None:
+            raise HTTPException(404, "no committed intra benchmark report in this checkout")
+        return board
 
     @app.get("/api/clips")
     def clips() -> list[dict[str, Any]]:
