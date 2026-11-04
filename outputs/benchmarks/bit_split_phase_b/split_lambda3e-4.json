@@ -1,0 +1,23 @@
+{
+  "8bit": {
+    "i_frame_bytes": 419401.0,
+    "i_frames": 75.0,
+    "p_motion_bytes": 162020.0,
+    "p_residual_bytes": 2137903.0,
+    "p_side_bytes": 0.0,
+    "p_frames": 644.0,
+    "total_bytes": 2735515.0,
+    "framing_bytes": 16191.0,
+    "share": {
+      "i_frame": 0.15331701708818998,
+      "p_motion": 0.059228335432267784,
+      "p_residual": 0.7815358351169707,
+      "p_side": 0.0,
+      "framing": 0.005918812362571582
+    },
+    "bytes_per_i_frame": 5592.013333333333,
+    "bytes_per_p_frame": 3571.30900621118,
+    "i_frame_psnr": 32.620565795898436,
+    "p_frame_psnr": 32.37005084493886
+  }
+}
