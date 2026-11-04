@@ -157,13 +157,14 @@ def encode_frame_recalibrated(model, assign_codebook, coding_codebook, reference
     device = reference.device
     started = time.perf_counter()
     target = torch.from_numpy(np.asarray(symbols, dtype=np.int64))[None].to(device)
-    rows = ma._rows(model.log_probabilities(reference, model.planes(target, zero.to(device))))
+    log_probabilities = model.log_probabilities(reference, model.planes(target, zero.to(device)))
     if device.type == "cuda":
         torch.cuda.synchronize()
     network = time.perf_counter() - started
 
     started = time.perf_counter()
-    _, table_index = ma._tables_for(rows, assign_codebook, mk)
+    # in the decoder's own group slices - see m11_ar_entropy.assign_by_group
+    table_index = ma.assign_by_group(assign_codebook, log_probabilities, model.group_size)
     tables = time.perf_counter() - started
 
     flat = np.asarray(symbols, dtype=np.int64).reshape(-1)

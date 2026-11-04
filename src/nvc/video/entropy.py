@@ -245,20 +245,39 @@ def _rows(log_probabilities: torch.Tensor) -> torch.Tensor:
     return probabilities.permute(0, 2, 3, 1).reshape(-1, alphabet)
 
 
+def assign_by_group(assign_codebook: SharedCodebook, log_probabilities: torch.Tensor,
+                    group: int) -> np.ndarray:
+    """Prototype assignment for every channel, one channel GROUP at a time.
+
+    `decode_residual_frame` can only assign group by group, and `assign_tensor`'s
+    GEMM is not guaranteed to give the same float costs for a whole-frame batch
+    as for a group-sized one, so a near-tie between two prototypes can resolve
+    differently on the two sides and break decoding. Assigning in the decoder's
+    own slices makes them identical by construction; wherever the whole-frame
+    assignment already agreed, the bytes are unchanged.
+    """
+    channels = log_probabilities.shape[1]
+    return np.concatenate([
+        assign_codebook.assign_tensor(_rows(log_probabilities[:, start:start + group]))
+        for start in range(0, channels, group)])
+
+
 @torch.no_grad()
 def encode_residual_frame(model: ChannelContextEntropyModel, assign_codebook: SharedCodebook,
                           coding_codebook: SharedCodebook, reference: torch.Tensor,
                           symbols: np.ndarray, zero: torch.Tensor) -> bytes:
     """Code one P-frame's residual symbols.
 
-    The encoder knows every symbol, so one network pass predicts every channel.
-    Prototype ASSIGNMENT uses `assign_codebook`; the coder reads the (M13
-    recalibrated) `coding_codebook` tables. The two are never swapped.
+    The encoder knows every symbol, so one network pass predicts every channel;
+    prototypes are then assigned group by group, as the decoder must
+    (`assign_by_group`). Prototype ASSIGNMENT uses `assign_codebook`; the coder
+    reads the (M13 recalibrated) `coding_codebook` tables. The two are never
+    swapped.
     """
     device = reference.device
     target = torch.from_numpy(np.asarray(symbols, dtype=np.int64))[None].to(device)
-    rows = _rows(model.log_probabilities(reference, model.planes(target, zero.to(device))))
-    table_index = assign_codebook.assign_tensor(rows)
+    log_probabilities = model.log_probabilities(reference, model.planes(target, zero.to(device)))
+    table_index = assign_by_group(assign_codebook, log_probabilities, model.group_size)
     flat = np.asarray(symbols, dtype=np.int64).reshape(-1)
     return encode_symbols(flat, coding_codebook.cumulative, table_index)
 

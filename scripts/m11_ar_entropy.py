@@ -358,6 +358,22 @@ def _tables_for(rows: torch.Tensor, codebook, mk):
     return None, codebook.assign_tensor(rows)
 
 
+def assign_by_group(codebook, log_probabilities: torch.Tensor, group: int) -> np.ndarray:
+    """Prototype assignment for every channel, one channel GROUP at a time.
+
+    The decoder can only assign group by group, and `assign_tensor`'s GEMM is
+    not guaranteed to give the same float costs for a 16,384-row batch as for a
+    group-sized one, so a near-tie between two prototypes can resolve
+    differently and break the round trip (seen once in 144 frames at 8 bits).
+    Assigning in the decoder's own slices makes the two sides identical by
+    construction; wherever the one-batch assignment already agreed, the bytes
+    are unchanged.
+    """
+    channels = log_probabilities.shape[1]
+    return np.concatenate([codebook.assign_tensor(_rows(log_probabilities[:, start:start + group]))
+                           for start in range(0, channels, group)])
+
+
 @torch.no_grad()
 def encode_frame(model, reference: torch.Tensor, symbols: np.ndarray, zero: torch.Tensor, *,
                  bits: int, codebook=None, timings: dict | None = None) -> tuple[bytes, float]:
@@ -366,17 +382,18 @@ def encode_frame(model, reference: torch.Tensor, symbols: np.ndarray, zero: torc
     device = reference.device
     started = time.perf_counter()
     target = torch.from_numpy(np.asarray(symbols, dtype=np.int64))[None].to(device)
-    rows = _rows(model.log_probabilities(reference, model.planes(target, zero.to(device))))
+    log_probabilities = model.log_probabilities(reference, model.planes(target, zero.to(device)))
     if device.type == "cuda":
         torch.cuda.synchronize()
     network = time.perf_counter() - started
 
     started = time.perf_counter()
-    cumulative, assigned = _tables_for(rows, codebook, mk)
     if codebook is None:
+        cumulative, _ = _tables_for(_rows(log_probabilities), None, mk)
         table_index = np.arange(cumulative.shape[0], dtype=np.int64)
     else:
-        cumulative, table_index = codebook.cumulative, assigned
+        cumulative = codebook.cumulative
+        table_index = assign_by_group(codebook, log_probabilities, model.group_size)
     tables = time.perf_counter() - started
 
     flat = np.asarray(symbols, dtype=np.int64).reshape(-1)
