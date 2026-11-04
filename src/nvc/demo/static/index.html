@@ -8,120 +8,205 @@
 </head>
 <body>
 <header class="topbar">
-  <div class="brand">
+  <a class="brand" href="#" aria-label="Home">
     <span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
     <div>
       <h1>Neural video codec</h1>
       <p>Real-Time Neural Video Compression and Streaming Engine</p>
     </div>
-  </div>
-  <div class="controls">
-    <label>Clip
-      <select id="clip-select" aria-label="Clip"></select>
-    </label>
-    <label>Codec
-      <select id="bundle-select" aria-label="Codec"></select>
-    </label>
-    <button id="upload-button" class="primary" type="button">Upload a clip</button>
-    <input id="upload-input" type="file" accept="video/*,.mp4,.mov,.avi,.mkv,.webm,.m4v" hidden>
-  </div>
+  </a>
 </header>
 
 <main>
-  <div id="standin-banner" class="banner warn" hidden></div>
-  <div id="message" class="banner" hidden></div>
-
-  <section id="job" class="job" hidden aria-live="polite">
-    <div class="job-row">
-      <strong id="job-title">Working</strong>
-      <span id="job-detail"></span>
+  <!-- Home: three ways in. Each page runs only while it is open (see app.js, router). -->
+  <section id="page-home" class="page home">
+    <h2 class="home-title">What would you like to see?</h2>
+    <div class="home-cards">
+      <a class="home-card" href="#results">
+        <span class="home-num">1</span>
+        <h3>Results vs H.264</h3>
+        <p>How our codec compares with H.264, and how each model we built got it there.</p>
+      </a>
+      <a class="home-card" href="#demo">
+        <span class="home-num">2</span>
+        <h3>Live codec demo</h3>
+        <p>Play a clip three ways side by side: original, our codec, and H.264 at the same bitrate.</p>
+      </a>
+      <a class="home-card" href="#hardware">
+        <span class="home-num">3</span>
+        <h3>Hardware accelerator</h3>
+        <p>An interactive 3D view of NVC-ACCEL, the chip we designed to run this codec.</p>
+      </a>
     </div>
-    <div class="bar"><div id="job-bar"></div></div>
   </section>
 
-  <section id="pending" class="pending" hidden>
-    <p id="pending-text"></p>
-    <button id="pending-button" class="primary" type="button">Encode now</button>
-  </section>
-
-  <div id="viewer" hidden>
-    <section class="panes" aria-label="Side by side comparison">
-      <figure class="pane">
-        <canvas id="pane-original" width="256" height="256"></canvas>
-        <figcaption>
-          <h2>Original</h2>
-          <p id="meta-original"></p>
-        </figcaption>
-      </figure>
-      <figure class="pane accent">
-        <canvas id="pane-nvc" width="256" height="256"></canvas>
-        <figcaption>
-          <h2>Neural codec</h2>
-          <p id="meta-nvc"></p>
-          <p class="sub" id="frame-nvc"></p>
-        </figcaption>
-      </figure>
-      <figure class="pane">
-        <canvas id="pane-h264" width="256" height="256"></canvas>
-        <figcaption>
-          <h2>H.264 at the same bitrate</h2>
-          <p id="meta-h264"></p>
-          <p class="sub" id="frame-h264"></p>
-        </figcaption>
-      </figure>
-    </section>
-
-    <section class="transport">
-      <button id="play" type="button" aria-label="Play or pause">Play</button>
-      <button id="prev" type="button" aria-label="Previous frame">&#9664;</button>
-      <button id="next" type="button" aria-label="Next frame">&#9654;</button>
-      <input id="scrub" type="range" min="0" max="0" value="0" step="1" aria-label="Frame">
-      <span id="frame-label" class="frame-label"></span>
-    </section>
-
-    <section class="stats" id="stats"></section>
-
-    <section class="block">
-      <div class="block-head">
-        <h2>Bytes per frame</h2>
-        <div class="legend">
-          <span><i class="sw sw-i"></i>I-frame</span>
-          <span><i class="sw sw-p"></i>P-frame residual</span>
-          <span><i class="sw sw-m"></i>Motion vectors</span>
+  <section id="page-results" class="page" hidden>
+    <div class="page-head"><a class="back" href="#">&larr; Back</a><h2>Results vs H.264</h2></div>
+    <section id="scoreboard" class="scoreboard" aria-label="Results against H.264">
+      <div class="score-head">
+        <div class="score-kpi">
+          <span id="score-number" class="score-number"></span>
+          <span class="score-unit">bits vs H.264<br>at equal quality</span>
+        </div>
+        <div>
+          <h2 id="score-title"></h2>
+          <p id="score-sub" class="hint"></p>
         </div>
       </div>
-      <canvas id="bars" height="150"></canvas>
-      <p class="hint">Click a bar to jump to that frame.</p>
+      <div class="score-charts">
+        <figure>
+          <svg id="score-curve" viewBox="0 0 520 320" role="img" aria-labelledby="score-curve-cap"></svg>
+          <figcaption id="score-curve-cap"><h3>Quality for the bits spent</h3>
+            <p>Further left at the same height = fewer bits for the same picture quality.</p></figcaption>
+        </figure>
+        <figure>
+          <svg id="score-bars" viewBox="0 0 520 320" role="img" aria-labelledby="score-bars-cap"></svg>
+          <figcaption id="score-bars-cap"><h3>Extra bits needed vs H.264 (BD-rate)</h3>
+            <p>Each model we built, oldest first. Below zero means we need fewer bits than H.264.</p></figcaption>
+        </figure>
+      </div>
+    </section>
+  </section>
+
+  <section id="page-demo" class="page" hidden>
+    <div class="page-head">
+      <a class="back" href="#">&larr; Back</a><h2>Live codec demo</h2>
+    <div class="controls demo-controls">
+      <label>Clip
+        <select id="clip-select" aria-label="Clip"></select>
+      </label>
+      <label>Codec
+        <select id="bundle-select" aria-label="Codec"></select>
+      </label>
+      <button id="upload-button" class="primary" type="button">Upload a clip</button>
+      <input id="upload-input" type="file" accept="video/*,.mp4,.mov,.avi,.mkv,.webm,.m4v" hidden>
+    </div>
+    </div>
+    <div id="standin-banner" class="banner warn" hidden></div>
+    <div id="message" class="banner" hidden></div>
+    <section id="job" class="job" hidden aria-live="polite">
+      <div class="job-row">
+        <strong id="job-title">Working</strong>
+        <span id="job-detail"></span>
+      </div>
+      <div class="bar"><div id="job-bar"></div></div>
     </section>
 
-    <section class="block">
+    <section id="pending" class="pending" hidden>
+      <p id="pending-text"></p>
+      <button id="pending-button" class="primary" type="button">Encode now</button>
+    </section>
+
+    <div id="viewer" hidden>
+      <section class="panes" aria-label="Side by side comparison">
+        <figure class="pane">
+          <canvas id="pane-original" width="256" height="256"></canvas>
+          <figcaption>
+            <h2>Original</h2>
+            <p id="meta-original"></p>
+          </figcaption>
+        </figure>
+        <figure class="pane accent">
+          <canvas id="pane-nvc" width="256" height="256"></canvas>
+          <figcaption>
+            <h2>Neural codec</h2>
+            <p id="meta-nvc"></p>
+            <p class="sub" id="frame-nvc"></p>
+          </figcaption>
+        </figure>
+        <figure class="pane">
+          <canvas id="pane-h264" width="256" height="256"></canvas>
+          <figcaption>
+            <h2>H.264 at the same bitrate</h2>
+            <p id="meta-h264"></p>
+            <p class="sub" id="frame-h264"></p>
+          </figcaption>
+        </figure>
+      </section>
+
+      <section class="transport">
+        <button id="play" type="button" aria-label="Play or pause">Play</button>
+        <button id="prev" type="button" aria-label="Previous frame">&#9664;</button>
+        <button id="next" type="button" aria-label="Next frame">&#9654;</button>
+        <input id="scrub" type="range" min="0" max="0" value="0" step="1" aria-label="Frame">
+        <span id="frame-label" class="frame-label"></span>
+      </section>
+
+      <section class="stats" id="stats"></section>
+
+      <section class="block">
+        <div class="block-head">
+          <h2>Bytes per frame</h2>
+          <div class="legend">
+            <span><i class="sw sw-i"></i>I-frame</span>
+            <span><i class="sw sw-p"></i>P-frame residual</span>
+            <span><i class="sw sw-m"></i>Motion vectors</span>
+          </div>
+        </div>
+        <canvas id="bars" height="150"></canvas>
+        <p class="hint">Click a bar to jump to that frame.</p>
+      </section>
+
+      <section class="block">
+        <div class="block-head">
+          <h2 id="inside-title">Inside this frame</h2>
+          <p id="inside-summary" class="hint"></p>
+        </div>
+        <div class="steps">
+          <figure>
+            <canvas id="step-motion" width="256" height="256"></canvas>
+            <figcaption><h3>1. Motion</h3><p>Where each 16&times;16 block was found in the previous decoded frame.</p></figcaption>
+          </figure>
+          <figure>
+            <canvas id="step-prediction" width="256" height="256"></canvas>
+            <figcaption><h3>2. Prediction</h3><p>The previous frame, shifted block by block. Nothing is sent for this picture.</p></figcaption>
+          </figure>
+          <figure>
+            <canvas id="step-residual" width="256" height="256"></canvas>
+            <figcaption><h3>3. Residual</h3><p>How far the prediction missed in latent space. Brighter costs more bits.</p></figcaption>
+          </figure>
+          <figure>
+            <canvas id="step-error" width="256" height="256"></canvas>
+            <figcaption><h3>4. Error</h3><p>Difference between the decoded frame and the original, amplified 8&times;.</p></figcaption>
+          </figure>
+        </div>
+      </section>
+    </div>
+
+    <section id="empty" class="pending" hidden>
+      <p id="empty-text"></p>
+    </section>
+  </section>
+
+  <section id="page-hardware" class="page" hidden>
+    <div class="page-head"><a class="back" href="#">&larr; Back</a><h2>Hardware accelerator</h2></div>
+    <section class="accel" aria-label="Hardware accelerator">
       <div class="block-head">
-        <h2 id="inside-title">Inside this frame</h2>
-        <p id="inside-summary" class="hint"></p>
+        <div>
+          <h2>The hardware accelerator we designed: NVC-ACCEL</h2>
+          <p class="hint">A chip layout for running this codec in real time. Drag to rotate, scroll to zoom,
+            click a block for its details.</p>
+        </div>
+        <div class="accel-controls">
+          <button type="button" data-accel-mode="encode">Encode</button>
+          <button type="button" data-accel-mode="decode">Decode</button>
+          <button type="button" id="accel-pause">Pause</button>
+          <button type="button" id="accel-reset">Reset view</button>
+          <button type="button" id="accel-about">About the chip</button>
+        </div>
       </div>
-      <div class="steps">
-        <figure>
-          <canvas id="step-motion" width="256" height="256"></canvas>
-          <figcaption><h3>1. Motion</h3><p>Where each 16&times;16 block was found in the previous decoded frame.</p></figcaption>
-        </figure>
-        <figure>
-          <canvas id="step-prediction" width="256" height="256"></canvas>
-          <figcaption><h3>2. Prediction</h3><p>The previous frame, shifted block by block. Nothing is sent for this picture.</p></figcaption>
-        </figure>
-        <figure>
-          <canvas id="step-residual" width="256" height="256"></canvas>
-          <figcaption><h3>3. Residual</h3><p>How far the prediction missed in latent space. Brighter costs more bits.</p></figcaption>
-        </figure>
-        <figure>
-          <canvas id="step-error" width="256" height="256"></canvas>
-          <figcaption><h3>4. Error</h3><p>Difference between the decoded frame and the original, amplified 8&times;.</p></figcaption>
-        </figure>
+      <div class="accel-body">
+        <div class="accel-stage">
+          <canvas id="accel-canvas" aria-label="3D view of the accelerator floorplan"></canvas>
+          <p id="accel-mode-note" class="accel-note"></p>
+        </div>
+        <aside id="accel-info" class="accel-info" aria-live="polite"></aside>
       </div>
+      <p class="hint">Tags: <span class="tag tag-measured">MEASURED</span> a result in this repo,
+        <span class="tag tag-derived">DERIVED</span> arithmetic on measured facts,
+        <span class="tag tag-assumed">ASSUMED</span> an estimate for hardware not yet built.
+        Source: <code>hardware/ARCHITECTURE.md</code>.</p>
     </section>
-  </div>
-
-  <section id="empty" class="pending" hidden>
-    <p id="empty-text"></p>
   </section>
 </main>
 
@@ -130,5 +215,6 @@
 </footer>
 
 <script src="/static/app.js"></script>
+<script src="/static/accelerator.js"></script>
 </body>
 </html>

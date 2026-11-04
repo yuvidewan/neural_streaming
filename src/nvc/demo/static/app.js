@@ -7,7 +7,7 @@ const STEP_SCALE = 2;            // the step canvases are drawn at 2x for sharp 
 const state = {
   status: null, clips: [], clipId: null, bundleId: null,
   result: null, images: null, frame: 0, playing: false, timer: null,
-  token: 0, activityMax: 1, busy: false,
+  token: 0, activityMax: 1, busy: false, errorCache: [],
 };
 
 // ---------------------------------------------------------------- helpers
@@ -96,6 +96,7 @@ async function loadView() {
   show("empty", false);
   state.result = null;
   state.images = null;
+  state.errorCache = [];
 
   const bundle = currentBundle();
   const banner = $("standin-banner");
@@ -261,10 +262,14 @@ function render() {
     ? `I-frame: coded on its own, with no prediction. ${bytes(frameBytes)} against ${bytes(raw)} raw.`
     : `P-frame: ${bytes(nvc.motion_bytes[index])} of motion vectors and ${bytes(nvc.residual_bytes[index])} of residual, against ${bytes(raw)} raw.`;
 
-  drawMotion(index);
-  drawPrediction(index);
-  drawResidual(index);
-  drawError(index);
+  // The four "inside this frame" panels are the expensive part (the error map reads
+  // pixels back), so playback skips them and they are drawn once it pauses.
+  if (!state.playing) {
+    drawMotion(index);
+    drawPrediction(index);
+    drawResidual(index);
+    drawError(index);
+  }
   drawBars();
 }
 
@@ -365,6 +370,8 @@ function pixels(image) {
 
 function drawError(index) {
   const context = stepContext("step-error");
+  const cached = state.errorCache[index];
+  if (cached) { context.drawImage(cached, 0, 0, 256, 256); return; }
   const original = pixels(state.images.original[index]).data;
   const decodedData = pixels(state.images.nvc[index]);
   const decoded = decodedData.data;
@@ -375,8 +382,11 @@ function drawError(index) {
     const level = Math.min(255, difference * 8);
     decoded[offset] = level; decoded[offset + 1] = level; decoded[offset + 2] = level; decoded[offset + 3] = 255;
   }
-  scratchContext.putImageData(decodedData, 0, 0);
-  context.drawImage(scratch, 0, 0, 256, 256);
+  const map = document.createElement("canvas");
+  map.width = 256; map.height = 256;
+  map.getContext("2d").putImageData(decodedData, 0, 0);
+  state.errorCache[index] = map;
+  context.drawImage(map, 0, 0, 256, 256);
 }
 
 function drawBars() {
@@ -429,17 +439,28 @@ function seek(index) {
   render();
 }
 function stop() {
-  if (state.timer) clearInterval(state.timer);
+  if (state.timer) cancelAnimationFrame(state.timer);
   state.timer = null;
+  const wasPlaying = state.playing;
   state.playing = false;
   $("play").textContent = "Play";
+  if (wasPlaying) render();          // now draw the panels playback skipped
 }
 function play() {
   if (!state.result) return;
   state.playing = true;
   $("play").textContent = "Pause";
   const interval = 1000 / Math.min(30, Math.max(1, state.result.fps));
-  state.timer = setInterval(() => seek(state.frame + 1), interval);
+  let due = performance.now() + interval;
+  const tick = (now) => {
+    if (!state.playing) return;
+    if (now >= due) {
+      due = Math.max(due + interval, now - interval);   // never try to catch up a backlog
+      seek(state.frame + 1);
+    }
+    state.timer = requestAnimationFrame(tick);
+  };
+  state.timer = requestAnimationFrame(tick);
 }
 
 // ---------------------------------------------------------------- jobs
@@ -519,6 +540,112 @@ async function uploadFile(file) {
   }
 }
 
+// ---------------------------------------------------------------- scoreboard (committed results)
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+const DANGER = "#a32d2d";
+
+function svgEl(parent, tag, attrs, text) {
+  const node = document.createElementNS(SVG_NS, tag);
+  for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
+  if (text !== undefined) node.textContent = text;
+  parent.appendChild(node);
+  return node;
+}
+
+const signed = (value) => (value > 0 ? "+" : "−") + Math.abs(value).toFixed(1) + "%";
+
+function drawCurves(svg, board) {
+  svg.innerHTML = "";
+  const W = 520, H = 320, L = 52, R = 14, T = 14, B = 44;
+  const latest = board.stages[board.stages.length - 1];
+  const previous = board.stages.length > 1 ? board.stages[board.stages.length - 2] : null;
+  const series = [
+    { curve: board.reference.curve, color: INK, width: 2.5, label: "H.264", dash: "" },
+    previous && { curve: previous.curve, color: MUTED, width: 1.6, label: previous.name.replace(/^\+ /, ""), dash: "5 4" },
+    { curve: latest.curve, color: TEAL, width: 3.5, label: "Ours, " + latest.name.replace(/^\+ /, "").replace(/ \(.*\)$/, ""), dash: "" },
+  ].filter(Boolean);
+  // Frame the range our latest model covers, with a margin, so the comparison fills the plot.
+  const xs = latest.curve.map((p) => p.bpp), ys = latest.curve.map((p) => p.psnr);
+  const x0 = 0.3, x1 = Math.max(...xs) * 1.08;
+  const y0 = Math.floor(Math.min(...ys) - 2), y1 = Math.ceil(Math.max(...ys) + 0.6);
+  const X = (v) => L + (v - x0) / (x1 - x0) * (W - L - R);
+  const Y = (v) => T + (y1 - v) / (y1 - y0) * (H - T - B);
+  const clip = svgEl(svgEl(svg, "defs", {}), "clipPath", { id: "score-plot" });
+  svgEl(clip, "rect", { x: L, y: T, width: W - L - R, height: H - T - B });
+
+  for (let v = Math.ceil(y0); v <= y1; v += 1) {
+    svgEl(svg, "line", { x1: L, x2: W - R, y1: Y(v), y2: Y(v), stroke: "#e3e8eb" });
+    svgEl(svg, "text", { x: L - 8, y: Y(v) + 4, "text-anchor": "end" }, v);
+  }
+  for (let v = 0.3; v <= x1 + 1e-9; v += 0.1) {
+    svgEl(svg, "text", { x: X(v), y: H - B + 18, "text-anchor": "middle" }, v.toFixed(1));
+  }
+  svgEl(svg, "text", { x: (L + W - R) / 2, y: H - 6, "text-anchor": "middle" }, "bits per pixel (file size) →");
+  svgEl(svg, "text", { x: 14, y: (T + H - B) / 2, "text-anchor": "middle",
+                       transform: `rotate(-90 14 ${(T + H - B) / 2})` }, "PSNR, dB (quality) →");
+
+  const plot = svgEl(svg, "g", { "clip-path": "url(#score-plot)" });
+  for (const s of series) {
+    const d = s.curve.map((p, i) => (i ? "L" : "M") + X(p.bpp).toFixed(1) + " " + Y(p.psnr).toFixed(1)).join(" ");
+    svgEl(plot, "path", { d, fill: "none", stroke: s.color, "stroke-width": s.width, "stroke-dasharray": s.dash,
+                          "stroke-linejoin": "round" });
+    for (const p of s.curve) svgEl(plot, "circle", { cx: X(p.bpp), cy: Y(p.psnr), r: s.width + 1, fill: s.color });
+  }
+  // Legend, top left, where the curves are not.
+  series.forEach((s, i) => {
+    const y = T + 16 + i * 18;
+    svgEl(svg, "line", { x1: L + 12, x2: L + 34, y1: y - 4, y2: y - 4, stroke: s.color, "stroke-width": s.width,
+                         "stroke-dasharray": s.dash });
+    svgEl(svg, "text", { x: L + 40, y, class: i === series.length - 1 ? "strong" : "" }, s.label);
+  });
+}
+
+function drawBdBars(svg, board) {
+  svg.innerHTML = "";
+  const W = 520, H = 320, L = 196, R = 64, T = 18, B = 34;
+  const values = board.stages.map((s) => s.bd_rate_percent);
+  const lo = Math.min(-30, Math.min(...values) * 1.6), hi = Math.max(0, ...values) * 1.08;
+  const X = (v) => L + (v - lo) / (hi - lo) * (W - L - R);
+  const row = (H - T - B) / board.stages.length;
+  board.stages.forEach((stage, i) => {
+    const v = stage.bd_rate_percent, y = T + i * row + row * 0.2, h = row * 0.6;
+    const good = v < 0;
+    svgEl(svg, "rect", { x: Math.min(X(0), X(v)), y, width: Math.abs(X(v) - X(0)), height: h, rx: 4,
+                         fill: good ? TEAL : (i === board.stages.length - 1 ? DANGER : "#c9b8a8") });
+    svgEl(svg, "text", { x: L - 10, y: y + h / 2 + 4, "text-anchor": "end",
+                         class: i === board.stages.length - 1 ? "strong" : "" }, stage.name);
+    // A negative bar is short and sits against the names, so its value goes on the
+    // empty side of the H.264 line instead, where it also says what it means.
+    svgEl(svg, "text", { x: good ? X(0) + 10 : X(v) + 6, y: y + h / 2 + 4, "text-anchor": "start",
+                         class: good ? "good" : "bad" }, good ? signed(v) + "  fewer bits than H.264" : signed(v));
+  });
+  svgEl(svg, "line", { x1: X(0), x2: X(0), y1: T - 6, y2: H - B + 4, stroke: INK, "stroke-width": 2 });
+  svgEl(svg, "text", { x: X(0), y: H - 8, "text-anchor": "middle", class: "strong" }, "H.264 = 0%");
+}
+
+async function loadScoreboard() {
+  let board;
+  try { board = await api("/api/scoreboard"); } catch (error) { board = null; }
+  if (!board || !board.stages.length) {
+    $("score-title").textContent = "No benchmark reports in this checkout.";
+    show("scoreboard", true);
+    return;
+  }
+  const latest = board.stages[board.stages.length - 1];
+  const beats = latest.bd_rate_percent < 0;
+  $("score-number").textContent = signed(latest.bd_rate_percent);
+  $("score-number").classList.toggle("bad", !beats);
+  $("score-title").textContent = beats
+    ? "Still frames: our codec now needs fewer bits than H.264"
+    : "Still frames: how close we are to H.264";
+  $("score-sub").textContent = `${board.dataset}, BD-rate on PSNR. Read from the committed benchmark ` +
+    `reports, not typed into this page. Full video (P-frames) is not in this panel yet.`;
+  drawCurves($("score-curve"), board);
+  drawBdBars($("score-bars"), board);
+  show("scoreboard", true);
+}
+
 // ---------------------------------------------------------------- wiring
 
 $("clip-select").addEventListener("change", (event) => { state.clipId = event.target.value; loadView(); });
@@ -543,16 +670,42 @@ $("upload-input").addEventListener("change", (event) => {
 window.addEventListener("resize", drawBars);
 document.addEventListener("keydown", (event) => {
   if (["INPUT", "SELECT", "BUTTON"].includes(event.target.tagName) || !state.result) return;
+  if (location.hash !== "#demo") return;
   if (event.key === " ") { event.preventDefault(); state.playing ? stop() : play(); }
   if (event.key === "ArrowLeft") { stop(); seek(state.frame - 1); }
   if (event.key === "ArrowRight") { stop(); seek(state.frame + 1); }
 });
 
-(async function start() {
+// ---------------------------------------------------------------- pages
+
+const PAGES = ["home", "results", "demo", "hardware"];
+const started = new Set();
+
+async function startDemo() {
   try {
     await refreshLists();
     await loadView();
   } catch (error) {
     message(error.message, "error");
   }
-})();
+}
+
+function route() {
+  const page = PAGES.includes(location.hash.slice(1)) ? location.hash.slice(1) : "home";
+  for (const name of PAGES) show("page-" + name, name === page);
+  // Only the open page does any work: playback stops and the 3D view stops drawing when left.
+  if (page !== "demo") stop();
+  if (window.nvcAccel) (page === "hardware" ? window.nvcAccel.start() : window.nvcAccel.stop());
+  if (!started.has(page)) {
+    started.add(page);
+    if (page === "results") loadScoreboard();
+    if (page === "demo") startDemo();
+  } else if (page === "demo") {
+    drawBars();                     // its width may have changed while hidden
+  }
+  $("footer-status").hidden = page !== "demo";
+  window.scrollTo(0, 0);
+}
+
+window.addEventListener("hashchange", route);
+window.addEventListener("DOMContentLoaded", route);

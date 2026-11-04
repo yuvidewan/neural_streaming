@@ -506,3 +506,69 @@ def test_server_picks_up_a_bundle_added_while_running(client, repo):
     _standin(3).save(repo / demo_bundles.STANDIN_DIR / "standin_3bit.pt")
     assert [b["id"] for b in client.get("/api/status").json()["bundles"]] == [
         "standin_3bit", "standin_4bit"]
+
+
+# --- the scoreboard panel ------------------------------------------------------------------
+
+
+def test_the_scoreboard_reads_the_committed_reports():
+    """The page shows what the full DAVIS TEST runs produced, nothing typed in by hand."""
+    from nvc.demo.scoreboard import load_scoreboard
+
+    root = Path(__file__).resolve().parents[1]
+    board = load_scoreboard(root)
+    if board is None:
+        pytest.skip("this checkout has no committed intra report")
+
+    stages = {s["id"]: s for s in board["stages"]}
+    assert list(stages)[0] == "deployed"
+    assert stages["deployed"]["bd_rate_percent"] == pytest.approx(176.185, abs=1e-3)
+    if "run5" in stages:
+        assert stages["run5"]["bd_rate_percent"] == pytest.approx(-12.254, abs=1e-3)
+        assert len(stages["run5"]["curve"]) == 3
+    reference = board["reference"]["curve"]
+    assert len(reference) >= 2
+    assert reference == sorted(reference, key=lambda p: p["bpp"])
+
+
+def test_the_scoreboard_leaves_out_a_missing_report(tmp_path):
+    import json
+
+    from nvc.demo import scoreboard
+
+    intra = tmp_path / scoreboard.INTRA_REPORT
+    intra.parent.mkdir(parents=True)
+    point = lambda arm, bpp, psnr: {"arm": arm, "bpp": bpp, "quality": {"sequence_mean": {"psnr": psnr}}}
+    intra.write_text(json.dumps({
+        "points": {"a": point("h264_intra", 0.5, 31.0), "b": point("h264_intra", 0.3, 29.0),
+                   "c": point("nvc_deployed", 0.6, 28.0)},
+        "comparisons": {"nvc_deployed_vs_h264_intra": {"sequence_mean/psnr": {"bd_rate_percent": 100.0}}},
+    }), encoding="utf-8")
+
+    board = scoreboard.load_scoreboard(tmp_path)
+
+    assert [s["id"] for s in board["stages"]] == ["deployed"]
+    assert [p["bpp"] for p in board["reference"]["curve"]] == [0.3, 0.5]
+    assert scoreboard.load_scoreboard(tmp_path / "nowhere") is None
+
+
+def test_the_scoreboard_endpoint_is_a_clean_404_without_reports(client):
+    assert client.get("/api/scoreboard").status_code == 404
+
+
+def test_the_page_loads_the_accelerator_view(client):
+    page = client.get("/").text
+    assert 'id="accel-canvas"' in page and "/static/accelerator.js" in page
+    script = client.get("/static/accelerator.js")
+    assert script.status_code == 200 and "NVC-ACCEL" in script.text
+
+
+def test_the_page_is_a_menu_of_three_pages_each_with_a_way_back(client):
+    """Home offers the three views; each view is its own page with a Back link, and
+    only one is shown at a time (the router in app.js does the switching)."""
+    page = client.get("/").text
+    for name in ("results", "demo", "hardware"):
+        assert f'href="#{name}"' in page
+        assert f'id="page-{name}" class="page" hidden' in page
+    assert 'id="page-home" class="page home"' in page
+    assert page.count('class="back" href="#"') == 3
