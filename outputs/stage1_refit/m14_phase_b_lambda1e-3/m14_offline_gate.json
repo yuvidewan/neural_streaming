@@ -1,0 +1,52 @@
+{
+  "phase": "M14 Phase B offline gate",
+  "weak_below_percent": 0.5,
+  "meaningful_above_percent": 1.0,
+  "val_a_sequence_ids": [
+    "bmx-trees",
+    "dogs-scale",
+    "mallard-water",
+    "skate-park",
+    "upside-down"
+  ],
+  "val_b_sequence_ids": [
+    "car-roundabout",
+    "drift-straight",
+    "pigs",
+    "stunt"
+  ],
+  "train_frames_per_sequence": 8,
+  "train_total_frames": 576,
+  "calibration_frames": 400,
+  "rate_points": [
+    {
+      "bits": 7,
+      "candidates": {
+        "intra": {
+          "train_frames": 576,
+          "val_a_frames": 200,
+          "val_b_frames": 160,
+          "val_a_gain_percent": 0.9594263913786609,
+          "val_b_h_old_bits_per_symbol": 1.8539306443179981,
+          "val_b_h_new_bits_per_symbol": 1.8454306151099864,
+          "val_b_gain_percent": 0.45848690370715717,
+          "verdict": "weak",
+          "current_identity": "35a2e3759fece60b",
+          "new_identity": "6e15e5199862ff0c"
+        },
+        "motion": {
+          "train_p_frames": 504,
+          "val_a_p_frames": 180,
+          "val_b_p_frames": 144,
+          "val_a_gain_percent": 15.27003307053495,
+          "val_b_h_old_bits_per_symbol": 4.4127425821468815,
+          "val_b_h_new_bits_per_symbol": 3.906214565074423,
+          "val_b_gain_percent": 11.47875743130303,
+          "verdict": "meaningful",
+          "current_identity": "b4e144ce3d8bcf17",
+          "new_identity": "a79ea2c8a0e9ed49"
+        }
+      }
+    }
+  ]
+}

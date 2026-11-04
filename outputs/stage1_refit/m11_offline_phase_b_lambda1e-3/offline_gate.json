@@ -1,0 +1,479 @@
+{
+  "phase": "M11 offline gate",
+  "checkpoint": "outputs\\stage1_vimeo\\colab_run5_phase_b\\phase_b_unitstep_lambda1e-3\\checkpoints\\best.pt",
+  "weak_below_percent": 0.5,
+  "meaningful_above_percent": 1.0,
+  "control_tolerance_percent": 0.1,
+  "scan_order": "C-major raster: i = c*H*W + y*W + x",
+  "contexts": {
+    "left": {
+      "family": "spatial",
+      "description": "magnitude of (c, y, x-1)",
+      "definition_id": "b051ef5779438ee5"
+    },
+    "up": {
+      "family": "spatial",
+      "description": "magnitude of (c, y-1, x)",
+      "definition_id": "02461ed65557bfeb"
+    },
+    "left_up": {
+      "family": "spatial",
+      "description": "left x up",
+      "definition_id": "e0fd63549b3e249f"
+    },
+    "left_up_upleft": {
+      "family": "spatial",
+      "description": "left x up x up-left",
+      "definition_id": "aa75b50f8dbf6783"
+    },
+    "neighbourhood": {
+      "family": "spatial",
+      "description": "bucketed sum over left, up, up-left, up-right",
+      "definition_id": "f9f06f0730859ef8"
+    },
+    "left_raw": {
+      "family": "spatial",
+      "description": "full symbol of (c, y, x-1), sign included",
+      "definition_id": "e1e6a0dd4b11cd6a"
+    },
+    "prev_channel": {
+      "family": "channel",
+      "description": "magnitude of (c-1, y, x)",
+      "definition_id": "31785f1fe12081d3"
+    },
+    "channel_activity": {
+      "family": "channel",
+      "description": "mean magnitude over channels < c at (y, x)",
+      "definition_id": "8dd23ae0422a5136"
+    },
+    "neighbourhood_x_channel": {
+      "family": "both",
+      "description": "neighbourhood x channel_activity",
+      "definition_id": "6640e4199f5eae7d"
+    },
+    "left_up_x_channel": {
+      "family": "both",
+      "description": "left x up x channel_activity",
+      "definition_id": "3ec52bf6a73baa47"
+    }
+  },
+  "rate_points": [
+    {
+      "bits": 7,
+      "alphabet": 128,
+      "channels": 64,
+      "height": 16,
+      "width": 16,
+      "train_p_frames": 536,
+      "val_a_p_frames": 180,
+      "val_b_p_frames": 144,
+      "val_sequence_ids": [
+        "bmx-trees",
+        "car-roundabout",
+        "dogs-scale",
+        "drift-straight",
+        "mallard-water",
+        "pigs",
+        "skate-park",
+        "stunt",
+        "upside-down"
+      ],
+      "data_from_cache": false,
+      "baselines_val_b_bits": {
+        "marginal": 1.227150478360901,
+        "local_activity4": 1.160290554711899,
+        "m10l": 1.1927082953247061,
+        "m10k": 1.19384910794993,
+        "m10l_recalibrated": 1.1222157989975017
+      },
+      "channel_only_val_b_bits": 1.2250406078743685,
+      "recalibration_gain_percent": 5.910288090015621,
+      "recalibration_strength": 256.0,
+      "zero_symbols": [
+        8,
+        6,
+        4,
+        10,
+        10,
+        5,
+        7,
+        11,
+        10,
+        9,
+        6,
+        4,
+        8,
+        6,
+        5,
+        7,
+        9,
+        5,
+        4,
+        12,
+        18,
+        4,
+        8,
+        10,
+        9,
+        6,
+        4,
+        4,
+        4,
+        6,
+        4,
+        5,
+        4,
+        5,
+        5,
+        4,
+        8,
+        4,
+        8,
+        4,
+        6,
+        6,
+        8,
+        8,
+        5,
+        5,
+        5,
+        5,
+        5,
+        4,
+        5,
+        7,
+        9,
+        9,
+        4,
+        5,
+        7,
+        5,
+        6,
+        7,
+        10,
+        7,
+        9,
+        4
+      ],
+      "candidates": [
+        {
+          "context": "left",
+          "family": "spatial",
+          "cardinality": 5,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 2560,
+          "real": {
+            "strength": 64.0,
+            "val_b_bits": 1.1053202364352783,
+            "val_a_bits": 1.2450971990734923,
+            "channel_only_val_b_bits": 1.1824462609407749
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 1.1222164444139429,
+            "val_a_bits": 1.2623625508834582,
+            "channel_only_val_b_bits": 1.2250434943983166
+          },
+          "context_gain_percent": 1.5055537960984424,
+          "control_gain_percent": -5.751268532818919e-05,
+          "net_gain_percent": 1.5055537960984424,
+          "vs_m10l_percent": 7.326859319414479,
+          "channel_only_gain_percent": 3.4769742863872333,
+          "selection_net_percent": 1.3675158108166496
+        },
+        {
+          "context": "up",
+          "family": "spatial",
+          "cardinality": 5,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 2560,
+          "real": {
+            "strength": 64.0,
+            "val_b_bits": 1.1098715738249063,
+            "val_a_bits": 1.2462628187409235,
+            "channel_only_val_b_bits": 1.1904694834287117
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 1.1222176950198839,
+            "val_a_bits": 1.262363704155267,
+            "channel_only_val_b_bits": 1.225043470349244
+          },
+          "context_gain_percent": 1.0999867568806925,
+          "control_gain_percent": -0.0001689534565368073,
+          "net_gain_percent": 1.0999867568806925,
+          "vs_m10l_percent": 6.9452624606126445,
+          "channel_only_gain_percent": 2.822039059231102,
+          "selection_net_percent": 1.2751792739550598
+        },
+        {
+          "context": "left_up",
+          "family": "spatial",
+          "cardinality": 25,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 12800,
+          "real": {
+            "strength": 64.0,
+            "val_b_bits": 1.1014817731057458,
+            "val_a_bits": 1.2372689213740071,
+            "channel_only_val_b_bits": 1.1630074984468801
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 1.122217013372451,
+            "val_a_bits": 1.2623631420679329,
+            "channel_only_val_b_bits": 1.2250433880324936
+          },
+          "context_gain_percent": 1.8475970406296196,
+          "control_gain_percent": -0.00010821224851319043,
+          "net_gain_percent": 1.8475970406296196,
+          "vs_m10l_percent": 7.6486868228014275,
+          "channel_only_gain_percent": 5.063759440197274,
+          "selection_net_percent": 1.9876460922095878
+        },
+        {
+          "context": "left_up_upleft",
+          "family": "spatial",
+          "cardinality": 125,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 64000,
+          "real": {
+            "strength": 64.0,
+            "val_b_bits": 1.1057044432281584,
+            "val_a_bits": 1.2418918906794296,
+            "channel_only_val_b_bits": 1.1613729505501509
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 1.122216735813811,
+            "val_a_bits": 1.262362792793561,
+            "channel_only_val_b_bits": 1.2250434133606356
+          },
+          "context_gain_percent": 1.471317351269978,
+          "control_gain_percent": -8.347915884384857e-05,
+          "net_gain_percent": 1.471317351269978,
+          "vs_m10l_percent": 7.294646347107156,
+          "channel_only_gain_percent": 5.197187498518168,
+          "selection_net_percent": 1.6214297459970457
+        },
+        {
+          "context": "neighbourhood",
+          "family": "spatial",
+          "cardinality": 4,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 2048,
+          "real": {
+            "strength": 64.0,
+            "val_b_bits": 1.0879387318464466,
+            "val_a_bits": 1.2190298178666734,
+            "channel_only_val_b_bits": 1.1472016035634214
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 1.1222168487618331,
+            "val_a_bits": 1.2623621858651848,
+            "channel_only_val_b_bits": 1.2250453091447295
+          },
+          "context_gain_percent": 3.054409604790403,
+          "control_gain_percent": -9.35438916828631e-05,
+          "net_gain_percent": 3.054409604790403,
+          "vs_m10l_percent": 8.784173287713804,
+          "channel_only_gain_percent": 6.353993803193972,
+          "selection_net_percent": 3.4324875790032516
+        },
+        {
+          "context": "left_raw",
+          "family": "spatial",
+          "cardinality": 129,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 66048,
+          "real": {
+            "strength": 64.0,
+            "val_b_bits": 1.1098445560129255,
+            "val_a_bits": 1.2487873152136864,
+            "channel_only_val_b_bits": 1.1856023315189874
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 1.1222163600338948,
+            "val_a_bits": 1.262361021868979,
+            "channel_only_val_b_bits": 1.2250401684006416
+          },
+          "context_gain_percent": 1.1023942984609227,
+          "control_gain_percent": -4.999362810806604e-05,
+          "net_gain_percent": 1.1023942984609227,
+          "vs_m10l_percent": 6.947527709549596,
+          "channel_only_gain_percent": 3.2193444120854493,
+          "selection_net_percent": 1.07519700861809
+        },
+        {
+          "context": "prev_channel",
+          "family": "channel",
+          "cardinality": 5,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 2560,
+          "real": {
+            "strength": 64.0,
+            "val_b_bits": 1.103353812621254,
+            "val_a_bits": 1.235666809972945,
+            "channel_only_val_b_bits": 1.1820335765649561
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 1.1222169621766938,
+            "val_a_bits": 1.262362688051316,
+            "channel_only_val_b_bits": 1.225047434256468
+          },
+          "context_gain_percent": 1.6807806834565495,
+          "control_gain_percent": -0.00010365022423631936,
+          "net_gain_percent": 1.6807806834565495,
+          "vs_m10l_percent": 7.491729792918554,
+          "channel_only_gain_percent": 3.510661690148879,
+          "selection_net_percent": 2.1145600612974214
+        },
+        {
+          "context": "channel_activity",
+          "family": "channel",
+          "cardinality": 5,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 2560,
+          "real": {
+            "strength": 64.0,
+            "val_b_bits": 1.0313182574760245,
+            "val_a_bits": 1.1448515747722043,
+            "channel_only_val_b_bits": 1.0740523294481852
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 1.1222161188913768,
+            "val_a_bits": 1.2623617751435623,
+            "channel_only_val_b_bits": 1.225042759793663
+          },
+          "context_gain_percent": 8.099827288359142,
+          "control_gain_percent": -2.8505557973138693e-05,
+          "net_gain_percent": 8.099827288359142,
+          "vs_m10l_percent": 13.531392250839039,
+          "channel_only_gain_percent": 12.325165178660562,
+          "selection_net_percent": 9.308642785713959
+        },
+        {
+          "context": "neighbourhood_x_channel",
+          "family": "both",
+          "cardinality": 20,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 10240,
+          "real": {
+            "strength": 64.0,
+            "val_b_bits": 1.0266966768437575,
+            "val_a_bits": 1.1398758014645165,
+            "channel_only_val_b_bits": 1.0587385691914737
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 1.122215894999635,
+            "val_a_bits": 1.2623603832489911,
+            "channel_only_val_b_bits": 1.2250428679733365
+          },
+          "context_gain_percent": 8.511653662252245,
+          "control_gain_percent": -8.55469451060969e-06,
+          "net_gain_percent": 8.511653662252245,
+          "vs_m10l_percent": 13.918878499604393,
+          "channel_only_gain_percent": 13.575226618116288,
+          "selection_net_percent": 9.702807098720749
+        },
+        {
+          "context": "left_up_x_channel",
+          "family": "both",
+          "cardinality": 125,
+          "causality": {
+            "causal": true,
+            "probes": 54,
+            "leaking_positions": []
+          },
+          "joint_contexts": 64000,
+          "real": {
+            "strength": 16.0,
+            "val_b_bits": 1.043958553857418,
+            "val_a_bits": 1.159035814689039,
+            "channel_only_val_b_bits": 1.0693953934231213
+          },
+          "control": {
+            "strength": 1048576.0,
+            "val_b_bits": 1.1222159169815196,
+            "val_a_bits": 1.2623609668420361,
+            "channel_only_val_b_bits": 1.2250432732626646
+          },
+          "context_gain_percent": 6.973457797510281,
+          "control_gain_percent": -1.0513487512318933e-05,
+          "net_gain_percent": 6.973457797510281,
+          "vs_m10l_percent": 12.471594441857386,
+          "channel_only_gain_percent": 12.70531061997327,
+          "selection_net_percent": 8.185014188385315
+        }
+      ],
+      "best_by_val_a": "neighbourhood_x_channel"
+    }
+  ],
+  "chosen_context": "neighbourhood_x_channel",
+  "chosen_family": "both",
+  "mean_selection_net_percent": {
+    "left": 1.3675158108166496,
+    "up": 1.2751792739550598,
+    "left_up": 1.9876460922095878,
+    "left_up_upleft": 1.6214297459970457,
+    "neighbourhood": 3.4324875790032516,
+    "left_raw": 1.07519700861809,
+    "prev_channel": 2.1145600612974214,
+    "channel_activity": 9.308642785713959,
+    "neighbourhood_x_channel": 9.702807098720749,
+    "left_up_x_channel": 8.185014188385315
+  },
+  "all_controls_within_tolerance": true,
+  "gate_passed": true,
+  "verdicts": [
+    {
+      "bits": 7,
+      "net_percent": 8.511653662252245,
+      "control_percent": -8.55469451060969e-06,
+      "control_ok": true,
+      "verdict": "meaningful",
+      "vs_m10l_percent": 13.918878499604393
+    }
+  ]
+}

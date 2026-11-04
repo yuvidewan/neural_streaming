@@ -1,0 +1,37 @@
+{
+  "phase": "M13 Phase C offline gate",
+  "checkpoint": "outputs\\stage1_vimeo\\colab_run5_phase_b\\phase_b_unitstep_lambda1e-4\\checkpoints\\best.pt",
+  "weak_below_percent": 0.5,
+  "meaningful_above_percent": 1.0,
+  "rate_points": [
+    {
+      "bits": 8,
+      "alphabet": 256,
+      "codebook_size": 512,
+      "train_p_frames": 536,
+      "val_a_p_frames": 180,
+      "val_b_p_frames": 144,
+      "val_sequence_ids": [
+        "bmx-trees",
+        "car-roundabout",
+        "dogs-scale",
+        "drift-straight",
+        "mallard-water",
+        "pigs",
+        "skate-park",
+        "stunt",
+        "upside-down"
+      ],
+      "smoothing_strength": 256.0,
+      "val_a_baseline_bits_per_symbol": 2.84743811760148,
+      "val_a_recalibrated_bits_per_symbol": 2.6845769587228125,
+      "val_b_h_old_bits_per_symbol": 2.6203504480229465,
+      "val_b_h_new_bits_per_symbol": 2.4755871626352803,
+      "val_b_gain_percent": 5.524577275413294,
+      "verdict": "meaningful",
+      "old_codebook_id": "b0f691cfc9ad1a79",
+      "new_codebook_id": "8de2605ec3cc454e"
+    }
+  ],
+  "all_meaningful": true
+}

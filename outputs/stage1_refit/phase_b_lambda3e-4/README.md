@@ -78,3 +78,46 @@ refitted curve at matched quality.** The intra gain reaches the stream, and is l
 -31.5% intra gate figure, because the unit step also wins on residuals (step 1). Still about
 2.3x x264's bits at this quality, so not parity. A point ratio, not a BD-rate: the BD-rate
 needs the other two lambdas (step 5, running).
+
+## Step 5: all three lambdas, 2026-11-04
+
+`scripts/run_phase_b_refit.sh 1e-4` and `1e-3`, same chain, same settings. Before the 1e-4
+M11-G1 round trip could pass, the residual encoders had to assign codebook prototypes group by
+group like the decoder (`assign_by_group`, commit b3444a0); that changes no byte the old encoders
+got right, so the lambda 3e-4 numbers above stand.
+
+| step | lambda 1e-3 (7-bit stream) | lambda 3e-4 (8-bit) | lambda 1e-4 (8-bit) |
+|---|---|---|---|
+| M10K | GATE NOT PASSED, kept | GATE NOT PASSED, kept | GATE NOT PASSED, kept |
+| M10L | K=512, -0.04% vs M10K | K=512, +0.01% | K=512, -0.02% |
+| M11 offline | net +8.51% | net +6.79% | net +4.39% |
+| M11 trained G16 | +4.91% bytes, exact | +3.74%, exact | +3.11%, exact |
+| M13 | +7.05% | +6.32% | +5.53% |
+| M14 motion / intra | +11.48% / +0.46% weak | +12.49% / +0.28% weak | +13.35% / +0.22% weak |
+
+Full video (`outputs/benchmarks/parity_phase_b_lambda*/`, full DAVIS TEST, GOP 10, all three
+runs valid and decode-exact):
+
+| lambda | bpp | PSNR | MS-SSIM |
+|---|---|---|---|
+| 1e-3 | 0.2955 | 31.375 | 0.97466 |
+| 3e-4 | 0.4644 | 32.699 | 0.98386 |
+| 1e-4 | 0.6486 | 33.316 | 0.98677 |
+
+3-point BD-rate (`benchmark_parity.bd_rate`; positive = Phase B needs more bits). The run4 row
+uses run4's `nvc_deployed` curve from `parity_refit/parity_64ch_qat.json`, which this function
+reproduces at +214.2% vs x264.
+
+| against | seq-mean PSNR | seq-mean MS-SSIM | global-pooled PSNR |
+|---|---|---|---|
+| **run4 refitted codec** | **-31.1%** | -27.7% | -30.4% |
+| x264 default | **+127.1%** (run4: +214.2%) | +106.7% | +187.4% |
+| x265 default | +141.9% (run4: +233.7%) | +102.2% | +204.0% |
+| x264 low-delay | +65.5% | +50.8% | +106.2% |
+| x265 low-delay | +80.5% | +47.6% | +125.3% |
+
+**Rate-aware training plus the unit step takes the full video codec from +214.2% to +127.1%
+vs x264 (-87 points), a 31% bit saving over run4 at the same quality.** It still needs about
+2.3x x264's bits, so this is not parity. The overlap with run4 is 31.4-32.9 dB. M10K failed its
+gate on all three (its learned model is about M10J's quality) and was kept as plumbing. M14's
+intra table was again too weak to ship.

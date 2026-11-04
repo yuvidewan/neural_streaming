@@ -1,0 +1,206 @@
+{
+  "phase": "M10K offline gate",
+  "frozen_lambda": 0.0003,
+  "checkpoint": "outputs\\stage1_vimeo\\colab_run5_phase_b\\phase_b_unitstep_lambda1e-4\\checkpoints\\best.pt",
+  "rate_points": [
+    {
+      "bits": 8,
+      "alphabet": 256,
+      "channels": 64,
+      "train_p_frames": 536,
+      "val_p_frames": 179,
+      "parameters": 20064,
+      "m10h_marginal_val_bits": 2.758321408862744,
+      "m10j_conditional_val_bits": 2.7241141586656243,
+      "m10k_learned_val_bits": 2.728365405794601,
+      "m10k_vs_m10h_percent": 1.0860229330741338,
+      "m10k_vs_m10j_percent": -0.1560598007779258,
+      "m10j_vs_m10h_percent": 1.2401473623490251,
+      "checkpoint_selection": {
+        "convention": "M10G: best validation checkpoint (primary), final checkpoint (secondary)",
+        "selection_metric": "val_loss",
+        "selection_domain": "validation",
+        "tie_break": "earliest epoch",
+        "objective_filter": "rate_enabled",
+        "stale_records_ignored": 0,
+        "epochs_considered": 20,
+        "selected_epoch": 19,
+        "selected_objective": 2.728365345374166,
+        "selected_psnr_db": null,
+        "final_epoch": 20,
+        "final_objective": 2.7288579860879056,
+        "final_psnr_db": null,
+        "epoch_difference": 1,
+        "best_vs_final_absolute": 0.0004926407137397781,
+        "best_vs_final_percent": 0.018056259018794193,
+        "psnr_difference_db": null,
+        "final_is_best": false
+      },
+      "history": [
+        {
+          "epoch": 1,
+          "train_nll_bits": 5.903579882721402,
+          "val_nll_bits": 4.969837439126809,
+          "rate_enabled": true,
+          "val_loss": 4.969837439126809,
+          "elapsed_seconds": 1.2939510345458984
+        },
+        {
+          "epoch": 2,
+          "train_nll_bits": 4.47286331119822,
+          "val_nll_bits": 4.145645493235668,
+          "rate_enabled": true,
+          "val_loss": 4.145645493235668,
+          "elapsed_seconds": 0.9360737800598145
+        },
+        {
+          "epoch": 3,
+          "train_nll_bits": 3.8153139975533557,
+          "val_nll_bits": 3.656272188911225,
+          "rate_enabled": true,
+          "val_loss": 3.656272188911225,
+          "elapsed_seconds": 0.9337847232818604
+        },
+        {
+          "epoch": 4,
+          "train_nll_bits": 3.4000940749894326,
+          "val_nll_bits": 3.317779901973362,
+          "rate_enabled": true,
+          "val_loss": 3.317779901973362,
+          "elapsed_seconds": 0.9352779388427734
+        },
+        {
+          "epoch": 5,
+          "train_nll_bits": 3.083030006778774,
+          "val_nll_bits": 3.0672675937247678,
+          "rate_enabled": true,
+          "val_loss": 3.0672675937247678,
+          "elapsed_seconds": 0.9344320297241211
+        },
+        {
+          "epoch": 6,
+          "train_nll_bits": 2.8698196019699322,
+          "val_nll_bits": 2.927360412128811,
+          "rate_enabled": true,
+          "val_loss": 2.927360412128811,
+          "elapsed_seconds": 0.9349594116210938
+        },
+        {
+          "epoch": 7,
+          "train_nll_bits": 2.7498487002813996,
+          "val_nll_bits": 2.8490572841473796,
+          "rate_enabled": true,
+          "val_loss": 2.8490572841473796,
+          "elapsed_seconds": 0.9352164268493652
+        },
+        {
+          "epoch": 8,
+          "train_nll_bits": 2.685714380065007,
+          "val_nll_bits": 2.8079005712903413,
+          "rate_enabled": true,
+          "val_loss": 2.8079005712903413,
+          "elapsed_seconds": 0.9383111000061035
+        },
+        {
+          "epoch": 9,
+          "train_nll_bits": 2.6490787676910856,
+          "val_nll_bits": 2.785012989736802,
+          "rate_enabled": true,
+          "val_loss": 2.785012989736802,
+          "elapsed_seconds": 0.9367046356201172
+        },
+        {
+          "epoch": 10,
+          "train_nll_bits": 2.6266772853794382,
+          "val_nll_bits": 2.7702065459842786,
+          "rate_enabled": true,
+          "val_loss": 2.7702065459842786,
+          "elapsed_seconds": 0.9348845481872559
+        },
+        {
+          "epoch": 11,
+          "train_nll_bits": 2.612125375377598,
+          "val_nll_bits": 2.7615158158307636,
+          "rate_enabled": true,
+          "val_loss": 2.7615158158307636,
+          "elapsed_seconds": 0.9366748332977295
+        },
+        {
+          "epoch": 12,
+          "train_nll_bits": 2.6022300898139155,
+          "val_nll_bits": 2.7546595861125924,
+          "rate_enabled": true,
+          "val_loss": 2.7546595861125924,
+          "elapsed_seconds": 0.936086893081665
+        },
+        {
+          "epoch": 13,
+          "train_nll_bits": 2.5949869013544338,
+          "val_nll_bits": 2.7468621451095494,
+          "rate_enabled": true,
+          "val_loss": 2.7468621451095494,
+          "elapsed_seconds": 0.9346656799316406
+        },
+        {
+          "epoch": 14,
+          "train_nll_bits": 2.589475738468455,
+          "val_nll_bits": 2.7426395962358185,
+          "rate_enabled": true,
+          "val_loss": 2.7426395962358185,
+          "elapsed_seconds": 0.9352419376373291
+        },
+        {
+          "epoch": 15,
+          "train_nll_bits": 2.585372195315005,
+          "val_nll_bits": 2.7398620024739695,
+          "rate_enabled": true,
+          "val_loss": 2.7398620024739695,
+          "elapsed_seconds": 0.9336857795715332
+        },
+        {
+          "epoch": 16,
+          "train_nll_bits": 2.5819368896199695,
+          "val_nll_bits": 2.739544704639712,
+          "rate_enabled": true,
+          "val_loss": 2.739544704639712,
+          "elapsed_seconds": 0.9382584095001221
+        },
+        {
+          "epoch": 17,
+          "train_nll_bits": 2.5782175064086914,
+          "val_nll_bits": 2.7320942132832617,
+          "rate_enabled": true,
+          "val_loss": 2.7320942132832617,
+          "elapsed_seconds": 0.9339911937713623
+        },
+        {
+          "epoch": 18,
+          "train_nll_bits": 2.5757672964636957,
+          "val_nll_bits": 2.730500969806863,
+          "rate_enabled": true,
+          "val_loss": 2.730500969806863,
+          "elapsed_seconds": 0.9369332790374756
+        },
+        {
+          "epoch": 19,
+          "train_nll_bits": 2.5731304261221815,
+          "val_nll_bits": 2.728365345374166,
+          "rate_enabled": true,
+          "val_loss": 2.728365345374166,
+          "elapsed_seconds": 0.9364631175994873
+        },
+        {
+          "epoch": 20,
+          "train_nll_bits": 2.570819417042519,
+          "val_nll_bits": 2.7288579860879056,
+          "rate_enabled": true,
+          "val_loss": 2.7288579860879056,
+          "elapsed_seconds": 0.9367949962615967
+        }
+      ]
+    }
+  ],
+  "note": "Held-out validation cross-entropy is the headline. Training NLL is diagnostic only - a more expressive model can always look better on the data it was fitted to.",
+  "best_vs_m10j_percent": -0.1560598007779258,
+  "gate_passed": false
+}
