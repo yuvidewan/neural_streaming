@@ -1,0 +1,86 @@
+{
+  "points": {
+    "1e-3": {
+      "intra": {
+        "bits": 30000.033954553357,
+        "psnr": 30.90103513705804,
+        "ratio_vs_intra": 0.999999999999999
+      },
+      "hand_built": {
+        "bits": 18761.98958772242,
+        "psnr": 30.891242384818508,
+        "ratio_vs_intra": null
+      },
+      "warp_only_psnr": 26.325612404187694,
+      "frames": 271,
+      "val_b": [
+        "car-roundabout",
+        "drift-straight",
+        "pigs",
+        "stunt"
+      ],
+      "learned": {
+        "bits": 16989.08947979128,
+        "psnr": 31.836672233479945,
+        "ratio_vs_intra": 0.4266341349692737
+      }
+    },
+    "3e-4": {
+      "intra": {
+        "bits": 44496.0346159845,
+        "psnr": 32.203393633006584,
+        "ratio_vs_intra": 1.0000000000000009
+      },
+      "hand_built": {
+        "bits": 30715.582249716812,
+        "psnr": 32.199988195387085,
+        "ratio_vs_intra": 0.6910112207166812
+      },
+      "warp_only_psnr": 26.638648759090785,
+      "frames": 271,
+      "val_b": [
+        "car-roundabout",
+        "drift-straight",
+        "pigs",
+        "stunt"
+      ],
+      "learned": {
+        "bits": 27356.160754439577,
+        "psnr": 32.90349470827484,
+        "ratio_vs_intra": null
+      }
+    },
+    "1e-4": {
+      "intra": {
+        "bits": 59079.475856291465,
+        "psnr": 32.74111006883107,
+        "ratio_vs_intra": 0.9999999999999996
+      },
+      "hand_built": {
+        "bits": 43236.40507358475,
+        "psnr": 32.74019339417096,
+        "ratio_vs_intra": 0.7321883674169
+      },
+      "warp_only_psnr": 26.748138635083023,
+      "frames": 271,
+      "val_b": [
+        "car-roundabout",
+        "drift-straight",
+        "pigs",
+        "stunt"
+      ],
+      "learned": {
+        "bits": 40135.02392037592,
+        "psnr": 33.32588175107185,
+        "ratio_vs_intra": null
+      }
+    }
+  },
+  "gate_ratio": 0.45,
+  "comparisons": {
+    "hand_built_vs_intra_bd_rate": -32.62611068615852,
+    "learned_vs_intra_bd_rate": -56.074582453198104,
+    "learned_vs_hand_built_bd_rate": -37.198239197948354
+  },
+  "gate_passed": true
+}
