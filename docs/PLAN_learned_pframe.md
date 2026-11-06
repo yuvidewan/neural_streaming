@@ -1,6 +1,6 @@
 # Plan: a learned P-frame coder
 
-Status: DRAFT, 2026-11-05. Nothing built yet.
+Status: gate 1 PASSED 2026-11-05 (outputs/p1_pframe/README.md); gate 2 trainer and notebook ready (`colab_train_pframe.ipynb`).
 
 ## Why
 
