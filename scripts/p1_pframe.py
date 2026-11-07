@@ -545,7 +545,8 @@ def command_train_vimeo(args) -> None:
             print(f"[chunk {chunk}] already trained for {args.lambdas}, skipping", flush=True)
             continue
         scratch = Path(args.scratch_dir) / f"chunk_{chunk}"
-        if args.local_vimeo:
+        local = bool(args.local_vimeo) and args.local_chunk in (None, chunk)
+        if local:
             group_root = Path(args.local_vimeo)
         else:
             group_root = chunks.download_and_extract_chunk(
@@ -557,8 +558,12 @@ def command_train_vimeo(args) -> None:
             train_lambda_on_chunk(lam, chunk, clip_dirs, args, device)
             progress["done"].append([lam, chunk])
             _save_json(progress_path, progress)
-        if not args.local_vimeo:
+        if not local:
             shutil.rmtree(scratch, ignore_errors=True)
+        elif args.delete_local_after:
+            print(f"[chunk {chunk}] trained for every lambda; deleting {args.delete_local_after}",
+                  flush=True)
+            shutil.rmtree(args.delete_local_after, ignore_errors=True)
     print("train-vimeo complete:", progress["done"], flush=True)
 
 
@@ -687,6 +692,10 @@ def main(argv: list[str] | None = None) -> int:
     vimeo.add_argument("--kaggle-prefix", default="vimeo-90k")
     vimeo.add_argument("--local-vimeo", default=None,
                        help="use this folder of <group>/<clip>/im*.png instead of downloading")
+    vimeo.add_argument("--local-chunk", type=int, default=None,
+                       help="use --local-vimeo for this chunk only; download the others")
+    vimeo.add_argument("--delete-local-after", default=None,
+                       help="folder to delete once the local chunk has trained every lambda")
     vimeo.add_argument("--max-clips", type=int, default=0, help="smoke tests only")
     args = parser.parse_args(argv)
     {"cache": command_cache, "train": command_train, "gate": command_gate,
