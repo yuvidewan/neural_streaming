@@ -4,6 +4,7 @@
 # Every chunk, chunk 1 included, is deleted once all three lambdas have trained on it.
 set -euo pipefail
 export PYTHONIOENCODING=utf-8
+export PATH="$PWD/.venv/Scripts:$PATH"   # kaggle CLI lives in the venv
 PY=".venv/Scripts/python.exe"; O=outputs/p1_pframe/gate2_local
 mkdir -p $O
 log() { echo "[$(date '+%m-%d %H:%M')] $*"; }
@@ -14,7 +15,7 @@ log "stage 1"
     --local-vimeo C:/vimeo_scratch/chunk_1/vimeo_settuplet_1/sequences --local-chunk 1 --delete-local-after C:/vimeo_scratch/chunk_1 >> $O/stage1.log 2>&1
 log "stage 2"
 "$PY" -u "${COMMON[@]}" --output-dir $O/stage2 --chunks 3 --steps-per-chunk 4000 --unroll 3 \
-    --init-from $O/stage1 >> $O/stage2.log 2>&1
+    --init-from $O/stage1 --local-vimeo C:/vimeo_scratch/chunk_3/sequence --local-chunk 3 --delete-local-after C:/vimeo_scratch/chunk_3 >> $O/stage2.log 2>&1
 log "gate stage 1"; "$PY" -u scripts/p1_pframe.py gate --models-dir $O/stage1 --output-name gate2_stage1.json > $O/gate_stage1.log 2>&1
 log "gate stage 2"; "$PY" -u scripts/p1_pframe.py gate --models-dir $O/stage2 --output-name gate2_stage2.json > $O/gate_stage2.log 2>&1
 log "done"

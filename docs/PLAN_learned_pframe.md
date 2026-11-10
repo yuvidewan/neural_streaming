@@ -1,6 +1,6 @@
 # Plan: a learned P-frame coder
 
-Status: gate 1 PASSED 2026-11-05 (outputs/p1_pframe/README.md); gate 2 trainer and notebook ready (`colab_train_pframe.ipynb`).
+Status: gate 1 PASSED 2026-11-05; gate 2 (Vimeo, 3 of 10 chunks) narrowly NOT PASSED 2026-11-10 at 0.453x/0.464x intra (bar 0.45x), still -31.8% BD-rate vs the hand-built P path (outputs/p1_pframe/README.md).
 
 ## Why
 
