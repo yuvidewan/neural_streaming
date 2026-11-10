@@ -1,0 +1,87 @@
+{
+  "models_dir": "outputs\\p2_motion\\finetune_block",
+  "gop": 10,
+  "val_b": [
+    "car-roundabout",
+    "drift-straight",
+    "pigs",
+    "stunt"
+  ],
+  "points": {
+    "1e-3": {
+      "block16": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 16494.202569232722,
+        "motion_bits_per_frame": 1866.6182081263792,
+        "bits_per_frame": 18360.820777359106,
+        "bpp": 0.28016389125608987,
+        "p_psnr": 31.90871507428093,
+        "p_pooled_psnr": 31.56711001212338,
+        "i_psnr": 30.820282828411674
+      },
+      "dense_oracle": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 16692.45994307355,
+        "motion_bits_per_frame": 0.0,
+        "bits_per_frame": 16692.45994307355,
+        "bpp": 0.25470672520559007,
+        "p_psnr": 31.889056272944984,
+        "p_pooled_psnr": 31.53462301086943,
+        "i_psnr": 30.820282828411674
+      }
+    },
+    "3e-4": {
+      "block16": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 27201.058228531503,
+        "motion_bits_per_frame": 1824.3528715947873,
+        "bits_per_frame": 29025.411100126294,
+        "bpp": 0.4428926254291732,
+        "p_psnr": 32.99702562298063,
+        "p_pooled_psnr": 32.50904647160993,
+        "i_psnr": 32.108597191206215
+      },
+      "dense_oracle": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 28885.8939079967,
+        "motion_bits_per_frame": 0.0,
+        "bits_per_frame": 28885.8939079967,
+        "bpp": 0.4407637620238754,
+        "p_psnr": 33.0146763947327,
+        "p_pooled_psnr": 32.502473976142994,
+        "i_psnr": 32.108597191206215
+      }
+    },
+    "1e-4": {
+      "block16": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 40212.942017594,
+        "motion_bits_per_frame": 1813.909956363046,
+        "bits_per_frame": 42026.85197395705,
+        "bpp": 0.6412788692315223,
+        "p_psnr": 33.4344934985326,
+        "p_pooled_psnr": 32.871217949849374,
+        "i_psnr": 32.62381689603527
+      },
+      "dense_oracle": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 41735.42863948171,
+        "motion_bits_per_frame": 0.0,
+        "bits_per_frame": 41735.42863948171,
+        "bpp": 0.6368321020428728,
+        "p_psnr": 33.448053260722546,
+        "p_pooled_psnr": 32.85508859259696,
+        "i_psnr": 32.62381689603527
+      }
+    }
+  },
+  "bd_rate_vs_block16": {
+    "dense_oracle": -3.9979017636535663
+  },
+  "gate": {
+    "arm": "dense_oracle",
+    "threshold_percent": -25.0,
+    "bd_rate": -3.9979017636535663,
+    "passed": false
+  }
+}

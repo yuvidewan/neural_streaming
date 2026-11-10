@@ -1,6 +1,6 @@
 # Plan: better motion for the learned P-frame coder
 
-Status: gate 1 (motion oracle) NOT PASSED 2026-11-10: free dense flow saves only 4.1% of P-frame bits (bar 25%) and makes the residual 3-7% bigger; see outputs/p2_motion/README.md. Learned-motion pilot not started.
+Status: gate 1 (motion oracle) NOT PASSED 2026-11-10: free dense flow saves only 4.1% of P-frame bits (bar 25%); with the P-coder fine-tuned on dense warps (fairness check) it saves 19.9%, still under the bar. Motion line closed; block motion stays. See outputs/p2_motion/README.md. Learned-motion pilot not started.
 
 ## Why
 

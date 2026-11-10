@@ -55,3 +55,44 @@ dense-warped references, then rerun this oracle. If dense flow still cannot reac
 the motion line is closed.
 
 `gate1_oracle.json` holds every number. `gate1_oracle.log` is not committed.
+
+## Fairness check: fine-tune the P-coder on each warp (2026-11-10)
+
+`scripts/p2_flow_finetune.py`, run by `run_flow_finetune.sh`. It tests the caveat above, that
+the P-coder only ever saw block-shifted references.
+- Two copies of the gate 2 stage 2 P-coder each get the same 3,000 steps (lr 5e-5, batch 8,
+  seed 7) on the same DAVIS TRAIN pairs: one copy on block16 warps, the other on dense-flow
+  warps (the oracle's own Farneback warp).
+- The oracle is then rerun with each copy. The fair comparison is each warp with the coder
+  tuned for it.
+
+| lambda | arm, coder | residual bits/P | motion bits/P | P PSNR |
+|---|---|---|---|---|
+| 1e-3 | block16, block-tuned | 16,494 | 1,867 | 31.909 |
+| 1e-3 | dense flow (free), dense-tuned | 15,860 | 0 | 32.015 |
+| 3e-4 | block16, block-tuned | 27,201 | 1,824 | 32.997 |
+| 3e-4 | dense flow (free), dense-tuned | 26,064 | 0 | 33.231 |
+| 1e-4 | block16, block-tuned | 40,213 | 1,814 | 33.434 |
+| 1e-4 | dense flow (free), dense-tuned | 38,495 | 0 | 33.686 |
+
+P-frame BD-rate:
+- **dense flow with its dense-tuned coder vs block16 with its block-tuned coder: -19.9%.**
+- Both warps with the block-tuned coder: -4.0%, the same as gate 1.
+- block16 with the dense-tuned coder: +30.6%. The dense-tuned coder has forgotten block warps.
+  That makes the script's own "PASSED, -37.4%" line for `fairness_dense.json` an unfair
+  comparison, not the gate.
+
+**GATE 1 STILL NOT PASSED.** The bar was fixed before this check: free dense flow must save
+25%. It saves 19.9%.
+- **The caveat was real.** Training on smooth warps turns a 4% saving into 20%. The residual
+  now shrinks by about 4% at every rate instead of growing, and quality rises 0.1-0.25 dB.
+- **The 20% is not enough to build on.** A real flow coder has to send its flow, which costs
+  10-20% of the bits in published learned codecs. That would leave roughly 0-10% net, before
+  any loss from coding the flow imperfectly.
+- **Possible upside, not measured:** only 3,000 steps, from a block-trained start. Longer or
+  joint training could add more. That would be a new bet, with no number behind it today.
+
+As said above, a miss here closes the motion line. Block motion stays.
+
+`fairness.json`, `fairness_block.json` and `fairness_dense.json` hold every number.
+`fairness.log` and the fine-tuned models are not committed.

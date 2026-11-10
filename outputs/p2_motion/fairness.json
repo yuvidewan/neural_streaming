@@ -1,0 +1,6 @@
+{
+  "dense_tuned_dense_vs_block_tuned_block16": -19.903244344517013,
+  "block_tuned_dense_vs_block16": -3.9979017636535663,
+  "dense_tuned_block16_vs_block_tuned_block16": 30.586616681479395,
+  "passed": false
+}
