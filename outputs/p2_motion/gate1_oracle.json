@@ -1,0 +1,242 @@
+{
+  "models_dir": "outputs\\p1_pframe\\gate2_local\\stage2",
+  "gop": 10,
+  "val_b": [
+    "car-roundabout",
+    "drift-straight",
+    "pigs",
+    "stunt"
+  ],
+  "points": {
+    "1e-3": {
+      "block16": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 15625.947063166921,
+        "motion_bits_per_frame": 1866.4835380601282,
+        "bits_per_frame": 17492.430601227046,
+        "bpp": 0.26691330873454355,
+        "p_psnr": 31.677745559752378,
+        "p_pooled_psnr": 31.33399931425329,
+        "i_psnr": 30.820282828411674
+      },
+      "block8": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 14171.354535854929,
+        "motion_bits_per_frame": 8090.9808475798145,
+        "bits_per_frame": 22262.335383434744,
+        "bpp": 0.3396962796544608,
+        "p_psnr": 31.868337368851453,
+        "p_pooled_psnr": 31.54305851927915,
+        "i_psnr": 30.820282828411674
+      },
+      "block8_free": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 14171.354535854929,
+        "motion_bits_per_frame": 0.0,
+        "bits_per_frame": 14171.354535854929,
+        "bpp": 0.21623770959251296,
+        "p_psnr": 31.868337368851453,
+        "p_pooled_psnr": 31.54305851927915,
+        "i_psnr": 30.820282828411674
+      },
+      "block4_free": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 11194.604420731708,
+        "motion_bits_per_frame": 0.0,
+        "bits_per_frame": 11194.604420731708,
+        "bpp": 0.17081610749407514,
+        "p_psnr": 32.60314044492596,
+        "p_pooled_psnr": 32.276784575309414,
+        "i_psnr": 30.820282828411674
+      },
+      "dense_oracle": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 16371.651889211764,
+        "motion_bits_per_frame": 0.0,
+        "bits_per_frame": 16371.651889211764,
+        "bpp": 0.24981158278216192,
+        "p_psnr": 31.680496496984617,
+        "p_pooled_psnr": 31.33021443994322,
+        "i_psnr": 30.820282828411674
+      },
+      "dense_clean": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 16336.803570010798,
+        "motion_bits_per_frame": 0.0,
+        "bits_per_frame": 16336.803570010798,
+        "bpp": 0.2492798396302917,
+        "p_psnr": 31.679902803762335,
+        "p_pooled_psnr": 31.329442663723892,
+        "i_psnr": 30.820282828411674
+      },
+      "zero": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 36954.36312047447,
+        "motion_bits_per_frame": 0.0,
+        "bits_per_frame": 36954.36312047447,
+        "bpp": 0.5638788317943492,
+        "p_psnr": 30.283623372942728,
+        "p_pooled_psnr": 29.67326889494261,
+        "i_psnr": 30.820282828411674
+      }
+    },
+    "3e-4": {
+      "block16": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 25470.367977483485,
+        "motion_bits_per_frame": 1831.5525177254306,
+        "bits_per_frame": 27301.920495208917,
+        "bpp": 0.4165942458375384,
+        "p_psnr": 32.78159556396141,
+        "p_pooled_psnr": 32.29580867542492,
+        "i_psnr": 32.108597191206215
+      },
+      "block8": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 23788.484251937247,
+        "motion_bits_per_frame": 7862.398143474134,
+        "bits_per_frame": 31650.88239541138,
+        "bpp": 0.48295413811357696,
+        "p_psnr": 32.96455632902701,
+        "p_pooled_psnr": 32.51077639526593,
+        "i_psnr": 32.108597191206215
+      },
+      "block8_free": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 23788.484251937247,
+        "motion_bits_per_frame": 0.0,
+        "bits_per_frame": 23788.484251937247,
+        "bpp": 0.36298346331691356,
+        "p_psnr": 32.96455632902701,
+        "p_pooled_psnr": 32.51077639526593,
+        "i_psnr": 32.108597191206215
+      },
+      "block4_free": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 20471.799483136434,
+        "motion_bits_per_frame": 0.0,
+        "bits_per_frame": 20471.799483136434,
+        "bpp": 0.31237487004297537,
+        "p_psnr": 33.654788992501224,
+        "p_pooled_psnr": 33.23270100005958,
+        "i_psnr": 32.108597191206215
+      },
+      "dense_oracle": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 27184.286871189026,
+        "motion_bits_per_frame": 0.0,
+        "bits_per_frame": 27184.286871189026,
+        "bpp": 0.41479929918196146,
+        "p_psnr": 32.80933363672157,
+        "p_pooled_psnr": 32.311010311583246,
+        "i_psnr": 32.108597191206215
+      },
+      "dense_clean": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 27066.702791539636,
+        "motion_bits_per_frame": 0.0,
+        "bits_per_frame": 27066.702791539636,
+        "bpp": 0.4130051085134832,
+        "p_psnr": 32.81231086732156,
+        "p_pooled_psnr": 32.31339228700841,
+        "i_psnr": 32.108597191206215
+      },
+      "zero": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 51565.09236852134,
+        "motion_bits_per_frame": 0.0,
+        "bits_per_frame": 51565.09236852134,
+        "bpp": 0.7868208674395957,
+        "p_psnr": 31.162620798949312,
+        "p_pooled_psnr": 30.41295851704566,
+        "i_psnr": 32.108597191206215
+      }
+    },
+    "1e-4": {
+      "block16": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 37689.64088700457,
+        "motion_bits_per_frame": 1815.4339588527773,
+        "bits_per_frame": 39505.07484585735,
+        "bpp": 0.602799603971212,
+        "p_psnr": 33.21989466389165,
+        "p_pooled_psnr": 32.64520722065074,
+        "i_psnr": 32.62381689603527
+      },
+      "block8": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 35941.83284902185,
+        "motion_bits_per_frame": 7736.798732162881,
+        "bits_per_frame": 43678.63158118474,
+        "bpp": 0.6664830258359488,
+        "p_psnr": 33.41554436484553,
+        "p_pooled_psnr": 32.87699029851427,
+        "i_psnr": 32.62381689603527
+      },
+      "block8_free": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 35941.83284902185,
+        "motion_bits_per_frame": 0.0,
+        "bits_per_frame": 35941.83284902185,
+        "bpp": 0.5484288459628578,
+        "p_psnr": 33.41554436484553,
+        "p_pooled_psnr": 32.87699029851427,
+        "i_psnr": 32.62381689603527
+      },
+      "block4_free": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 33340.63468622968,
+        "motion_bits_per_frame": 0.0,
+        "bits_per_frame": 33340.63468622968,
+        "bpp": 0.5087377118870495,
+        "p_psnr": 34.123026903923794,
+        "p_pooled_psnr": 33.623995094862856,
+        "i_psnr": 32.62381689603527
+      },
+      "dense_oracle": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 38801.19302591463,
+        "motion_bits_per_frame": 0.0,
+        "bits_per_frame": 38801.19302591463,
+        "bpp": 0.5920592197557775,
+        "p_psnr": 33.26666989586734,
+        "p_pooled_psnr": 32.67000009094291,
+        "i_psnr": 32.62381689603527
+      },
+      "dense_clean": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 38718.375166730184,
+        "motion_bits_per_frame": 0.0,
+        "bits_per_frame": 38718.375166730184,
+        "bpp": 0.5907955195118741,
+        "p_psnr": 33.269220430384564,
+        "p_pooled_psnr": 32.67315012744389,
+        "i_psnr": 32.62381689603527
+      },
+      "zero": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 59793.25932895071,
+        "motion_bits_per_frame": 0.0,
+        "bits_per_frame": 59793.25932895071,
+        "bpp": 0.9123727314598192,
+        "p_psnr": 31.43382644021447,
+        "p_pooled_psnr": 30.594978158967365,
+        "i_psnr": 32.62381689603527
+      }
+    }
+  },
+  "bd_rate_vs_block16": {
+    "block8": 9.074011003946136,
+    "block8_free": -22.989112951961953,
+    "block4_free": -56.63035806565881,
+    "dense_oracle": -4.058705846167731,
+    "dense_clean": -4.4649150759135665,
+    "zero": null
+  },
+  "gate": {
+    "arm": "dense_oracle",
+    "threshold_percent": -25.0,
+    "bd_rate": -4.058705846167731,
+    "passed": false
+  }
+}
