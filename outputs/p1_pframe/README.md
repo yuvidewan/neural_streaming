@@ -69,3 +69,57 @@ and the measured ratios are 0.453 and 0.464.
 
 `gate2_stage1.json` and `gate2_stage2.json` hold the numbers. `gate2_local/*/lambda*/history.json`
 and `progress.json` hold the training curves. Models (`*.pt`) and logs are not committed.
+
+## Gate 3: inside the real video codec, real bytes, full DAVIS TEST (2026-11-10)
+
+`scripts/p1_gate3.py` codes all 9 DAVIS TEST sequences (719 frames) at GOP 10 with the gate 2
+stage 2 P-coders. Each P-frame references the previous **reconstruction**, so frames chain
+along the GOP.
+- **I-frames and motion:** the deployed Phase B rig's own payloads, unchanged. I-frame bytes per
+  frame match `bit_split_phase_b` exactly: 3,794 / 5,592 / 7,409.
+- **P-frames:** coded with the project's range coder against the model's Laplace, with the scale
+  snapped to 64 log-spaced tables.
+- **Container:** a `.nvct` v2 file from the deployed writer.
+
+Every stream is decoded from its file and matches the encoder bit for bit, at all 27
+sequence x rate-point combinations. The real P-frame bytes are within 0.01% of the model's ideal
+code length. The x264/x265 curves and the deployed points are the stored Phase B parity runs,
+scored the same way. Nothing was tuned on TEST.
+
+| lambda | codec | bytes | bpp | PSNR | MS-SSIM |
+|---|---|---|---|---|---|
+| 1e-3 | deployed | 1,740,415 | 0.2955 | 31.375 | 0.97466 |
+| 1e-3 | **learned P** | **1,686,034** | **0.2863** | **32.036** | **0.97862** |
+| 3e-4 | deployed | 2,735,515 | 0.4644 | 32.699 | 0.98386 |
+| 3e-4 | **learned P** | **2,621,959** | **0.4452** | **33.159** | **0.98518** |
+| 1e-4 | deployed | 3,820,310 | 0.6486 | 33.316 | 0.98677 |
+| 1e-4 | **learned P** | **3,756,947** | **0.6378** | **33.641** | **0.98770** |
+
+At every rate point the learned-P codec uses fewer bytes and gets higher quality.
+
+| BD-rate (seq-mean) | PSNR | MS-SSIM |
+|---|---|---|
+| learned P vs deployed | **-22.2%** | -16.1% |
+| learned P vs x264 | **+91.1%** (deployed +127.1%) | +74.9% (+106.7%) |
+| learned P vs x265 | +104.1% (+141.9%) | +71.8% (+102.2%) |
+| learned P vs x264 low-delay | +39.9% (+65.5%) | +28.4% (+50.8%) |
+| learned P vs x265 low-delay | +52.6% (+80.5%) | +25.4% (+47.6%) |
+
+Global-pooled PSNR, the sensitivity check: +136.1% vs x264 (deployed +187.4%).
+
+**GATE 3 PASSED.** The bar was below +117.1% vs x264 (deployed minus 10 points); the
+result is +91.1%, 36 points better than the deployed codec.
+- **The gain shows up as quality, not as smaller P-frames.**
+  - P-frames cost 0.57 / 0.61 / 0.67x an I-frame, about the deployed codec's 0.59-0.68x.
+  - The proxy's 0.45x did not carry over as a byte ratio.
+  - P-frames now come out above the I-frames' PSNR (pooled +0.72 / +0.51 / +0.44 dB), while the
+    deployed codec's came out below them. The whole stream gains 0.3-0.7 dB at fewer bytes.
+- **The share of bits is unchanged:** P-frame residuals are still 72-81% of the stream and
+  I-frames about 15%.
+- **Still not parity:** at the same quality it needs about 1.9x x264's bits.
+- **Coding speed:** encoding runs at about 3 frames/s, mostly the full motion search; decoding
+  takes 6 s for 719 frames on the RTX 5060.
+- **What this does not include yet:** a `.nvct` format version that declares the learned
+  P-coder (this run reuses the v2 residual-identity field), and cross-device decoding.
+
+`gate3.json` holds every number. `gate3.log` is not committed.

@@ -1,6 +1,6 @@
 # Plan: a learned P-frame coder
 
-Status: gate 1 PASSED 2026-11-05; gate 2 (Vimeo, 3 of 10 chunks) narrowly NOT PASSED 2026-11-10 at 0.453x/0.464x intra (bar 0.45x), still -31.8% BD-rate vs the hand-built P path (outputs/p1_pframe/README.md).
+Status: gate 1 PASSED 2026-11-05; gate 2 narrowly NOT PASSED (0.453x/0.464x proxy); **gate 3 PASSED 2026-11-10: real bytes on full DAVIS TEST, +91.1% vs x264 (deployed +127.1%), -22.2% BD-rate vs the deployed codec, decode-exact** (outputs/p1_pframe/README.md).
 
 ## Why
 
