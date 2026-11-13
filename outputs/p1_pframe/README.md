@@ -123,3 +123,32 @@ result is +91.1%, 36 points better than the deployed codec.
   P-coder (this run reuses the v2 residual-identity field), and cross-device decoding.
 
 `gate3.json` holds every number. `gate3.log` is not committed.
+
+## More training: Vimeo chunks 4-10 (2026-11-10 to 11-13)
+
+`run_more_training.sh`. The gate 3 P-coders (stage 2) trained further on the 7 Vimeo chunks
+they had not seen: 3,500 steps per chunk per lambda, unroll 3, lr 1e-4 halved every 2 chunks.
+Every chunk was deleted after use. Gate 3 was then rerun unchanged on the new models
+(`gate3_stage3.json`). It ran by hand because the script's wrapper was cut off after training.
+
+| λ | gate 3 (stage 2) | after chunks 4-10 (stage 3) |
+|---|---|---|
+| 1e-3 | 1,686,034 B, 32.036 dB, P/I 0.57 | 1,610,584 B (-4.5%), 32.226 dB, P/I 0.54 |
+| 3e-4 | 2,621,959 B, 33.159 dB, P/I 0.61 | 2,533,412 B (-3.4%), 33.273 dB, P/I 0.58 |
+| 1e-4 | 3,756,947 B, 33.641 dB, P/I 0.67 | 3,557,288 B (-5.3%), 33.891 dB, P/I 0.63 |
+
+Every stream decodes exactly, and the coder overhead is within 0.02% of the ideal.
+
+BD-rate, sequence-mean:
+- **vs x264: +77.8%** (was +91.1%; deployed +127.1%).
+- vs x265 +90.0%; x264 low-delay +30.3%; x265 low-delay +42.2%.
+- MS-SSIM vs x264 +63.2%.
+- **Stage 3 vs stage 2:** -11.0% PSNR, -7.5% MS-SSIM.
+- vs the deployed codec: -29.8% PSNR, -21.8% MS-SSIM.
+
+**The extra Vimeo training was worth 13 points.** Unlike gate 3, it came as both smaller
+files (3-5%) and higher quality (+0.1-0.25 dB). P-frames also got cheaper relative to
+I-frames. The codec still spends about 1.8x x264's bits at the same quality.
+
+`gate3_stage3.json` holds every number. `gate3_stage3.log`, `stage3.log` and the models are
+not committed.
