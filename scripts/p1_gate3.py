@@ -262,7 +262,9 @@ def build_rig(args, m21, md, intra, lam: str, bits: int, device, train_full, mot
         m11_dir=REFIT_DIR / f"m11_{tag}", m10k_dir=REFIT_DIR / f"m10k_{tag}", device=device,
         cache_dir=args.cache_dir or md.DEFAULT_CACHE_DIR, train_full=train_full,
         motion_train=motion_train, calibration_frames=args.calibration_frames,
-        gop_size=args.gop, block_size=args.block_size, search_range=args.search_range,
+        # The rig's I-frame and motion models were calibrated at the deployed GOP; their
+        # provenance check includes it. Coding at another --gop reuses them unchanged.
+        gop_size=bp.DEPLOYED_GOP, block_size=args.block_size, search_range=args.search_range,
         motion_cache=REFIT_DIR / f"m14_{tag}" / "motion_table.json", motion_identity=None,
         motion_cache_key=md._file_digest(checkpoint))
 

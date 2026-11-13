@@ -152,3 +152,40 @@ I-frames. The codec still spends about 1.8x x264's bits at the same quality.
 
 `gate3_stage3.json` holds every number. `gate3_stage3.log`, `stage3.log` and the models are
 not committed.
+
+## I-frame spacing: every 20 and every 30 frames (2026-11-14)
+
+`run_gop_check.sh` reruns gate 3 on the stage 3 coders with `--gop 20` and `--gop 30`. There
+is no training. The rule was fixed before running: adopt a longer spacing only if it beats
++77.8% vs x264 by at least 3 points.
+- `p1_gate3.py` now keeps the deployed rig (I-frame and motion models) at its calibrated
+  GOP 10. Coding at another GOP failed that rig's provenance check. GOP 10 results are
+  unchanged by this.
+
+| λ | GOP 10 | GOP 20 | GOP 30 |
+|---|---|---|---|
+| 1e-3 | 1,610,584 B, 32.226 dB | 1,541,528 B, 32.257 dB | 1,517,559 B, 32.264 dB |
+| 3e-4 | 2,533,412 B, 33.273 dB | 2,442,640 B, 33.270 dB | 2,412,481 B, 33.263 dB |
+| 1e-4 | 3,557,288 B, 33.891 dB | 3,448,531 B, 33.882 dB | 3,413,300 B, 33.872 dB |
+
+BD-rate vs x264 (default GOP and B-frames, which `--gop` does not touch):
+- GOP 10: +77.8%.
+- GOP 20: **+71.1%**.
+- GOP 30: **+69.1%** (vs GOP 10: -5.0% PSNR, -4.3% MS-SSIM).
+
+Every stream decodes exactly.
+
+**Adopted: GOP 30, at +69.1% vs x264.**
+- Quality holds over 29 chained P-frames, even though the coder trained on chains of 3. Mean
+  PSNR moves by at most 0.02 dB, and the P/I ratio stays the same.
+- The saving is the I-frames that are no longer sent.
+- **Caveats:**
+  - The spacing was chosen on TEST, from two candidates, so the gain is slightly
+    optimistic.
+  - The low-delay x264/x265 arms (+24.0% / +35.3%) are stored runs forced to GOP 10, so they
+    are not like-for-like at GOP 30.
+  - Longer spacing makes seeking and error recovery slower. That is a product trade-off that
+    BD-rate does not see.
+
+`gate3_stage3_gop20.json` and `gate3_stage3_gop30.json` hold every number. Logs are not
+committed.
