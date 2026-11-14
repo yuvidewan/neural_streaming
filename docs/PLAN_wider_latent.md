@@ -53,3 +53,32 @@ For A1 and A2:
   2026-10 192-channel run failed.
 - **Gate 3:** real bytes at GOP 30. **Passes if it beats +69.1% vs x264 by more than 8
   points.**
+
+### Gate 2 details (fixed 2026-11-14, before any gate 2 result)
+
+`scripts/p4_wide_latent.py train-vimeo`, run by `outputs/p4_wide_latent/run_gate2.sh`.
+
+- **Data:** Vimeo chunks 4-10, the same data stage 3 trained on. Each chunk is downloaded,
+  used by all six models, then deleted.
+- **P-coder (A2), one per lambda:** starts from the gate 1 A2 model.
+  - Stage 3's recipe: unroll 3, I-frames from the old intra model (frozen), batch 8, crop
+    256, lr 1e-4 (x0.1 for the last 2 chunks), grad clip 1, seed 43.
+  - **2,500 steps per chunk**, versus stage 3's 3,500. A2 is about 45% slower per step, and
+    this keeps the run near 1.5 days.
+- **Wide I-frame coder, one per lambda:** the A2 architecture fed a flat gray reference.
+  - With nothing to predict from, its 1/16 prior is a learned per-channel Laplace, so an
+    unused channel costs almost nothing. The 1/8 detail latent is coded given the 1/16 one.
+  - Starts from the gate 1 A2 model of the same lambda.
+  - 2,000 steps per chunk on single frames: batch of 8 frames, crop 256, the same lr
+    schedule, same lambda as the P-coder.
+- **Checks after training (VAL-B, reported, not pass/fail):**
+  - The A2 P-coder's BD-rate vs the stage 3 P-coder (motion oracle loop).
+  - The wide I-coder's no-rounding ceiling vs the old intra model's.
+- **Gate 3 arms (TEST, real bytes, GOP 30, every stream must decode exactly):**
+  1. A2 P-coder + old I-frames
+  2. A2 P-coder + wide I-frames
+  - **Passes if either arm is at or below +61.1% vs x264** (more than 8 points better
+    than +69.1%).
+  - Both arms are always reported. Picking the better of two is disclosed.
+  - The A2 coders get one more pass over chunks 4-10 than stage 3 did, so some of any gain
+    may be extra training. The write-up must say so.

@@ -13,6 +13,7 @@ context and the decoded 1/16 latent. Its synthesis branch starts at zero.
 Usage:
     p4_wide_latent.py train --lambda 3e-4 --kind a1|a2 [--steps 5000]
     p4_wide_latent.py evaluate
+    p4_wide_latent.py train-vimeo --scratch-dir C:/vimeo_scratch --chunks 4 5 6 7 8 9 10
 """
 
 from __future__ import annotations
@@ -276,9 +277,189 @@ def command_evaluate(args) -> None:
               f"{g['ceiling_lift_db']:+.2f} dB -> {verdict}")
 
 
+# --------------------------------------------------------------------------------------------
+# Gate 2: Vimeo retrain of A2 (P-coder) and a wide I-frame coder
+# --------------------------------------------------------------------------------------------
+
+GRAY = 0.5
+VIMEO_DIR = OUTPUT_DIR / "vimeo"
+ROLES = ("i", "p")
+
+
+def code_intra(model: WideLatentPFrameCoder, frame: torch.Tensor,
+               rounding: bool = True) -> dict[str, torch.Tensor]:
+    """The wide I-frame coder: the A2 architecture fed a flat gray reference. With nothing
+    to predict from, its 1/16 prior is a learned per-channel Laplace, so an unused channel
+    costs almost nothing. The 1/8 detail latent is coded given the decoded 1/16 latent."""
+    return model(frame, torch.full_like(frame, GRAY), rounding=rounding)
+
+
+def load_vimeo(role: str, lam: str, device, directory: Path = VIMEO_DIR) -> WideLatentPFrameCoder:
+    saved = torch.load(directory / role / f"lambda{lam}" / "model.pt", map_location="cpu",
+                       weights_only=False)
+    model = WideLatentPFrameCoder(p1.ConditionalPFrameCoder(**saved["config"]["base"]),
+                                  saved["config"]["kind"])
+    model.load_state_dict(saved["model_state_dict"])
+    return model.to(device).eval()
+
+
+def intra_step(model: WideLatentPFrameCoder, images: torch.Tensor, lam: float):
+    """One I-frame training step's loss pieces on `images` [N, 3, H, W] in [0, 1]."""
+    result = code_intra(model, images)
+    mse = F.mse_loss(result["reconstruction"], images)
+    bpp = result["bits"].mean() / (images.shape[-1] * images.shape[-2])
+    (mse + lam * bpp).backward()
+    return mse.detach(), bpp.detach()
+
+
+def train_role_on_chunk(role: str, lam: str, chunk: int, clip_dirs: list[Path], args,
+                        device) -> None:
+    """Train one (role, lambda) model on one chunk, resuming from its latest.pt.
+
+    role 'p': the A2 P-coder with stage 3's recipe (unroll 3, I-frames from the old intra
+    model, frozen). role 'i': the wide I-frame coder on single frames."""
+    out = Path(args.output_dir) / role / f"lambda{lam}"
+    out.mkdir(parents=True, exist_ok=True)
+    latest = out / "latest.pt"
+    saved, start_step, history = None, 0, []
+    if latest.is_file():
+        saved = torch.load(latest, map_location="cpu", weights_only=False)
+        model = WideLatentPFrameCoder(p1.ConditionalPFrameCoder(**saved["config"]["base"]),
+                                      saved["config"]["kind"])
+        model.load_state_dict(saved["model_state_dict"])
+        source = f"resumed {latest}"
+    else:
+        model = load_arm("a2", lam, "cpu")
+        source = f"init from {OUTPUT_DIR / 'finetune_a2'}"
+    model.to(device).train()
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    if saved is not None:
+        optimizer.load_state_dict(saved["optimizer_state_dict"])
+        history = saved.get("history", [])
+        if saved.get("chunk") == chunk:
+            start_step = saved["chunk_step"]
+    decayed = chunk in args.chunks[len(args.chunks) - args.lr_decay_chunks:]
+    lr = args.lr * (0.1 if decayed else 1.0)
+    for group in optimizer.param_groups:
+        group["lr"] = lr
+    steps = args.p_steps if role == "p" else args.i_steps
+    intra = p1._intra_model(lam, device).requires_grad_(False) if role == "p" else None
+    length, batch = (args.unroll + 1, args.batch) if role == "p" else (2, args.batch // 2)
+    print(f"[{role} {lam} chunk {chunk}] {source}; {len(clip_dirs)} clips, lr {lr:g}, "
+          f"steps {start_step}->{steps}", flush=True)
+    loader = torch.utils.data.DataLoader(
+        p1.VimeoClips(clip_dirs, length, args.crop), batch_size=batch, shuffle=True,
+        num_workers=args.num_workers, drop_last=True, persistent_workers=args.num_workers > 0)
+
+    def checkpoint(step: int) -> None:
+        state = {"model_state_dict": model.state_dict(), "config": model.config_dict(),
+                 "optimizer_state_dict": optimizer.state_dict(), "chunk": chunk,
+                 "chunk_step": step, "history": history, "lambda": lam, "role": role}
+        torch.save(state, out / "latest.tmp")
+        (out / "latest.tmp").replace(latest)
+
+    lam_value, pixels = float(lam), args.crop * args.crop
+    step, started, seen = start_step, time.time(), 0
+    running = {"mse": 0.0, "bpp": 0.0}
+    while step < steps:
+        for clip in loader:
+            clip = clip.to(device, non_blocking=True).float() / 255
+            optimizer.zero_grad(set_to_none=True)
+            if role == "p":
+                mse, bits = p1.unrolled_step(model, intra, clip, lam_value)   # backpropagates
+                bpp = bits / pixels
+            else:
+                mse, bpp = intra_step(model, clip.flatten(0, 1), lam_value)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            optimizer.step()
+            step += 1
+            seen += 1
+            running["mse"] += float(mse)
+            running["bpp"] += float(bpp)
+            if step % args.log_every == 0:
+                entry = {k: v / seen for k, v in running.items()}
+                entry.update(chunk=chunk, step=step, psnr=10 * math.log10(1 / entry["mse"]),
+                             lr=lr, minutes=(time.time() - started) / 60)
+                history.append(entry)
+                print(f"  [{role} {lam} c{chunk}] step {step:6d}  {entry['psnr']:.2f} dB  "
+                      f"{entry['bpp']:.4f} bpp  {entry['minutes']:.1f} min", flush=True)
+                running, seen = dict.fromkeys(running, 0.0), 0
+            if step % args.save_every == 0:
+                checkpoint(step)
+            if step >= steps:
+                break
+    checkpoint(step)
+    torch.save({"model_state_dict": model.state_dict(), "config": model.config_dict(),
+                "lambda": lam, "role": role, "chunks_done_through": chunk, "data": "vimeo90k",
+                "init": str(OUTPUT_DIR / "finetune_a2")}, out / "model.pt")
+    p1._save_json(out / "history.json", history)
+
+
+def command_train_vimeo(args) -> None:
+    import shutil
+
+    from nvc.utils.device import get_device
+    chunks = p1._load_script("train_vimeo_qat_combined")
+    device = get_device()
+    torch.manual_seed(args.seed)
+    out = Path(args.output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    progress_path = out / "progress.json"
+    progress = (json.loads(progress_path.read_text(encoding="utf-8")) if progress_path.is_file()
+                else {"done": []})
+    for chunk in args.chunks:
+        todo = [(role, lam) for lam in args.lambdas for role in args.roles
+                if [role, lam, chunk] not in progress["done"]]
+        if not todo:
+            print(f"[chunk {chunk}] already trained, skipping", flush=True)
+            continue
+        scratch = Path(args.scratch_dir) / f"chunk_{chunk}"
+        local = bool(args.local_vimeo) and args.local_chunk in (None, chunk)
+        group_root = (Path(args.local_vimeo) if local else chunks.download_and_extract_chunk(
+            chunk, scratch, dataset_owner=args.kaggle_owner, dataset_prefix=args.kaggle_prefix))
+        clip_dirs = p1.complete_clip_dirs(group_root)
+        if args.max_clips:
+            clip_dirs = clip_dirs[:args.max_clips]
+        for role, lam in todo:
+            train_role_on_chunk(role, lam, chunk, clip_dirs, args, device)
+            progress["done"].append([role, lam, chunk])
+            p1._save_json(progress_path, progress)
+        if not local:
+            print(f"[chunk {chunk}] trained for every model; deleting {scratch}", flush=True)
+            shutil.rmtree(scratch, ignore_errors=True)
+        elif args.delete_local_after:
+            print(f"[chunk {chunk}] trained for every model; deleting {args.delete_local_after}",
+                  flush=True)
+            shutil.rmtree(args.delete_local_after, ignore_errors=True)
+    print("train-vimeo complete:", progress["done"], flush=True)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
+    vimeo = sub.add_parser("train-vimeo")
+    vimeo.add_argument("--output-dir", default=str(VIMEO_DIR))
+    vimeo.add_argument("--scratch-dir", required=True)
+    vimeo.add_argument("--lambdas", nargs="+", choices=p1.LAMBDAS, default=list(p1.LAMBDAS))
+    vimeo.add_argument("--roles", nargs="+", choices=ROLES, default=list(ROLES))
+    vimeo.add_argument("--chunks", nargs="+", type=int, required=True)
+    vimeo.add_argument("--p-steps", type=int, default=3000)
+    vimeo.add_argument("--i-steps", type=int, default=2000)
+    vimeo.add_argument("--unroll", type=int, default=3)
+    vimeo.add_argument("--batch", type=int, default=8)
+    vimeo.add_argument("--crop", type=int, default=256)
+    vimeo.add_argument("--lr", type=float, default=1e-4)
+    vimeo.add_argument("--lr-decay-chunks", type=int, default=2)
+    vimeo.add_argument("--seed", type=int, default=43)
+    vimeo.add_argument("--num-workers", type=int, default=2)
+    vimeo.add_argument("--log-every", type=int, default=250)
+    vimeo.add_argument("--save-every", type=int, default=500)
+    vimeo.add_argument("--kaggle-owner", default="wangsally")
+    vimeo.add_argument("--kaggle-prefix", default="vimeo-90k")
+    vimeo.add_argument("--local-vimeo", default=None)
+    vimeo.add_argument("--local-chunk", type=int, default=None)
+    vimeo.add_argument("--delete-local-after", default=None)
+    vimeo.add_argument("--max-clips", type=int, default=0, help="smoke tests only")
     train = sub.add_parser("train")
     train.add_argument("--lambda", dest="lam", required=True, choices=p1.LAMBDAS)
     train.add_argument("--kind", required=True, choices=tuple(EXTRA))
@@ -293,7 +474,8 @@ def main(argv: list[str] | None = None) -> int:
     evaluate.add_argument("--gop", type=int, default=10)
     evaluate.add_argument("--ceiling-frames", type=int, default=20)
     args = parser.parse_args(argv)
-    {"train": command_train, "evaluate": command_evaluate}[args.command](args)
+    {"train": command_train, "evaluate": command_evaluate,
+     "train-vimeo": command_train_vimeo}[args.command](args)
     return 0
 
 

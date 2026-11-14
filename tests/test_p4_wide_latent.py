@@ -55,3 +55,22 @@ def test_no_rounding_flag_changes_only_the_decoded_latent():
         b = wide(frame, warped, rounding=False)
     assert torch.allclose(a["bits"], b["bits"])
     assert not torch.equal(a["reconstruction"], b["reconstruction"])
+
+
+def test_intra_coder_uses_a_flat_reference_and_codes_both_latents():
+    wide = p4.WideLatentPFrameCoder(_base(), "a2").eval()
+    frame = torch.rand(1, 3, 64, 64)
+    with torch.no_grad():
+        result = p4.code_intra(wide, frame)
+        same = wide(frame, torch.full_like(frame, p4.GRAY))
+    assert torch.equal(result["reconstruction"], same["reconstruction"])
+    assert result["bits"].item() > 0
+
+
+def test_intra_step_backpropagates_into_the_detail_branch():
+    wide = p4.WideLatentPFrameCoder(_base(), "a2")
+    wide.calibrate(torch.rand(2, 3, 64, 64), torch.full((2, 3, 64, 64), p4.GRAY))
+    wide.train()
+    mse, bpp = p4.intra_step(wide, torch.rand(2, 3, 64, 64), 1e-3)
+    assert wide.extra_syn.weight.grad.abs().sum() > 0
+    assert float(mse) > 0 and float(bpp) > 0
