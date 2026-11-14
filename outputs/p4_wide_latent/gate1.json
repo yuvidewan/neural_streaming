@@ -1,0 +1,184 @@
+{
+  "val_b": [
+    "car-roundabout",
+    "drift-straight",
+    "pigs",
+    "stunt"
+  ],
+  "gop": 10,
+  "points": {
+    "1e-3": {
+      "plain": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 15947.328180576727,
+        "motion_bits_per_frame": 1859.174507126339,
+        "bits_per_frame": 17806.50268770307,
+        "bpp": 0.27170566845250044,
+        "p_psnr": 32.07477769222361,
+        "p_pooled_psnr": 31.741785526362428,
+        "i_psnr": 30.820282828411674
+      },
+      "a1": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 4830.390568430831,
+        "motion_bits_per_frame": 2089.5943438805607,
+        "bits_per_frame": 6919.984912311392,
+        "bpp": 0.10559059009264209,
+        "p_psnr": 23.58396259922605,
+        "p_pooled_psnr": 22.33542660507261,
+        "i_psnr": 30.820282828411674
+      },
+      "a2": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 18322.950336239202,
+        "motion_bits_per_frame": 1861.456831084396,
+        "bits_per_frame": 20184.4071673236,
+        "bpp": 0.30798961131780395,
+        "p_psnr": 32.53983773586557,
+        "p_pooled_psnr": 32.27540515822011,
+        "i_psnr": 30.820282828411674
+      }
+    },
+    "3e-4": {
+      "plain": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 26301.145388719513,
+        "motion_bits_per_frame": 1830.1654921268766,
+        "bits_per_frame": 28131.310880846388,
+        "bpp": 0.4292497387824461,
+        "p_psnr": 33.09349801650871,
+        "p_pooled_psnr": 32.62782627182649,
+        "i_psnr": 32.108597191206215
+      },
+      "a1": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 33373.607100323934,
+        "motion_bits_per_frame": 1823.0231361786798,
+        "bits_per_frame": 35196.63023650261,
+        "bpp": 0.5370579564896029,
+        "p_psnr": 34.259111530190125,
+        "p_pooled_psnr": 33.87895718022661,
+        "i_psnr": 32.108597191206215
+      },
+      "a2": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 43277.97640370935,
+        "motion_bits_per_frame": 1817.7770894752155,
+        "bits_per_frame": 45095.753493184566,
+        "bpp": 0.6881065901670008,
+        "p_psnr": 36.032590505806596,
+        "p_pooled_psnr": 35.81898057267776,
+        "i_psnr": 32.108597191206215
+      }
+    },
+    "1e-4": {
+      "plain": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 38369.32676733994,
+        "motion_bits_per_frame": 1816.3313761716543,
+        "bits_per_frame": 40185.658143511595,
+        "bpp": 0.6131844809495788,
+        "p_psnr": 33.620962142663124,
+        "p_pooled_psnr": 33.08892973454579,
+        "i_psnr": 32.62381689603527
+      },
+      "a1": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 61636.90566247459,
+        "motion_bits_per_frame": 1810.7165110782603,
+        "bits_per_frame": 63447.62217355285,
+        "bpp": 0.9681338832634407,
+        "p_psnr": 36.343591901544556,
+        "p_pooled_psnr": 35.9057316965134,
+        "i_psnr": 32.62381689603527
+      },
+      "a2": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 75294.28841145833,
+        "motion_bits_per_frame": 1810.8964369507505,
+        "bits_per_frame": 77105.18484840909,
+        "bpp": 1.1765317512269453,
+        "p_psnr": 38.263071432847696,
+        "p_pooled_psnr": 37.965126461670216,
+        "i_psnr": 32.62381689603527
+      }
+    }
+  },
+  "ceiling": {
+    "1e-3": {
+      "plain": {
+        "car-roundabout": 30.89986565925718,
+        "drift-straight": 32.19372155843852,
+        "pigs": 36.05752287497795,
+        "stunt": 32.147050496431746
+      },
+      "a1": {
+        "car-roundabout": 24.90347757639432,
+        "drift-straight": 24.07755566603316,
+        "pigs": 30.891306376173837,
+        "stunt": 27.36955843788033
+      },
+      "a2": {
+        "car-roundabout": 31.938588569796195,
+        "drift-straight": 33.24394321532109,
+        "pigs": 36.871200985779275,
+        "stunt": 33.08962685553911
+      }
+    },
+    "3e-4": {
+      "plain": {
+        "car-roundabout": 31.231632348337836,
+        "drift-straight": 32.608956786733145,
+        "pigs": 36.79492544228028,
+        "stunt": 32.60965439518456
+      },
+      "a1": {
+        "car-roundabout": 32.767065731041015,
+        "drift-straight": 34.35660125018582,
+        "pigs": 38.16034029879593,
+        "stunt": 33.948568770714616
+      },
+      "a2": {
+        "car-roundabout": 36.019383790495105,
+        "drift-straight": 37.48964057169852,
+        "pigs": 40.79427759774421,
+        "stunt": 36.69022224290725
+      }
+    },
+    "1e-4": {
+      "plain": {
+        "car-roundabout": 31.439252144908682,
+        "drift-straight": 32.84756275757196,
+        "pigs": 37.26775886224146,
+        "stunt": 32.88987545493497
+      },
+      "a1": {
+        "car-roundabout": 34.596824299261144,
+        "drift-straight": 36.33819686488859,
+        "pigs": 40.13429751264303,
+        "stunt": 35.60015377924718
+      },
+      "a2": {
+        "car-roundabout": 37.577119448852315,
+        "drift-straight": 39.23925052332261,
+        "pigs": 42.97706811321783,
+        "stunt": 37.97339688006748
+      }
+    }
+  },
+  "judged_video": "car-roundabout",
+  "gate": {
+    "a1": {
+      "bd_rate_vs_plain": 10.389678216542642,
+      "ceiling_lift_db": -0.4344608486024022,
+      "passed": false,
+      "near_miss": false
+    },
+    "a2": {
+      "bd_rate_vs_plain": -20.62039642445983,
+      "ceiling_lift_db": 3.988113885546646,
+      "passed": true,
+      "near_miss": false
+    }
+  }
+}

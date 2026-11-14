@@ -1,6 +1,6 @@
 # Plan: a wider latent for the learned P-frame coder (Plan A)
 
-Status: planned 2026-11-14, gate 1 running.
+Status: gate 1 PASSED 2026-11-14 by A2 (+32 detail channels at 1/8): -20.6% P-frame BD-rate vs plain, and the car-roundabout ceiling is +3.99 dB higher. A1 NOT PASSED (+10.4%; its λ=1e-3 run diverged on the last step). Next is gate 2. See outputs/p4_wide_latent/README.md.
 
 ## Why
 
