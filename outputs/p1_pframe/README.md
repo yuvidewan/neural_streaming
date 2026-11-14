@@ -189,3 +189,9 @@ Every stream decodes exactly.
 
 `gate3_stage3_gop20.json` and `gate3_stage3_gop30.json` hold every number. Logs are not
 committed.
+
+**Like-for-like low-delay number (2026-11-14):** x264 and x265 were re-run with an I-frame
+every 30 (`outputs/benchmarks/parity_classical_gop30/`). Against x264 low-delay at GOP 30
+the GOP 30 codec is **+40.4% PSNR / +28.8% MS-SSIM**, not the +24.0% quoted above, which
+compared it with x264 forced to GOP 10. x264 low-delay itself saves 13.2% going from 10 to
+30. The +69.1% vs default x264 is unchanged.
