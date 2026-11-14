@@ -1,0 +1,89 @@
+{
+  "val_b": [
+    "car-roundabout",
+    "drift-straight",
+    "pigs",
+    "stunt"
+  ],
+  "gop": 10,
+  "points": {
+    "1e-3": {
+      "plain": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 15947.328180576727,
+        "motion_bits_per_frame": 1859.174507126339,
+        "bits_per_frame": 17806.50268770307,
+        "bpp": 0.27170566845250044,
+        "p_psnr": 32.07477769222361,
+        "p_pooled_psnr": 31.741785526362428,
+        "i_psnr": 30.820282828411674,
+        "z_bits_per_frame": 0.0
+      },
+      "hyper": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 15988.246786474212,
+        "motion_bits_per_frame": 1862.7944149977668,
+        "bits_per_frame": 17851.04120147198,
+        "bpp": 0.2723852722392575,
+        "p_psnr": 32.07647993583418,
+        "p_pooled_psnr": 31.74264999269999,
+        "i_psnr": 30.820282828411674,
+        "z_bits_per_frame": 7.883047103881836
+      }
+    },
+    "3e-4": {
+      "plain": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 26301.145388719513,
+        "motion_bits_per_frame": 1830.1654921268766,
+        "bits_per_frame": 28131.310880846388,
+        "bpp": 0.4292497387824461,
+        "p_psnr": 33.09349801650871,
+        "p_pooled_psnr": 32.62782627182649,
+        "i_psnr": 32.108597191206215,
+        "z_bits_per_frame": 0.0
+      },
+      "hyper": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 26268.39164126016,
+        "motion_bits_per_frame": 1825.2941406168384,
+        "bits_per_frame": 28093.685781877,
+        "bpp": 0.42867562533381653,
+        "p_psnr": 33.1049516362174,
+        "p_pooled_psnr": 32.639675935297475,
+        "i_psnr": 32.108597191206215,
+        "z_bits_per_frame": 7.883047103881836
+      }
+    },
+    "1e-4": {
+      "plain": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 38369.32676733994,
+        "motion_bits_per_frame": 1816.3313761716543,
+        "bits_per_frame": 40185.658143511595,
+        "bpp": 0.6131844809495788,
+        "p_psnr": 33.620962142663124,
+        "p_pooled_psnr": 33.08892973454579,
+        "i_psnr": 32.62381689603527,
+        "z_bits_per_frame": 0.0
+      },
+      "hyper": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 38370.20973863059,
+        "motion_bits_per_frame": 1816.229372700872,
+        "bits_per_frame": 40186.43911133146,
+        "bpp": 0.6131963975728068,
+        "p_psnr": 33.63311412127844,
+        "p_pooled_psnr": 33.09932656460424,
+        "i_psnr": 32.62381689603527,
+        "z_bits_per_frame": 7.883047103881836
+      }
+    }
+  },
+  "bd_rate_hyper_vs_plain": -0.4469106966694225,
+  "gate": {
+    "threshold_percent": -8.0,
+    "bd_rate": -0.4469106966694225,
+    "passed": false
+  }
+}

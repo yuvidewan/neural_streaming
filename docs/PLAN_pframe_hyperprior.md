@@ -1,6 +1,6 @@
 # Plan: side information (a hyperprior) for the learned P-frame coder
 
-Status: planned 2026-11-14. Nothing built yet.
+Status: gate 1 NOT PASSED 2026-11-14: hyperprior vs an equally fine-tuned plain coder is -0.4% P-frame BD-rate (bar -8%); z collapsed to 8 bits/frame. Stopped. See outputs/p3_hyperprior/README.md.
 
 ## Why
 
