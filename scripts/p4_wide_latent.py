@@ -434,6 +434,63 @@ def command_train_vimeo(args) -> None:
     print("train-vimeo complete:", progress["done"], flush=True)
 
 
+@torch.no_grad()
+def command_check_gate2(args) -> None:
+    """Gate 2's VAL-B checks (reported, not pass/fail): the Vimeo A2 P-coder vs the stage 3
+    P-coder in the motion oracle loop, and the wide I-coder vs the old intra model on every
+    10th VAL-B frame, with and without rounding."""
+    import benchmark_parity as bp
+    from nvc.utils.config import load_default_config
+    from nvc.utils.device import get_device
+    oracle = p1._load_script("p2_motion_oracle")
+    mc = p1._load_script("m10h_motion_compensation")
+    m21 = p1._load_script("m21_refinement")
+    device = get_device()
+    sequences = m21.val_b_sequences(load_default_config().processed_data_dir / "manifest.json",
+                                    count=4)
+    report = {"val_b": [s.sequence_id for s in sequences], "p": {}, "i": {}}
+    for lam in p1.LAMBDAS:
+        intra = p1._intra_model(lam, device)
+        stage3 = WideLatentPFrameCoder(load_base(INIT_DIR, lam)).to(device).eval()
+        wide_p = load_vimeo("p", lam, device, Path(args.models_dir))
+        wide_i = load_vimeo("i", lam, device, Path(args.models_dir))
+        report["p"][lam] = {name: oracle.run_arm("block16", mc, intra, model, sequences,
+                                                 device, args.gop)
+                            for name, model in (("stage3", stage3), ("a2_vimeo", wide_p))}
+        rows = {"old": [], "wide": []}
+        with mc.deterministic_kernels():
+            for sequence in sequences:
+                frames = sequence.load_frames()[::args.gop].to(device)
+                for t in range(frames.shape[0]):
+                    frame = frames[t:t + 1]
+                    latent = intra.encode(frame)
+                    rows["old"].append((p1.psnr(intra.decode(torch.round(latent)).clamp(0, 1), frame),
+                                        p1.psnr(intra.decode(latent).clamp(0, 1), frame), None))
+                    coded = code_intra(wide_i, frame)
+                    rows["wide"].append((p1.psnr(coded["reconstruction"], frame),
+                                         p1.psnr(code_intra(wide_i, frame, rounding=False)
+                                                 ["reconstruction"], frame),
+                                         float(coded["bits"]) / (frame.shape[-1] * frame.shape[-2])))
+        report["i"][lam] = {name: {"psnr": sum(r[0] for r in v) / len(v),
+                                   "ceiling": sum(r[1] for r in v) / len(v),
+                                   "ideal_bpp": (sum(r[2] for r in v) / len(v)) if v[0][2] else None}
+                            for name, v in rows.items()}
+        p, i = report["p"][lam], report["i"][lam]
+        print(f"  [{lam}] P stage3 {p['stage3']['bpp']:.4f} bpp {p['stage3']['p_psnr']:.2f} dB | "
+              f"A2 {p['a2_vimeo']['bpp']:.4f} bpp {p['a2_vimeo']['p_psnr']:.2f} dB || I old "
+              f"{i['old']['psnr']:.2f} dB (ceiling {i['old']['ceiling']:.2f}) | wide "
+              f"{i['wide']['psnr']:.2f} dB at {i['wide']['ideal_bpp']:.4f} bpp "
+              f"(ceiling {i['wide']['ceiling']:.2f})", flush=True)
+
+    def curve(name):
+        return sorted((report["p"][lam][name]["bpp"], report["p"][lam][name]["p_psnr"])
+                      for lam in p1.LAMBDAS)
+
+    report["p_bd_rate_a2_vs_stage3"] = bp.bd_rate(curve("stage3"), curve("a2_vimeo"))
+    (OUTPUT_DIR / args.output_name).write_text(json.dumps(report, indent=2), encoding="utf-8")
+    print(f"P-frame BD-rate, A2 (Vimeo) vs stage 3: {report['p_bd_rate_a2_vs_stage3']:+.1f}%")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
@@ -473,9 +530,13 @@ def main(argv: list[str] | None = None) -> int:
     evaluate.add_argument("--kinds", nargs="+", default=list(EXTRA), choices=tuple(EXTRA))
     evaluate.add_argument("--gop", type=int, default=10)
     evaluate.add_argument("--ceiling-frames", type=int, default=20)
+    check = sub.add_parser("check-gate2")
+    check.add_argument("--gop", type=int, default=10)
+    check.add_argument("--models-dir", default=str(VIMEO_DIR))
+    check.add_argument("--output-name", default="gate2_check.json")
     args = parser.parse_args(argv)
-    {"train": command_train, "evaluate": command_evaluate,
-     "train-vimeo": command_train_vimeo}[args.command](args)
+    {"train": command_train, "evaluate": command_evaluate, "train-vimeo": command_train_vimeo,
+     "check-gate2": command_check_gate2}[args.command](args)
     return 0
 
 
