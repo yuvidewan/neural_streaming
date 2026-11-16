@@ -166,3 +166,20 @@ decoding 7-9 s (stage 3: 243-269 s and 7-9 s).
 We are still +39.9% vs x264 default and +16.1% vs x264 low-delay at GOP 30. The remaining gap
 is cows and schoolgirls. A wider latent (128 channels at 1/8, or 4 values per pixel, as
 DCVC-RT uses), B-frames, and a rate-aware quantizer are the candidates.
+
+## Stricter anchor: x264 in full colour (added 2026-11-17)
+
+Every x264/x265 anchor above used 4:2:0, which halves the colour resolution, but every codec
+is scored in full RGB. That handicaps x264. With x264/x265 in 4:4:4 (full colour) on the same
+256x256 TEST frames (`outputs/benchmarks/parity_classical_444_gop30/`):
+
+| A2 P + wide I vs | 4:2:0 anchor (above) | 4:4:4 anchor |
+|---|---|---|
+| x264 default, PSNR | +39.9% | **+77.2%** |
+| x264 low-delay GOP 30, PSNR | +16.1% | **+49.0%** |
+| x265 default, PSNR | +52.0% | +85.2% |
+| x264 default, MS-SSIM | +51.6% | +67.4% |
+
+The 4:4:4 anchor is the stricter and fairer one for a codec scored in RGB. Both are reported
+from now on. Gate 3 was fixed against the 4:2:0 anchor, so its verdict stands as written, but
+the gap to x264 is larger than the headline above suggests.
