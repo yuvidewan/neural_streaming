@@ -1,0 +1,18 @@
+{
+  "gop": 30,
+  "baseline": 69.1,
+  "threshold": 61.099999999999994,
+  "arms": {
+    "old": {
+      "vs_x264": 40.35279540842409,
+      "vs_x264_lowdelay": 4.746587952214054,
+      "valid": true
+    },
+    "wide": {
+      "vs_x264": 39.85857811721281,
+      "vs_x264_lowdelay": 4.332724481527395,
+      "valid": true
+    }
+  },
+  "passed": true
+}

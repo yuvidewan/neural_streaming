@@ -356,7 +356,14 @@ def train_role_on_chunk(role: str, lam: str, chunk: int, clip_dirs: list[Path], 
                  "optimizer_state_dict": optimizer.state_dict(), "chunk": chunk,
                  "chunk_step": step, "history": history, "lambda": lam, "role": role}
         torch.save(state, out / "latest.tmp")
-        (out / "latest.tmp").replace(latest)
+        for attempt in range(30):   # OneDrive or antivirus can briefly lock the file on Windows
+            try:
+                (out / "latest.tmp").replace(latest)
+                return
+            except PermissionError:
+                if attempt == 29:
+                    raise
+                time.sleep(2)
 
     lam_value, pixels = float(lam), args.crop * args.crop
     step, started, seen = start_step, time.time(), 0
@@ -388,7 +395,8 @@ def train_role_on_chunk(role: str, lam: str, chunk: int, clip_dirs: list[Path], 
                 checkpoint(step)
             if step >= steps:
                 break
-    checkpoint(step)
+    if step % args.save_every != 0 or step == start_step:
+        checkpoint(step)
     torch.save({"model_state_dict": model.state_dict(), "config": model.config_dict(),
                 "lambda": lam, "role": role, "chunks_done_through": chunk, "data": "vimeo90k",
                 "init": str(OUTPUT_DIR / "finetune_a2")}, out / "model.pt")

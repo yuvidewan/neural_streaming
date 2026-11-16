@@ -1,6 +1,6 @@
 # Plan: a wider latent for the learned P-frame coder (Plan A)
 
-Status: gate 1 PASSED 2026-11-14 by A2 (+32 detail channels at 1/8): -20.6% P-frame BD-rate vs plain, and the car-roundabout ceiling is +3.99 dB higher. A1 NOT PASSED (+10.4%; its λ=1e-3 run diverged on the last step). Next is gate 2. See outputs/p4_wide_latent/README.md.
+Status: **gate 3 PASSED 2026-11-16**: real bytes on TEST at GOP 30, the A2 P-coder with wide I-frames is +39.9% vs x264 (+16.1% vs x264 low-delay at GOP 30), down from +69.1%; the bar was +61.1%. Gate 1 PASSED 2026-11-14 by A2 (-20.6% P-frame BD-rate, +3.99 dB ceiling); A1 NOT PASSED. See outputs/p4_wide_latent/README.md.
 
 ## Why
 

@@ -72,3 +72,97 @@ The bar, fixed in the plan before the run, was BD-rate ≤ -10% and a ceiling li
 
 Gate 2: retrain A2 on Vimeo, plus a wider I-frame model with the learned per-value prior.
 Gate 3: real bytes at GOP 30. It passes if it beats +69.1% vs x264 by more than 8 points.
+
+# Gate 2 and gate 3 (2026-11-16): PASSED
+
+Gate 2 is a Vimeo retrain, run by `run_gate2.sh`. Gate 3 is real bytes on DAVIS TEST at GOP 30
+(`scripts/p4_gate3.py`). The recipe and the bar were fixed in `docs/PLAN_wider_latent.md`
+before any result.
+
+## Gate 3: real bytes, TEST, GOP 30, every stream decodes exactly
+
+| codec | vs x264 (PSNR) | vs x264 low-delay, GOP 30 | vs x264 (MS-SSIM) | vs x265 (PSNR) |
+|---|---|---|---|---|
+| stage 3 P-coder (before) | +69.1% | +40.4% | +55.9% | +80.7% |
+| A2 P-coder + old I-frames | **+40.4%** | +16.5% | +52.2% | +52.6% |
+| A2 P-coder + wide I-frames | **+39.9%** | **+16.1%** | +51.6% | +52.0% |
+
+**Bar: either arm at or below +61.1%. Both arms pass, by about 21 points.** `gate3_verdict_gop30.json`.
+The low-delay column uses the fair GOP-30 classical runs (`gate3_vs_classical_gop30.json`).
+`p4_gate3.py` also prints a "lowdelay" line of about +4.5%, but that is against x264 forced to
+GOP 10, which is not a fair match.
+
+| lambda | arm | bpp | PSNR | I PSNR | P PSNR | I-frame share of bytes |
+|---|---|---|---|---|---|---|
+| 1e-3 | stage 3 | 0.258 | 32.26 | 30.17 | 31.05 | 6.7% |
+| 1e-3 | A2 + wide I | 0.298 | 33.05 | 30.85 | 32.05 | 6.6% |
+| 3e-4 | stage 3 | 0.410 | 33.26 | 31.20 | 31.76 | 6.3% |
+| 3e-4 | A2 + wide I | 0.616 | 35.25 | 33.51 | 34.45 | 6.0% |
+| 1e-4 | stage 3 | 0.580 | 33.87 | 31.58 | 32.15 | 5.9% |
+| 1e-4 | A2 + wide I | 1.028 | 37.92 | 35.44 | 36.99 | 5.6% |
+
+The ideal-to-real coder overhead is +0.06%. On 719 frames, encoding takes 200-220 s and
+decoding 7-9 s (stage 3: 243-269 s and 7-9 s).
+
+## Per video, vs x264 (PSNR BD-rate)
+
+| video | stage 3 | A2 + old I | A2 + wide I | A2 + wide I vs x264 low-delay |
+|---|---|---|---|---|
+| surf | -5.3% | -20.0% | **-20.5%** | -29.6% |
+| cat-girl | +25.3% | -4.4% | **-4.7%** | -15.0% |
+| bmx-bumps | +71.6% | +52.2% | +50.9% | +28.9% |
+| drift-chicane | +101.2% | +64.4% | +62.8% | +9.0% |
+| car-turn | +139.6% | +85.8% | +84.5% | +23.4% |
+| cows | +292.1% | +184.1% | +181.3% | +67.3% |
+| schoolgirls | +292.3% | +220.0% | +219.2% | +66.0% |
+| drone | -20.6% | beats x264 | beats x264 | |
+| gold-fish | above range | beats x264 | beats x264 | |
+
+- On drone and gold-fish, the new codec's lowest point already beats x264's best point. Drone
+  is 35.69 dB at 0.263 bpp against x264's 35.41 dB at 0.343 bpp. Gold-fish is 34.28 dB at
+  0.220 bpp against 33.46 dB at 0.304 bpp. The curves overlap too little for a BD-rate, so
+  these are listed as wins, not numbers. `gate3_per_video.json`.
+- **We now beat x264 on 4 of 9 test videos** (stage 3: 2, plus gold-fish out of range).
+- Every video improved. The two detailed videos improved the most in points (cows -111,
+  schoolgirls -73), but they are still the gap.
+
+## Gate 2 checks (VAL-B, reported, not pass/fail)
+
+`gate2_check.json`. The motion oracle loop, GOP 10.
+
+| lambda | stage 3 P | A2 P (Vimeo) | old I: rounded / ceiling | wide I: rounded / ceiling |
+|---|---|---|---|---|
+| 1e-3 | 0.254 bpp, 31.91 dB | 0.298 bpp, 32.89 dB | 30.82 / 32.10 dB | 31.50 / 33.47 dB |
+| 3e-4 | 0.403 bpp, 32.93 dB | 0.603 bpp, 35.35 dB | 32.11 / 32.75 dB | 34.37 / 36.48 dB |
+| 1e-4 | 0.571 bpp, 33.51 dB | 1.016 bpp, 38.25 dB | 32.62 / 32.88 dB | 36.56 / 38.03 dB |
+
+- **A2 P-coder vs stage 3: -31.2% P-frame BD-rate.** Gate 1 measured -20.6% after only a DAVIS
+  fine-tune.
+- **The wide I-coder lifts the I-frame ceiling from 32.9 to 38.0 dB.** The old intra model's
+  ceiling barely moves with lambda.
+
+## Caveats (must be read with the result)
+
+- **Extra training.** The A2 coders got one more pass over Vimeo chunks 4-10 than stage 3 did.
+  Some of the gain may be extra training rather than the wider latent. Gate 1 isolated the
+  latent's effect at -20.6% with equal training.
+- **Best of two arms.** Two arms were run and the bar needed only one. Both pass, and they
+  differ by only 0.5 points, so this choice does not matter here.
+- **The wide I-coder at lambda 1e-4 diverged** at the end of chunk 6: its 250-step training
+  average fell from 39.7 to 27.4 dB. No earlier save was kept. It recovered to 38.5 dB by the
+  end of chunk 7 and finished at 39.0 dB. The released model is the recovered one.
+- **Rate range.** The new codec runs at higher rates (up to 1.03 bpp vs 0.58). The BD-rate vs
+  x264 is computed where the curves overlap, which is the low-rate end, where gate 1 found
+  the wider latent's gain smallest. The gain at matched high quality is larger than the
+  headline.
+- **MS-SSIM gained much less than PSNR** (+55.9% to +51.6%). The training loss is MSE.
+- **One crash and one code fix during the run.** A Windows file lock, most likely OneDrive,
+  failed a checkpoint rename. The save now retries, and a duplicate final save was removed. No
+  training step was lost or repeated. The training recipe is unchanged.
+- All results are on 9 DAVIS TEST videos at 480p.
+
+## Next
+
+We are still +39.9% vs x264 default and +16.1% vs x264 low-delay at GOP 30. The remaining gap
+is cows and schoolgirls. A wider latent (128 channels at 1/8, or 4 values per pixel, as
+DCVC-RT uses), B-frames, and a rate-aware quantizer are the candidates.

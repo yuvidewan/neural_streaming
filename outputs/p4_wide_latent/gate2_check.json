@@ -1,0 +1,115 @@
+{
+  "val_b": [
+    "car-roundabout",
+    "drift-straight",
+    "pigs",
+    "stunt"
+  ],
+  "p": {
+    "1e-3": {
+      "stage3": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 14799.303370530044,
+        "motion_bits_per_frame": 1867.5561430286227,
+        "bits_per_frame": 16666.859513558666,
+        "bpp": 0.25431609365171304,
+        "p_psnr": 31.908603836150437,
+        "p_pooled_psnr": 31.579550409836294,
+        "i_psnr": 30.820282828411674
+      },
+      "a2_vimeo": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 17686.19374047256,
+        "motion_bits_per_frame": 1866.911483515047,
+        "bits_per_frame": 19553.105223987608,
+        "bpp": 0.2983567081296937,
+        "p_psnr": 32.88708576194699,
+        "p_pooled_psnr": 32.68074397214243,
+        "i_psnr": 30.820282828411674
+      }
+    },
+    "3e-4": {
+      "stage3": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 24599.646476435468,
+        "motion_bits_per_frame": 1829.1992709736185,
+        "bits_per_frame": 26428.845747409086,
+        "bpp": 0.4032721824250654,
+        "p_psnr": 32.92994788407241,
+        "p_pooled_psnr": 32.459150977793676,
+        "i_psnr": 32.108597191206215
+      },
+      "a2_vimeo": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 37715.71758685849,
+        "motion_bits_per_frame": 1829.6320424784033,
+        "bits_per_frame": 39545.349629336895,
+        "bpp": 0.6034141483968642,
+        "p_psnr": 35.34608915095499,
+        "p_pooled_psnr": 35.05379185850855,
+        "i_psnr": 32.108597191206215
+      }
+    },
+    "1e-4": {
+      "stage3": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 35604.56963763974,
+        "motion_bits_per_frame": 1814.7282276741676,
+        "bits_per_frame": 37419.2978653139,
+        "bpp": 0.5709731729936813,
+        "p_psnr": 33.50801854824991,
+        "p_pooled_psnr": 32.96194557277091,
+        "i_psnr": 32.62381689603527
+      },
+      "a2_vimeo": {
+        "p_frames": 246,
+        "residual_bits_per_frame": 64780.99121887703,
+        "motion_bits_per_frame": 1808.8171687740478,
+        "bits_per_frame": 66589.80838765108,
+        "bpp": 1.016079839899461,
+        "p_psnr": 38.25347254699173,
+        "p_pooled_psnr": 37.974341823263956,
+        "i_psnr": 32.62381689603527
+      }
+    }
+  },
+  "i": {
+    "1e-3": {
+      "old": {
+        "psnr": 30.820282828411674,
+        "ceiling": 32.10061231736817,
+        "ideal_bpp": null
+      },
+      "wide": {
+        "psnr": 31.498323714902263,
+        "ceiling": 33.46806803432791,
+        "ideal_bpp": 0.5303566959397547
+      }
+    },
+    "3e-4": {
+      "old": {
+        "psnr": 32.108597191206215,
+        "ceiling": 32.750547202464446,
+        "ideal_bpp": null
+      },
+      "wide": {
+        "psnr": 34.367109728199594,
+        "ceiling": 36.48241152863247,
+        "ideal_bpp": 0.9817168979809202
+      }
+    },
+    "1e-4": {
+      "old": {
+        "psnr": 32.62381689603527,
+        "ceiling": 32.8785413968786,
+        "ideal_bpp": null
+      },
+      "wide": {
+        "psnr": 36.56425893572181,
+        "ceiling": 38.032466081055894,
+        "ideal_bpp": 1.53299067760336
+      }
+    }
+  },
+  "p_bd_rate_a2_vs_stage3": -31.17441721089953
+}
