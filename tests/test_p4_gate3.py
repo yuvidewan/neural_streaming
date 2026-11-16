@@ -44,3 +44,25 @@ def test_intra_frame_codes_against_a_gray_reference():
         expected = p4.code_intra(model, frame)["reconstruction"]
     assert torch.equal(decoded, reconstruction)
     assert torch.allclose(reconstruction, expected, atol=1e-6)
+
+
+def test_tuning_never_raises_the_coded_cost_and_still_decodes_exactly():
+    model, frame, warped = _model()
+    tables = g3.cumulative_tables()
+    with torch.no_grad():
+        y, x, info = p4g.tune_latents(model, frame, warped, 1e-3, 15, 0.05)
+        payload, reconstruction, _ = p4g.encode_frame(model, frame, warped, tables,
+                                                      (1e-3, 15, 0.05))
+        decoded = p4g.decode_frame(model, payload, warped, tables)
+    assert info["best_cost"] <= info["first_cost"]
+    assert torch.equal(decoded, reconstruction)
+
+
+def test_zero_tuning_steps_is_the_untuned_encoder():
+    model, frame, warped = _model()
+    tables = g3.cumulative_tables()
+    with torch.no_grad():
+        plain = p4g.encode_frame(model, frame, warped, tables)
+        zero = p4g.encode_frame(model, frame, warped, tables, (1e-3, 0, 0.05))
+    assert plain[0] == zero[0]
+    assert torch.equal(plain[1], zero[1])

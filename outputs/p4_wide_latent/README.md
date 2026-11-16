@@ -159,7 +159,7 @@ decoding 7-9 s (stage 3: 243-269 s and 7-9 s).
 - **One crash and one code fix during the run.** A Windows file lock, most likely OneDrive,
   failed a checkpoint rename. The save now retries, and a duplicate final save was removed. No
   training step was lost or repeated. The training recipe is unchanged.
-- All results are on 9 DAVIS TEST videos at 480p.
+- All results are on 9 DAVIS TEST videos, resized and centre-cropped to 256x256 (719 frames). This is a small test set at a low resolution.
 
 ## Next
 

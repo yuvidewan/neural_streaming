@@ -248,14 +248,16 @@ class ClassicalArm:
     """libx264/libx265 at one structural configuration. Plain class, not a
     dataclass: scripts are loaded without sys.modules registration."""
 
-    __slots__ = ("name", "encoder", "lowdelay", "gop")
+    __slots__ = ("name", "encoder", "lowdelay", "gop", "pix_fmt")
 
-    def __init__(self, name: str, encoder: str, *, lowdelay: bool, gop: int) -> None:
+    def __init__(self, name: str, encoder: str, *, lowdelay: bool, gop: int,
+                 pix_fmt: str = "yuv420p") -> None:
         self.name, self.encoder, self.lowdelay, self.gop = name, encoder, lowdelay, gop
+        self.pix_fmt = pix_fmt
 
     def encoder_arguments(self, crf: int) -> list[str]:
         arguments = ["-c:v", self.encoder, "-crf", str(crf), "-preset", "medium",
-                     "-pix_fmt", "yuv420p"]
+                     "-pix_fmt", self.pix_fmt]
         if self.encoder == "libx264":
             if self.lowdelay:
                 arguments += ["-g", str(self.gop), "-keyint_min", str(self.gop),
@@ -277,11 +279,11 @@ class ClassicalArm:
             structure = "all-intra: every frame an I-frame, no B-frames"
         else:
             structure = f"I every {self.gop}, P only"
-        return {"encoder": self.encoder, "preset": "medium", "pix_fmt": "yuv420p",
+        return {"encoder": self.encoder, "preset": "medium", "pix_fmt": self.pix_fmt,
                 "lowdelay": self.lowdelay, "structure": structure}
 
 
-def classical_arms(gop: int) -> list[ClassicalArm]:
+def classical_arms(gop: int, pix_fmt: str = "yuv420p") -> list[ClassicalArm]:
     """The two default-configuration arms, plus two forced into NVC's structure.
 
     At GOP 1 the forced arms are all-intra, so they are named for what they are
@@ -292,10 +294,15 @@ def classical_arms(gop: int) -> list[ClassicalArm]:
     they stay in the report as context, not as the intra reference.
     """
     forced = "intra" if gop == 1 else "lowdelay"
-    return [ClassicalArm("h264", "libx264", lowdelay=False, gop=gop),
-            ClassicalArm("h265", "libx265", lowdelay=False, gop=gop),
-            ClassicalArm(f"h264_{forced}", "libx264", lowdelay=True, gop=gop),
-            ClassicalArm(f"h265_{forced}", "libx265", lowdelay=True, gop=gop)]
+    # 4:2:0 halves the chroma resolution, which caps an RGB score; "yuv444p" is the
+    # classical codecs' full-colour mode and the stricter anchor for an RGB codec.
+    tag = "" if pix_fmt == "yuv420p" else "_444" if pix_fmt == "yuv444p" else f"_{pix_fmt}"
+    return [ClassicalArm(f"h264{tag}", "libx264", lowdelay=False, gop=gop, pix_fmt=pix_fmt),
+            ClassicalArm(f"h265{tag}", "libx265", lowdelay=False, gop=gop, pix_fmt=pix_fmt),
+            ClassicalArm(f"h264{tag}_{forced}", "libx264", lowdelay=True, gop=gop,
+                         pix_fmt=pix_fmt),
+            ClassicalArm(f"h265{tag}_{forced}", "libx265", lowdelay=True, gop=gop,
+                         pix_fmt=pix_fmt)]
 
 
 def ffmpeg_round_trip(frames_uint8: np.ndarray, arm: ClassicalArm, crf: int,
@@ -384,6 +391,9 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
     parser.add_argument("--calibration-frames", type=int, default=400)
     parser.add_argument("--train-frames-per-sequence", type=int, default=8)
     parser.add_argument("--gop", type=int, default=10)
+    parser.add_argument("--classical-pix-fmt", default="yuv420p",
+                        choices=["yuv420p", "yuv444p"],
+                        help="pixel format of the x264/x265 arms; yuv444p is full colour")
     parser.add_argument("--block-size", type=int, default=16)
     parser.add_argument("--search-range", type=int, default=16)
     parser.add_argument("--cache-dir", type=Path, default=None)
@@ -565,9 +575,23 @@ def run_nvc(args, device, sequences, frame_cache, report, persist) -> None:
                   f"decode-exact={exact}  reproduces-M22={check['reproduces']}", flush=True)
 
 
+class _OneAtATime:
+    """A frame cache that holds a single sequence, for test sets too big for memory."""
+
+    def __init__(self, sequences) -> None:
+        self._sequences = {s.sequence_id: s for s in sequences}
+        self._key, self._frames = None, None
+
+    def __getitem__(self, key: str) -> torch.Tensor:
+        if key != self._key:
+            self._frames = None
+            self._key, self._frames = key, self._sequences[key].load_frames()
+        return self._frames
+
+
 def run_classical(args, device, sequences, frame_cache, report, persist) -> None:
     workdir = Path(tempfile.mkdtemp(prefix="parity_ffmpeg_"))
-    for arm in classical_arms(args.gop):
+    for arm in classical_arms(args.gop, args.classical_pix_fmt):
         for crf in args.crf:
             label = f"{arm.name}/crf{crf}"
             if label in report["points"]:
@@ -672,7 +696,10 @@ def main(argv: list[str] | None = None) -> int:
     sequences = discover_sequences(args.manifest, split="test",
                                    max_sequences=args.max_sequences,
                                    max_frames_per_sequence=args.max_frames)
-    frame_cache = {s.sequence_id: s.load_frames() for s in sequences}
+    if sum(s.total_pixels for s in sequences) > 2e8:
+        frame_cache = _OneAtATime(sequences)     # e.g. UVG at 1080p: too big to hold at once
+    else:
+        frame_cache = {s.sequence_id: s.load_frames() for s in sequences}
     report["dataset"] = {"split": "test", "sequences": [s.sequence_id for s in sequences],
                          "frames": sum(s.frame_count for s in sequences),
                          "resolution": [sequences[0].width, sequences[0].height]}

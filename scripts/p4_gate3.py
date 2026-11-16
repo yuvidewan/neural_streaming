@@ -100,16 +100,67 @@ def _reconstruct(model, decoded_y, decoded_x, warped, context) -> torch.Tensor:
     return out.clamp(0, 1)
 
 
-def encode_frame(model, frame, warped, tables) -> tuple[bytes, torch.Tensor, float]:
-    """Payload, reconstruction and ideal bits of one frame under an A2 model."""
+def tune_latents(model, frame, warped, lam: float, steps: int, lr: float):
+    """Encode-time latent tuning (`docs/PLAN_encode_tuning.md`).
+
+    Adam on the latents y and x for `steps` steps, minimizing the frame's coded cost
+    mse + lam * bits/pixel. Rounding is straight-through for both the decoder and the rate, so
+    the forward value at every step IS the coded cost with rounding (ideal bits). Returns the
+    best iterate seen; step 0 (the encoder's own latents) is a candidate, so the coded cost
+    never goes up. The decoder is untouched: it decodes whatever symbols it is sent.
+    """
+    with torch.no_grad():
+        context, features, mean, scale = _y_side(model, warped)
+        h = model.base.encoder.net[:-1](torch.cat([frame, context], dim=1))
+        y0, x0 = model.base.encoder.net[-1](h), model.extra_enc(h)
+    if steps <= 0:
+        return y0, x0, None
+    pixels = frame.shape[-1] * frame.shape[-2]
+    y = y0.clone().requires_grad_(True)
+    x = x0.clone().requires_grad_(True)
+    optimizer = torch.optim.Adam([y, x], lr=lr)
+    best, best_cost, first_cost = (y0, x0), float("inf"), None
+    with torch.enable_grad():
+        for step in range(steps + 1):
+            centred_y = y - mean
+            decoded_y = mean + centred_y + (torch.round(centred_y) - centred_y).detach()
+            x_mean, x_scale = _x_side(model, features, decoded_y)
+            centred_x = x - x_mean
+            symbols_x = centred_x + (torch.round(centred_x) - centred_x).detach()
+            bits = (p1.laplace_bits(decoded_y - mean, scale).sum()
+                    + p1.laplace_bits(symbols_x, x_scale).sum())
+            reconstruction = _reconstruct(model, decoded_y, x_mean + symbols_x, warped, context)
+            cost = F.mse_loss(reconstruction, frame) + lam * bits / pixels
+            value = float(cost.detach())
+            if first_cost is None:
+                first_cost = value
+            if value < best_cost:
+                best_cost, best = value, (y.detach().clone(), x.detach().clone())
+            if step == steps:
+                break
+            optimizer.zero_grad(set_to_none=True)
+            cost.backward()
+            optimizer.step()
+    return best[0], best[1], {"first_cost": first_cost, "best_cost": best_cost}
+
+
+def encode_frame(model, frame, warped, tables, tune=None) -> tuple[bytes, torch.Tensor, float]:
+    """Payload, reconstruction and ideal bits of one frame under an A2 model.
+
+    `tune` = (lam, steps, lr) turns on encode-time latent tuning; None codes the encoder's
+    own latents exactly as gate 3 did."""
     if model.kind != "a2":
         raise ValueError(f"p4_gate3 codes A2 models only, got {model.kind!r}")
     context, features, mean, scale = _y_side(model, warped)
-    h = model.base.encoder.net[:-1](torch.cat([frame, context], dim=1))
-    y_symbols = torch.round(model.base.encoder.net[-1](h) - mean)
+    if tune is None:
+        h = model.base.encoder.net[:-1](torch.cat([frame, context], dim=1))
+        y, x = model.base.encoder.net[-1](h), model.extra_enc(h)
+    else:
+        y, x, _ = tune_latents(model, frame, warped, *tune)
+    y_symbols = torch.round(y - mean)
     decoded_y = mean + y_symbols
     x_mean, x_scale = _x_side(model, features, decoded_y)
-    x_symbols = torch.round(model.extra_enc(h) - x_mean)
+    x_symbols = torch.round(x - x_mean)
     y_payload, y_ideal = _code(y_symbols, scale, tables)
     x_payload, x_ideal = _code(x_symbols, x_scale, tables)
     payload = struct.pack("<I", len(y_payload)) + y_payload + x_payload
@@ -137,7 +188,7 @@ def gray(frame: torch.Tensor) -> torch.Tensor:
 
 @torch.no_grad()
 def encode_sequence(mc, m21, intra, icoder, pcoder, frames, path, rig, tables, *, gop,
-                    block_size, search_range, identity) -> dict[str, Any]:
+                    block_size, search_range, identity, tune=None) -> dict[str, Any]:
     """`p1_gate3.encode_sequence` with A2 P-frames, and wide I-frames when `icoder` is set."""
     device = next(pcoder.parameters()).device
     count = frames.shape[0]
@@ -174,7 +225,7 @@ def encode_sequence(mc, m21, intra, icoder, pcoder, frames, path, rig, tables, *
                     reconstruction, ideal = intra.decode(latent.to(device)), 0.0
                 else:
                     payload, reconstruction, ideal = encode_frame(icoder, frame, gray(frame),
-                                                                  tables)
+                                                                  tables, tune)
                 writer.append_frame(types[t], b"", payload)
                 records.append({"type": "I", "motion": 0, "residual": len(payload),
                                 "ideal_bits": ideal})
@@ -188,7 +239,8 @@ def encode_sequence(mc, m21, intra, icoder, pcoder, frames, path, rig, tables, *
                     motion_payload, grid, search_range=search_range,
                     entropy_model=rig["motion_entropy_model"])
                 warped = mc.warp_blocks(previous, decoded_motion, block_size=block_size)
-                payload, reconstruction, ideal = encode_frame(pcoder, frame, warped, tables)
+                payload, reconstruction, ideal = encode_frame(pcoder, frame, warped, tables,
+                                                              tune)
                 writer.append_frame(types[t], motion_payload, payload)
                 records.append({"type": "P", "motion": len(motion_payload),
                                 "residual": len(payload), "ideal_bits": ideal})
@@ -284,23 +336,46 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--i-frames", choices=("old", "wide"), default="wide")
     parser.add_argument("--lambdas", nargs="+", default=list(p1.LAMBDAS))
     parser.add_argument("--verdict", action="store_true")
+    parser.add_argument("--tune-steps", type=int, default=0,
+                        help="encode-time latent tuning steps per frame (0 = off, as gate 3)")
+    parser.add_argument("--tune-lr", type=float, default=0.03)
+    parser.add_argument("--eval-manifest", type=Path, default=None,
+                        help="code the test split of another manifest (e.g. UVG from "
+                             "prepare_uvg.py); the coding tables still come from --manifest")
+    parser.add_argument("--val-b", action="store_true",
+                        help="code the 4 VAL-B videos instead of TEST (for choosing settings)")
     args = parser.parse_args(argv)
     if args.verdict:
         return command_verdict(args.gop)
     seed_everything(args.seed)
     device = get_device() if args.device == "auto" else torch.device(args.device)
-    output_name = (args.output_name if args.output_name != "parity.json"
-                   else report_name(args.i_frames, args.gop))
+    split_tag = "valb" if args.val_b else "test"
+    external = args.eval_manifest is not None
+    if external and args.output_name == "parity.json":
+        parser.error("--eval-manifest needs an explicit --output-name")
+    if args.output_name != "parity.json":
+        output_name = args.output_name
+    elif args.tune_steps > 0 or args.val_b:
+        output_name = (f"tune_{split_tag}_s{args.tune_steps}_lr{args.tune_lr:g}_"
+                       f"{args.i_frames}_gop{args.gop}.json")
+    else:
+        output_name = report_name(args.i_frames, args.gop)
 
     mc = bp._load_script("m10h_motion_compensation")
     m21 = bp._load_script("m21_refinement")
     md = bp._load_script("m11_data")
     from nvc.training.checkpoint import load_model_from_checkpoint
 
-    sequences = discover_sequences(args.manifest, split="test",
-                                   max_sequences=args.max_sequences,
-                                   max_frames_per_sequence=args.max_frames)
-    frame_cache = {s.sequence_id: s.load_frames() for s in sequences}
+    if external:
+        sequences = discover_sequences(args.eval_manifest, split="test",
+                                       max_sequences=args.max_sequences,
+                                       max_frames_per_sequence=args.max_frames)
+    elif args.val_b:
+        sequences = m21.val_b_sequences(args.manifest, count=4, max_frames=args.max_frames)
+    else:
+        sequences = discover_sequences(args.manifest, split="test",
+                                       max_sequences=args.max_sequences,
+                                       max_frames_per_sequence=args.max_frames)
     smoke = args.max_sequences is not None or args.max_frames is not None
     train_full = discover_sequences(args.manifest, split="train")
     motion_train = m21.broad_train_sequences(
@@ -310,7 +385,9 @@ def main(argv: list[str] | None = None) -> int:
     report_path = args.output_dir / output_name
     report: dict[str, Any] = {
         "models_dir": str(args.models_dir), "i_frames": args.i_frames, "gop": args.gop,
-        "smoke": smoke, "dataset": {"sequences": [s.sequence_id for s in sequences],
+        "smoke": smoke, "split": split_tag,
+        "eval_manifest": str(args.eval_manifest) if external else None, "tune_steps": args.tune_steps,
+        "tune_lr": args.tune_lr if args.tune_steps > 0 else None, "dataset": {"sequences": [s.sequence_id for s in sequences],
                                     "frames": sum(s.frame_count for s in sequences)},
         "points": {}}
     print(f"p4 gate 3: {len(sequences)} sequences, GOP {args.gop}, {args.i_frames} I-frames, "
@@ -328,12 +405,14 @@ def main(argv: list[str] | None = None) -> int:
         tally = {"i_bytes": 0, "p_bytes": 0, "framing_bytes": 0, "i_frames": 0, "p_frames": 0,
                  "ideal_bits": 0.0, "coded_bytes": 0, "i_mse": [], "p_mse": []}
         for sequence in sequences:
-            frames = frame_cache[sequence.sequence_id]
+            frames = sequence.load_frames()      # one video at a time: 1080p does not fit
             path = stream_dir / f"{lam}_{sequence.sequence_id}.nvct"
             started = time.perf_counter()
             encoded = encode_sequence(mc, m21, intra, icoder, pcoder, frames, path, rig, tables,
                                       gop=args.gop, block_size=args.block_size,
-                                      search_range=args.search_range, identity=identity)
+                                      search_range=args.search_range, identity=identity,
+                                      tune=((float(lam), args.tune_steps, args.tune_lr)
+                                            if args.tune_steps > 0 else None))
             encode_seconds = time.perf_counter() - started
             size = path.stat().st_size
             started = time.perf_counter()
@@ -386,7 +465,7 @@ def main(argv: list[str] | None = None) -> int:
               f"{100 * split['coder_overhead_vs_ideal']:+.2f}%  decode-exact={exact}", flush=True)
 
     report["valid"] = all(p["decode_reconstruction_exact"] for p in report["points"].values())
-    if len(report["points"]) >= 2 and not smoke:
+    if len(report["points"]) >= 2 and not smoke and not args.val_b and not external:
         report["comparisons"] = g3.comparisons(list(report["points"].values()))
         for key, entry in report["comparisons"].items():
             if key.startswith("learned_p_vs_h26"):
