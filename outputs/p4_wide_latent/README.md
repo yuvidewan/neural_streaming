@@ -183,3 +183,20 @@ is scored in full RGB. That handicaps x264. With x264/x265 in 4:4:4 (full colour
 The 4:4:4 anchor is the stricter and fairer one for a codec scored in RGB. Both are reported
 from now on. Gate 3 was fixed against the 4:2:0 anchor, so its verdict stands as written, but
 the gap to x264 is larger than the headline above suggests.
+
+## Over the codec's full quality range (added 2026-11-17)
+
+x264/x265 were also run at CRF 8-18 (`outputs/benchmarks/parity_classical_{420,444}_hq_gop30/`),
+so their curves now cover every quality A2 reaches. The BD-rate is then computed over A2's
+whole range, 33.05-37.92 dB, not only up to 34.6 dB. `gate3_vs_full_range_anchors.json`.
+
+| A2 P + wide I vs | 4:2:0 anchor | 4:4:4 anchor |
+|---|---|---|
+| x264 default | +32.9% | **+80.9%** |
+| x264 low-delay GOP 30 | +11.8% | **+51.4%** |
+| x265 default | +42.7% | +88.5% |
+| (stage 3, for reference: x264 default) | +69.1% | +98.4% |
+
+Over the full range the 4:2:0 gap shrinks (the wider latent gains most at high quality),
+while the 4:4:4 gap stays about the same. **The strict number is +80.9% vs x264 in full
+colour.**
