@@ -22,6 +22,15 @@ part is done. The bar now is to win.
 
 ### Where that stands today
 
+> **Latest (2026-11-18), superseding the M22 table below** (full write-up in
+> [`outputs/p4_wide_latent/README.md`](outputs/p4_wide_latent/README.md)):
+> the current codec (A2 wide-latent P-coder + wide I-coder, GOP 30) with
+> encode-time latent tuning is **+20.6% vs x264** (4:2:0) and **+69.4% vs x264
+> in full colour (4:4:4)** on DAVIS TEST, BD-rate PSNR. On UVG at 1080p,
+> untuned, it is **−18.9% vs x264 4:4:4** (fewer bits) but +17.2% vs x265
+> 4:4:4, and only over 36.8-40.9 dB, the range its models reach.
+> The rest of this README still describes the older M22 codec.
+
 Measured in a single pass on the DAVIS test split (9 sequences, 719 frames):
 every codec scored on the same frames by the same metric code
 ([`outputs/benchmarks/parity_s0/`](outputs/benchmarks/parity_s0/README.md)).

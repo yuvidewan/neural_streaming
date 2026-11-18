@@ -200,3 +200,68 @@ whole range, 33.05-37.92 dB, not only up to 34.6 dB. `gate3_vs_full_range_anchor
 Over the full range the 4:2:0 gap shrinks (the wider latent gains most at high quality),
 while the 4:4:4 gap stays about the same. **The strict number is +80.9% vs x264 in full
 colour.**
+
+## Encode-time latent tuning: TEST verdict PASS (added 2026-11-18)
+
+Plan and gate: `docs/PLAN_encode_tuning.md` (fixed before any result). The setting was picked on
+VAL-B: 20 Adam steps at lr 0.01 (VAL-B −6.14% vs untuned; 50 steps gave −6.27%, lr 0.03 −4.69%,
+lr 0.1 −1.66%). Numbers below come from `outputs/p5_encode_tuning/report.py` →
+`outputs/p5_encode_tuning/results.json`. Every stream decodes exactly.
+
+**Gate score (BD-rate PSNR, tuned vs untuned, DAVIS TEST, GOP 30): −6.30% → PASS** (gate ≤ −5%).
+MS-SSIM: −2.43%. Every one of the 9 videos improves, by −3.4% (car-turn) to −13.6% (gold-fish);
+cows −3.5%, schoolgirls −7.8%.
+
+Against x264/x265 over the codec's full quality range (same method as
+`gate3_vs_full_range_anchors.json`, which the script reproduces for the untuned codec):
+
+| A2 P + wide I vs | untuned | **tuned** |
+|---|---|---|
+| x264 default, 4:2:0, PSNR | +32.9% | **+20.6%** |
+| x264 low-delay GOP 30, 4:2:0, PSNR | +11.8% | **+2.1%** |
+| x264 default, 4:4:4, PSNR | +80.9% | **+69.4%** |
+| x264 low-delay GOP 30, 4:4:4, PSNR | +51.4% | +42.1% |
+| x265 default, 4:2:0, PSNR | +42.7% | +29.2% |
+| x264 default, 4:2:0, MS-SSIM | +45.7% | +41.4% |
+
+(The `test_run.log` summary line, +32.5% vs x264 and −1.5% vs x264 low-delay, uses the older
+anchor files that stop at 34.6 dB. The full-range numbers above are the ones to quote.)
+
+Encode cost: the untuned encoder runs at about 0.3 s/frame; tuned took 0.77 s/frame at λ 1e-4
+with the GPU to itself, and 2.8-2.9 s/frame at 1e-3/3e-4, which ran while other jobs shared the
+laptop. So the true cost is roughly 2.5× to 10× slower encoding. Decoding is unchanged.
+
+Limit: the straight-through cost starts rising after about 3 Adam steps, so more steps do not help
+(50 ≈ 20). A smoother relaxation (annealed soft rounding, Yang et al. 2020) is the follow-up; it
+needs its own plan.
+
+## First run on UVG at 1080p (added 2026-11-18)
+
+The same A2 codec, **untuned**, on the 7 UVG sequences (Beauty, Bosphorus, HoneyBee, Jockey,
+ReadySetGo, ShakeNDry, YachtRide), 96 frames each at 1920x1072, GOP 30: `uvg_a2_wide_gop30.json`.
+Anchors: x264/x265 preset medium on the same frames, in 4:2:0
+(`outputs/benchmarks/uvg_classical_420_gop30/`) and 4:4:4 (`.../uvg_classical_444_gop30/`).
+
+| λ | bpp | PSNR | MS-SSIM | encode s/frame | decode s/frame |
+|---|---|---|---|---|---|
+| 1e-3 | 0.125 | 36.81 | 0.970 | 1.13 | 0.38 |
+| 3e-4 | 0.273 | 38.72 | 0.982 | 1.13 | 0.38 |
+| 1e-4 | 0.594 | 40.92 | 0.990 | 1.14 | 0.39 |
+
+| A2 (untuned) vs, over 36.8-40.9 dB | PSNR | MS-SSIM |
+|---|---|---|
+| **x264 default, 4:4:4** | **−18.9%** | +3.3% |
+| x264 low-delay, 4:4:4 | −27.6% | −9.8% |
+| x265 default, 4:4:4 | +17.2% | −0.2% |
+| x265 low-delay, 4:4:4 | −10.3% | −17.0% |
+| x264 default, 4:2:0 | −57.2% | −10.8% |
+
+This is the first time the codec beats x264 default on BD-rate PSNR, but read it carefully:
+- The overlap is only **36.8-40.9 dB**: the three models do not reach lower quality. At the lowest
+  point (λ 1e-3, 36.8 dB) the codec still spends **1.23× x264 4:4:4's bits** (1.76× x265's); it
+  wins at 38.7 dB (0.81×) and 40.9 dB (0.60×). The win is at high quality.
+- The 4:2:0 numbers are inflated: at high quality, 4:2:0's half-resolution colour caps its RGB
+  PSNR. The 4:4:4 anchor is the fair one here.
+- UVG is smooth, high-resolution content, much easier for this codec than 256x256 DAVIS crops.
+- Lower-λ models, needed for a standard 32-38 dB comparison, are on the roadmap. A tuned UVG run
+  has not been done yet.

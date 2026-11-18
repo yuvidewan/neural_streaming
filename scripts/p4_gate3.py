@@ -393,7 +393,24 @@ def main(argv: list[str] | None = None) -> int:
     print(f"p4 gate 3: {len(sequences)} sequences, GOP {args.gop}, {args.i_frames} I-frames, "
           f"models from {args.models_dir}", flush=True)
 
+    # Crash-resume (the laptop crashed twice under long GPU runs on 2026-11-17): a lambda that
+    # a previous run with the same settings already finished is kept, and inside a lambda every
+    # finished video is saved to a sidecar file, so a crash costs one video, not a whole run.
+    def same_settings(old: dict) -> bool:
+        keys = ("models_dir", "i_frames", "gop", "smoke", "split", "eval_manifest",
+                "tune_steps", "tune_lr", "dataset")
+        return all(old.get(k) == report.get(k) for k in keys)
+
+    if report_path.is_file() and not args.no_resume:
+        old = json.loads(report_path.read_text(encoding="utf-8"))
+        if same_settings(old):
+            report["points"] = {k: v for k, v in old["points"].items() if k in args.lambdas}
+            if report["points"]:
+                print(f"[resume] lambdas already finished: {list(report['points'])}", flush=True)
+
     for lam in args.lambdas:
+        if lam in report["points"]:
+            continue
         bits = g3.BITS[lam]
         intra, _ = load_model_from_checkpoint(Path(p1.CHECKPOINT.format(lam)), device=device)
         intra.eval()
@@ -404,7 +421,39 @@ def main(argv: list[str] | None = None) -> int:
         rows, exact = [], True
         tally = {"i_bytes": 0, "p_bytes": 0, "framing_bytes": 0, "i_frames": 0, "p_frames": 0,
                  "ideal_bits": 0.0, "coded_bytes": 0, "i_mse": [], "p_mse": []}
+        sidecar_path = report_path.with_name(f"{report_path.stem}.{lam}.videos.json")
+        sidecar = {"settings": {k: report[k] for k in report if k != "points"},
+                   "identity": identity.hex(), "videos": {}}
+        if sidecar_path.is_file() and not args.no_resume:
+            old = json.loads(sidecar_path.read_text(encoding="utf-8"))
+            if old.get("settings") == sidecar["settings"] and old.get("identity") == identity.hex():
+                sidecar["videos"] = old["videos"]
+                print(f"  [resume] {lam}: videos already coded: {list(sidecar['videos'])}",
+                      flush=True)
+
+        def add_video(row, records, mses, size, same) -> None:
+            rows.append(row)
+            body = 0
+            for record, mse in zip(records, mses):
+                key = "i" if record["type"] == "I" else "p"
+                tally[f"{key}_frames"] += 1
+                tally[f"{key}_mse"].append(mse)
+                tally[f"{key}_bytes"] += record["motion"] + record["residual"]
+                if record["ideal_bits"]:
+                    tally["ideal_bits"] += record["ideal_bits"]
+                    tally["coded_bytes"] += record["residual"]
+                body += record["motion"] + record["residual"]
+            tally["framing_bytes"] += size - body
+            print(f"  [{lam}] {row['sequence']:14s} {size:>9,} B  "
+                  f"PSNR {np.mean(row['psnr']):.3f}  decode-exact={same}", flush=True)
+
         for sequence in sequences:
+            saved = sidecar["videos"].get(sequence.sequence_id)
+            if saved is not None:
+                exact &= saved["exact"]
+                add_video(saved["row"], saved["records"], saved["row"]["mse"], saved["size"],
+                          saved["exact"])
+                continue
             frames = sequence.load_frames()      # one video at a time: 1080p does not fit
             path = stream_dir / f"{lam}_{sequence.sequence_id}.nvct"
             started = time.perf_counter()
@@ -423,22 +472,16 @@ def main(argv: list[str] | None = None) -> int:
             same = torch.equal(decoded, encoded["reconstructions"])
             exact &= same
             scores = bp.score_frames(bp.to_uint8_frames(decoded), frames, device=device)
-            rows.append({"sequence": sequence.sequence_id, "bytes": size,
-                         "pixels": sequence.total_pixels, "encode_seconds": encode_seconds,
-                         "decode_seconds": decode_seconds, **scores})
-            body = 0
-            for record, mse in zip(encoded["records"], scores["mse"]):
-                key = "i" if record["type"] == "I" else "p"
-                tally[f"{key}_frames"] += 1
-                tally[f"{key}_mse"].append(mse)
-                tally[f"{key}_bytes"] += record["motion"] + record["residual"]
-                if record["ideal_bits"]:
-                    tally["ideal_bits"] += record["ideal_bits"]
-                    tally["coded_bytes"] += record["residual"]
-                body += record["motion"] + record["residual"]
-            tally["framing_bytes"] += size - body
-            print(f"  [{lam}] {sequence.sequence_id:14s} {size:>9,} B  "
-                  f"PSNR {np.mean(scores['psnr']):.3f}  decode-exact={same}", flush=True)
+            row = {"sequence": sequence.sequence_id, "bytes": size,
+                   "pixels": sequence.total_pixels, "encode_seconds": encode_seconds,
+                   "decode_seconds": decode_seconds, **scores}
+            records = [{k: r[k] for k in ("type", "motion", "residual", "ideal_bits")}
+                       for r in encoded["records"]]
+            add_video(row, records, scores["mse"], size, same)
+            sidecar["videos"][sequence.sequence_id] = {"row": row, "records": records,
+                                                       "size": size, "exact": same}
+            args.output_dir.mkdir(parents=True, exist_ok=True)
+            sidecar_path.write_text(json.dumps(sidecar, default=float), encoding="utf-8")
 
         def psnr_of(values):
             return float(10 * np.log10(1 / np.mean(values))) if values else None
@@ -458,6 +501,7 @@ def main(argv: list[str] | None = None) -> int:
         report["points"][lam] = point
         args.output_dir.mkdir(parents=True, exist_ok=True)
         report_path.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+        sidecar_path.unlink(missing_ok=True)      # the lambda is in the report now
         q = point["quality"][bp.PRIMARY_CONVENTION]
         print(f"  A2/{args.i_frames}/{lam}: {point['total_bytes']:,} B  bpp {point['bpp']:.4f}  "
               f"PSNR {q['psnr']:.3f}  MS-SSIM {q['msssim']:.4f}  I PSNR {split['pooled_psnr_i']:.2f}  "
