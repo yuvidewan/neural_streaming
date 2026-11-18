@@ -1,0 +1,6612 @@
+{
+  "stage": "PARITY_ROADMAP Stage 0 - single-pass scoreboard",
+  "started_utc": "2026-11-17T07:07:34.298850+00:00",
+  "configuration": {
+    "rate_points": [
+      5,
+      4,
+      3
+    ],
+    "crf": [
+      8,
+      10,
+      12,
+      14,
+      16,
+      18,
+      20,
+      22,
+      24,
+      26,
+      28,
+      30,
+      32,
+      34,
+      36,
+      38,
+      40,
+      42,
+      44
+    ],
+    "gop": 30,
+    "block_size": 16,
+    "search_range": 16,
+    "calibration_frames": 400,
+    "checkpoint": "outputs\\m10f_lambda_boundary\\lambda_3.0e-04_seed42\\best.pt",
+    "m22_candidate": "symmetric_p01",
+    "arms": [
+      "nvc_deployed",
+      "nvc_m22"
+    ],
+    "m11_dir": "outputs\\m11_autoregressive_entropy",
+    "m10k_dir": "outputs\\m10k_learned_entropy",
+    "primary_convention": "sequence_mean",
+    "max_sequences": null,
+    "max_frames": null
+  },
+  "environment": {
+    "python": "3.11.9",
+    "torch": "2.13.0+cu130",
+    "device": "cpu",
+    "ffmpeg": "ffmpeg version 9.0-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers",
+    "platform": "Windows-10-10.0.26300-SP0"
+  },
+  "points": {
+    "h264/crf8": {
+      "label": "h264/crf8",
+      "arm": "h264",
+      "setting": "crf8",
+      "total_bytes": 322111495,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 1.8630775102815536,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 40.70178283935477,
+          "msssim": 0.9943292731685298
+        },
+        "frame_mean": {
+          "psnr": 40.70178283935477,
+          "msssim": 0.9943292731685298
+        },
+        "sequence_pooled": {
+          "psnr": 40.68068669497437,
+          "msssim": 0.9943292731685298
+        },
+        "global_pooled": {
+          "psnr": 40.624309335611684,
+          "msssim": 0.9943292731685298
+        }
+      },
+      "encode_seconds": 23.776381199946627,
+      "decode_seconds": 14.99537949997466,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 78591703,
+          "bpp": 3.181994608662417,
+          "mean_psnr": 40.64876291094177,
+          "mean_msssim": 0.9925535495082537
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 32335153,
+          "bpp": 1.3091748694677654,
+          "mean_psnr": 41.9887264807928,
+          "mean_msssim": 0.9943084909270207
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 46905624,
+          "bpp": 1.8990992304104477,
+          "mean_psnr": 39.76109679848124,
+          "mean_msssim": 0.9946918866286675
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 44581086,
+          "bpp": 1.8049841126399253,
+          "mean_psnr": 40.7802286582779,
+          "mean_msssim": 0.9941337748120228
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 33058342,
+          "bpp": 1.3384551040371062,
+          "mean_psnr": 40.271839831914626,
+          "mean_msssim": 0.995564637084802
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 50621187,
+          "bpp": 2.04953370355255,
+          "mean_psnr": 40.12295028941434,
+          "mean_msssim": 0.9945324088136355
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 36018400,
+          "bpp": 1.4583009432006633,
+          "mean_psnr": 41.33887490566071,
+          "mean_msssim": 0.9945201644053062
+        }
+      ],
+      "crf": 8,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h264/crf10": {
+      "label": "h264/crf10",
+      "arm": "h264",
+      "setting": "crf10",
+      "total_bytes": 236795752,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 1.3696153255300876,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 40.04807625105702,
+          "msssim": 0.9925316526066689
+        },
+        "frame_mean": {
+          "psnr": 40.048076251057026,
+          "msssim": 0.992531652606669
+        },
+        "sequence_pooled": {
+          "psnr": 40.0239393432077,
+          "msssim": 0.9925316526066689
+        },
+        "global_pooled": {
+          "psnr": 39.961830891734756,
+          "msssim": 0.992531652606669
+        }
+      },
+      "encode_seconds": 19.87875500007067,
+      "decode_seconds": 16.427856000023894,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 64954891,
+          "bpp": 2.6298719213178896,
+          "mean_psnr": 39.93855899721796,
+          "mean_msssim": 0.9900968391448259
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 21338218,
+          "bpp": 0.8639346399512853,
+          "mean_psnr": 41.41009386212589,
+          "mean_msssim": 0.992779607574145
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 32901862,
+          "bpp": 1.3321195940868573,
+          "mean_psnr": 39.11055913041577,
+          "mean_msssim": 0.992848281438152
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 31442164,
+          "bpp": 1.2730198292392205,
+          "mean_psnr": 40.12853388236639,
+          "mean_msssim": 0.9920976708332697
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 22972473,
+          "bpp": 0.9301018102845149,
+          "mean_psnr": 39.72091033715502,
+          "mean_msssim": 0.9943537736932436
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 37481498,
+          "bpp": 1.5175383661121475,
+          "mean_psnr": 39.32636708807632,
+          "mean_msssim": 0.9924772592882315
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 25704646,
+          "bpp": 1.0407211177186981,
+          "mean_psnr": 40.70151046004181,
+          "mean_msssim": 0.9930681362748146
+        }
+      ],
+      "crf": 10,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h264/crf12": {
+      "label": "h264/crf12",
+      "arm": "h264",
+      "setting": "crf12",
+      "total_bytes": 165051437,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.9546496324645374,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 39.350072859459154,
+          "msssim": 0.990128759649538
+        },
+        "frame_mean": {
+          "psnr": 39.35007285945916,
+          "msssim": 0.9901287596495378
+        },
+        "sequence_pooled": {
+          "psnr": 39.327861335430775,
+          "msssim": 0.990128759649538
+        },
+        "global_pooled": {
+          "psnr": 39.25928292911045,
+          "msssim": 0.9901287596495378
+        }
+      },
+      "encode_seconds": 19.447852500132285,
+      "decode_seconds": 16.0894056999241,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 51125027,
+          "bpp": 2.069933009108105,
+          "mean_psnr": 39.028804618826435,
+          "mean_msssim": 0.9862138995279869
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 13179447,
+          "bpp": 0.5336050460587687,
+          "mean_psnr": 40.82409228990616,
+          "mean_msssim": 0.9910482075065374
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 20893332,
+          "bpp": 0.8459222442475124,
+          "mean_psnr": 38.45412572540353,
+          "mean_msssim": 0.9903757149974505
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 20156683,
+          "bpp": 0.8160970456959992,
+          "mean_psnr": 39.41542496076202,
+          "mean_msssim": 0.9892255365848541
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 15107734,
+          "bpp": 0.6116768857535241,
+          "mean_psnr": 39.15283516976596,
+          "mean_msssim": 0.9928949742267529
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 26734423,
+          "bpp": 1.0824143847818202,
+          "mean_psnr": 38.538890684589354,
+          "mean_msssim": 0.9897450668116411
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 17854791,
+          "bpp": 0.7228988116060323,
+          "mean_psnr": 40.036336566960635,
+          "mean_msssim": 0.9913979178915421
+        }
+      ],
+      "crf": 12,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h264/crf14": {
+      "label": "h264/crf14",
+      "arm": "h264",
+      "setting": "crf14",
+      "total_bytes": 109193324,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.6315689733993722,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 38.64559159330836,
+          "msssim": 0.9870409357938028
+        },
+        "frame_mean": {
+          "psnr": 38.64559159330835,
+          "msssim": 0.9870409357938028
+        },
+        "sequence_pooled": {
+          "psnr": 38.62959148137444,
+          "msssim": 0.9870409357938028
+        },
+        "global_pooled": {
+          "psnr": 38.551430878477454,
+          "msssim": 0.9870409357938028
+        }
+      },
+      "encode_seconds": 15.880621800024528,
+      "decode_seconds": 16.12428130005719,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 37363245,
+          "bpp": 1.5127505781638682,
+          "mean_psnr": 37.902526794584496,
+          "mean_msssim": 0.9795047361403704
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 8123186,
+          "bpp": 0.32888884030368987,
+          "mean_psnr": 40.25441758306612,
+          "mean_msssim": 0.9891794417053461
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 11609490,
+          "bpp": 0.4700411516635572,
+          "mean_psnr": 37.87447255092636,
+          "mean_msssim": 0.9875066100309292
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 11772816,
+          "bpp": 0.4766538401741294,
+          "mean_psnr": 38.75037556029786,
+          "mean_msssim": 0.9857451990246773
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 9412049,
+          "bpp": 0.3810718947579809,
+          "mean_psnr": 38.5711828681334,
+          "mean_msssim": 0.9911899870882431
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 18680251,
+          "bpp": 0.756319760248238,
+          "mean_psnr": 37.813551526823325,
+          "mean_msssim": 0.986614752560854
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 12232287,
+          "bpp": 0.4952567484841418,
+          "mean_psnr": 39.352614269326914,
+          "mean_msssim": 0.9895458240061998
+        }
+      ],
+      "crf": 14,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h264/crf16": {
+      "label": "h264/crf16",
+      "arm": "h264",
+      "setting": "crf16",
+      "total_bytes": 70137032,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.4056692449212272,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 37.98878467949603,
+          "msssim": 0.9834849539079836
+        },
+        "frame_mean": {
+          "psnr": 37.988784679496035,
+          "msssim": 0.9834849539079836
+        },
+        "sequence_pooled": {
+          "psnr": 37.9784769308278,
+          "msssim": 0.9834849539079836
+        },
+        "global_pooled": {
+          "psnr": 37.88290198790501,
+          "msssim": 0.9834849539079836
+        }
+      },
+      "encode_seconds": 14.675211600086186,
+      "decode_seconds": 15.659490400052164,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 25179651,
+          "bpp": 1.0194652955923507,
+          "mean_psnr": 36.70759401886656,
+          "mean_msssim": 0.9689944423735142
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 5225320,
+          "bpp": 0.21156101005389719,
+          "mean_psnr": 39.68525956758071,
+          "mean_msssim": 0.9872554255028566
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 5726092,
+          "bpp": 0.23183609945066336,
+          "mean_psnr": 37.45655626381984,
+          "mean_msssim": 0.9850247167050838
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 6304542,
+          "bpp": 0.2552561897543532,
+          "mean_psnr": 38.23011883475851,
+          "mean_msssim": 0.982478391379118
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 5906519,
+          "bpp": 0.23914116753472223,
+          "mean_psnr": 37.99203735563301,
+          "mean_msssim": 0.9896026539305846
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 13099228,
+          "bpp": 0.5303571659929519,
+          "mean_psnr": 37.17303148847977,
+          "mean_msssim": 0.9833756629377604
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 8695680,
+          "bpp": 0.3520677860696517,
+          "mean_psnr": 38.67689522733384,
+          "mean_msssim": 0.987663384526968
+        }
+      ],
+      "crf": 16,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h264/crf18": {
+      "label": "h264/crf18",
+      "arm": "h264",
+      "setting": "crf18",
+      "total_bytes": 44286774,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.256152586675995,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 37.361851439827504,
+          "msssim": 0.9792534128895828
+        },
+        "frame_mean": {
+          "psnr": 37.36185143982751,
+          "msssim": 0.9792534128895828
+        },
+        "sequence_pooled": {
+          "psnr": 37.35508755359696,
+          "msssim": 0.9792534128895828
+        },
+        "global_pooled": {
+          "psnr": 37.232321292122876,
+          "msssim": 0.9792534128895828
+        }
+      },
+      "encode_seconds": 13.312674999935552,
+      "decode_seconds": 15.991310500074178,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 14701939,
+          "bpp": 0.5952471933950041,
+          "mean_psnr": 35.565661867435935,
+          "mean_msssim": 0.9533872523655494
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 3520722,
+          "bpp": 0.14254581584266168,
+          "mean_psnr": 39.09939930806908,
+          "mean_msssim": 0.9851624338577191
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 2762934,
+          "bpp": 0.11186474852300995,
+          "mean_psnr": 37.17279250159277,
+          "mean_msssim": 0.9833135741452376
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 3477410,
+          "bpp": 0.1407922140599088,
+          "mean_psnr": 37.777482440891276,
+          "mean_msssim": 0.979443563769261
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 3947432,
+          "bpp": 0.15982230773217246,
+          "mean_psnr": 37.37742495391287,
+          "mean_msssim": 0.9880256212006012
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 9441247,
+          "bpp": 0.3822540536251037,
+          "mean_psnr": 36.577377822034244,
+          "mean_msssim": 0.9799315370619297
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 6435090,
+          "bpp": 0.26054177355410446,
+          "mean_psnr": 37.96282118485638,
+          "mean_msssim": 0.9855099078267813
+        }
+      ],
+      "crf": 18,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h264/crf20": {
+      "label": "h264/crf20",
+      "arm": "h264",
+      "setting": "crf20",
+      "total_bytes": 27637876,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.1598561554208126,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 36.764969509623015,
+          "msssim": 0.9745530535777409
+        },
+        "frame_mean": {
+          "psnr": 36.76496950962301,
+          "msssim": 0.974553053577741
+        },
+        "sequence_pooled": {
+          "psnr": 36.759916864884055,
+          "msssim": 0.9745530535777409
+        },
+        "global_pooled": {
+          "psnr": 36.6147151262839,
+          "msssim": 0.974553053577741
+        }
+      },
+      "encode_seconds": 13.739367800066248,
+      "decode_seconds": 17.325650300015695,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 7082861,
+          "bpp": 0.28676850934131426,
+          "mean_psnr": 34.689072711652635,
+          "mean_msssim": 0.9352759476751089
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 2458305,
+          "bpp": 0.09953103136660447,
+          "mean_psnr": 38.50764428345705,
+          "mean_msssim": 0.9826845191419125
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 1408435,
+          "bpp": 0.05702424563381012,
+          "mean_psnr": 36.91566006017009,
+          "mean_msssim": 0.9820531159639359
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 2116535,
+          "bpp": 0.08569356181332918,
+          "mean_psnr": 37.36421833460471,
+          "mean_msssim": 0.976596704373757
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 2790357,
+          "bpp": 0.11297504178327114,
+          "mean_psnr": 36.71848599291627,
+          "mean_msssim": 0.9863453041762114
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 6960377,
+          "bpp": 0.28180941807887644,
+          "mean_psnr": 35.9658533648421,
+          "mean_msssim": 0.97585129737854
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 4821006,
+          "bpp": 0.1951912799284826,
+          "mean_psnr": 37.19385181971821,
+          "mean_msssim": 0.9830644863347212
+        }
+      ],
+      "crf": 20,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h264/crf22": {
+      "label": "h264/crf22",
+      "arm": "h264",
+      "setting": "crf22",
+      "total_bytes": 17962743,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.10389564801550284,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 36.1846378055787,
+          "msssim": 0.9699169589827459
+        },
+        "frame_mean": {
+          "psnr": 36.1846378055787,
+          "msssim": 0.9699169589827458
+        },
+        "sequence_pooled": {
+          "psnr": 36.18028284697054,
+          "msssim": 0.9699169589827459
+        },
+        "global_pooled": {
+          "psnr": 36.03389968739787,
+          "msssim": 0.9699169589827458
+        }
+      },
+      "encode_seconds": 11.174399800074752,
+      "decode_seconds": 17.74707759998273,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 3127086,
+          "bpp": 0.1266084130130597,
+          "mean_psnr": 34.15614963280506,
+          "mean_msssim": 0.9196241659422716
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 1738717,
+          "bpp": 0.07039659288194444,
+          "mean_psnr": 37.90760253985496,
+          "mean_msssim": 0.9800815545022488
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 813286,
+          "bpp": 0.03292805179830017,
+          "mean_psnr": 36.586322178384584,
+          "mean_msssim": 0.9805566258728504
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 1433431,
+          "bpp": 0.058036275329083745,
+          "mean_psnr": 36.934658420748725,
+          "mean_msssim": 0.973672720293204
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 2054226,
+          "bpp": 0.08317081584266169,
+          "mean_psnr": 36.015449734606804,
+          "mean_msssim": 0.9844589003672203
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 5165071,
+          "bpp": 0.2091216686748549,
+          "mean_psnr": 35.29821659598088,
+          "mean_msssim": 0.9706643347938856
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 3630926,
+          "bpp": 0.14700771856861525,
+          "mean_psnr": 36.39406553666989,
+          "mean_msssim": 0.9803604111075401
+        }
+      ],
+      "crf": 22,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h264/crf24": {
+      "label": "h264/crf24",
+      "arm": "h264",
+      "setting": "crf24",
+      "total_bytes": 12577345,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.07274676306895582,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 35.586004558490835,
+          "msssim": 0.9651997495620023
+        },
+        "frame_mean": {
+          "psnr": 35.586004558490835,
+          "msssim": 0.9651997495620024
+        },
+        "sequence_pooled": {
+          "psnr": 35.5818642447023,
+          "msssim": 0.9651997495620023
+        },
+        "global_pooled": {
+          "psnr": 35.44381395987905,
+          "msssim": 0.9651997495620024
+        }
+      },
+      "encode_seconds": 10.295623599842656,
+      "decode_seconds": 15.967290799831972,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 1604487,
+          "bpp": 0.0649619334965796,
+          "mean_psnr": 33.80105531920483,
+          "mean_msssim": 0.9079238343983889
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 1258771,
+          "bpp": 0.05096469961390962,
+          "mean_psnr": 37.281029673433984,
+          "mean_msssim": 0.9768288750201464
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 535834,
+          "bpp": 0.02169466793635987,
+          "mean_psnr": 36.18993529661041,
+          "mean_msssim": 0.9787071788062652
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 1045373,
+          "bpp": 0.04232471269952322,
+          "mean_psnr": 36.4554482945156,
+          "mean_msssim": 0.9701787270605564
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 1562170,
+          "bpp": 0.06324861694133499,
+          "mean_psnr": 35.2686669512989,
+          "mean_msssim": 0.9821079932153225
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 3806634,
+          "bpp": 0.15412172535758706,
+          "mean_psnr": 34.55241838750998,
+          "mean_msssim": 0.9638228838642439
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 2764076,
+          "bpp": 0.11191098543739635,
+          "mean_psnr": 35.55347798686215,
+          "mean_msssim": 0.9768287545690933
+        }
+      ],
+      "crf": 24,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h264/crf26": {
+      "label": "h264/crf26",
+      "arm": "h264",
+      "setting": "crf26",
+      "total_bytes": 9195776,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.053187929400615966,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 34.9489582260041,
+          "msssim": 0.9602158690492313
+        },
+        "frame_mean": {
+          "psnr": 34.9489582260041,
+          "msssim": 0.9602158690492312
+        },
+        "sequence_pooled": {
+          "psnr": 34.94486841638684,
+          "msssim": 0.9602158690492313
+        },
+        "global_pooled": {
+          "psnr": 34.82165923213451,
+          "msssim": 0.9602158690492312
+        }
+      },
+      "encode_seconds": 9.406404800072778,
+      "decode_seconds": 15.683072799933143,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 1003964,
+          "bpp": 0.040648158944859035,
+          "mean_psnr": 33.590811379739996,
+          "mean_msssim": 0.9016148851563534
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 921320,
+          "bpp": 0.037302096289386404,
+          "mean_psnr": 36.58201784220088,
+          "mean_msssim": 0.9724859377990166
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 388423,
+          "bpp": 0.01572634062759121,
+          "mean_psnr": 35.675869026832494,
+          "mean_msssim": 0.976004513601462
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 795088,
+          "bpp": 0.03219125725538972,
+          "mean_psnr": 35.884749283066334,
+          "mean_msssim": 0.9653065993140141
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 1214194,
+          "bpp": 0.0491598809338723,
+          "mean_psnr": 34.48353374260827,
+          "mean_msssim": 0.9790914375334978
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 2763093,
+          "bpp": 0.11187118606187811,
+          "mean_psnr": 33.76093845931734,
+          "mean_msssim": 0.9549093544483185
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 2109694,
+          "bpp": 0.08541658569133499,
+          "mean_psnr": 34.664787848263394,
+          "mean_msssim": 0.9720983554919561
+        }
+      ],
+      "crf": 26,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h264/crf28": {
+      "label": "h264/crf28",
+      "arm": "h264",
+      "setting": "crf28",
+      "total_bytes": 6844710,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.039589475890636106,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 34.278948840282816,
+          "msssim": 0.9546215754179727
+        },
+        "frame_mean": {
+          "psnr": 34.278948840282816,
+          "msssim": 0.9546215754179728
+        },
+        "sequence_pooled": {
+          "psnr": 34.27490679490546,
+          "msssim": 0.9546215754179727
+        },
+        "global_pooled": {
+          "psnr": 34.156823280495786,
+          "msssim": 0.9546215754179728
+        }
+      },
+      "encode_seconds": 9.456769000040367,
+      "decode_seconds": 15.749479000049178,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 717681,
+          "bpp": 0.02905722850590796,
+          "mean_psnr": 33.44936584857805,
+          "mean_msssim": 0.8994446483751138
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 684219,
+          "bpp": 0.027702430231654227,
+          "mean_psnr": 35.831278858602424,
+          "mean_msssim": 0.9667239772776762
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 295952,
+          "bpp": 0.011982405679933665,
+          "mean_psnr": 35.08681934912647,
+          "mean_msssim": 0.9724469042072693
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 631769,
+          "bpp": 0.02557885215847844,
+          "mean_psnr": 35.282060193596855,
+          "mean_msssim": 0.9595928204556307
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 954620,
+          "bpp": 0.03865033556177446,
+          "mean_psnr": 33.67054689675149,
+          "mean_msssim": 0.9751807606468598
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 1950804,
+          "bpp": 0.07898350046641792,
+          "mean_psnr": 32.89469271805065,
+          "mean_msssim": 0.9430970381945372
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 1609665,
+          "bpp": 0.06517157863028607,
+          "mean_psnr": 33.7378780172738,
+          "mean_msssim": 0.9658648787687222
+        }
+      ],
+      "crf": 28,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h264/crf30": {
+      "label": "h264/crf30",
+      "arm": "h264",
+      "setting": "crf30",
+      "total_bytes": 5131039,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.029677684633010543,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 33.57992106851544,
+          "msssim": 0.9477231463506108
+        },
+        "frame_mean": {
+          "psnr": 33.57992106851544,
+          "msssim": 0.9477231463506108
+        },
+        "sequence_pooled": {
+          "psnr": 33.57579027704333,
+          "msssim": 0.9477231463506108
+        },
+        "global_pooled": {
+          "psnr": 33.44928663112134,
+          "msssim": 0.9477231463506108
+        }
+      },
+      "encode_seconds": 8.851095799880568,
+      "decode_seconds": 15.340059700014535,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 548464,
+          "bpp": 0.02220602715588723,
+          "mean_psnr": 33.23358152329305,
+          "mean_msssim": 0.8958448302000761
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 518124,
+          "bpp": 0.02097763137437811,
+          "mean_psnr": 35.05056117530465,
+          "mean_msssim": 0.9596965586145719
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 234197,
+          "bpp": 0.009482089876140134,
+          "mean_psnr": 34.4834973612274,
+          "mean_msssim": 0.9686426271994909
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 512523,
+          "bpp": 0.020750859958022387,
+          "mean_psnr": 34.622795347184116,
+          "mean_msssim": 0.9528679891179005
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 758688,
+          "bpp": 0.030717506218905472,
+          "mean_psnr": 32.8391067790068,
+          "mean_msssim": 0.9705753227074941
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 1329557,
+          "bpp": 0.05383065952788143,
+          "mean_psnr": 32.027795539527425,
+          "mean_msssim": 0.9281166891256968
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 1229486,
+          "bpp": 0.049779018319859036,
+          "mean_psnr": 32.80210975406461,
+          "mean_msssim": 0.9583180074890455
+        }
+      ],
+      "crf": 30,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h264/crf32": {
+      "label": "h264/crf32",
+      "arm": "h264",
+      "setting": "crf32",
+      "total_bytes": 3849637,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.02226611663594231,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 32.84364872413947,
+          "msssim": 0.9388477218647797
+        },
+        "frame_mean": {
+          "psnr": 32.84364872413947,
+          "msssim": 0.9388477218647798
+        },
+        "sequence_pooled": {
+          "psnr": 32.83942699070449,
+          "msssim": 0.9388477218647797
+        },
+        "global_pooled": {
+          "psnr": 32.694743737180794,
+          "msssim": 0.9388477218647798
+        }
+      },
+      "encode_seconds": 8.583268599933945,
+      "decode_seconds": 16.12330239993753,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 422915,
+          "bpp": 0.017122841197657546,
+          "mean_psnr": 32.92957524456316,
+          "mean_msssim": 0.8894216765960058
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 402989,
+          "bpp": 0.016316083968179934,
+          "mean_psnr": 34.24605383533694,
+          "mean_msssim": 0.951138228798906
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 189625,
+          "bpp": 0.007677473634432007,
+          "mean_psnr": 33.86099059986376,
+          "mean_msssim": 0.9642425322284301
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 423121,
+          "bpp": 0.017131181656820066,
+          "mean_psnr": 33.89596323559133,
+          "mean_msssim": 0.9443601506451765
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 604771,
+          "bpp": 0.024485766156198175,
+          "mean_psnr": 31.976162358971873,
+          "mean_msssim": 0.9648976611594359
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 863017,
+          "bpp": 0.034941543908063845,
+          "mean_psnr": 31.154057466467894,
+          "mean_msssim": 0.9093306151529154
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 943199,
+          "bpp": 0.03818792593024461,
+          "mean_psnr": 31.84273832818134,
+          "mean_msssim": 0.9485431884725889
+        }
+      ],
+      "crf": 32,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h264/crf34": {
+      "label": "h264/crf34",
+      "arm": "h264",
+      "setting": "crf34",
+      "total_bytes": 2886813,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.016697188582755863,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 32.08683896919805,
+          "msssim": 0.9282186891706218
+        },
+        "frame_mean": {
+          "psnr": 32.08683896919805,
+          "msssim": 0.9282186891706217
+        },
+        "sequence_pooled": {
+          "psnr": 32.08236529626326,
+          "msssim": 0.9282186891706218
+        },
+        "global_pooled": {
+          "psnr": 31.915147401575098,
+          "msssim": 0.9282186891706217
+        }
+      },
+      "encode_seconds": 8.12791500001913,
+      "decode_seconds": 15.779746700078249,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 333384,
+          "bpp": 0.013497939987562189,
+          "mean_psnr": 32.59403794862329,
+          "mean_msssim": 0.8835570588707924
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 312966,
+          "bpp": 0.012671262826492537,
+          "mean_psnr": 33.39719606929955,
+          "mean_msssim": 0.9410338892290989
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 154066,
+          "bpp": 0.006237772724917081,
+          "mean_psnr": 33.17358930583356,
+          "mean_msssim": 0.9585216976702213
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 353301,
+          "bpp": 0.014304332828047264,
+          "mean_psnr": 33.16779518694381,
+          "mean_msssim": 0.9340023578455051
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 482722,
+          "bpp": 0.01954428702839967,
+          "mean_psnr": 31.08796430291387,
+          "mean_msssim": 0.9575539343059063
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 528645,
+          "bpp": 0.021403602106654228,
+          "mean_psnr": 30.289309980596794,
+          "mean_msssim": 0.8863761629909277
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 721729,
+          "bpp": 0.029221122577218078,
+          "mean_psnr": 30.89797999017547,
+          "mean_msssim": 0.9364857232819
+        }
+      ],
+      "crf": 34,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h264/crf36": {
+      "label": "h264/crf36",
+      "arm": "h264",
+      "setting": "crf36",
+      "total_bytes": 2197209,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.012708551966728855,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 31.32465051234711,
+          "msssim": 0.9157050239543121
+        },
+        "frame_mean": {
+          "psnr": 31.324650512347105,
+          "msssim": 0.915705023954312
+        },
+        "sequence_pooled": {
+          "psnr": 31.320132380752224,
+          "msssim": 0.9157050239543121
+        },
+        "global_pooled": {
+          "psnr": 31.13291789179857,
+          "msssim": 0.915705023954312
+        }
+      },
+      "encode_seconds": 8.815113799937535,
+      "decode_seconds": 15.996527399984188,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 260347,
+          "bpp": 0.010540842337790216,
+          "mean_psnr": 32.194315862237005,
+          "mean_msssim": 0.8769795093685389
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 245945,
+          "bpp": 0.009957738974398838,
+          "mean_psnr": 32.56422540027763,
+          "mean_msssim": 0.9287216508140167
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 127553,
+          "bpp": 0.005164323240567994,
+          "mean_psnr": 32.489133804994815,
+          "mean_msssim": 0.9519227234025797
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 300459,
+          "bpp": 0.012164883589863184,
+          "mean_psnr": 32.355203823301245,
+          "mean_msssim": 0.92055259210368
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 391954,
+          "bpp": 0.01586930257566335,
+          "mean_psnr": 30.20320418573782,
+          "mean_msssim": 0.9486276395618916
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 316233,
+          "bpp": 0.012803536030783581,
+          "mean_psnr": 29.51490313996941,
+          "mean_msssim": 0.8617540616542101
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 554718,
+          "bpp": 0.022459237018034827,
+          "mean_psnr": 29.951567369911825,
+          "mean_msssim": 0.9213769907752672
+        }
+      ],
+      "crf": 36,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h264/crf38": {
+      "label": "h264/crf38",
+      "arm": "h264",
+      "setting": "crf38",
+      "total_bytes": 1682377,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.00973078825552298,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 30.523913806325826,
+          "msssim": 0.9009433765673921
+        },
+        "frame_mean": {
+          "psnr": 30.523913806325822,
+          "msssim": 0.9009433765673921
+        },
+        "sequence_pooled": {
+          "psnr": 30.519101966754224,
+          "msssim": 0.9009433765673921
+        },
+        "global_pooled": {
+          "psnr": 30.3203680271896,
+          "msssim": 0.9009433765673921
+        }
+      },
+      "encode_seconds": 10.220695700030774,
+      "decode_seconds": 18.24173700006213,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 203987,
+          "bpp": 0.008258957491189885,
+          "mean_psnr": 31.663469269682107,
+          "mean_msssim": 0.8670020022739967
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 195193,
+          "bpp": 0.007902908957815091,
+          "mean_psnr": 31.659201890935933,
+          "mean_msssim": 0.9132774894436201
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 105066,
+          "bpp": 0.004253877098880597,
+          "mean_psnr": 31.739775087913014,
+          "mean_msssim": 0.9433971717953682
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 249393,
+          "bpp": 0.010097340446206467,
+          "mean_psnr": 31.5151683745986,
+          "mean_msssim": 0.9051897345731655
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 311851,
+          "bpp": 0.012626119079083748,
+          "mean_psnr": 29.268524608989722,
+          "mean_msssim": 0.9370170521239439
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 196442,
+          "bpp": 0.007953478052446103,
+          "mean_psnr": 28.820775597027588,
+          "mean_msssim": 0.8381628897041082
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 420445,
+          "bpp": 0.01702283666303897,
+          "mean_psnr": 29.000481815133814,
+          "mean_msssim": 0.9025572960575422
+        }
+      ],
+      "crf": 38,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h264/crf40": {
+      "label": "h264/crf40",
+      "arm": "h264",
+      "setting": "crf40",
+      "total_bytes": 1309199,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.0075723445181088605,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 29.747035818198817,
+          "msssim": 0.8849235373061327
+        },
+        "frame_mean": {
+          "psnr": 29.747035818198817,
+          "msssim": 0.8849235373061328
+        },
+        "sequence_pooled": {
+          "psnr": 29.742094512335886,
+          "msssim": 0.8849235373061327
+        },
+        "global_pooled": {
+          "psnr": 29.53082097533192,
+          "msssim": 0.8849235373061328
+        }
+      },
+      "encode_seconds": 9.607118500105571,
+      "decode_seconds": 17.642095900024287,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 157182,
+          "bpp": 0.006363932291666667,
+          "mean_psnr": 31.185185879792922,
+          "mean_msssim": 0.8583090808242559
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 154944,
+          "bpp": 0.006273320895522388,
+          "mean_psnr": 30.81864720556914,
+          "mean_msssim": 0.8954433972636858
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 86686,
+          "bpp": 0.003509713800787728,
+          "mean_psnr": 30.941011516677985,
+          "mean_msssim": 0.9323780046155056
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 209918,
+          "bpp": 0.008499089837271974,
+          "mean_psnr": 30.666249888223064,
+          "mean_msssim": 0.8876041676849127
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 248466,
+          "bpp": 0.010059808379975124,
+          "mean_psnr": 28.33383394171217,
+          "mean_msssim": 0.9232199117541313
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 136739,
+          "bpp": 0.005536242938951078,
+          "mean_psnr": 28.22080787761917,
+          "mean_msssim": 0.8163146165510019
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 315264,
+          "bpp": 0.012764303482587065,
+          "mean_psnr": 28.06351441779728,
+          "mean_msssim": 0.8811955824494362
+        }
+      ],
+      "crf": 40,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h264/crf42": {
+      "label": "h264/crf42",
+      "arm": "h264",
+      "setting": "crf42",
+      "total_bytes": 1009094,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.005836551524372187,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 28.943609435484923,
+          "msssim": 0.8660735823214054
+        },
+        "frame_mean": {
+          "psnr": 28.943609435484923,
+          "msssim": 0.8660735823214054
+        },
+        "sequence_pooled": {
+          "psnr": 28.938585918698557,
+          "msssim": 0.8660735823214054
+        },
+        "global_pooled": {
+          "psnr": 28.715749053414438,
+          "msssim": 0.8660735823214054
+        }
+      },
+      "encode_seconds": 9.557469699939247,
+      "decode_seconds": 17.419603599933907,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 119107,
+          "bpp": 0.004822364414904644,
+          "mean_psnr": 30.584351163416155,
+          "mean_msssim": 0.8466498764852682
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 120818,
+          "bpp": 0.004891638811152571,
+          "mean_psnr": 29.91808119470316,
+          "mean_msssim": 0.8741288955012957
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 65942,
+          "bpp": 0.002669837660655058,
+          "mean_psnr": 30.191379109705125,
+          "mean_msssim": 0.9195287022739649
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 171623,
+          "bpp": 0.006948614674025705,
+          "mean_psnr": 29.78381146854417,
+          "mean_msssim": 0.86823102645576
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 199309,
+          "bpp": 0.008069556190402156,
+          "mean_psnr": 27.417092175008154,
+          "mean_msssim": 0.9059592566142479
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 98354,
+          "bpp": 0.0039821238857794365,
+          "mean_psnr": 27.582214531756573,
+          "mean_msssim": 0.79185022910436
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 233941,
+          "bpp": 0.009471725033685739,
+          "mean_psnr": 27.128336405261123,
+          "mean_msssim": 0.856167089814941
+        }
+      ],
+      "crf": 42,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h264/crf44": {
+      "label": "h264/crf44",
+      "arm": "h264",
+      "setting": "crf44",
+      "total_bytes": 795363,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.004600341623356432,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 28.100928195159145,
+          "msssim": 0.8441656333882185
+        },
+        "frame_mean": {
+          "psnr": 28.100928195159142,
+          "msssim": 0.8441656333882184
+        },
+        "sequence_pooled": {
+          "psnr": 28.09591551663263,
+          "msssim": 0.8441656333882185
+        },
+        "global_pooled": {
+          "psnr": 27.869576999868777,
+          "msssim": 0.8441656333882184
+        }
+      },
+      "encode_seconds": 9.792390799964778,
+      "decode_seconds": 18.332719399943016,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 90251,
+          "bpp": 0.0036540523294983415,
+          "mean_psnr": 29.798014874745764,
+          "mean_msssim": 0.8302418868988752
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 91099,
+          "bpp": 0.003688385870128524,
+          "mean_psnr": 29.054730960354462,
+          "mean_msssim": 0.8471185974776745
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 55222,
+          "bpp": 0.0022358098828772805,
+          "mean_psnr": 29.337438580105168,
+          "mean_msssim": 0.9029698440184196
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 145843,
+          "bpp": 0.005904842648735489,
+          "mean_psnr": 28.921426347627648,
+          "mean_msssim": 0.8497728034853935
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 165261,
+          "bpp": 0.006691032143967662,
+          "mean_psnr": 26.445700161790437,
+          "mean_msssim": 0.8846371366331974
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 72590,
+          "bpp": 0.00293899966314262,
+          "mean_psnr": 26.889093395106162,
+          "mean_msssim": 0.7643641196191311
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 175097,
+          "bpp": 0.007089268825145108,
+          "mean_psnr": 26.260093046384355,
+          "mean_msssim": 0.8300550455848376
+        }
+      ],
+      "crf": 44,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h265/crf8": {
+      "label": "h265/crf8",
+      "arm": "h265",
+      "setting": "crf8",
+      "total_bytes": 237679744,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 1.374728293058517,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 40.209057574831824,
+          "msssim": 0.9919582594718251
+        },
+        "frame_mean": {
+          "psnr": 40.20905757483182,
+          "msssim": 0.9919582594718251
+        },
+        "sequence_pooled": {
+          "psnr": 40.17549086248149,
+          "msssim": 0.9919582594718251
+        },
+        "global_pooled": {
+          "psnr": 40.09183023472669,
+          "msssim": 0.9919582594718251
+        }
+      },
+      "encode_seconds": 112.80332509998698,
+      "decode_seconds": 20.78529540001182,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 59406675,
+          "bpp": 2.4052376059157337,
+          "mean_psnr": 39.37184729895936,
+          "mean_msssim": 0.9861657557388147
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 21672710,
+          "bpp": 0.8774774402725953,
+          "mean_psnr": 41.72288743198168,
+          "mean_msssim": 0.9933405928313732
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 34488685,
+          "bpp": 1.3963663534540838,
+          "mean_psnr": 39.25371923293093,
+          "mean_msssim": 0.9925769679248333
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 31979169,
+          "bpp": 1.294761908232276,
+          "mean_psnr": 40.30832807861804,
+          "mean_msssim": 0.9915784119317929
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 24374367,
+          "bpp": 0.9868612260960821,
+          "mean_psnr": 40.096332232606734,
+          "mean_msssim": 0.9942885469645262
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 39492534,
+          "bpp": 1.5989605196672885,
+          "mean_psnr": 39.55742298187835,
+          "mean_msssim": 0.9924241434782743
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 26265604,
+          "bpp": 1.0634329977715589,
+          "mean_psnr": 41.15286576684766,
+          "mean_msssim": 0.9933333974331617
+        }
+      ],
+      "crf": 8,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h265/crf10": {
+      "label": "h265/crf10",
+      "arm": "h265",
+      "setting": "crf10",
+      "total_bytes": 171320754,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.9909110627109986,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 39.638212407058646,
+          "msssim": 0.9898380709013769
+        },
+        "frame_mean": {
+          "psnr": 39.638212407058646,
+          "msssim": 0.9898380709013769
+        },
+        "sequence_pooled": {
+          "psnr": 39.602996514018464,
+          "msssim": 0.9898380709013769
+        },
+        "global_pooled": {
+          "psnr": 39.496239127874986,
+          "msssim": 0.9898380709013769
+        }
+      },
+      "encode_seconds": 100.13325409992831,
+      "decode_seconds": 19.279418000020087,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 46390923,
+          "bpp": 1.8782601883162313,
+          "mean_psnr": 38.470577158003145,
+          "mean_msssim": 0.9808521574983994
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 14642144,
+          "bpp": 0.5928262334162521,
+          "mean_psnr": 41.31210690422959,
+          "mean_msssim": 0.9923511811842521
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 23445906,
+          "bpp": 0.9492700073849503,
+          "mean_psnr": 38.725654257663436,
+          "mean_msssim": 0.9906863092134396
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 22030045,
+          "bpp": 0.891945100344631,
+          "mean_psnr": 39.75515005193122,
+          "mean_msssim": 0.9894157859186331
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 16637828,
+          "bpp": 0.6736268203254561,
+          "mean_psnr": 39.65788952923571,
+          "mean_msssim": 0.9932015476127466
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 29174031,
+          "bpp": 1.1811884182602612,
+          "mean_psnr": 38.87984691096907,
+          "mean_msssim": 0.9901681207120419
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 18999877,
+          "bpp": 0.7692606709292081,
+          "mean_psnr": 40.66626203737836,
+          "mean_msssim": 0.9921913941701254
+        }
+      ],
+      "crf": 10,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h265/crf12": {
+      "label": "h265/crf12",
+      "arm": "h265",
+      "setting": "crf12",
+      "total_bytes": 118858084,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.6874694838678631,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 39.073336078125116,
+          "msssim": 0.9872165784417163
+        },
+        "frame_mean": {
+          "psnr": 39.073336078125116,
+          "msssim": 0.9872165784417164
+        },
+        "sequence_pooled": {
+          "psnr": 39.04149803141159,
+          "msssim": 0.9872165784417163
+        },
+        "global_pooled": {
+          "psnr": 38.904868634846295,
+          "msssim": 0.9872165784417164
+        }
+      },
+      "encode_seconds": 88.4649590998888,
+      "decode_seconds": 18.92522130004363,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 34592054,
+          "bpp": 1.4005515229840382,
+          "mean_psnr": 37.48247875901617,
+          "mean_msssim": 0.9729146907726923
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 9788644,
+          "bpp": 0.39631934727404644,
+          "mean_psnr": 40.900174177581896,
+          "mean_msssim": 0.9912595096975565
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 14656448,
+          "bpp": 0.5934053689883914,
+          "mean_psnr": 38.24523129534193,
+          "mean_msssim": 0.9886585716158152
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 13970604,
+          "bpp": 0.5656371462997513,
+          "mean_psnr": 39.230366793951156,
+          "mean_msssim": 0.9869605209678411
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 11045753,
+          "bpp": 0.44721675638733416,
+          "mean_psnr": 39.22822815164824,
+          "mean_msssim": 0.9921048314621052
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 21085065,
+          "bpp": 0.8536850658815298,
+          "mean_psnr": 38.27633628943661,
+          "mean_msssim": 0.987681775043408
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 13719516,
+          "bpp": 0.5554711792599503,
+          "mean_psnr": 40.1505370798998,
+          "mean_msssim": 0.9909361495325962
+        }
+      ],
+      "crf": 12,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h265/crf14": {
+      "label": "h265/crf14",
+      "arm": "h265",
+      "setting": "crf14",
+      "total_bytes": 80218527,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.4639801307358298,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 38.54413362361721,
+          "msssim": 0.9843428688389915
+        },
+        "frame_mean": {
+          "psnr": 38.54413362361721,
+          "msssim": 0.9843428688389915
+        },
+        "sequence_pooled": {
+          "psnr": 38.51899144170967,
+          "msssim": 0.9843428688389915
+        },
+        "global_pooled": {
+          "psnr": 38.35123189753356,
+          "msssim": 0.9843428688389915
+        }
+      },
+      "encode_seconds": 78.7740653999499,
+      "decode_seconds": 19.103163500025403,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 24479052,
+          "bpp": 0.9910996773942786,
+          "mean_psnr": 36.56692995980274,
+          "mean_msssim": 0.9635259894033273
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 6509857,
+          "bpp": 0.2635689148657753,
+          "mean_psnr": 40.485805885849395,
+          "mean_msssim": 0.9900388034681479
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 8422271,
+          "bpp": 0.34099809384069235,
+          "mean_psnr": 37.845619993046554,
+          "mean_msssim": 0.9867721280703942
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 8317401,
+          "bpp": 0.33675215232431593,
+          "mean_psnr": 38.77423580840426,
+          "mean_msssim": 0.9845306525627772
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 7355431,
+          "bpp": 0.29780423241863596,
+          "mean_psnr": 38.81612068927248,
+          "mean_msssim": 0.991061681881547
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 15046493,
+          "bpp": 0.609197380609971,
+          "mean_psnr": 37.702546017189874,
+          "mean_msssim": 0.9849204489340385
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 10088022,
+          "bpp": 0.4084404636971393,
+          "mean_psnr": 39.61767701175518,
+          "mean_msssim": 0.989550377552708
+        }
+      ],
+      "crf": 14,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h265/crf16": {
+      "label": "h265/crf16",
+      "arm": "h265",
+      "setting": "crf16",
+      "total_bytes": 52793437,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.3053547193811449,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 38.03706545688011,
+          "msssim": 0.9811015978810333
+        },
+        "frame_mean": {
+          "psnr": 38.037065456880114,
+          "msssim": 0.9811015978810333
+        },
+        "sequence_pooled": {
+          "psnr": 38.01817358540264,
+          "msssim": 0.9811015978810333
+        },
+        "global_pooled": {
+          "psnr": 37.82149161387821,
+          "msssim": 0.9811015978810333
+        }
+      },
+      "encode_seconds": 80.17398329993011,
+      "decode_seconds": 24.53330220002681,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 15807216,
+          "bpp": 0.6399972792288557,
+          "mean_psnr": 35.716460793813226,
+          "mean_msssim": 0.9518916395803293
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 4403827,
+          "bpp": 0.17830067598206883,
+          "mean_psnr": 40.035335093028216,
+          "mean_msssim": 0.9885931188861529
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 4404572,
+          "bpp": 0.17833083929311774,
+          "mean_psnr": 37.539410606994096,
+          "mean_msssim": 0.9851393134643635
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 4750996,
+          "bpp": 0.19235673844320067,
+          "mean_psnr": 38.37694407118777,
+          "mean_msssim": 0.9821630492806435
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 4973999,
+          "bpp": 0.20138560938795605,
+          "mean_psnr": 38.37909296946297,
+          "mean_msssim": 0.9899542114386956
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 10868348,
+          "bpp": 0.44003404202943613,
+          "mean_psnr": 37.17234364787483,
+          "mean_msssim": 0.9820257599155108
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 7584479,
+          "bpp": 0.30707785130337895,
+          "mean_psnr": 39.03987101579966,
+          "mean_msssim": 0.9879440926015377
+        }
+      ],
+      "crf": 16,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h265/crf18": {
+      "label": "h265/crf18",
+      "arm": "h265",
+      "setting": "crf18",
+      "total_bytes": 34557770,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.19988049197835228,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 37.5402274220134,
+          "msssim": 0.9774945133498737
+        },
+        "frame_mean": {
+          "psnr": 37.5402274220134,
+          "msssim": 0.9774945133498737
+        },
+        "sequence_pooled": {
+          "psnr": 37.52646916040097,
+          "msssim": 0.9774945133498737
+        },
+        "global_pooled": {
+          "psnr": 37.30730463621093,
+          "msssim": 0.9774945133498737
+        }
+      },
+      "encode_seconds": 28.690548500046134,
+      "decode_seconds": 15.73800170008326,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 9365859,
+          "bpp": 0.37920176947294776,
+          "mean_psnr": 34.967907755791174,
+          "mean_msssim": 0.9383498871078094
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 3011388,
+          "bpp": 0.12192407105099502,
+          "mean_psnr": 39.55586066591349,
+          "mean_msssim": 0.9868197832256556
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 2185489,
+          "bpp": 0.08848534832348673,
+          "mean_psnr": 37.287620856698375,
+          "mean_msssim": 0.9837860018014908
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 2730570,
+          "bpp": 0.11055440570584577,
+          "mean_psnr": 38.016333996600814,
+          "mean_msssim": 0.9798609347393116
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 3467058,
+          "bpp": 0.1403730857431592,
+          "mean_psnr": 37.89887267156014,
+          "mean_msssim": 0.9888066090643406
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 8023477,
+          "bpp": 0.3248518556307007,
+          "mean_psnr": 36.64655546783238,
+          "mean_msssim": 0.9787876928846041
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 5773929,
+          "bpp": 0.23377290792133085,
+          "mean_psnr": 38.40844053969746,
+          "mean_msssim": 0.9860506846259037
+        }
+      ],
+      "crf": 18,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h265/crf20": {
+      "label": "h265/crf20",
+      "arm": "h265",
+      "setting": "crf20",
+      "total_bytes": 22815232,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.13196221274579484,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 37.04033798807488,
+          "msssim": 0.9736862416778292
+        },
+        "frame_mean": {
+          "psnr": 37.04033798807488,
+          "msssim": 0.9736862416778292
+        },
+        "sequence_pooled": {
+          "psnr": 37.029736600312155,
+          "msssim": 0.9736862416778292
+        },
+        "global_pooled": {
+          "psnr": 36.80479303278139,
+          "msssim": 0.9736862416778292
+        }
+      },
+      "encode_seconds": 23.334844199940562,
+      "decode_seconds": 15.258592299884185,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 4975887,
+          "bpp": 0.20146205010105722,
+          "mean_psnr": 34.390452737926644,
+          "mean_msssim": 0.9249671343713999
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 2096813,
+          "bpp": 0.08489506406768242,
+          "mean_psnr": 39.02941579330133,
+          "mean_msssim": 0.9847165513783693
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 1130543,
+          "bpp": 0.04577304719890133,
+          "mean_psnr": 37.05050610605026,
+          "mean_msssim": 0.9826452968021234
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 1651906,
+          "bpp": 0.06688181812292703,
+          "mean_psnr": 37.665101184147495,
+          "mean_msssim": 0.977552393451333
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 2514839,
+          "bpp": 0.10181996106706052,
+          "mean_psnr": 37.358502009619365,
+          "mean_msssim": 0.9874572244783243
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 5999791,
+          "bpp": 0.24291753310271558,
+          "mean_psnr": 36.07503449122932,
+          "mean_msssim": 0.9747924686719974
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 4445453,
+          "bpp": 0.17998601556021973,
+          "mean_psnr": 37.71335359424975,
+          "mean_msssim": 0.9836726225912571
+        }
+      ],
+      "crf": 20,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h265/crf22": {
+      "label": "h265/crf22",
+      "arm": "h265",
+      "setting": "crf22",
+      "total_bytes": 15365919,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.08887574196539623,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 36.51726428469531,
+          "msssim": 0.9697393029928207
+        },
+        "frame_mean": {
+          "psnr": 36.51726428469531,
+          "msssim": 0.9697393029928207
+        },
+        "sequence_pooled": {
+          "psnr": 36.50853865407509,
+          "msssim": 0.9697393029928207
+        },
+        "global_pooled": {
+          "psnr": 36.297933879959544,
+          "msssim": 0.9697393029928207
+        }
+      },
+      "encode_seconds": 20.816633100039326,
+      "decode_seconds": 15.468756199989002,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 2405474,
+          "bpp": 0.09739202749274462,
+          "mean_psnr": 33.9927939502819,
+          "mean_msssim": 0.9136948622763157
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 1470700,
+          "bpp": 0.05954521014718076,
+          "mean_psnr": 38.435280166812014,
+          "mean_msssim": 0.9819927457720041
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 583374,
+          "bpp": 0.023619451570273634,
+          "mean_psnr": 36.79311140584135,
+          "mean_msssim": 0.9814051762223244
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 1097372,
+          "bpp": 0.0444300308354063,
+          "mean_psnr": 37.26993424375108,
+          "mean_msssim": 0.9749230549981197
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 1873212,
+          "bpp": 0.07584198149875622,
+          "mean_psnr": 36.742007873108456,
+          "mean_msssim": 0.9857349830369154
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 4514690,
+          "bpp": 0.18278926007980928,
+          "mean_psnr": 35.43632365967072,
+          "mean_msssim": 0.9697397649288177
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 3421097,
+          "bpp": 0.1385122321336028,
+          "mean_psnr": 36.95139869340162,
+          "mean_msssim": 0.9806845337152481
+        }
+      ],
+      "crf": 22,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h265/crf24": {
+      "label": "h265/crf24",
+      "arm": "h265",
+      "setting": "crf24",
+      "total_bytes": 10768582,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.062284964222784886,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 35.96080167538363,
+          "msssim": 0.9658041224770603
+        },
+        "frame_mean": {
+          "psnr": 35.96080167538363,
+          "msssim": 0.9658041224770603
+        },
+        "sequence_pooled": {
+          "psnr": 35.95280051369742,
+          "msssim": 0.9658041224770603
+        },
+        "global_pooled": {
+          "psnr": 35.77062303654675,
+          "msssim": 0.9658041224770603
+        }
+      },
+      "encode_seconds": 18.768004699901212,
+      "decode_seconds": 15.043185399961658,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 1185354,
+          "bpp": 0.047992216651119406,
+          "mean_psnr": 33.755161112017454,
+          "mean_msssim": 0.9066967132190863
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 1035389,
+          "bpp": 0.04192048384380182,
+          "mean_psnr": 37.79326752266153,
+          "mean_msssim": 0.978616222118338
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 326559,
+          "bpp": 0.013221611668221393,
+          "mean_psnr": 36.41591618593666,
+          "mean_msssim": 0.9796442929655313
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 782867,
+          "bpp": 0.031696457491189885,
+          "mean_psnr": 36.83043517929216,
+          "mean_msssim": 0.9717624193678299
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 1420209,
+          "bpp": 0.0575009474113806,
+          "mean_psnr": 36.05119372473835,
+          "mean_msssim": 0.9835779902835687
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 3407426,
+          "bpp": 0.13795872525393865,
+          "mean_psnr": 34.745236820513206,
+          "mean_msssim": 0.9633100827534994
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 2610778,
+          "bpp": 0.10570430723984245,
+          "mean_psnr": 36.13440118252607,
+          "mean_msssim": 0.9770211366315683
+        }
+      ],
+      "crf": 24,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h265/crf26": {
+      "label": "h265/crf26",
+      "arm": "h265",
+      "setting": "crf26",
+      "total_bytes": 7819223,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.04522601256181888,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 35.35462272712396,
+          "msssim": 0.9616538868063972
+        },
+        "frame_mean": {
+          "psnr": 35.35462272712397,
+          "msssim": 0.9616538868063972
+        },
+        "sequence_pooled": {
+          "psnr": 35.34635361411854,
+          "msssim": 0.9616538868063972
+        },
+        "global_pooled": {
+          "psnr": 35.19288251264335,
+          "msssim": 0.9616538868063972
+        }
+      },
+      "encode_seconds": 16.839903600048274,
+      "decode_seconds": 15.465613499924075,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 698328,
+          "bpp": 0.028273670708955225,
+          "mean_psnr": 33.61405233299895,
+          "mean_msssim": 0.9043732353796562
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 737161,
+          "bpp": 0.029845928236422056,
+          "mean_psnr": 37.094768365895995,
+          "mean_msssim": 0.9744163999954859
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 212709,
+          "bpp": 0.008612090912624378,
+          "mean_psnr": 35.93837044905486,
+          "mean_msssim": 0.9772876395533482
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 581685,
+          "bpp": 0.02355106790267413,
+          "mean_psnr": 36.29399294444888,
+          "mean_msssim": 0.9676317442208529
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 1088845,
+          "bpp": 0.04408479250881012,
+          "mean_psnr": 35.2811619836859,
+          "mean_msssim": 0.9807926819970211
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 2518172,
+          "bpp": 0.10195490645729685,
+          "mean_psnr": 33.95796648953789,
+          "mean_msssim": 0.9545642789453268
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 1982323,
+          "bpp": 0.08025963120594942,
+          "mean_psnr": 35.30204652424528,
+          "mean_msssim": 0.9725112275530895
+        }
+      ],
+      "crf": 26,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h265/crf28": {
+      "label": "h265/crf28",
+      "arm": "h265",
+      "setting": "crf28",
+      "total_bytes": 5776561,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.033411353065402154,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 34.70439216275093,
+          "msssim": 0.9565741989229407
+        },
+        "frame_mean": {
+          "psnr": 34.704392162750935,
+          "msssim": 0.9565741989229407
+        },
+        "sequence_pooled": {
+          "psnr": 34.696043379119565,
+          "msssim": 0.9565741989229407
+        },
+        "global_pooled": {
+          "psnr": 34.55929533310245,
+          "msssim": 0.9565741989229407
+        }
+      },
+      "encode_seconds": 15.87802099995315,
+      "decode_seconds": 14.672451200080104,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 494326,
+          "bpp": 0.020014105902777777,
+          "mean_psnr": 33.457981223330954,
+          "mean_msssim": 0.9017873660971721
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 527256,
+          "bpp": 0.021347364738805972,
+          "mean_psnr": 36.36119043795496,
+          "mean_msssim": 0.9691612888127565
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 150939,
+          "bpp": 0.0061111677938432835,
+          "mean_psnr": 35.34606919869457,
+          "mean_msssim": 0.9741376756380001
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 446045,
+          "bpp": 0.018059320908478442,
+          "mean_psnr": 35.73521173112378,
+          "mean_msssim": 0.9627387834091982
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 842995,
+          "bpp": 0.03413089986266584,
+          "mean_psnr": 34.4644840792201,
+          "mean_msssim": 0.9773068403204282
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 1828155,
+          "bpp": 0.07401772873911691,
+          "mean_psnr": 33.146876546747215,
+          "mean_msssim": 0.9438847216467062
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 1486845,
+          "bpp": 0.06019888351212686,
+          "mean_psnr": 34.418931922184925,
+          "mean_msssim": 0.9670027165363232
+        }
+      ],
+      "crf": 28,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h265/crf30": {
+      "label": "h265/crf30",
+      "arm": "h265",
+      "setting": "crf30",
+      "total_bytes": 4261498,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.024648300998726606,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 34.02607003068009,
+          "msssim": 0.950469126126596
+        },
+        "frame_mean": {
+          "psnr": 34.02607003068009,
+          "msssim": 0.950469126126596
+        },
+        "sequence_pooled": {
+          "psnr": 34.01741279616133,
+          "msssim": 0.950469126126596
+        },
+        "global_pooled": {
+          "psnr": 33.88181204573089,
+          "msssim": 0.950469126126596
+        }
+      },
+      "encode_seconds": 14.869048500084318,
+      "decode_seconds": 13.553621000086423,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 368966,
+          "bpp": 0.014938572113391377,
+          "mean_psnr": 33.242558372718335,
+          "mean_msssim": 0.8984638241430124
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 381043,
+          "bpp": 0.015427541653710613,
+          "mean_psnr": 35.63588461186748,
+          "mean_msssim": 0.9631846894820532
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 113524,
+          "bpp": 0.004596321776533996,
+          "mean_psnr": 34.7177246620816,
+          "mean_msssim": 0.9703997808198134
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 348577,
+          "bpp": 0.014113069094631012,
+          "mean_psnr": 35.13516221301169,
+          "mean_msssim": 0.9574005547910929
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 651297,
+          "bpp": 0.026369495296952736,
+          "mean_psnr": 33.63074797630906,
+          "mean_msssim": 0.9731725795815388
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 1294643,
+          "bpp": 0.05241707316283167,
+          "mean_psnr": 32.32221371275846,
+          "mean_msssim": 0.930715079108874
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 1103448,
+          "bpp": 0.044676033893034824,
+          "mean_psnr": 33.49819866601397,
+          "mean_msssim": 0.9599473749597868
+        }
+      ],
+      "crf": 30,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h265/crf32": {
+      "label": "h265/crf32",
+      "arm": "h265",
+      "setting": "crf32",
+      "total_bytes": 3104377,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.01795556837279377,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 33.30226057547948,
+          "msssim": 0.9426849166020042
+        },
+        "frame_mean": {
+          "psnr": 33.30226057547948,
+          "msssim": 0.9426849166020042
+        },
+        "sequence_pooled": {
+          "psnr": 33.293351680645436,
+          "msssim": 0.9426849166020042
+        },
+        "global_pooled": {
+          "psnr": 33.15723015313996,
+          "msssim": 0.9426849166020042
+        }
+      },
+      "encode_seconds": 13.532658500073012,
+      "decode_seconds": 13.48491049988661,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 276632,
+          "bpp": 0.011200183975953565,
+          "mean_psnr": 32.993539718589155,
+          "mean_msssim": 0.8940513251970211
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 273617,
+          "bpp": 0.011078113663453565,
+          "mean_psnr": 34.81025813761098,
+          "mean_msssim": 0.9556005299091339
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 90844,
+          "bpp": 0.0036780615153399667,
+          "mean_psnr": 34.0594363176844,
+          "mean_msssim": 0.9657926559448242
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 271254,
+          "bpp": 0.010982441309079601,
+          "mean_psnr": 34.40972297625398,
+          "mean_msssim": 0.9493831638246775
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 503737,
+          "bpp": 0.020395135325974294,
+          "mean_psnr": 32.743552289381206,
+          "mean_msssim": 0.967779753729701
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 879122,
+          "bpp": 0.03559359776637645,
+          "mean_psnr": 31.524681956190992,
+          "mean_msssim": 0.9149542935192585
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 809171,
+          "bpp": 0.03276144505337894,
+          "mean_psnr": 32.57463263264564,
+          "mean_msssim": 0.9512326940894127
+        }
+      ],
+      "crf": 32,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h265/crf34": {
+      "label": "h265/crf34",
+      "arm": "h265",
+      "setting": "crf34",
+      "total_bytes": 2234852,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.012926277281746031,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 32.53879603964206,
+          "msssim": 0.9332668534701779
+        },
+        "frame_mean": {
+          "psnr": 32.53879603964205,
+          "msssim": 0.9332668534701779
+        },
+        "sequence_pooled": {
+          "psnr": 32.530022997462154,
+          "msssim": 0.9332668534701779
+        },
+        "global_pooled": {
+          "psnr": 32.38241827254583,
+          "msssim": 0.9332668534701779
+        }
+      },
+      "encode_seconds": 20.774763299967162,
+      "decode_seconds": 16.955033800040837,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 210731,
+          "bpp": 0.008532006309597844,
+          "mean_psnr": 32.69389667846774,
+          "mean_msssim": 0.889076062788566
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 198557,
+          "bpp": 0.008039109465692371,
+          "mean_psnr": 33.99633792071839,
+          "mean_msssim": 0.9466969290127357
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 74811,
+          "bpp": 0.0030289227689676615,
+          "mean_psnr": 33.293358945604005,
+          "mean_msssim": 0.9595321944604317
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 213951,
+          "bpp": 0.008662376593594527,
+          "mean_psnr": 33.66637907687688,
+          "mean_msssim": 0.9403956737369299
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 387452,
+          "bpp": 0.015687027104063018,
+          "mean_psnr": 31.783614694103278,
+          "mean_msssim": 0.9609353126337131
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 567313,
+          "bpp": 0.022969179169257878,
+          "mean_psnr": 30.693625431563017,
+          "mean_msssim": 0.8954537635048231
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 582037,
+          "bpp": 0.02356531956104892,
+          "mean_psnr": 31.644359530161065,
+          "mean_msssim": 0.9407780381540457
+        }
+      ],
+      "crf": 34,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h265/crf36": {
+      "label": "h265/crf36",
+      "arm": "h265",
+      "setting": "crf36",
+      "total_bytes": 1590511,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.009199439696976428,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 31.82191504753292,
+          "msssim": 0.9228116011335735
+        },
+        "frame_mean": {
+          "psnr": 31.82191504753292,
+          "msssim": 0.9228116011335736
+        },
+        "sequence_pooled": {
+          "psnr": 31.81311546764157,
+          "msssim": 0.9228116011335735
+        },
+        "global_pooled": {
+          "psnr": 31.645114749279763,
+          "msssim": 0.9228116011335736
+        }
+      },
+      "encode_seconds": 17.230054699990433,
+      "decode_seconds": 15.716654199990444,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 156632,
+          "bpp": 0.006341664075456053,
+          "mean_psnr": 32.374191973911046,
+          "mean_msssim": 0.8833390853057305
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 144970,
+          "bpp": 0.005869496916459369,
+          "mean_psnr": 33.253202448327976,
+          "mean_msssim": 0.9366460163146257
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 64591,
+          "bpp": 0.0026151388241086237,
+          "mean_psnr": 32.596421935463866,
+          "mean_msssim": 0.9531938377767801
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 169373,
+          "bpp": 0.0068575174258913765,
+          "mean_psnr": 32.97923566512954,
+          "mean_msssim": 0.9307649365315834
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 297015,
+          "bpp": 0.012025444068718905,
+          "mean_psnr": 30.905107867202872,
+          "mean_msssim": 0.9532085880637169
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 345616,
+          "bpp": 0.013993185116086236,
+          "mean_psnr": 29.928279093719027,
+          "mean_msssim": 0.8744359264771143
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 412314,
+          "bpp": 0.016693631452114426,
+          "mean_psnr": 30.716966348976097,
+          "mean_msssim": 0.9280928174654642
+        }
+      ],
+      "crf": 36,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h265/crf38": {
+      "label": "h265/crf38",
+      "arm": "h265",
+      "setting": "crf38",
+      "total_bytes": 1122423,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.006492041050328714,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 31.073495188988186,
+          "msssim": 0.9104820347080628
+        },
+        "frame_mean": {
+          "psnr": 31.073495188988186,
+          "msssim": 0.9104820347080628
+        },
+        "sequence_pooled": {
+          "psnr": 31.064655125834992,
+          "msssim": 0.9104820347080628
+        },
+        "global_pooled": {
+          "psnr": 30.882389079789895,
+          "msssim": 0.9104820347080628
+        }
+      },
+      "encode_seconds": 15.794268199941143,
+      "decode_seconds": 15.476601899892557,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 118829,
+          "bpp": 0.004811108843801824,
+          "mean_psnr": 31.912165361060037,
+          "mean_msssim": 0.8755699756244818
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 106921,
+          "bpp": 0.004328981719009121,
+          "mean_psnr": 32.478577915938736,
+          "mean_msssim": 0.9248094068219265
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 55476,
+          "bpp": 0.00224609375,
+          "mean_psnr": 31.906729817544363,
+          "mean_msssim": 0.9462309802571932
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 134649,
+          "bpp": 0.005451623717350747,
+          "mean_psnr": 32.19556974727632,
+          "mean_msssim": 0.9181766963253418
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 226628,
+          "bpp": 0.009175638733416253,
+          "mean_psnr": 29.97528937271154,
+          "mean_msssim": 0.9434996439764897
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 194876,
+          "bpp": 0.00789007436774461,
+          "mean_psnr": 29.233219982221232,
+          "mean_msssim": 0.8517897396037976
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 285044,
+          "bpp": 0.011540766220978441,
+          "mean_psnr": 29.812914126165072,
+          "mean_msssim": 0.913297800347209
+        }
+      ],
+      "crf": 38,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h265/crf40": {
+      "label": "h265/crf40",
+      "arm": "h265",
+      "setting": "crf40",
+      "total_bytes": 796162,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.004604963001214167,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 30.309731399374584,
+          "msssim": 0.8967034124015342
+        },
+        "frame_mean": {
+          "psnr": 30.30973139937458,
+          "msssim": 0.8967034124015343
+        },
+        "sequence_pooled": {
+          "psnr": 30.3015018472152,
+          "msssim": 0.8967034124015342
+        },
+        "global_pooled": {
+          "psnr": 30.10567710975589,
+          "msssim": 0.8967034124015343
+        }
+      },
+      "encode_seconds": 15.481043600069825,
+      "decode_seconds": 15.730005800025538,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 85811,
+          "bpp": 0.0034742870931799338,
+          "mean_psnr": 31.514249750875425,
+          "mean_msssim": 0.8683050343145927
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 79202,
+          "bpp": 0.003206704109660033,
+          "mean_psnr": 31.5837576786098,
+          "mean_msssim": 0.9093187879770994
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 48360,
+          "bpp": 0.0019579835199004976,
+          "mean_psnr": 31.170979342726625,
+          "mean_msssim": 0.9372439328581095
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 105859,
+          "bpp": 0.004285983817889718,
+          "mean_psnr": 31.402973682029124,
+          "mean_msssim": 0.9050938369085392
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 171379,
+          "bpp": 0.00693873568356136,
+          "mean_psnr": 29.01851806676161,
+          "mean_msssim": 0.9316658955067396
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 111758,
+          "bpp": 0.004524820558665008,
+          "mean_psnr": 28.572738946758914,
+          "mean_msssim": 0.8297103724131981
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 193793,
+          "bpp": 0.00784622622564262,
+          "mean_psnr": 28.90490232786058,
+          "mean_msssim": 0.8955860268324614
+        }
+      ],
+      "crf": 40,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h265/crf42": {
+      "label": "h265/crf42",
+      "arm": "h265",
+      "setting": "crf42",
+      "total_bytes": 583341,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.003374016496757285,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 29.51104640047915,
+          "msssim": 0.881172733470088
+        },
+        "frame_mean": {
+          "psnr": 29.51104640047915,
+          "msssim": 0.881172733470088
+        },
+        "sequence_pooled": {
+          "psnr": 29.502629836697654,
+          "msssim": 0.881172733470088
+        },
+        "global_pooled": {
+          "psnr": 29.30000583772042,
+          "msssim": 0.881172733470088
+        }
+      },
+      "encode_seconds": 14.581766300078016,
+      "decode_seconds": 16.688301700050943,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 64798,
+          "bpp": 0.0026235197709369817,
+          "mean_psnr": 30.981379365619564,
+          "mean_msssim": 0.8596056693543991
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 59706,
+          "bpp": 0.002417356576492537,
+          "mean_psnr": 30.752313534125957,
+          "mean_msssim": 0.8920434725781282
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 42110,
+          "bpp": 0.0017049356084162521,
+          "mean_psnr": 30.359939980449827,
+          "mean_msssim": 0.9257912238438925
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 84220,
+          "bpp": 0.0034098712168325043,
+          "mean_psnr": 30.470682220227673,
+          "mean_msssim": 0.887650496015946
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 129278,
+          "bpp": 0.005234164464137645,
+          "mean_psnr": 28.03185976906048,
+          "mean_msssim": 0.9169676291445891
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 72608,
+          "bpp": 0.0029397284411276947,
+          "mean_psnr": 27.989735060127654,
+          "mean_msssim": 0.8096077876786391
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 130621,
+          "bpp": 0.00528853939935738,
+          "mean_psnr": 27.991414873742894,
+          "mean_msssim": 0.8765428556750218
+        }
+      ],
+      "crf": 42,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h265/crf44": {
+      "label": "h265/crf44",
+      "arm": "h265",
+      "setting": "crf44",
+      "total_bytes": 445204,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.0025750386830727316,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 28.68831447997682,
+          "msssim": 0.8634175575737443
+        },
+        "frame_mean": {
+          "psnr": 28.68831447997682,
+          "msssim": 0.8634175575737443
+        },
+        "sequence_pooled": {
+          "psnr": 28.679812309145934,
+          "msssim": 0.8634175575737443
+        },
+        "global_pooled": {
+          "psnr": 28.46759434123889,
+          "msssim": 0.8634175575737443
+        }
+      },
+      "encode_seconds": 14.837029399932362,
+      "decode_seconds": 15.98128269991139,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 50404,
+          "bpp": 0.002040740308872305,
+          "mean_psnr": 30.45080919515856,
+          "mean_msssim": 0.8498248104006052
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 45843,
+          "bpp": 0.0018560760649875621,
+          "mean_psnr": 29.820997278631634,
+          "mean_msssim": 0.8707286305725574
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 36282,
+          "bpp": 0.0014689734919154228,
+          "mean_psnr": 29.518450244018666,
+          "mean_msssim": 0.9121271781623363
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 69024,
+          "bpp": 0.002794620646766169,
+          "mean_psnr": 29.535490914960235,
+          "mean_msssim": 0.8702875251571337
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 100067,
+          "bpp": 0.004051479257359038,
+          "mean_psnr": 27.033161935669654,
+          "mean_msssim": 0.8987660308678945
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 52378,
+          "bpp": 0.0021206629612354894,
+          "mean_psnr": 27.3690853668973,
+          "mean_msssim": 0.7867433472226063
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 91206,
+          "bpp": 0.0036927180503731343,
+          "mean_psnr": 27.090206424501716,
+          "mean_msssim": 0.8554453806330761
+        }
+      ],
+      "crf": 44,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": false,
+      "structure": "encoder default GOP and B-frames"
+    },
+    "h264_lowdelay/crf8": {
+      "label": "h264_lowdelay/crf8",
+      "arm": "h264_lowdelay",
+      "setting": "crf8",
+      "total_bytes": 377669380,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 2.184421664926854,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 41.02028254480233,
+          "msssim": 0.9950047561987525
+        },
+        "frame_mean": {
+          "psnr": 41.02028254480233,
+          "msssim": 0.9950047561987525
+        },
+        "sequence_pooled": {
+          "psnr": 41.01597314941083,
+          "msssim": 0.9950047561987525
+        },
+        "global_pooled": {
+          "psnr": 40.97080012024155,
+          "msssim": 0.9950047561987525
+        }
+      },
+      "encode_seconds": 30.323566799983382,
+      "decode_seconds": 17.085693400003947,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 80021459,
+          "bpp": 3.239882091819548,
+          "mean_psnr": 40.73996556601698,
+          "mean_msssim": 0.9927337554593881
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 40734927,
+          "bpp": 1.6492621122901119,
+          "mean_psnr": 42.24442308849976,
+          "mean_msssim": 0.9950417894870043
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 56979837,
+          "bpp": 2.3069805999300375,
+          "mean_psnr": 40.19005204353271,
+          "mean_msssim": 0.9954936485737562
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 52602624,
+          "bpp": 2.129757462686567,
+          "mean_psnr": 41.10606162150582,
+          "mean_msssim": 0.9949914291501045
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 44287807,
+          "bpp": 1.7931099304907754,
+          "mean_psnr": 40.6971661370995,
+          "mean_msssim": 0.99627985060215
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 60552285,
+          "bpp": 2.4516206807758083,
+          "mean_psnr": 40.598718672484374,
+          "mean_msssim": 0.9953822599103054
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 42490441,
+          "bpp": 1.7203387764951286,
+          "mean_psnr": 41.56559068447712,
+          "mean_msssim": 0.995110560208559
+        }
+      ],
+      "crf": 8,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h264_lowdelay/crf10": {
+      "label": "h264_lowdelay/crf10",
+      "arm": "h264_lowdelay",
+      "setting": "crf10",
+      "total_bytes": 281608813,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 1.6288119310904554,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 40.3419229604521,
+          "msssim": 0.9933566741113152
+        },
+        "frame_mean": {
+          "psnr": 40.34192296045211,
+          "msssim": 0.9933566741113152
+        },
+        "sequence_pooled": {
+          "psnr": 40.33579624061777,
+          "msssim": 0.9933566741113152
+        },
+        "global_pooled": {
+          "psnr": 40.290113654944015,
+          "msssim": 0.9933566741113152
+        }
+      },
+      "encode_seconds": 27.952579500037245,
+      "decode_seconds": 16.404474599985406,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 66442057,
+          "bpp": 2.69008380137075,
+          "mean_psnr": 40.06003705442411,
+          "mean_msssim": 0.9903915425141653
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 27544526,
+          "bpp": 1.1152135643397596,
+          "mean_psnr": 41.585180928316,
+          "mean_msssim": 0.993478878090779
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 41527755,
+          "bpp": 1.681361867420709,
+          "mean_psnr": 39.55917653838565,
+          "mean_msssim": 0.9939366541802883
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 38448576,
+          "bpp": 1.5566930970149253,
+          "mean_psnr": 40.46635968640255,
+          "mean_msssim": 0.9932694658637047
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 31444479,
+          "bpp": 1.2731135581856343,
+          "mean_psnr": 40.05674627616295,
+          "mean_msssim": 0.9951360691338778
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 45856863,
+          "bpp": 1.8566373454990672,
+          "mean_psnr": 39.80626982750902,
+          "mean_msssim": 0.9936765444775423
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 30344557,
+          "bpp": 1.2285802838023425,
+          "mean_psnr": 40.85969041196446,
+          "mean_msssim": 0.993607564518849
+        }
+      ],
+      "crf": 10,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h264_lowdelay/crf12": {
+      "label": "h264_lowdelay/crf12",
+      "arm": "h264_lowdelay",
+      "setting": "crf12",
+      "total_bytes": 197978996,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 1.1451010618410922,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 39.5631882760285,
+          "msssim": 0.9910057332544099
+        },
+        "frame_mean": {
+          "psnr": 39.5631882760285,
+          "msssim": 0.99100573325441
+        },
+        "sequence_pooled": {
+          "psnr": 39.55495270026946,
+          "msssim": 0.9910057332544099
+        },
+        "global_pooled": {
+          "psnr": 39.50109785378984,
+          "msssim": 0.99100573325441
+        }
+      },
+      "encode_seconds": 26.695483099960256,
+      "decode_seconds": 17.234328400169034,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 52525526,
+          "bpp": 2.1266359446258294,
+          "mean_psnr": 39.161057565237556,
+          "mean_msssim": 0.9866666719317436
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 17815838,
+          "bpp": 0.721321695558665,
+          "mean_psnr": 40.913805061469084,
+          "mean_msssim": 0.9916228037327528
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 27296507,
+          "bpp": 1.1051718539464137,
+          "mean_psnr": 38.7785270034917,
+          "mean_msssim": 0.9915547221899033
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 25355278,
+          "bpp": 1.0265760228803897,
+          "mean_psnr": 39.70273142051989,
+          "mean_msssim": 0.990619167064627
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 21034322,
+          "bpp": 0.8516306002539387,
+          "mean_psnr": 39.36146355435953,
+          "mean_msssim": 0.9936331287026405
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 32793706,
+          "bpp": 1.327740610100539,
+          "mean_psnr": 38.8997411089421,
+          "mean_msssim": 0.9911145269870758
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 21157819,
+          "bpp": 0.8566307055218698,
+          "mean_psnr": 40.124992218179635,
+          "mean_msssim": 0.9918291121721268
+        }
+      ],
+      "crf": 12,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h264_lowdelay/crf14": {
+      "label": "h264_lowdelay/crf14",
+      "arm": "h264_lowdelay",
+      "setting": "crf14",
+      "total_bytes": 131269556,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.7592568454231817,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 38.76021405957238,
+          "msssim": 0.9878248260134742
+        },
+        "frame_mean": {
+          "psnr": 38.760214059572384,
+          "msssim": 0.9878248260134742
+        },
+        "sequence_pooled": {
+          "psnr": 38.75023989564077,
+          "msssim": 0.9878248260134742
+        },
+        "global_pooled": {
+          "psnr": 38.680546762537816,
+          "msssim": 0.9878248260134742
+        }
+      },
+      "encode_seconds": 22.19628459989326,
+      "decode_seconds": 15.79112420004094,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 38370593,
+          "bpp": 1.5535357473699212,
+          "mean_psnr": 38.00380456200066,
+          "mean_msssim": 0.9800056734432777
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 11319242,
+          "bpp": 0.4582896876295605,
+          "mean_psnr": 40.28554796695447,
+          "mean_msssim": 0.9896742012351751
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 15909990,
+          "bpp": 0.6441583585976368,
+          "mean_psnr": 38.03335665331315,
+          "mean_msssim": 0.9885218795388937
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 15202577,
+          "bpp": 0.6155168574445481,
+          "mean_psnr": 38.93730864992877,
+          "mean_msssim": 0.9870136051128308
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 13357395,
+          "bpp": 0.5408097452192164,
+          "mean_psnr": 38.651793234022364,
+          "mean_msssim": 0.9917927955587705
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 22558662,
+          "bpp": 0.9133475687966418,
+          "mean_psnr": 38.0098430126158,
+          "mean_msssim": 0.9877887188146511
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 14551097,
+          "bpp": 0.5891399529047471,
+          "mean_psnr": 39.399844338171455,
+          "mean_msssim": 0.9899769083907207
+        }
+      ],
+      "crf": 14,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h264_lowdelay/crf16": {
+      "label": "h264_lowdelay/crf16",
+      "arm": "h264_lowdelay",
+      "setting": "crf16",
+      "total_bytes": 84654359,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.48963677126828653,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 38.03080620257562,
+          "msssim": 0.9842006460364375
+        },
+        "frame_mean": {
+          "psnr": 38.03080620257562,
+          "msssim": 0.9842006460364375
+        },
+        "sequence_pooled": {
+          "psnr": 38.0201453105916,
+          "msssim": 0.9842006460364375
+        },
+        "global_pooled": {
+          "psnr": 37.92845014603937,
+          "msssim": 0.9842006460364375
+        }
+      },
+      "encode_seconds": 21.030474200088065,
+      "decode_seconds": 15.477260900021065,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 25896284,
+          "bpp": 1.048480093024461,
+          "mean_psnr": 36.77932943763628,
+          "mean_msssim": 0.969587999706467
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 7437889,
+          "bpp": 0.30114276436826287,
+          "mean_psnr": 39.66932672340217,
+          "mean_msssim": 0.9876226025323073
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 8311849,
+          "bpp": 0.33652736480358625,
+          "mean_psnr": 37.477503032730716,
+          "mean_msssim": 0.9858617602537075
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 8605202,
+          "bpp": 0.3484045430400083,
+          "mean_psnr": 38.380634603651295,
+          "mean_msssim": 0.9838360715657473
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 8495030,
+          "bpp": 0.3439439359193615,
+          "mean_psnr": 37.96880567287174,
+          "mean_msssim": 0.9900388270616531
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 15502615,
+          "bpp": 0.6276646957270937,
+          "mean_psnr": 37.2418516500086,
+          "mean_msssim": 0.9842844754457474
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 10405490,
+          "bpp": 0.42129400199523215,
+          "mean_psnr": 38.69819229772857,
+          "mean_msssim": 0.9881727856894335
+        }
+      ],
+      "crf": 16,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h264_lowdelay/crf18": {
+      "label": "h264_lowdelay/crf18",
+      "arm": "h264_lowdelay",
+      "setting": "crf18",
+      "total_bytes": 53683891,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.3105050628090944,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 37.33931710386654,
+          "msssim": 0.9797568440082527
+        },
+        "frame_mean": {
+          "psnr": 37.339317103866534,
+          "msssim": 0.9797568440082527
+        },
+        "sequence_pooled": {
+          "psnr": 37.32821218923574,
+          "msssim": 0.9797568440082527
+        },
+        "global_pooled": {
+          "psnr": 37.210165668786146,
+          "msssim": 0.9797568440082527
+        }
+      },
+      "encode_seconds": 17.88556519994745,
+      "decode_seconds": 15.52073719992768,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 15347265,
+          "bpp": 0.6213749368392413,
+          "mean_psnr": 35.62749304055257,
+          "mean_msssim": 0.9542655410865942
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 4979111,
+          "bpp": 0.20159258233571725,
+          "mean_psnr": 39.048048359047456,
+          "mean_msssim": 0.985157843058308
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 4078012,
+          "bpp": 0.16510918713723052,
+          "mean_psnr": 37.050736565143204,
+          "mean_msssim": 0.9835649722566208
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 4850806,
+          "bpp": 0.19639781237043946,
+          "mean_psnr": 37.86030993812206,
+          "mean_msssim": 0.9806508794426918
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 5657959,
+          "bpp": 0.22907755331415838,
+          "mean_psnr": 37.27385560279795,
+          "mean_msssim": 0.9882204731305441
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 11025274,
+          "bpp": 0.4463876094786484,
+          "mean_psnr": 36.56460053494115,
+          "mean_msssim": 0.9806060045957565
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 7745464,
+          "bpp": 0.31359575818822555,
+          "mean_psnr": 37.95017568646135,
+          "mean_msssim": 0.9858321944872538
+        }
+      ],
+      "crf": 18,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h264_lowdelay/crf20": {
+      "label": "h264_lowdelay/crf20",
+      "arm": "h264_lowdelay",
+      "setting": "crf20",
+      "total_bytes": 33997821,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.19664177369291932,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 36.7061215838796,
+          "msssim": 0.9749360048167761
+        },
+        "frame_mean": {
+          "psnr": 36.7061215838796,
+          "msssim": 0.9749360048167762
+        },
+        "sequence_pooled": {
+          "psnr": 36.69473726326,
+          "msssim": 0.9749360048167761
+        },
+        "global_pooled": {
+          "psnr": 36.5585378658382,
+          "msssim": 0.9749360048167762
+        }
+      },
+      "encode_seconds": 15.226939499960281,
+      "decode_seconds": 14.937577899894677,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 7802344,
+          "bpp": 0.31589869662106135,
+          "mean_psnr": 34.76714738981113,
+          "mean_msssim": 0.9372022828708092
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 3403861,
+          "bpp": 0.13781438672522803,
+          "mean_psnr": 38.43920263886961,
+          "mean_msssim": 0.9824651554226875
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 2131172,
+          "bpp": 0.08628617977819238,
+          "mean_psnr": 36.673632556792626,
+          "mean_msssim": 0.9815170094370842
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 2924243,
+          "bpp": 0.1183957734115879,
+          "mean_psnr": 37.41223625600938,
+          "mean_msssim": 0.9774869388590256
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 3912607,
+          "bpp": 0.15841232476938225,
+          "mean_psnr": 36.54499986160645,
+          "mean_msssim": 0.9861778269211451
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 8096702,
+          "bpp": 0.32781656496165007,
+          "mean_psnr": 35.917965234417224,
+          "mean_msssim": 0.9762718081474304
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 5726892,
+          "bpp": 0.23186848958333334,
+          "mean_psnr": 37.18766714965077,
+          "mean_msssim": 0.9834310120592514
+        }
+      ],
+      "crf": 20,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h264_lowdelay/crf22": {
+      "label": "h264_lowdelay/crf22",
+      "arm": "h264_lowdelay",
+      "setting": "crf22",
+      "total_bytes": 22235945,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.1286116443915097,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 36.09531584297532,
+          "msssim": 0.9700617241185335
+        },
+        "frame_mean": {
+          "psnr": 36.095315842975324,
+          "msssim": 0.9700617241185336
+        },
+        "sequence_pooled": {
+          "psnr": 36.083667026508785,
+          "msssim": 0.9700617241185335
+        },
+        "global_pooled": {
+          "psnr": 35.94801956263177,
+          "msssim": 0.9700617241185336
+        }
+      },
+      "encode_seconds": 14.05839229997946,
+      "decode_seconds": 17.279923599911854,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 3720389,
+          "bpp": 0.15062986661743366,
+          "mean_psnr": 34.218213721165974,
+          "mean_msssim": 0.9221358243376017
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 2332699,
+          "bpp": 0.09444553761142206,
+          "mean_psnr": 37.79975631904828,
+          "mean_msssim": 0.9792566367735466
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 1243256,
+          "bpp": 0.05033653347844113,
+          "mean_psnr": 36.28447788819559,
+          "mean_msssim": 0.9795894715934992
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 1853470,
+          "bpp": 0.0750426739997927,
+          "mean_psnr": 36.962540704381446,
+          "mean_msssim": 0.9740803508708874
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 2805035,
+          "bpp": 0.11356931974243366,
+          "mean_psnr": 35.79186545115413,
+          "mean_msssim": 0.9839562891672055
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 5986700,
+          "bpp": 0.24238750906923714,
+          "mean_psnr": 35.22197091582931,
+          "mean_msssim": 0.970800186196963
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 4294396,
+          "bpp": 0.17387007022180762,
+          "mean_psnr": 36.3883859010525,
+          "mean_msssim": 0.9806133098900318
+        }
+      ],
+      "crf": 22,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h264_lowdelay/crf24": {
+      "label": "h264_lowdelay/crf24",
+      "arm": "h264_lowdelay",
+      "setting": "crf24",
+      "total_bytes": 15521595,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.08977616451781273,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 35.46048097297593,
+          "msssim": 0.9649661263184888
+        },
+        "frame_mean": {
+          "psnr": 35.46048097297593,
+          "msssim": 0.9649661263184888
+        },
+        "sequence_pooled": {
+          "psnr": 35.448069554933525,
+          "msssim": 0.9649661263184888
+        },
+        "global_pooled": {
+          "psnr": 35.32249015788012,
+          "msssim": 0.9649661263184888
+        }
+      },
+      "encode_seconds": 13.299064699967857,
+      "decode_seconds": 20.191820800013375,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 1965696,
+          "bpp": 0.07958644278606965,
+          "mean_psnr": 33.835928950606736,
+          "mean_msssim": 0.9101745411753654
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 1646486,
+          "bpp": 0.06666237497408789,
+          "mean_psnr": 37.10175151645604,
+          "mean_msssim": 0.975084629530708
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 832628,
+          "bpp": 0.03371116423092869,
+          "mean_psnr": 35.822931512260624,
+          "mean_msssim": 0.9773105749239525
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 1313511,
+          "bpp": 0.05318099444185324,
+          "mean_psnr": 36.45839156141431,
+          "mean_msssim": 0.9702762762705485
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 2090738,
+          "bpp": 0.08464910149771973,
+          "mean_psnr": 35.00104870038905,
+          "mean_msssim": 0.9812690783292055
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 4422533,
+          "bpp": 0.1790580382592247,
+          "mean_psnr": 34.45809038254949,
+          "mean_msssim": 0.9637478521714608
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 3250003,
+          "bpp": 0.13158503543480515,
+          "mean_psnr": 35.54522418715526,
+          "mean_msssim": 0.9768999318281809
+        }
+      ],
+      "crf": 24,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h264_lowdelay/crf26": {
+      "label": "h264_lowdelay/crf26",
+      "arm": "h264_lowdelay",
+      "setting": "crf26",
+      "total_bytes": 11252604,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.06508452436478322,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 34.797310210733826,
+          "msssim": 0.9593539615826947
+        },
+        "frame_mean": {
+          "psnr": 34.797310210733826,
+          "msssim": 0.9593539615826947
+        },
+        "sequence_pooled": {
+          "psnr": 34.78391292322639,
+          "msssim": 0.9593539615826947
+        },
+        "global_pooled": {
+          "psnr": 34.6695649561955,
+          "msssim": 0.9593539615826947
+        }
+      },
+      "encode_seconds": 10.57861349999439,
+      "decode_seconds": 19.767455199966207,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 1184128,
+          "bpp": 0.047942578772802655,
+          "mean_psnr": 33.56527434605891,
+          "mean_msssim": 0.9016352538019419
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 1176981,
+          "bpp": 0.04765321342506219,
+          "mean_psnr": 36.34961012506387,
+          "mean_msssim": 0.9697084898749987
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 627439,
+          "bpp": 0.025403540565402154,
+          "mean_psnr": 35.295551635983685,
+          "mean_msssim": 0.9743650251378616
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 978152,
+          "bpp": 0.039603091314262026,
+          "mean_psnr": 35.89132020177177,
+          "mean_msssim": 0.9654563125222921
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 1589946,
+          "bpp": 0.06437320234763681,
+          "mean_psnr": 34.18477215942704,
+          "mean_msssim": 0.9778394233435392
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 3241703,
+          "bpp": 0.13124898780835406,
+          "mean_psnr": 33.64306164912485,
+          "mean_msssim": 0.9545336520920197
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 2454255,
+          "bpp": 0.09936705631996269,
+          "mean_psnr": 34.651581357706675,
+          "mean_msssim": 0.9719395743062099
+        }
+      ],
+      "crf": 26,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h264_lowdelay/crf28": {
+      "label": "h264_lowdelay/crf28",
+      "arm": "h264_lowdelay",
+      "setting": "crf28",
+      "total_bytes": 8312353,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.048078252941024045,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 34.12372235761562,
+          "msssim": 0.9534419457472506
+        },
+        "frame_mean": {
+          "psnr": 34.12372235761562,
+          "msssim": 0.9534419457472506
+        },
+        "sequence_pooled": {
+          "psnr": 34.10967460926127,
+          "msssim": 0.9534419457472506
+        },
+        "global_pooled": {
+          "psnr": 33.99767263730069,
+          "msssim": 0.9534419457472506
+        }
+      },
+      "encode_seconds": 10.573049199942034,
+      "decode_seconds": 20.301933099981397,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 791582,
+          "bpp": 0.032049307498963515,
+          "mean_psnr": 33.38006281841964,
+          "mean_msssim": 0.8975158532460531
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 856138,
+          "bpp": 0.03466302925476783,
+          "mean_psnr": 35.57538883539301,
+          "mean_msssim": 0.9633383695036173
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 486053,
+          "bpp": 0.019679151443304312,
+          "mean_psnr": 34.752234563467084,
+          "mean_msssim": 0.9710702300071716
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 752499,
+          "bpp": 0.030466928055037312,
+          "mean_psnr": 35.28743741021887,
+          "mean_msssim": 0.959862295538187
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 1235997,
+          "bpp": 0.050042633512126865,
+          "mean_psnr": 33.355192302817834,
+          "mean_msssim": 0.9737560345480839
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 2332997,
+          "bpp": 0.09445760293584163,
+          "mean_psnr": 32.78999910647391,
+          "mean_msssim": 0.9428839304794868
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 1857087,
+          "bpp": 0.07518911788712687,
+          "mean_psnr": 33.72574146651899,
+          "mean_msssim": 0.9656669069081545
+        }
+      ],
+      "crf": 28,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h264_lowdelay/crf30": {
+      "label": "h264_lowdelay/crf30",
+      "arm": "h264_lowdelay",
+      "setting": "crf30",
+      "total_bytes": 6208712,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.03591089381959251,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 33.430898523588546,
+          "msssim": 0.946548154134126
+        },
+        "frame_mean": {
+          "psnr": 33.430898523588546,
+          "msssim": 0.946548154134126
+        },
+        "sequence_pooled": {
+          "psnr": 33.4157315958685,
+          "msssim": 0.946548154134126
+        },
+        "global_pooled": {
+          "psnr": 33.29210327441722,
+          "msssim": 0.946548154134126
+        }
+      },
+      "encode_seconds": 11.098579000099562,
+      "decode_seconds": 20.639637100044638,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 581709,
+          "bpp": 0.023552039606654227,
+          "mean_psnr": 33.190621005743616,
+          "mean_msssim": 0.8948543307681879
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 630491,
+          "bpp": 0.025527108921538144,
+          "mean_psnr": 34.79816504597607,
+          "mean_msssim": 0.9560635729382435
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 395435,
+          "bpp": 0.016010240140443614,
+          "mean_psnr": 34.18497368216083,
+          "mean_msssim": 0.9671813982228438
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 594413,
+          "bpp": 0.024066394913453564,
+          "mean_psnr": 34.64064689188013,
+          "mean_msssim": 0.9533614025761684
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 973131,
+          "bpp": 0.03939980274409204,
+          "mean_psnr": 32.508486533012984,
+          "mean_msssim": 0.968745393678546
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 1631355,
+          "bpp": 0.06604975610230099,
+          "mean_psnr": 31.920276560174788,
+          "mean_msssim": 0.9277067494889101
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 1402178,
+          "bpp": 0.05677091430866501,
+          "mean_psnr": 32.77311994617143,
+          "mean_msssim": 0.957924231265982
+        }
+      ],
+      "crf": 30,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h264_lowdelay/crf32": {
+      "label": "h264_lowdelay/crf32",
+      "arm": "h264_lowdelay",
+      "setting": "crf32",
+      "total_bytes": 4642658,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.026852912243099977,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 32.6943968688914,
+          "msssim": 0.9376385596891244
+        },
+        "frame_mean": {
+          "psnr": 32.6943968688914,
+          "msssim": 0.9376385596891245
+        },
+        "sequence_pooled": {
+          "psnr": 32.677227225735216,
+          "msssim": 0.9376385596891244
+        },
+        "global_pooled": {
+          "psnr": 32.530741345769016,
+          "msssim": 0.9376385596891245
+        }
+      },
+      "encode_seconds": 9.920326600084081,
+      "decode_seconds": 21.062376299931202,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 441211,
+          "bpp": 0.017863603531820066,
+          "mean_psnr": 32.91781000634735,
+          "mean_msssim": 0.8895950062821308
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 473905,
+          "bpp": 0.019187307278710614,
+          "mean_psnr": 33.99199088132429,
+          "mean_msssim": 0.9473939078549544
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 325522,
+          "bpp": 0.013179625958747927,
+          "mean_psnr": 33.55792721804914,
+          "mean_msssim": 0.9624048334856828
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 477488,
+          "bpp": 0.019332374585406303,
+          "mean_psnr": 33.94114310846461,
+          "mean_msssim": 0.945460748548309
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 773132,
+          "bpp": 0.031302310064262026,
+          "mean_psnr": 31.63307014527221,
+          "mean_msssim": 0.9625120641042789
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 1093978,
+          "bpp": 0.0442926156975539,
+          "mean_psnr": 31.02041570282137,
+          "mean_msssim": 0.9078877680003643
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 1057422,
+          "bpp": 0.042812548585199006,
+          "mean_psnr": 31.798421019960838,
+          "mean_msssim": 0.9482155895481507
+        }
+      ],
+      "crf": 32,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h264_lowdelay/crf34": {
+      "label": "h264_lowdelay/crf34",
+      "arm": "h264_lowdelay",
+      "setting": "crf34",
+      "total_bytes": 3491491,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.020194617268938047,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 31.939217100734115,
+          "msssim": 0.926688619312786
+        },
+        "frame_mean": {
+          "psnr": 31.939217100734112,
+          "msssim": 0.9266886193127859
+        },
+        "sequence_pooled": {
+          "psnr": 31.92078595091913,
+          "msssim": 0.926688619312786
+        },
+        "global_pooled": {
+          "psnr": 31.74717152775434,
+          "msssim": 0.9266886193127859
+        }
+      },
+      "encode_seconds": 11.484798600082286,
+      "decode_seconds": 27.466549700009637,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 348258,
+          "bpp": 0.014100153529228856,
+          "mean_psnr": 32.562191380135395,
+          "mean_msssim": 0.882576602200667
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 360947,
+          "bpp": 0.01461390152104063,
+          "mean_psnr": 33.185696545118574,
+          "mean_msssim": 0.9371686428785324
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 269837,
+          "bpp": 0.010925070286587894,
+          "mean_psnr": 32.883151779474666,
+          "mean_msssim": 0.9564373375227054
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 389846,
+          "bpp": 0.015783954576077945,
+          "mean_psnr": 33.21223744897082,
+          "mean_msssim": 0.9360816894719998
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 618794,
+          "bpp": 0.025053524694237148,
+          "mean_psnr": 30.75755710578262,
+          "mean_msssim": 0.9549318620314201
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 706633,
+          "bpp": 0.02860992077373549,
+          "mean_psnr": 30.149238261766158,
+          "mean_msssim": 0.8835279898097118
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 797176,
+          "bpp": 0.03227579550165838,
+          "mean_psnr": 30.82444718389057,
+          "mean_msssim": 0.936096211274465
+        }
+      ],
+      "crf": 34,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h264_lowdelay/crf36": {
+      "label": "h264_lowdelay/crf36",
+      "arm": "h264_lowdelay",
+      "setting": "crf36",
+      "total_bytes": 2650165,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.015328427847740465,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 31.17812730144652,
+          "msssim": 0.9140231291807833
+        },
+        "frame_mean": {
+          "psnr": 31.17812730144652,
+          "msssim": 0.9140231291807833
+        },
+        "sequence_pooled": {
+          "psnr": 31.15825716573965,
+          "msssim": 0.9140231291807833
+        },
+        "global_pooled": {
+          "psnr": 30.95843563350533,
+          "msssim": 0.9140231291807833
+        }
+      },
+      "encode_seconds": 10.011779999942519,
+      "decode_seconds": 24.603828899911605,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 276899,
+          "bpp": 0.011210994182732173,
+          "mean_psnr": 32.16765770793981,
+          "mean_msssim": 0.875934769709905
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 278638,
+          "bpp": 0.011281402233623549,
+          "mean_psnr": 32.38184558597079,
+          "mean_msssim": 0.9252787176519632
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 227102,
+          "bpp": 0.009194829887023217,
+          "mean_psnr": 32.1727763078786,
+          "mean_msssim": 0.949063166975975
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 321428,
+          "bpp": 0.013013869454809287,
+          "mean_psnr": 32.44497978035562,
+          "mean_msssim": 0.924409244209528
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 497999,
+          "bpp": 0.02016281709939884,
+          "mean_psnr": 29.880277844491502,
+          "mean_msssim": 0.94534070789814
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 447966,
+          "bpp": 0.018137097714552238,
+          "mean_psnr": 29.338332059903248,
+          "mean_msssim": 0.8570280261337757
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 600133,
+          "bpp": 0.02429798436204395,
+          "mean_psnr": 29.861021823586057,
+          "mean_msssim": 0.9211072716861963
+        }
+      ],
+      "crf": 36,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h264_lowdelay/crf38": {
+      "label": "h264_lowdelay/crf38",
+      "arm": "h264_lowdelay",
+      "setting": "crf38",
+      "total_bytes": 2058007,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.011903414243884743,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 30.40101563968631,
+          "msssim": 0.899646699783348
+        },
+        "frame_mean": {
+          "psnr": 30.401015639686314,
+          "msssim": 0.8996466997833479
+        },
+        "sequence_pooled": {
+          "psnr": 30.379692728493097,
+          "msssim": 0.899646699783348
+        },
+        "global_pooled": {
+          "psnr": 30.16511486454227,
+          "msssim": 0.8996466997833479
+        }
+      },
+      "encode_seconds": 7.551806200004648,
+      "decode_seconds": 18.585946800012607,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 219795,
+          "bpp": 0.008898986512748756,
+          "mean_psnr": 31.647562757251666,
+          "mean_msssim": 0.8668346193929514
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 220831,
+          "bpp": 0.008940931734556385,
+          "mean_psnr": 31.535161561842838,
+          "mean_msssim": 0.9100758594771227
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 192349,
+          "bpp": 0.0077877620361733,
+          "mean_psnr": 31.410993320948844,
+          "mean_msssim": 0.9395863202710947
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 268496,
+          "bpp": 0.010870776326699834,
+          "mean_psnr": 31.665991575616047,
+          "mean_msssim": 0.9112786067028841
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 402660,
+          "bpp": 0.016302763526119403,
+          "mean_psnr": 28.97270920589179,
+          "mean_msssim": 0.9337370985498031
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 299745,
+          "bpp": 0.012135975396455223,
+          "mean_psnr": 28.659327243473886,
+          "mean_msssim": 0.8326453752815723
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 454131,
+          "bpp": 0.0183867041744403,
+          "mean_psnr": 28.915363812779106,
+          "mean_msssim": 0.9033690188080072
+        }
+      ],
+      "crf": 38,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h264_lowdelay/crf40": {
+      "label": "h264_lowdelay/crf40",
+      "arm": "h264_lowdelay",
+      "setting": "crf40",
+      "total_bytes": 1639402,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.00948222290704217,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 29.62329582355182,
+          "msssim": 0.8837031986387004
+        },
+        "frame_mean": {
+          "psnr": 29.62329582355182,
+          "msssim": 0.8837031986387003
+        },
+        "sequence_pooled": {
+          "psnr": 29.600643387198186,
+          "msssim": 0.8837031986387004
+        },
+        "global_pooled": {
+          "psnr": 29.37573680900013,
+          "msssim": 0.8837031986387003
+        }
+      },
+      "encode_seconds": 7.409165800025221,
+      "decode_seconds": 18.514805799990427,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 177273,
+          "bpp": 0.007177369986007463,
+          "mean_psnr": 31.08691777251343,
+          "mean_msssim": 0.8563544495652119
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 174838,
+          "bpp": 0.0070787825196932,
+          "mean_psnr": 30.703968542883576,
+          "mean_msssim": 0.8927206539859375
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 167602,
+          "bpp": 0.006785813769693201,
+          "mean_psnr": 30.634669322883763,
+          "mean_msssim": 0.9282875321805477
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 226377,
+          "bpp": 0.009165476329291045,
+          "mean_psnr": 30.837128685928832,
+          "mean_msssim": 0.8963128241399924
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 327715,
+          "bpp": 0.01326841540992952,
+          "mean_psnr": 28.0567312588912,
+          "mean_msssim": 0.9193936238686243
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 217205,
+          "bpp": 0.008794123458229684,
+          "mean_psnr": 28.051430139845028,
+          "mean_msssim": 0.8103890207906564
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 348392,
+          "bpp": 0.014105578876451077,
+          "mean_psnr": 27.992225041916925,
+          "mean_msssim": 0.8824642859399319
+        }
+      ],
+      "crf": 40,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h264_lowdelay/crf42": {
+      "label": "h264_lowdelay/crf42",
+      "arm": "h264_lowdelay",
+      "setting": "crf42",
+      "total_bytes": 1324077,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.007658398159870292,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 28.83755118417264,
+          "msssim": 0.865298354554744
+        },
+        "frame_mean": {
+          "psnr": 28.83755118417264,
+          "msssim": 0.865298354554744
+        },
+        "sequence_pooled": {
+          "psnr": 28.813983811311523,
+          "msssim": 0.865298354554744
+        },
+        "global_pooled": {
+          "psnr": 28.58465317620158,
+          "msssim": 0.865298354554744
+        }
+      },
+      "encode_seconds": 7.6329041999415495,
+      "decode_seconds": 18.00358970015077,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 142241,
+          "bpp": 0.005759006076388889,
+          "mean_psnr": 30.448347071571288,
+          "mean_msssim": 0.8451423725734154
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 142884,
+          "bpp": 0.005785039645522388,
+          "mean_psnr": 29.86632366557085,
+          "mean_msssim": 0.871046798924605
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 142405,
+          "bpp": 0.005765646053586235,
+          "mean_psnr": 29.81709229164809,
+          "mean_msssim": 0.913944243763884
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 191995,
+          "bpp": 0.0077734294024668325,
+          "mean_psnr": 30.00221111837644,
+          "mean_msssim": 0.8788159508258104
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 268686,
+          "bpp": 0.010878468983208956,
+          "mean_psnr": 27.16127326204783,
+          "mean_msssim": 0.9021011218428612
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 163594,
+          "bpp": 0.006623539205016584,
+          "mean_psnr": 27.46225153425155,
+          "mean_msssim": 0.7867445349693298
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 272272,
+          "bpp": 0.011023657752902156,
+          "mean_psnr": 27.10535934574244,
+          "mean_msssim": 0.8592934589833021
+        }
+      ],
+      "crf": 42,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h264_lowdelay/crf44": {
+      "label": "h264_lowdelay/crf44",
+      "arm": "h264_lowdelay",
+      "setting": "crf44",
+      "total_bytes": 1070517,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.006191819224191542,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 28.036033821894062,
+          "msssim": 0.843867467893731
+        },
+        "frame_mean": {
+          "psnr": 28.036033821894062,
+          "msssim": 0.843867467893731
+        },
+        "sequence_pooled": {
+          "psnr": 28.01058764392995,
+          "msssim": 0.843867467893731
+        },
+        "global_pooled": {
+          "psnr": 27.777124367108147,
+          "msssim": 0.843867467893731
+        }
+      },
+      "encode_seconds": 7.191467600001488,
+      "decode_seconds": 18.629999899945688,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 113092,
+          "bpp": 0.004578831104892205,
+          "mean_psnr": 29.78905921566647,
+          "mean_msssim": 0.8316607810556889
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 114133,
+          "bpp": 0.0046209787650290214,
+          "mean_psnr": 29.03093645724613,
+          "mean_msssim": 0.8476249898473421
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 116241,
+          "bpp": 0.004706326764614428,
+          "mean_psnr": 28.973181677817724,
+          "mean_msssim": 0.8961973153054714
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 166879,
+          "bpp": 0.0067565411872927035,
+          "mean_psnr": 29.126797697209497,
+          "mean_msssim": 0.8593279228856167
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 222953,
+          "bpp": 0.009026846561463516,
+          "mean_psnr": 26.23965090750426,
+          "mean_msssim": 0.8812431513021389
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 120676,
+          "bpp": 0.004885889562603649,
+          "mean_psnr": 26.82069859113245,
+          "mean_msssim": 0.7583953682333231
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 216543,
+          "bpp": 0.008767320623445273,
+          "mean_psnr": 26.27191220668192,
+          "mean_msssim": 0.832622746626536
+        }
+      ],
+      "crf": 44,
+      "encoder": "libx264",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h265_lowdelay/crf8": {
+      "label": "h265_lowdelay/crf8",
+      "arm": "h265_lowdelay",
+      "setting": "crf8",
+      "total_bytes": 350409110,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 2.026749564584074,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 40.89081720556898,
+          "msssim": 0.9938653108796903
+        },
+        "frame_mean": {
+          "psnr": 40.89081720556898,
+          "msssim": 0.9938653108796903
+        },
+        "sequence_pooled": {
+          "psnr": 40.88430085432181,
+          "msssim": 0.9938653108796903
+        },
+        "global_pooled": {
+          "psnr": 40.82232237930532,
+          "msssim": 0.9938653108796903
+        }
+      },
+      "encode_seconds": 112.02718020003522,
+      "decode_seconds": 20.30772250011796,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 70657680,
+          "bpp": 2.8607645366915424,
+          "mean_psnr": 40.07098356368796,
+          "mean_msssim": 0.9893819304804007
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 36208090,
+          "bpp": 1.4659810485333749,
+          "mean_psnr": 42.21882282036058,
+          "mean_msssim": 0.994461065158248
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 55806085,
+          "bpp": 2.2594581211779645,
+          "mean_psnr": 40.05504422602083,
+          "mean_msssim": 0.994701816389958
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 46737657,
+          "bpp": 1.8922986386427239,
+          "mean_psnr": 40.94513643086114,
+          "mean_msssim": 0.9936403464525938
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 42732245,
+          "bpp": 1.7301288560452943,
+          "mean_psnr": 40.7898795343144,
+          "mean_msssim": 0.9956480134278536
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 59580606,
+          "bpp": 2.4122796661225125,
+          "mean_psnr": 40.494443067058604,
+          "mean_msssim": 0.9947661540160576
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 38686747,
+          "bpp": 1.5663360848751036,
+          "mean_psnr": 41.66141079667934,
+          "mean_msssim": 0.9944578502327204
+        }
+      ],
+      "crf": 8,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h265_lowdelay/crf10": {
+      "label": "h265_lowdelay/crf10",
+      "arm": "h265_lowdelay",
+      "setting": "crf10",
+      "total_bytes": 266571605,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 1.5418374378572168,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 40.31519686562276,
+          "msssim": 0.9921737730148292
+        },
+        "frame_mean": {
+          "psnr": 40.31519686562277,
+          "msssim": 0.9921737730148292
+        },
+        "sequence_pooled": {
+          "psnr": 40.307223514875844,
+          "msssim": 0.9921737730148292
+        },
+        "global_pooled": {
+          "psnr": 40.23609850152218,
+          "msssim": 0.9921737730148292
+        }
+      },
+      "encode_seconds": 105.52290679991711,
+      "decode_seconds": 20.66149780008709,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 58096564,
+          "bpp": 2.352194269537728,
+          "mean_psnr": 39.34276103664536,
+          "mean_msssim": 0.9859301472703615
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 25109370,
+          "bpp": 1.0166197819496268,
+          "mean_psnr": 41.71450296758165,
+          "mean_msssim": 0.9932509306818247
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 42834124,
+          "bpp": 1.734253698953151,
+          "mean_psnr": 39.52628320497593,
+          "mean_msssim": 0.9932480423400799
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 34705694,
+          "bpp": 1.4051525413298094,
+          "mean_psnr": 40.36745620116363,
+          "mean_msssim": 0.9918186304469904
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 31160663,
+          "bpp": 1.2616225108183043,
+          "mean_psnr": 40.27773925189403,
+          "mean_msssim": 0.9946155119687319
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 46723076,
+          "bpp": 1.8917082879871476,
+          "mean_psnr": 39.827646896511766,
+          "mean_msssim": 0.9931143100063006
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 27942114,
+          "bpp": 1.1313109744247511,
+          "mean_psnr": 41.14998850058698,
+          "mean_msssim": 0.9932388383895159
+        }
+      ],
+      "crf": 10,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h265_lowdelay/crf12": {
+      "label": "h265_lowdelay/crf12",
+      "arm": "h265_lowdelay",
+      "setting": "crf12",
+      "total_bytes": 191953714,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 1.1102511183850095,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 39.69313953162024,
+          "msssim": 0.9899451051439557
+        },
+        "frame_mean": {
+          "psnr": 39.69313953162024,
+          "msssim": 0.9899451051439557
+        },
+        "sequence_pooled": {
+          "psnr": 39.68357410086951,
+          "msssim": 0.9899451051439557
+        },
+        "global_pooled": {
+          "psnr": 39.58955804718347,
+          "msssim": 0.9899451051439557
+        }
+      },
+      "encode_seconds": 93.09953270002734,
+      "decode_seconds": 19.323019800009206,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 44543776,
+          "bpp": 1.803473517827529,
+          "mean_psnr": 38.410626105345486,
+          "mean_msssim": 0.9803277862568697
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 17106706,
+          "bpp": 0.6926105961080017,
+          "mean_psnr": 41.262230442517904,
+          "mean_msssim": 0.9920509203026692
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 30163680,
+          "bpp": 1.2212569962686568,
+          "mean_psnr": 38.94246343857853,
+          "mean_msssim": 0.9913779906928539
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 23389875,
+          "bpp": 0.9470014429804104,
+          "mean_psnr": 39.76059137210607,
+          "mean_msssim": 0.9895351131757101
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 21451413,
+          "bpp": 0.8685176412857587,
+          "mean_psnr": 39.754900380995814,
+          "mean_msssim": 0.993419491375486
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 35319935,
+          "bpp": 1.4300217256814884,
+          "mean_psnr": 39.11089970408333,
+          "mean_msssim": 0.9909659537176291
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 19978329,
+          "bpp": 0.8088759085432214,
+          "mean_psnr": 40.610265277714554,
+          "mean_msssim": 0.9919384804864725
+        }
+      ],
+      "crf": 12,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h265_lowdelay/crf14": {
+      "label": "h265_lowdelay/crf14",
+      "arm": "h265_lowdelay",
+      "setting": "crf14",
+      "total_bytes": 132124474,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.7642016503235312,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 39.048083267015606,
+          "msssim": 0.9870239182242325
+        },
+        "frame_mean": {
+          "psnr": 39.0480832670156,
+          "msssim": 0.9870239182242325
+        },
+        "sequence_pooled": {
+          "psnr": 39.037331326592074,
+          "msssim": 0.9870239182242325
+        },
+        "global_pooled": {
+          "psnr": 38.90925963252184,
+          "msssim": 0.9870239182242325
+        }
+      },
+      "encode_seconds": 80.36340679996647,
+      "decode_seconds": 20.2291049999767,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 33367293,
+          "bpp": 1.3509638088852611,
+          "mean_psnr": 37.338619790955896,
+          "mean_msssim": 0.9713843651115894
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 11395775,
+          "bpp": 0.46138833015910036,
+          "mean_psnr": 40.7712217001202,
+          "mean_msssim": 0.9906298201531172
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 19022579,
+          "bpp": 0.7701798219190505,
+          "mean_psnr": 38.37110264951417,
+          "mean_msssim": 0.98918727102379
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 14441206,
+          "bpp": 0.5846907228182007,
+          "mean_psnr": 39.201124430398536,
+          "mean_msssim": 0.9869733732193708
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 14256527,
+          "bpp": 0.5772135011790008,
+          "mean_psnr": 39.20767717348557,
+          "mean_msssim": 0.9920987132936716
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 25212879,
+          "bpp": 1.0208106197527984,
+          "mean_psnr": 38.399322968252115,
+          "mean_msssim": 0.9883493656913439
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 14428215,
+          "bpp": 0.584164747551306,
+          "mean_psnr": 40.047514156382725,
+          "mean_msssim": 0.9905445190767447
+        }
+      ],
+      "crf": 14,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h265_lowdelay/crf16": {
+      "label": "h265_lowdelay/crf16",
+      "arm": "h265_lowdelay",
+      "setting": "crf16",
+      "total_bytes": 87815508,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.5079207061789268,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 38.43442095451904,
+          "msssim": 0.9839018588619572
+        },
+        "frame_mean": {
+          "psnr": 38.434420954519034,
+          "msssim": 0.9839018588619572
+        },
+        "sequence_pooled": {
+          "psnr": 38.42374624083889,
+          "msssim": 0.9839018588619572
+        },
+        "global_pooled": {
+          "psnr": 38.271387076443084,
+          "msssim": 0.9839018588619572
+        }
+      },
+      "encode_seconds": 63.73406350007281,
+      "decode_seconds": 16.50972400000319,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 23161729,
+          "bpp": 0.9377643439702529,
+          "mean_psnr": 36.47123438455059,
+          "mean_msssim": 0.9622274295737346
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 7558054,
+          "bpp": 0.30600796473362357,
+          "mean_psnr": 40.22767524607328,
+          "mean_msssim": 0.9888519439846277
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 11020918,
+          "bpp": 0.4462112452062604,
+          "mean_psnr": 37.83427339789124,
+          "mean_msssim": 0.9869743964324394
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 8540197,
+          "bpp": 0.345772642322243,
+          "mean_psnr": 38.6931460319474,
+          "mean_msssim": 0.984249280144771
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 9304611,
+          "bpp": 0.37672198091573383,
+          "mean_psnr": 38.648883963125435,
+          "mean_msssim": 0.9907475610574087
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 17585124,
+          "bpp": 0.7119806242226369,
+          "mean_psnr": 37.69299098050962,
+          "mean_msssim": 0.9852402980128924
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 10644875,
+          "bpp": 0.4309861418817372,
+          "mean_psnr": 39.47274267753568,
+          "mean_msssim": 0.9890221028278271
+        }
+      ],
+      "crf": 16,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h265_lowdelay/crf18": {
+      "label": "h265_lowdelay/crf18",
+      "arm": "h265_lowdelay",
+      "setting": "crf18",
+      "total_bytes": 57297590,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.3314065253161277,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 37.833459645067556,
+          "msssim": 0.9801820110352267
+        },
+        "frame_mean": {
+          "psnr": 37.833459645067556,
+          "msssim": 0.9801820110352266
+        },
+        "sequence_pooled": {
+          "psnr": 37.822600363290995,
+          "msssim": 0.9801820110352267
+        },
+        "global_pooled": {
+          "psnr": 37.64491268850812,
+          "msssim": 0.9801820110352266
+        }
+      },
+      "encode_seconds": 54.033658499945886,
+      "decode_seconds": 15.12140589999035,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 14821802,
+          "bpp": 0.600100166485282,
+          "mean_psnr": 35.60029352737578,
+          "mean_msssim": 0.9499688235421976
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 5287282,
+          "bpp": 0.21406970680451906,
+          "mean_psnr": 39.68183134666265,
+          "mean_msssim": 0.986813093846043
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 5750231,
+          "bpp": 0.23281343121631426,
+          "mean_psnr": 37.364502675866255,
+          "mean_msssim": 0.9848020151257515
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 4777004,
+          "bpp": 0.19340974165630181,
+          "mean_psnr": 38.22633336435935,
+          "mean_msssim": 0.9814113825559616
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 6261280,
+          "bpp": 0.2535046123548922,
+          "mean_psnr": 38.07548345262554,
+          "mean_msssim": 0.9893056986232599
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 12357527,
+          "bpp": 0.5003274237536277,
+          "mean_psnr": 37.04108366995418,
+          "mean_msssim": 0.9817822637657324
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 8042464,
+          "bpp": 0.3256205949419569,
+          "mean_psnr": 38.84468947862913,
+          "mean_msssim": 0.9871907997876406
+        }
+      ],
+      "crf": 18,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h265_lowdelay/crf20": {
+      "label": "h265_lowdelay/crf20",
+      "arm": "h265_lowdelay",
+      "setting": "crf20",
+      "total_bytes": 36992997,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.21396572869469616,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 37.246543922203564,
+          "msssim": 0.9760002279210658
+        },
+        "frame_mean": {
+          "psnr": 37.246543922203564,
+          "msssim": 0.9760002279210658
+        },
+        "sequence_pooled": {
+          "psnr": 37.23546895844209,
+          "msssim": 0.9760002279210658
+        },
+        "global_pooled": {
+          "psnr": 37.0444121760907,
+          "msssim": 0.9760002279210658
+        }
+      },
+      "encode_seconds": 46.20525960007217,
+      "decode_seconds": 15.384172799938824,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 8268495,
+          "bpp": 0.33477206253886815,
+          "mean_psnr": 34.854054373423956,
+          "mean_msssim": 0.9357000831514597
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 3665085,
+          "bpp": 0.1483907367459577,
+          "mean_psnr": 39.08660015537887,
+          "mean_msssim": 0.9843241653094689
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 2855597,
+          "bpp": 0.11561645710250829,
+          "mean_psnr": 36.94800723116086,
+          "mean_msssim": 0.9827749505639076
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 2829842,
+          "bpp": 0.11457369726886402,
+          "mean_psnr": 37.801860484791796,
+          "mean_msssim": 0.9786572108666102
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 4325074,
+          "bpp": 0.17511215083436982,
+          "mean_psnr": 37.472172322266154,
+          "mean_msssim": 0.9877313189208508
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 8864702,
+          "bpp": 0.35891109232483415,
+          "mean_psnr": 36.403774765287785,
+          "mean_msssim": 0.9778102586666743
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 6184202,
+          "bpp": 0.25038390404747096,
+          "mean_psnr": 38.15933812311555,
+          "mean_msssim": 0.9850036079684893
+        }
+      ],
+      "crf": 20,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h265_lowdelay/crf22": {
+      "label": "h265_lowdelay/crf22",
+      "arm": "h265_lowdelay",
+      "setting": "crf22",
+      "total_bytes": 24357829,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.14088452015406597,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 36.654615958763216,
+          "msssim": 0.9716146761285407
+        },
+        "frame_mean": {
+          "psnr": 36.654615958763216,
+          "msssim": 0.9716146761285407
+        },
+        "sequence_pooled": {
+          "psnr": 36.64318380743092,
+          "msssim": 0.9716146761285407
+        },
+        "global_pooled": {
+          "psnr": 36.46178048780586,
+          "msssim": 0.9716146761285407
+        }
+      },
+      "encode_seconds": 37.55384259996936,
+      "decode_seconds": 14.909820900065824,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 4280704,
+          "bpp": 0.17331571310116087,
+          "mean_psnr": 34.31886194714669,
+          "mean_msssim": 0.9227305774887403
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 2533251,
+          "bpp": 0.1025654199704602,
+          "mean_psnr": 38.4265572073258,
+          "mean_msssim": 0.9812325555831194
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 1415109,
+          "bpp": 0.057294460315609454,
+          "mean_psnr": 36.53624778350138,
+          "mean_msssim": 0.980727806687355
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 1771390,
+          "bpp": 0.07171944638785241,
+          "mean_psnr": 37.360546112773115,
+          "mean_msssim": 0.9756187784175078
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 3098510,
+          "bpp": 0.1254514374740879,
+          "mean_psnr": 36.81099554401627,
+          "mean_msssim": 0.9858619868755341
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 6504011,
+          "bpp": 0.26333222397128936,
+          "mean_psnr": 35.73059332216885,
+          "mean_msssim": 0.9729033640275399
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 4754854,
+          "bpp": 0.19251293985800166,
+          "mean_psnr": 37.39850979441041,
+          "mean_msssim": 0.9822276638199886
+        }
+      ],
+      "crf": 22,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h265_lowdelay/crf24": {
+      "label": "h265_lowdelay/crf24",
+      "arm": "h265_lowdelay",
+      "setting": "crf24",
+      "total_bytes": 16668624,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.09641052549751243,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 36.05131373021821,
+          "msssim": 0.9670810358864921
+        },
+        "frame_mean": {
+          "psnr": 36.05131373021821,
+          "msssim": 0.9670810358864921
+        },
+        "sequence_pooled": {
+          "psnr": 36.038852029815146,
+          "msssim": 0.9670810358864921
+        },
+        "global_pooled": {
+          "psnr": 35.881600389426104,
+          "msssim": 0.9670810358864921
+        }
+      },
+      "encode_seconds": 32.25588680023793,
+      "decode_seconds": 15.029625099909026,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 2041553,
+          "bpp": 0.08265771565350331,
+          "mean_psnr": 33.948713423017985,
+          "mean_msssim": 0.9121476045499245
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 1789040,
+          "bpp": 0.07243405368988391,
+          "mean_psnr": 37.731816647201335,
+          "mean_msssim": 0.9775144917269548
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 795167,
+          "bpp": 0.03219445578099088,
+          "mean_psnr": 36.08672814865621,
+          "mean_msssim": 0.9785015390564998
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 1194196,
+          "bpp": 0.0483502085924544,
+          "mean_psnr": 36.87857651106797,
+          "mean_msssim": 0.9721121527254581
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 2305541,
+          "bpp": 0.0933459735826078,
+          "mean_psnr": 36.08886127723981,
+          "mean_msssim": 0.9835819229483604
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 4889122,
+          "bpp": 0.19794913777466833,
+          "mean_psnr": 35.03045309440014,
+          "mean_msssim": 0.9668930601328611
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 3654005,
+          "bpp": 0.14794213340847845,
+          "mean_psnr": 36.594047009944006,
+          "mean_msssim": 0.9788164800653855
+        }
+      ],
+      "crf": 24,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h265_lowdelay/crf26": {
+      "label": "h265_lowdelay/crf26",
+      "arm": "h265_lowdelay",
+      "setting": "crf26",
+      "total_bytes": 11952876,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.06913486418354656,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 35.43238696064571,
+          "msssim": 0.9625854108127809
+        },
+        "frame_mean": {
+          "psnr": 35.432386960645715,
+          "msssim": 0.9625854108127809
+        },
+        "sequence_pooled": {
+          "psnr": 35.41845414527697,
+          "msssim": 0.9625854108127809
+        },
+        "global_pooled": {
+          "psnr": 35.291321924243604,
+          "msssim": 0.9625854108127809
+        }
+      },
+      "encode_seconds": 27.282708900107536,
+      "decode_seconds": 14.488339500094298,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 1075481,
+          "bpp": 0.04354371534255804,
+          "mean_psnr": 33.71138359594812,
+          "mean_msssim": 0.9059328498939673
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 1263353,
+          "bpp": 0.05115021409877695,
+          "mean_psnr": 36.995501796281644,
+          "mean_msssim": 0.9729318289707104
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 502281,
+          "bpp": 0.020336185284514925,
+          "mean_psnr": 35.57058145906974,
+          "mean_msssim": 0.9758104557792345
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 864287,
+          "bpp": 0.03499296324367745,
+          "mean_psnr": 36.35734124161086,
+          "mean_msssim": 0.9681513595084349
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 1747263,
+          "bpp": 0.07074260047419154,
+          "mean_psnr": 35.30663714418981,
+          "mean_msssim": 0.980705256263415
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 3698148,
+          "bpp": 0.1497293804415423,
+          "mean_psnr": 34.31061914618084,
+          "mean_msssim": 0.9598331277569135
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 2802063,
+          "bpp": 0.11344899039956467,
+          "mean_psnr": 35.77464434123897,
+          "mean_msssim": 0.974732997516791
+        }
+      ],
+      "crf": 26,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h265_lowdelay/crf28": {
+      "label": "h265_lowdelay/crf28",
+      "arm": "h265_lowdelay",
+      "setting": "crf28",
+      "total_bytes": 8782503,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.05079757809723703,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 34.79296435400405,
+          "msssim": 0.9577500335872173
+        },
+        "frame_mean": {
+          "psnr": 34.79296435400405,
+          "msssim": 0.9577500335872173
+        },
+        "sequence_pooled": {
+          "psnr": 34.778249629663556,
+          "msssim": 0.9577500335872173
+        },
+        "global_pooled": {
+          "psnr": 34.67007807198652,
+          "msssim": 0.9577500335872173
+        }
+      },
+      "encode_seconds": 24.839272499957588,
+      "decode_seconds": 14.839679500029888,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 687260,
+          "bpp": 0.027825553223466002,
+          "mean_psnr": 33.51713558535017,
+          "mean_msssim": 0.9022009323040644
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 892427,
+          "bpp": 0.03613228616034411,
+          "mean_psnr": 36.26790780732504,
+          "mean_msssim": 0.9677548172573248
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 363742,
+          "bpp": 0.014727064547056384,
+          "mean_psnr": 35.02143032556278,
+          "mean_msssim": 0.9728119832774004
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 650190,
+          "bpp": 0.026324675450870645,
+          "mean_psnr": 35.82553714387192,
+          "mean_msssim": 0.9639270889262358
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 1338071,
+          "bpp": 0.05417537151482173,
+          "mean_psnr": 34.49576100626944,
+          "mean_msssim": 0.9773808494210243
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 2726905,
+          "bpp": 0.11040601841055141,
+          "mean_psnr": 33.51707610381106,
+          "mean_msssim": 0.9503310962269703
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 2123908,
+          "bpp": 0.08599207737354893,
+          "mean_psnr": 34.90590250583795,
+          "mean_msssim": 0.9698434676975012
+        }
+      ],
+      "crf": 28,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h265_lowdelay/crf30": {
+      "label": "h265_lowdelay/crf30",
+      "arm": "h265_lowdelay",
+      "setting": "crf30",
+      "total_bytes": 6502357,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.037609322481713454,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 34.09621079605504,
+          "msssim": 0.9517763499170542
+        },
+        "frame_mean": {
+          "psnr": 34.09621079605503,
+          "msssim": 0.9517763499170542
+        },
+        "sequence_pooled": {
+          "psnr": 34.07932123924594,
+          "msssim": 0.9517763499170542
+        },
+        "global_pooled": {
+          "psnr": 33.98181543590398,
+          "msssim": 0.9517763499170542
+        }
+      },
+      "encode_seconds": 24.742244500026572,
+      "decode_seconds": 16.179291099950206,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 494132,
+          "bpp": 0.020006251295605307,
+          "mean_psnr": 33.30198695558551,
+          "mean_msssim": 0.898804963255922
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 628891,
+          "bpp": 0.025462328656198175,
+          "mean_psnr": 35.49117315568904,
+          "mean_msssim": 0.9615047220140696
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 283211,
+          "bpp": 0.011466552329498341,
+          "mean_psnr": 34.39203640046576,
+          "mean_msssim": 0.9688634009410938
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 493377,
+          "bpp": 0.01997568310789801,
+          "mean_psnr": 35.18166200800832,
+          "mean_msssim": 0.9580027622481188
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 1027245,
+          "bpp": 0.04159075229322139,
+          "mean_psnr": 33.63475649134434,
+          "mean_msssim": 0.9731025323271751
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 1981008,
+          "bpp": 0.08020638992537313,
+          "mean_psnr": 32.70179451579357,
+          "mean_msssim": 0.9388122527549664
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 1594493,
+          "bpp": 0.06455729976419984,
+          "mean_psnr": 33.9700660454987,
+          "mean_msssim": 0.9633438158780336
+        }
+      ],
+      "crf": 30,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h265_lowdelay/crf32": {
+      "label": "h265_lowdelay/crf32",
+      "arm": "h265_lowdelay",
+      "setting": "crf32",
+      "total_bytes": 4826326,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.02791523918724828,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 33.40168187338885,
+          "msssim": 0.9448566484664168
+        },
+        "frame_mean": {
+          "psnr": 33.40168187338885,
+          "msssim": 0.9448566484664168
+        },
+        "sequence_pooled": {
+          "psnr": 33.38028281917538,
+          "msssim": 0.9448566484664168
+        },
+        "global_pooled": {
+          "psnr": 33.283543902288585,
+          "msssim": 0.9448566484664168
+        }
+      },
+      "encode_seconds": 20.20454179990338,
+      "decode_seconds": 14.736892200016882,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 365538,
+          "bpp": 0.014799780394900498,
+          "mean_psnr": 33.128734711174246,
+          "mean_msssim": 0.8967229848106703
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 449918,
+          "bpp": 0.018216129638267,
+          "mean_psnr": 34.68269736521059,
+          "mean_msssim": 0.9538087751716375
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 232884,
+          "bpp": 0.009428929570895523,
+          "mean_psnr": 33.80399933497245,
+          "mean_msssim": 0.964360968520244
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 385645,
+          "bpp": 0.015613865891894693,
+          "mean_psnr": 34.50042221071107,
+          "mean_msssim": 0.9509087223559618
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 795661,
+          "bpp": 0.032214456687914596,
+          "mean_psnr": 32.746959837425386,
+          "mean_msssim": 0.9679132103919983
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 1406702,
+          "bpp": 0.05695408050891376,
+          "mean_psnr": 31.90350901954562,
+          "mean_msssim": 0.9250466215113798
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 1189978,
+          "bpp": 0.04817943161795191,
+          "mean_psnr": 33.04545063468262,
+          "mean_msssim": 0.9552352565030257
+        }
+      ],
+      "crf": 32,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h265_lowdelay/crf34": {
+      "label": "h265_lowdelay/crf34",
+      "arm": "h265_lowdelay",
+      "setting": "crf34",
+      "total_bytes": 3538669,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.020467492568778133,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 32.65223723611739,
+          "msssim": 0.9359461560490585
+        },
+        "frame_mean": {
+          "psnr": 32.65223723611738,
+          "msssim": 0.9359461560490585
+        },
+        "sequence_pooled": {
+          "psnr": 32.63186441366742,
+          "msssim": 0.9359461560490585
+        },
+        "global_pooled": {
+          "psnr": 32.52268920926882,
+          "msssim": 0.9359461560490585
+        }
+      },
+      "encode_seconds": 17.894241399888415,
+      "decode_seconds": 15.095809299964458,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 275260,
+          "bpp": 0.011144634898424544,
+          "mean_psnr": 32.8257949276978,
+          "mean_msssim": 0.8915740177035332
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 323172,
+          "bpp": 0.01308447994402985,
+          "mean_psnr": 33.85007737731407,
+          "mean_msssim": 0.9444934750596682
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 192453,
+          "bpp": 0.007791972753420398,
+          "mean_psnr": 33.10034171386214,
+          "mean_msssim": 0.9589620927969614
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 305531,
+          "bpp": 0.01237023703099088,
+          "mean_psnr": 33.81471767676609,
+          "mean_msssim": 0.9426185290018717
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 618486,
+          "bpp": 0.025041054493159205,
+          "mean_psnr": 31.833403078896524,
+          "mean_msssim": 0.9615312969932953
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 950217,
+          "bpp": 0.03847206836909204,
+          "mean_psnr": 31.068170956251336,
+          "mean_msssim": 0.9074186366051435
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 873550,
+          "bpp": 0.035368000492330014,
+          "mean_psnr": 32.073154922033716,
+          "mean_msssim": 0.9450250441829363
+        }
+      ],
+      "crf": 34,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h265_lowdelay/crf36": {
+      "label": "h265_lowdelay/crf36",
+      "arm": "h265_lowdelay",
+      "setting": "crf36",
+      "total_bytes": 2582569,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.014937455810604714,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 31.912387668931917,
+          "msssim": 0.9255731818931443
+        },
+        "frame_mean": {
+          "psnr": 31.912387668931913,
+          "msssim": 0.9255731818931443
+        },
+        "sequence_pooled": {
+          "psnr": 31.890635785599425,
+          "msssim": 0.9255731818931443
+        },
+        "global_pooled": {
+          "psnr": 31.761229843915228,
+          "msssim": 0.9255731818931443
+        }
+      },
+      "encode_seconds": 20.17127959994832,
+      "decode_seconds": 21.09667170001194,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 208195,
+          "bpp": 0.008429329589033996,
+          "mean_psnr": 32.50696888050725,
+          "mean_msssim": 0.8859033634265264
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 233623,
+          "bpp": 0.00945884995594942,
+          "mean_psnr": 33.03067971366338,
+          "mean_msssim": 0.9341984074562788
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 162473,
+          "bpp": 0.00657815253161277,
+          "mean_psnr": 32.46941065701322,
+          "mean_msssim": 0.952986483151714
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 241254,
+          "bpp": 0.009767811333955224,
+          "mean_psnr": 33.088308937660976,
+          "mean_msssim": 0.9328578455994526
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 482448,
+          "bpp": 0.019533193407960198,
+          "mean_psnr": 30.925023952176037,
+          "mean_msssim": 0.9537640033910671
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 624034,
+          "bpp": 0.025265680063225538,
+          "mean_psnr": 30.25196368731659,
+          "mean_msssim": 0.8868279214948416
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 630542,
+          "bpp": 0.025529173792495852,
+          "mean_psnr": 31.11435785418594,
+          "mean_msssim": 0.9324742487321297
+        }
+      ],
+      "crf": 36,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h265_lowdelay/crf38": {
+      "label": "h265_lowdelay/crf38",
+      "arm": "h265_lowdelay",
+      "setting": "crf38",
+      "total_bytes": 1869561,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.010813451575826225,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 31.140731490042644,
+          "msssim": 0.9132714478210324
+        },
+        "frame_mean": {
+          "psnr": 31.140731490042647,
+          "msssim": 0.9132714478210324
+        },
+        "sequence_pooled": {
+          "psnr": 31.11607113798962,
+          "msssim": 0.9132714478210324
+        },
+        "global_pooled": {
+          "psnr": 30.966171441459444,
+          "msssim": 0.9132714478210324
+        }
+      },
+      "encode_seconds": 18.188109300099313,
+      "decode_seconds": 21.66270489996532,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 157059,
+          "bpp": 0.006358952308768657,
+          "mean_psnr": 32.085708546381746,
+          "mean_msssim": 0.8786742705851793
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 170773,
+          "bpp": 0.006914200158063847,
+          "mean_psnr": 32.21417843007775,
+          "mean_msssim": 0.9215408079326153
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 137402,
+          "bpp": 0.005563086261401327,
+          "mean_psnr": 31.78605668428845,
+          "mean_msssim": 0.9456357726206382
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 190267,
+          "bpp": 0.0077034667158996685,
+          "mean_psnr": 32.29021826546721,
+          "mean_msssim": 0.9215829136470953
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 374580,
+          "bpp": 0.015165869869402986,
+          "mean_psnr": 30.005487261178207,
+          "mean_msssim": 0.944285341228048
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 392841,
+          "bpp": 0.015905215135261195,
+          "mean_psnr": 29.464783231550737,
+          "mean_msssim": 0.8632039682318767
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 446639,
+          "bpp": 0.018083370581985905,
+          "mean_psnr": 30.138688011354414,
+          "mean_msssim": 0.9179770605017742
+        }
+      ],
+      "crf": 38,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h265_lowdelay/crf40": {
+      "label": "h265_lowdelay/crf40",
+      "arm": "h265_lowdelay",
+      "setting": "crf40",
+      "total_bytes": 1339053,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.007745018628953447,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 30.3263909896801,
+          "msssim": 0.8985188608723027
+        },
+        "frame_mean": {
+          "psnr": 30.326390989680096,
+          "msssim": 0.8985188608723027
+        },
+        "sequence_pooled": {
+          "psnr": 30.299463068108338,
+          "msssim": 0.8985188608723027
+        },
+        "global_pooled": {
+          "psnr": 30.126546983136635,
+          "msssim": 0.8985188608723027
+        }
+      },
+      "encode_seconds": 18.407910800131503,
+      "decode_seconds": 21.57639839994954,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 115778,
+          "bpp": 0.004687580975331675,
+          "mean_psnr": 31.60044858024376,
+          "mean_msssim": 0.8697701077908278
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 124390,
+          "bpp": 0.005036260753524047,
+          "mean_psnr": 31.37383133288903,
+          "mean_msssim": 0.9063991010189056
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 115385,
+          "bpp": 0.0046716693226575455,
+          "mean_psnr": 31.02461236745866,
+          "mean_msssim": 0.9363588398943344
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 150381,
+          "bpp": 0.00608857567630597,
+          "mean_psnr": 31.451704532309353,
+          "mean_msssim": 0.9078989923000336
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 288372,
+          "bpp": 0.011675509172885573,
+          "mean_psnr": 29.023999764740125,
+          "mean_msssim": 0.9323611551274856
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 235549,
+          "bpp": 0.009536829200352405,
+          "mean_psnr": 28.684542353844048,
+          "mean_msssim": 0.8360959192117056
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 309198,
+          "bpp": 0.012518705301616915,
+          "mean_psnr": 29.12559799627572,
+          "mean_msssim": 0.9007479107628266
+        }
+      ],
+      "crf": 40,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h265_lowdelay/crf42": {
+      "label": "h265_lowdelay/crf42",
+      "arm": "h265_lowdelay",
+      "setting": "crf42",
+      "total_bytes": 975566,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.005642627172915186,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 29.488796588344,
+          "msssim": 0.8821442093522777
+        },
+        "frame_mean": {
+          "psnr": 29.488796588344,
+          "msssim": 0.8821442093522776
+        },
+        "sequence_pooled": {
+          "psnr": 29.45685490718275,
+          "msssim": 0.8821442093522777
+        },
+        "global_pooled": {
+          "psnr": 29.2645316417598,
+          "msssim": 0.8821442093522776
+        }
+      },
+      "encode_seconds": 17.105985600035638,
+      "decode_seconds": 21.638475499989,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 85762,
+          "bpp": 0.0034723031975538972,
+          "mean_psnr": 31.045583383423505,
+          "mean_msssim": 0.8605962861329317
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 92977,
+          "bpp": 0.00376442170657131,
+          "mean_psnr": 30.537202764466652,
+          "mean_msssim": 0.8898561348517736
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 97136,
+          "bpp": 0.003932809908789386,
+          "mean_psnr": 30.198081453415202,
+          "mean_msssim": 0.924413421501716
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 119424,
+          "bpp": 0.004835199004975125,
+          "mean_psnr": 30.55229045312224,
+          "mean_msssim": 0.8921538759022951
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 222424,
+          "bpp": 0.00900542858623549,
+          "mean_psnr": 27.994838831298466,
+          "mean_msssim": 0.9172052182257175
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 147522,
+          "bpp": 0.005972821439676617,
+          "mean_psnr": 28.011724600348472,
+          "mean_msssim": 0.8104357949147621
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 210321,
+          "bpp": 0.008515406366604477,
+          "mean_psnr": 28.081854632333485,
+          "mean_msssim": 0.880348733936747
+        }
+      ],
+      "crf": 42,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    },
+    "h265_lowdelay/crf44": {
+      "label": "h265_lowdelay/crf44",
+      "arm": "h265_lowdelay",
+      "setting": "crf44",
+      "total_bytes": 728310,
+      "total_pixels": 1383137280,
+      "frames": 672,
+      "bpp": 0.004212510272299218,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 28.61953762231345,
+          "msssim": 0.863767097482369
+        },
+        "frame_mean": {
+          "psnr": 28.619537622313448,
+          "msssim": 0.863767097482369
+        },
+        "sequence_pooled": {
+          "psnr": 28.58161058344874,
+          "msssim": 0.863767097482369
+        },
+        "global_pooled": {
+          "psnr": 28.379052675423996,
+          "msssim": 0.863767097482369
+        }
+      },
+      "encode_seconds": 14.838961900037248,
+      "decode_seconds": 24.186390200222377,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 64385,
+          "bpp": 0.002606798364946103,
+          "mean_psnr": 30.424699223466813,
+          "mean_msssim": 0.8501423529038826
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 69291,
+          "bpp": 0.002805430853544776,
+          "mean_psnr": 29.65196336754828,
+          "mean_msssim": 0.869022243966659
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 80257,
+          "bpp": 0.0032494185971185738,
+          "mean_psnr": 29.259080213219466,
+          "mean_msssim": 0.9089040737599134
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 95276,
+          "bpp": 0.003857502850331675,
+          "mean_psnr": 29.56239783246878,
+          "mean_msssim": 0.8742128095279137
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 170847,
+          "bpp": 0.006917196245335821,
+          "mean_psnr": 26.949511364342786,
+          "mean_msssim": 0.8985600788146257
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 104625,
+          "bpp": 0.004236022038246269,
+          "mean_psnr": 27.398620284686917,
+          "mean_msssim": 0.78715630620718
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 143629,
+          "bpp": 0.00581520295657131,
+          "mean_psnr": 27.090491070461116,
+          "mean_msssim": 0.8583718171964089
+        }
+      ],
+      "crf": 44,
+      "encoder": "libx265",
+      "preset": "medium",
+      "pix_fmt": "yuv420p",
+      "lowdelay": true,
+      "structure": "I every 30, P only"
+    }
+  },
+  "dataset": {
+    "split": "test",
+    "sequences": [
+      "Beauty",
+      "Bosphorus",
+      "HoneyBee",
+      "Jockey",
+      "ReadySetGo",
+      "ShakeNDry",
+      "YachtRide"
+    ],
+    "frames": 672,
+    "resolution": [
+      1920,
+      1072
+    ]
+  },
+  "comparisons": {},
+  "finished_utc": "2026-11-17T12:18:08.383330+00:00",
+  "valid": true
+}

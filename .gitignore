@@ -109,6 +109,16 @@ outputs/benchmarks/*
 # And for the learned intra anchor the NCC paper cites: CompressAI's pretrained
 # bmshj2018 models scored by this harness. One JSON report + log + README.
 !outputs/benchmarks/compressai_anchor/
+# And for the x264/x265 anchors the wide-latent and encode-tuning results are scored against
+# (outputs/p5_encode_tuning/report.py reads them): DAVIS TEST 4:4:4 and high-quality runs, and
+# UVG 1080p in 4:2:0 and 4:4:4. One JSON report + log each, under 200 KB.
+!outputs/benchmarks/parity_classical_444_gop30/
+!outputs/benchmarks/parity_classical_420_hq_gop30/
+!outputs/benchmarks/parity_classical_444_hq_gop30/
+!outputs/benchmarks/uvg_classical_420_gop30/
+!outputs/benchmarks/uvg_classical_444_gop30/
+!outputs/benchmarks/run_uvg_444.sh
+!outputs/benchmarks/run_queue.sh
 # QAT+control combined training output (Milestone 8B): checkpoints (already
 # caught by *.pt below) plus progress_*.json/history.json, which are not.
 # Auto-created by scripts/train_vimeo_qat_combined.py - no .gitkeep needed.
