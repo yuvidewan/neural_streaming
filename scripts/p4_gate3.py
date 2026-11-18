@@ -411,13 +411,19 @@ def main(argv: list[str] | None = None) -> int:
     for lam in args.lambdas:
         if lam in report["points"]:
             continue
-        bits = g3.BITS[lam]
-        intra, _ = load_model_from_checkpoint(Path(p1.CHECKPOINT.format(lam)), device=device)
+        # A lambda with no old intra model / motion rig (docs/PLAN_low_rate.md) borrows the
+        # 1e-3 rig: its motion table and stream header. Motion is coded losslessly, so this can
+        # only cost bits. The learned coders are always this lambda's own.
+        rig_lam = lam if lam in g3.BITS else "1e-3"
+        if rig_lam != lam and args.i_frames != "wide":
+            parser.error(f"lambda {lam} has no old intra model; use --i-frames wide")
+        bits = g3.BITS[rig_lam]
+        intra, _ = load_model_from_checkpoint(Path(p1.CHECKPOINT.format(rig_lam)), device=device)
         intra.eval()
         pcoder = p4.load_vimeo("p", lam, device, args.models_dir)
         icoder = p4.load_vimeo("i", lam, device, args.models_dir) if args.i_frames == "wide" else None
         identity = identity_of(pcoder, *([icoder] if icoder is not None else []))
-        rig = g3.build_rig(args, m21, md, intra, lam, bits, device, train_full, motion_train)
+        rig = g3.build_rig(args, m21, md, intra, rig_lam, bits, device, train_full, motion_train)
         rows, exact = [], True
         tally = {"i_bytes": 0, "p_bytes": 0, "framing_bytes": 0, "i_frames": 0, "p_frames": 0,
                  "ideal_bits": 0.0, "coded_bytes": 0, "i_mse": [], "p_mse": []}
@@ -496,7 +502,7 @@ def main(argv: list[str] | None = None) -> int:
             "pooled_psnr_i": psnr_of(tally["i_mse"]), "pooled_psnr_p": psnr_of(tally["p_mse"]),
         }
         point = bp.summarize_point(f"learned_p/{lam}", "learned_p", lam, rows, extra={
-            "bits": bits, "lambda": lam, "decode_reconstruction_exact": exact,
+            "bits": bits, "lambda": lam, "rig_lambda": rig_lam, "decode_reconstruction_exact": exact,
             "coder_identity": identity.hex(), "split": split})
         report["points"][lam] = point
         args.output_dir.mkdir(parents=True, exist_ok=True)

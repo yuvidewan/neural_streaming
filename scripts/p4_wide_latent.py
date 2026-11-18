@@ -14,6 +14,7 @@ Usage:
     p4_wide_latent.py train --lambda 3e-4 --kind a1|a2 [--steps 5000]
     p4_wide_latent.py evaluate
     p4_wide_latent.py train-vimeo --scratch-dir C:/vimeo_scratch --chunks 4 5 6 7 8 9 10
+    p4_wide_latent.py train-vimeo ... --lambdas 3e-3 1e-2 --init-dir outputs/p4_wide_latent/vimeo         --init-lambda 1e-3 --wide-intra-refs      (docs/PLAN_low_rate.md)
 """
 
 from __future__ import annotations
@@ -312,6 +313,27 @@ def intra_step(model: WideLatentPFrameCoder, images: torch.Tensor, lam: float):
     return mse.detach(), bpp.detach()
 
 
+class WideIntraReference(nn.Module):
+    """A frozen wide I-coder as the source of a P-coder's training I-frames
+    (`p1.unrolled_step` calls `.reference`), for lambdas that have no old intra model."""
+
+    def __init__(self, coder: WideLatentPFrameCoder) -> None:
+        super().__init__()
+        self.coder = coder.eval().requires_grad_(False)
+
+    @torch.no_grad()
+    def reference(self, frames: torch.Tensor) -> torch.Tensor:
+        return code_intra(self.coder, frames)["reconstruction"]
+
+
+def load_checkpoint_model(path: Path) -> tuple[WideLatentPFrameCoder, dict]:
+    saved = torch.load(path, map_location="cpu", weights_only=False)
+    model = WideLatentPFrameCoder(p1.ConditionalPFrameCoder(**saved["config"]["base"]),
+                                  saved["config"]["kind"])
+    model.load_state_dict(saved["model_state_dict"])
+    return model, saved
+
+
 def train_role_on_chunk(role: str, lam: str, chunk: int, clip_dirs: list[Path], args,
                         device) -> None:
     """Train one (role, lambda) model on one chunk, resuming from its latest.pt.
@@ -323,14 +345,17 @@ def train_role_on_chunk(role: str, lam: str, chunk: int, clip_dirs: list[Path], 
     latest = out / "latest.pt"
     saved, start_step, history = None, 0, []
     if latest.is_file():
-        saved = torch.load(latest, map_location="cpu", weights_only=False)
-        model = WideLatentPFrameCoder(p1.ConditionalPFrameCoder(**saved["config"]["base"]),
-                                      saved["config"]["kind"])
-        model.load_state_dict(saved["model_state_dict"])
+        model, saved = load_checkpoint_model(latest)
         source = f"resumed {latest}"
+    elif args.init_dir:
+        init = Path(args.init_dir) / role / f"lambda{args.init_lambda}" / "model.pt"
+        model, _ = load_checkpoint_model(init)
+        source = f"init from {init}"
     else:
         model = load_arm("a2", lam, "cpu")
         source = f"init from {OUTPUT_DIR / 'finetune_a2'}"
+    init_record = (str(Path(args.init_dir) / role / f"lambda{args.init_lambda}") if args.init_dir
+                   else str(OUTPUT_DIR / "finetune_a2"))
     model.to(device).train()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     if saved is not None:
@@ -343,7 +368,13 @@ def train_role_on_chunk(role: str, lam: str, chunk: int, clip_dirs: list[Path], 
     for group in optimizer.param_groups:
         group["lr"] = lr
     steps = args.p_steps if role == "p" else args.i_steps
-    intra = p1._intra_model(lam, device).requires_grad_(False) if role == "p" else None
+    if role != "p":
+        intra = None
+    elif args.wide_intra_refs:   # the same lambda's wide I-coder, as trained so far
+        intra = WideIntraReference(load_checkpoint_model(
+            Path(args.output_dir) / "i" / f"lambda{lam}" / "latest.pt")[0]).to(device)
+    else:
+        intra = p1._intra_model(lam, device).requires_grad_(False)
     length, batch = (args.unroll + 1, args.batch) if role == "p" else (2, args.batch // 2)
     print(f"[{role} {lam} chunk {chunk}] {source}; {len(clip_dirs)} clips, lr {lr:g}, "
           f"steps {start_step}->{steps}", flush=True)
@@ -399,7 +430,8 @@ def train_role_on_chunk(role: str, lam: str, chunk: int, clip_dirs: list[Path], 
         checkpoint(step)
     torch.save({"model_state_dict": model.state_dict(), "config": model.config_dict(),
                 "lambda": lam, "role": role, "chunks_done_through": chunk, "data": "vimeo90k",
-                "init": str(OUTPUT_DIR / "finetune_a2")}, out / "model.pt")
+                "init": init_record, "wide_intra_refs": bool(args.wide_intra_refs)},
+               out / "model.pt")
     p1._save_json(out / "history.json", history)
 
 
@@ -499,13 +531,20 @@ def command_check_gate2(args) -> None:
     print(f"P-frame BD-rate, A2 (Vimeo) vs stage 3: {report['p_bd_rate_a2_vs_stage3']:+.1f}%")
 
 
+def lambda_name(text: str) -> str:
+    """A lambda as written in directory names (e.g. '3e-3'); must parse as a positive float."""
+    if not float(text) > 0:
+        raise argparse.ArgumentTypeError(f"lambda must be positive, got {text}")
+    return text
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
     vimeo = sub.add_parser("train-vimeo")
     vimeo.add_argument("--output-dir", default=str(VIMEO_DIR))
     vimeo.add_argument("--scratch-dir", required=True)
-    vimeo.add_argument("--lambdas", nargs="+", choices=p1.LAMBDAS, default=list(p1.LAMBDAS))
+    vimeo.add_argument("--lambdas", nargs="+", type=lambda_name, default=list(p1.LAMBDAS))
     vimeo.add_argument("--roles", nargs="+", choices=ROLES, default=list(ROLES))
     vimeo.add_argument("--chunks", nargs="+", type=int, required=True)
     vimeo.add_argument("--p-steps", type=int, default=3000)
@@ -525,6 +564,11 @@ def main(argv: list[str] | None = None) -> int:
     vimeo.add_argument("--local-chunk", type=int, default=None)
     vimeo.add_argument("--delete-local-after", default=None)
     vimeo.add_argument("--max-clips", type=int, default=0, help="smoke tests only")
+    vimeo.add_argument("--init-dir", default=None,
+                       help="warm-start new models from <init-dir>/<role>/lambda<init-lambda>")
+    vimeo.add_argument("--init-lambda", default="1e-3")
+    vimeo.add_argument("--wide-intra-refs", action="store_true",
+                       help="P-coder training I-frames from the same lambda's wide I-coder")
     train = sub.add_parser("train")
     train.add_argument("--lambda", dest="lam", required=True, choices=p1.LAMBDAS)
     train.add_argument("--kind", required=True, choices=tuple(EXTRA))

@@ -412,7 +412,10 @@ def unrolled_step(model: ConditionalPFrameCoder, intra: nn.Module, clip: torch.T
     alive at a time: holding all of them overflowed an 8 GB GPU at T = 4 and ran ~15x
     slower. The returned values are then detached, for logging."""
     with torch.no_grad():
-        reference = intra.decode(torch.round(intra.encode(clip[:, 0]))).clamp(0, 1)
+        if hasattr(intra, "reference"):   # any I-frame coder that returns its reconstruction
+            reference = intra.reference(clip[:, 0]).clamp(0, 1)
+        else:
+            reference = intra.decode(torch.round(intra.encode(clip[:, 0]))).clamp(0, 1)
     steps = clip.shape[1] - 1
     pixels = clip.shape[-1] * clip.shape[-2]
     mse = bits = 0.0
