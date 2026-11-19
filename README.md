@@ -29,6 +29,12 @@ part is done. The bar now is to win.
 > in full colour (4:4:4)** on DAVIS TEST, BD-rate PSNR. On UVG at 1080p,
 > untuned, it is **−18.9% vs x264 4:4:4** (fewer bits) but +17.2% vs x265
 > 4:4:4, and only over 36.8-40.9 dB, the range its models reach.
+> **Update 2026-11-19** ([`outputs/p6_low_rate/README.md`](outputs/p6_low_rate/README.md)):
+> two lower-rate models (λ 3e-3, 1e-2) extend the DAVIS curve down to 28.6 dB. At low rate
+> (28.6-33.0 dB) the codec is **+47.1% vs x264 4:4:4** (pre-registered bar +80.9%: passed)
+> and +35.1% vs x264 4:2:0. On UVG 1080p the low rate is weak: **+95.6% vs x264 4:4:4**
+> over 32.4-36.8 dB, and +27.9% over the full 32.4-40.9 dB, so the UVG win above holds
+> only at high quality.
 > The rest of this README still describes the older M22 codec.
 
 Measured in a single pass on the DAVIS test split (9 sequences, 719 frames):

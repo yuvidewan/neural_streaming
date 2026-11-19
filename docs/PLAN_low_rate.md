@@ -2,6 +2,8 @@
 
 Roadmap item 2 (`docs/ROADMAP_2026-11-17.md`).
 
+Status: **PASSED 2026-11-19**: low band vs x264 4:4:4 is +47.1% (bar +80.9%), valid and decode-exact. UVG (not gated) is +95.6% over its low band. See `outputs/p6_low_rate/README.md`.
+
 ## Why
 
 The codec has three models (λ 1e-3, 3e-4, 1e-4). On DAVIS TEST they span 33.0-37.9 dB, and on
