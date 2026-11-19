@@ -109,7 +109,8 @@ SNAPSHOT_MODES = ("prev", "mc", "oracle")
 
 FRAME_TYPE_I = 0
 FRAME_TYPE_P = 1
-FRAME_TYPE_NAMES = {FRAME_TYPE_I: "I", FRAME_TYPE_P: "P"}
+FRAME_TYPE_B = 2          # docs/PLAN_bframes.md: two-sided prediction, see scripts/bframes.py
+FRAME_TYPE_NAMES = {FRAME_TYPE_I: "I", FRAME_TYPE_P: "P", FRAME_TYPE_B: "B"}
 
 MODE_CODES = {"prev": 0, "mc": 1, "oracle": 2}
 MODE_NAMES = {code: name for name, code in MODE_CODES.items()}
@@ -478,7 +479,7 @@ class TemporalStreamHeader:
         48  8  bytes   motion_entropy_model_id
 
     Then each frame:
-        uint8   frame_type (0=I, 1=P)
+        uint8   frame_type (0=I, 1=P, 2=B: scripts/bframes.py)
         uint32  motion_payload_length   (0 for I-frames)
         uint32  residual_payload_length
         bytes   motion payload
@@ -623,7 +624,7 @@ class TemporalStreamWriter:
             raise
 
     def append_frame(self, frame_type: int, motion_payload: bytes, residual_payload: bytes) -> None:
-        if frame_type not in (FRAME_TYPE_I, FRAME_TYPE_P):
+        if frame_type not in FRAME_TYPE_NAMES:
             raise TemporalFormatError(f"Unknown frame_type {frame_type}")
         if self._written >= self._expected:
             raise TemporalFormatError(
@@ -699,7 +700,7 @@ class TemporalStreamReader:
             frame_type, motion_length, residual_length = _FRAME_RECORD_STRUCT.unpack_from(
                 body, offset)
             offset += _FRAME_RECORD_STRUCT.size
-            if frame_type not in (FRAME_TYPE_I, FRAME_TYPE_P):
+            if frame_type not in FRAME_TYPE_NAMES:
                 raise TemporalFormatError(
                     f"Frame {count} declares unknown frame_type {frame_type}")
             if count == 0 and frame_type != FRAME_TYPE_I:

@@ -41,7 +41,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 import benchmark_parity as bp  # noqa: E402
 import p1_gate3 as g3  # noqa: E402
 import p1_pframe as p1  # noqa: E402
-import motion_pred as mp  # noqa: E402
+import motion_pred as mp
+import bframes as bf  # noqa: E402
 import p4_wide_latent as p4  # noqa: E402
 
 from nvc.compression.range_coder import decode_symbols, encode_symbols  # noqa: E402
@@ -274,8 +275,119 @@ def encode_sequence(mc, m21, intra, icoder, pcoder, frames, path, rig, tables, *
     return {"reconstructions": torch.cat(reconstructions), "records": records}
 
 
+
+def _last_use(order) -> dict[int, int]:
+    """Display index -> the last coding position that reads it as a reference."""
+    last = {}
+    for position, (_, _, refs) in enumerate(order):
+        for r in refs:
+            last[r] = position
+    return last
+
+
+def _code_motion(mc, reference, frame, *, block_size, search_range, motion_lambda, scales):
+    if motion_lambda > 0:
+        cost = mc.block_sad_costs(reference, frame, block_size=block_size,
+                                  search_range=search_range)
+        return mp.search_rate_aware(cost, search_range=search_range, lambda_m=motion_lambda,
+                                    scale_indices=scales)
+    return mc.estimate_block_motion(reference, frame, block_size=block_size,
+                                    search_range=search_range).cpu()
+
+
+def encode_sequence_b(mc, intra, icoder, pcoder, bcoder, frames, path, rig, tables, *, gop,
+                      bframes, block_size, search_range, identity, tune,
+                      motion_lambda) -> dict[str, Any]:
+    """docs/PLAN_bframes.md: anchors every `bframes` frames, B-frames between them coded by
+    `bcoder` from a two-sided block prediction. Wide I-frames and motion_pred only."""
+    device = next(pcoder.parameters()).device
+    count = frames.shape[0]
+    order = bf.coding_order(count, gop, bframes)
+    last = _last_use(order)
+    intra_params = rig["intra_params"]
+    latent_shape = tuple(intra.encode(frames[0:1].to(device)).shape[1:])
+    header = mc.TemporalStreamHeader(
+        gop_size=gop, quantization_bits=intra_params.bits,
+        quantization_mode=intra_params.mode, image_width=frames.shape[3],
+        image_height=frames.shape[2], image_channels=frames.shape[1],
+        latent_channels=latent_shape[0], latent_height=latent_shape[1],
+        latent_width=latent_shape[2], frame_count=count,
+        num_intra_quantization_params=intra_params.scale.numel(),
+        num_residual_quantization_params=intra_params.scale.numel(),
+        block_size=block_size, search_range=search_range,
+        motion_bits=rig["motion_entropy_model"].bits, reference_mode="mc",
+        intra_entropy_model_id=rig["intra_entropy_model"].model_id(),
+        residual_entropy_model_id=identity, motion_entropy_model_id=mp.model_id())
+    writer = mc.TemporalStreamWriter(path, header, intra_params, intra_params)
+    default = (mp.DEFAULT_SCALE_INDEX, mp.DEFAULT_SCALE_INDEX)
+    p_scales = b_forward = b_backward = default
+    grid = (frames.shape[2] // block_size, frames.shape[3] // block_size)
+    live, outputs, records = {}, [None] * count, [None] * count
+    with mc.deterministic_kernels():
+        for position, (kind, t, refs) in enumerate(order):
+            frame = frames[t:t + 1].to(device)
+            if kind == "I":
+                payload, reconstruction, ideal = encode_frame(icoder, frame, gray(frame), tables,
+                                                              tune)
+                writer.append_frame(mc.FRAME_TYPE_I, b"", payload)
+                records[t] = {"type": "I", "motion": 0, "residual": len(payload),
+                              "ideal_bits": ideal}
+                p_scales = b_forward = b_backward = default
+            elif kind == "P":
+                reference = live[refs[0]]
+                motion = _code_motion(mc, reference, frame, block_size=block_size,
+                                      search_range=search_range, motion_lambda=motion_lambda,
+                                      scales=p_scales)
+                motion_payload, p_scales = mp.encode_field(motion)
+                decoded_motion, _ = mp.decode_field(motion_payload, grid)
+                if not torch.equal(decoded_motion, motion.cpu()):
+                    raise RuntimeError("motion_pred round trip failed")
+                warped = mc.warp_blocks(reference, decoded_motion, block_size=block_size)
+                payload, reconstruction, ideal = encode_frame(pcoder, frame, warped, tables, tune)
+                writer.append_frame(mc.FRAME_TYPE_P, motion_payload, payload)
+                records[t] = {"type": "P", "motion": len(motion_payload),
+                              "residual": len(payload), "ideal_bits": ideal}
+            else:
+                past, future = live[refs[0]], live[refs[1]]
+                forward = _code_motion(mc, past, frame, block_size=block_size,
+                                       search_range=search_range, motion_lambda=motion_lambda,
+                                       scales=b_forward)
+                backward = _code_motion(mc, future, frame, block_size=block_size,
+                                        search_range=search_range, motion_lambda=motion_lambda,
+                                        scales=b_backward)
+                modes = bf.choose_modes(
+                    frame, mc.warp_blocks(past, forward, block_size=block_size),
+                    mc.warp_blocks(future, backward, block_size=block_size), block_size,
+                    motion_lambda, bf.vector_bits(forward, b_forward),
+                    bf.vector_bits(backward, b_backward))
+                forward, backward = bf.clear_unused(forward, backward, modes)
+                motion_payload, b_forward, b_backward = bf.encode_payload(forward, backward, modes)
+                got = bf.decode_payload(motion_payload, grid)
+                if not (torch.equal(got[0], forward) and torch.equal(got[1], backward)
+                        and torch.equal(got[2], modes)):
+                    raise RuntimeError("B payload round trip failed")
+                prediction = bf.combine(mc.warp_blocks(past, forward, block_size=block_size),
+                                        mc.warp_blocks(future, backward, block_size=block_size),
+                                        modes, block_size)
+                payload, reconstruction, ideal = encode_frame(bcoder, frame, prediction, tables,
+                                                              tune)
+                writer.append_frame(mc.FRAME_TYPE_B, motion_payload, payload)
+                records[t] = {"type": "B", "motion": len(motion_payload),
+                              "residual": len(payload), "ideal_bits": ideal,
+                              "modes": np.bincount(modes.numpy().ravel(), minlength=3).tolist()}
+            outputs[t] = reconstruction.cpu()
+            if last.get(t, -1) > position:
+                live[t] = reconstruction
+            for r in refs:
+                if last[r] == position:
+                    live.pop(r, None)
+    writer.close()
+    return {"reconstructions": torch.cat(outputs), "records": records}
+
+
 @torch.no_grad()
-def decode_sequence(mc, m21, intra, icoder, pcoder, path, rig, tables, *, identity):
+def decode_sequence(mc, m21, intra, icoder, pcoder, path, rig, tables, *, identity,
+                    bcoder=None):
     device = next(pcoder.parameters()).device
     reader = mc.TemporalStreamReader(path)
     header = reader.header
@@ -290,9 +402,14 @@ def decode_sequence(mc, m21, intra, icoder, pcoder, path, rig, tables, *, identi
             raise mc.TemporalFormatError(f"{label} model mismatch: stream declares "
                                          f"{declared.hex()}, supplied is {supplied.hex()}")
     shape = (1, header.image_channels, header.image_height, header.image_width)
-    reconstructions, previous = [], None
+    records = list(reader)
+    order = bf.display_order([mc.FRAME_TYPE_NAMES[r[0]] for r in records])
+    last = _last_use(order)
+    live, outputs = {}, [None] * len(records)
+    bcoder = pcoder if bcoder is None else bcoder
     with mc.deterministic_kernels():
-        for frame_type, motion_payload, payload in reader:
+        for position, ((frame_type, motion_payload, payload), (_, t, refs)) in enumerate(
+                zip(records, order)):
             if frame_type == mc.FRAME_TYPE_I:
                 if icoder is None:
                     latent, _ = m21.decode_payload_to_latent(
@@ -302,18 +419,29 @@ def decode_sequence(mc, m21, intra, icoder, pcoder, path, rig, tables, *, identi
                 else:
                     flat = torch.full(shape, p4.GRAY, device=device)
                     reconstruction = decode_frame(icoder, payload, flat, tables)
-            else:
+            elif frame_type == mc.FRAME_TYPE_P:
                 if predicted_motion:
                     motion, _ = mp.decode_field(motion_payload, header.block_grid)
                 else:
                     motion = mc.decode_motion_payload(
                         motion_payload, header.block_grid, search_range=header.search_range,
                         entropy_model=rig["motion_entropy_model"])
-                warped = mc.warp_blocks(previous, motion, block_size=header.block_size)
+                warped = mc.warp_blocks(live[refs[0]], motion, block_size=header.block_size)
                 reconstruction = decode_frame(pcoder, payload, warped, tables)
-            previous = reconstruction
-            reconstructions.append(reconstruction.cpu())
-    return torch.cat(reconstructions)
+            else:
+                forward, backward, modes = bf.decode_payload(motion_payload, header.block_grid)
+                prediction = bf.combine(
+                    mc.warp_blocks(live[refs[0]], forward, block_size=header.block_size),
+                    mc.warp_blocks(live[refs[1]], backward, block_size=header.block_size),
+                    modes, header.block_size)
+                reconstruction = decode_frame(bcoder, payload, prediction, tables)
+            outputs[t] = reconstruction.cpu()
+            if last.get(t, -1) > position:
+                live[t] = reconstruction
+            for r in refs:
+                if last[r] == position:
+                    live.pop(r, None)
+    return torch.cat(outputs)
 
 
 def identity_of(*models) -> bytes:
@@ -379,6 +507,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--low-rate-dir", type=Path, default=None,
                         help="models for lambdas outside the original three "
                              "(e.g. outputs/p6_low_rate/vimeo)")
+    parser.add_argument("--bframes", type=int, default=1,
+                        help="docs/PLAN_bframes.md: anchor spacing M (1 = no B-frames)")
+    parser.add_argument("--b-model", choices=("same", "coarser"), default="same",
+                        help="which lambda's P-coder codes the B-frames")
     parser.add_argument("--val-b", action="store_true",
                         help="code the 4 VAL-B videos instead of TEST (for choosing settings)")
     args = parser.parse_args(argv)
@@ -395,6 +527,15 @@ def main(argv: list[str] | None = None) -> int:
         if args.low_rate_dir is not None and lam not in p1.LAMBDAS:
             return args.low_rate_dir
         return args.models_dir
+
+    if args.bframes > 1 and (args.motion_lambda is None or args.i_frames != "wide"):
+        parser.error("--bframes needs --motion-lambda and --i-frames wide")
+    ladder = ["1e-4", "3e-4", "1e-3", "3e-3", "1e-2"]
+
+    def b_lambda_for(lam: str) -> str:
+        if args.bframes == 1 or args.b_model == "same" or lam == ladder[-1]:
+            return lam
+        return ladder[ladder.index(lam) + 1]
 
     if args.verdict:
         return command_verdict(args.gop)
@@ -439,7 +580,8 @@ def main(argv: list[str] | None = None) -> int:
         "smoke": smoke, "split": split_tag,
         "eval_manifest": str(args.eval_manifest) if external else None, "tune_steps": args.tune_steps,
         "tune_lr": args.tune_lr if args.tune_steps > 0 else None,
-        "motion_lambda": args.motion_lambda,
+        "motion_lambda": args.motion_lambda, "bframes": args.bframes,
+        "b_model": args.b_model if args.bframes > 1 else None,
         "low_rate_dir": str(args.low_rate_dir) if args.low_rate_dir else None, "dataset": {"sequences": [s.sequence_id for s in sequences],
                                     "frames": sum(s.frame_count for s in sequences)},
         "points": {}}
@@ -451,7 +593,8 @@ def main(argv: list[str] | None = None) -> int:
     # finished video is saved to a sidecar file, so a crash costs one video, not a whole run.
     def same_settings(old: dict) -> bool:
         keys = ("models_dir", "i_frames", "gop", "smoke", "split", "eval_manifest",
-                "tune_steps", "tune_lr", "dataset", "motion_lambda", "low_rate_dir")
+                "tune_steps", "tune_lr", "dataset", "motion_lambda", "low_rate_dir",
+                "bframes", "b_model")
         return all(old.get(k) == report.get(k) for k in keys)
 
     if report_path.is_file() and not args.no_resume:
@@ -476,10 +619,15 @@ def main(argv: list[str] | None = None) -> int:
         pcoder = p4.load_vimeo("p", lam, device, models_dir_for(lam))
         icoder = (p4.load_vimeo("i", lam, device, models_dir_for(lam)) if args.i_frames == "wide"
                   else None)
-        identity = identity_of(pcoder, *([icoder] if icoder is not None else []))
+        b_lam = b_lambda_for(lam)
+        bcoder = (pcoder if b_lam == lam
+                  else p4.load_vimeo("p", b_lam, device, models_dir_for(b_lam)))
+        identity = identity_of(pcoder, *([icoder] if icoder is not None else []),
+                               *([bcoder] if bcoder is not pcoder else []))
         rig = g3.build_rig(args, m21, md, intra, rig_lam, bits, device, train_full, motion_train)
         rows, exact = [], True
-        tally = {"i_bytes": 0, "p_bytes": 0, "motion_bytes": 0, "framing_bytes": 0, "i_frames": 0, "p_frames": 0,
+        tally = {"i_bytes": 0, "p_bytes": 0, "b_bytes": 0, "motion_bytes": 0, "framing_bytes": 0,
+                 "i_frames": 0, "p_frames": 0, "b_frames": 0, "b_mse": [], "modes": [0, 0, 0],
                  "ideal_bits": 0.0, "coded_bytes": 0, "i_mse": [], "p_mse": []}
         sidecar_path = report_path.with_name(f"{report_path.stem}.{lam}.videos.json")
         sidecar = {"settings": {k: report[k] for k in report if k != "points"},
@@ -495,7 +643,9 @@ def main(argv: list[str] | None = None) -> int:
             rows.append(row)
             body = 0
             for record, mse in zip(records, mses):
-                key = "i" if record["type"] == "I" else "p"
+                key = record["type"].lower()
+                if "modes" in record:
+                    tally["modes"] = [a + b for a, b in zip(tally["modes"], record["modes"])]
                 tally[f"{key}_frames"] += 1
                 tally[f"{key}_mse"].append(mse)
                 tally[f"{key}_bytes"] += record["motion"] + record["residual"]
@@ -518,17 +668,23 @@ def main(argv: list[str] | None = None) -> int:
             frames = sequence.load_frames()      # one video at a time: 1080p does not fit
             path = stream_dir / f"{lam}_{sequence.sequence_id}.nvct"
             started = time.perf_counter()
-            encoded = encode_sequence(mc, m21, intra, icoder, pcoder, frames, path, rig, tables,
-                                      gop=args.gop, block_size=args.block_size,
-                                      search_range=args.search_range, identity=identity,
-                                      tune=((float(lam), args.tune_steps, args.tune_lr)
-                                            if args.tune_steps > 0 else None),
-                                      motion_lambda=motion_lambda_for(lam))
+            tune = (float(lam), args.tune_steps, args.tune_lr) if args.tune_steps > 0 else None
+            if args.bframes > 1:
+                encoded = encode_sequence_b(
+                    mc, intra, icoder, pcoder, bcoder, frames, path, rig, tables, gop=args.gop,
+                    bframes=args.bframes, block_size=args.block_size,
+                    search_range=args.search_range, identity=identity, tune=tune,
+                    motion_lambda=motion_lambda_for(lam))
+            else:
+                encoded = encode_sequence(mc, m21, intra, icoder, pcoder, frames, path, rig,
+                                          tables, gop=args.gop, block_size=args.block_size,
+                                          search_range=args.search_range, identity=identity,
+                                          tune=tune, motion_lambda=motion_lambda_for(lam))
             encode_seconds = time.perf_counter() - started
             size = path.stat().st_size
             started = time.perf_counter()
             decoded = decode_sequence(mc, m21, intra, icoder, pcoder, path, rig, tables,
-                                      identity=identity)
+                                      identity=identity, bcoder=bcoder)
             decode_seconds = time.perf_counter() - started
             path.unlink()
             same = torch.equal(decoded, encoded["reconstructions"])
@@ -537,8 +693,8 @@ def main(argv: list[str] | None = None) -> int:
             row = {"sequence": sequence.sequence_id, "bytes": size,
                    "pixels": sequence.total_pixels, "encode_seconds": encode_seconds,
                    "decode_seconds": decode_seconds, **scores}
-            records = [{k: r[k] for k in ("type", "motion", "residual", "ideal_bits")}
-                       for r in encoded["records"]]
+            records = [{k: r[k] for k in ("type", "motion", "residual", "ideal_bits", "modes")
+                        if k in r} for r in encoded["records"]]
             add_video(row, records, scores["mse"], size, same)
             sidecar["videos"][sequence.sequence_id] = {"row": row, "records": records,
                                                        "size": size, "exact": same}
@@ -554,11 +710,15 @@ def main(argv: list[str] | None = None) -> int:
             "bytes_per_p_frame": tally["p_bytes"] / max(tally["p_frames"], 1),
             "i_bytes": tally["i_bytes"], "p_bytes": tally["p_bytes"],
             "framing_bytes": tally["framing_bytes"], "motion_bytes": tally["motion_bytes"],
+            "b_frames": tally["b_frames"], "b_bytes": tally["b_bytes"],
+            "bytes_per_b_frame": tally["b_bytes"] / max(tally["b_frames"], 1),
+            "pooled_psnr_b": psnr_of(tally["b_mse"]), "b_modes_fwd_bwd_avg": tally["modes"],
             "coder_overhead_vs_ideal": tally["coded_bytes"] * 8 / max(tally["ideal_bits"], 1.0) - 1,
             "pooled_psnr_i": psnr_of(tally["i_mse"]), "pooled_psnr_p": psnr_of(tally["p_mse"]),
         }
         point = bp.summarize_point(f"learned_p/{lam}", "learned_p", lam, rows, extra={
-            "motion_lambda": motion_lambda_for(lam), "bits": bits, "lambda": lam, "rig_lambda": rig_lam, "decode_reconstruction_exact": exact,
+            "motion_lambda": motion_lambda_for(lam), "bframes": args.bframes,
+            "b_lambda": b_lam if args.bframes > 1 else None, "bits": bits, "lambda": lam, "rig_lambda": rig_lam, "decode_reconstruction_exact": exact,
             "coder_identity": identity.hex(), "split": split})
         report["points"][lam] = point
         args.output_dir.mkdir(parents=True, exist_ok=True)
