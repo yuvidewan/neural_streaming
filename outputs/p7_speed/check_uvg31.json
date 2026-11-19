@@ -1,0 +1,122 @@
+{
+  "models_dir": "outputs\\p4_wide_latent\\vimeo",
+  "i_frames": "wide",
+  "gop": 30,
+  "smoke": true,
+  "split": "test",
+  "eval_manifest": "C:\\uvg_scratch\\uvg\\manifest.json",
+  "tune_steps": 0,
+  "tune_lr": null,
+  "dataset": {
+    "sequences": [
+      "Beauty",
+      "Bosphorus",
+      "HoneyBee",
+      "Jockey",
+      "ReadySetGo",
+      "ShakeNDry",
+      "YachtRide"
+    ],
+    "frames": 217
+  },
+  "points": {
+    "1e-3": {
+      "label": "learned_p/1e-3",
+      "arm": "learned_p",
+      "setting": "1e-3",
+      "total_bytes": 7190511,
+      "total_pixels": 446638080,
+      "frames": 217,
+      "bpp": 0.12879351442671436,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 36.69347220149115,
+          "msssim": 0.9699460059267035
+        },
+        "frame_mean": {
+          "psnr": 36.69347220149115,
+          "msssim": 0.9699460059267035
+        },
+        "sequence_pooled": {
+          "psnr": 36.686105654889424,
+          "msssim": 0.9699460059267035
+        },
+        "global_pooled": {
+          "psnr": 36.503277686671005,
+          "msssim": 0.9699460059267035
+        }
+      },
+      "encode_seconds": 412.97024190000957,
+      "decode_seconds": 96.87435420003021,
+      "per_sequence": [
+        {
+          "sequence": "Beauty",
+          "bytes": 841840,
+          "bpp": 0.10555087465896325,
+          "mean_psnr": 34.54791569681125,
+          "mean_msssim": 0.9213833251307088
+        },
+        {
+          "sequence": "Bosphorus",
+          "bytes": 743565,
+          "bpp": 0.09322904128550795,
+          "mean_psnr": 38.331920642953534,
+          "mean_msssim": 0.9803019473629613
+        },
+        {
+          "sequence": "HoneyBee",
+          "bytes": 605802,
+          "bpp": 0.07595615671641791,
+          "mean_psnr": 36.82553273699215,
+          "mean_msssim": 0.9791565537452698
+        },
+        {
+          "sequence": "Jockey",
+          "bytes": 1071954,
+          "bpp": 0.1344028346172364,
+          "mean_psnr": 37.65224635264413,
+          "mean_msssim": 0.9708715177351429
+        },
+        {
+          "sequence": "ReadySetGo",
+          "bytes": 1247344,
+          "bpp": 0.15639343604557857,
+          "mean_psnr": 36.15508149110253,
+          "mean_msssim": 0.9852792178430865
+        },
+        {
+          "sequence": "ShakeNDry",
+          "bytes": 1529573,
+          "bpp": 0.19177963509067567,
+          "mean_psnr": 35.58851897826641,
+          "mean_msssim": 0.9705240880289385
+        },
+        {
+          "sequence": "YachtRide",
+          "bytes": 1150433,
+          "bpp": 0.14424262257262077,
+          "mean_psnr": 37.75308951166805,
+          "mean_msssim": 0.982105391640817
+        }
+      ],
+      "bits": 7,
+      "lambda": "1e-3",
+      "rig_lambda": "1e-3",
+      "decode_reconstruction_exact": true,
+      "coder_identity": "bd78e18c13907219",
+      "split": {
+        "i_frames": 14,
+        "p_frames": 203,
+        "bytes_per_i_frame": 71002.42857142857,
+        "bytes_per_p_frame": 30477.655172413793,
+        "i_bytes": 994034,
+        "p_bytes": 6186964,
+        "framing_bytes": 9513,
+        "coder_overhead_vs_ideal": 0.0004813442341189411,
+        "pooled_psnr_i": 35.97352090601256,
+        "pooled_psnr_p": 36.542309227327955
+      }
+    }
+  },
+  "valid": true
+}

@@ -2,6 +2,8 @@
 
 Roadmap item 4 (`docs/ROADMAP_2026-11-17.md`).
 
+Status: **NOT PASSED 2026-11-19, change kept**: checks 1-2 pass (0 differences, identical bytes); DAVIS encode 8-11.5x faster, UVG 0.9x (bar 1.5x). See `outputs/p7_speed/README.md`.
+
 ## What the profile says (`scripts/p7_speed_profile.py` → `outputs/p7_speed/profile.json`)
 
 Measured on the laptop RTX 5060. One GOP (31 frames), second pass reported, CUDA synced

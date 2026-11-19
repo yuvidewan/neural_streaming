@@ -177,9 +177,73 @@ def motion_alphabet_bits(search_range: int) -> int:
 
 # --- motion estimation -------------------------------------------------------
 
-
 @torch.no_grad()
 def estimate_block_motion(
+    reference: torch.Tensor,
+    current: torch.Tensor,
+    *,
+    block_size: int = DEFAULT_BLOCK_SIZE,
+    search_range: int = DEFAULT_SEARCH_RANGE,
+) -> torch.Tensor:
+    """Full-search block matching, SAD criterion, integer pixels (batched).
+
+    Same contract and the same output as `_estimate_block_motion_loop`, the original
+    one-candidate-at-a-time search (docs/PLAN_speed.md): every candidate's per-block SAD is
+    computed by the same ops on the same values, only several candidates per GPU call, and
+    the winner is chosen by the same rule - lowest SAD, then smallest |dy|+|dx|, then the
+    first candidate in (dy, dx) visiting order.
+    """
+    if reference.shape != current.shape:
+        raise ValueError(
+            f"reference {tuple(reference.shape)} and current {tuple(current.shape)} "
+            f"must have the same shape")
+    if reference.dim() != 4 or reference.shape[0] != 1:
+        raise ValueError(f"expected [1, C, H, W], got {tuple(reference.shape)}")
+    _, channels, height, width = reference.shape
+    if height % block_size or width % block_size:
+        raise ValueError(
+            f"frame {height}x{width} must divide evenly into {block_size}x{block_size} blocks")
+
+    if reference.device.type != "cuda":
+        # The batched form only pays off on a GPU (it is ~6x slower on CPU at 256x256).
+        return _estimate_block_motion_loop(reference, current, block_size=block_size,
+                                           search_range=search_range)
+    span = 2 * search_range + 1
+    padded = F.pad(reference, (search_range,) * 4, mode="replicate").contiguous()
+    offsets = [(dy, dx) for dy in range(-search_range, search_range + 1)
+               for dx in range(-search_range, search_range + 1)]
+    # For one dy, all 2R+1 horizontal shifts are a strided VIEW of the padded reference (no
+    # copy). Large frames are cut into bands of block rows so each call's working set stays
+    # small; a band is a whole number of blocks, so every block's SAD is computed whole.
+    band_rows = height if channels * height * width <= (1 << 20) else block_size
+    rows_per_dy = []
+    for dy in range(-search_range, search_range + 1):
+        top = search_range + dy
+        bands = []
+        for r0 in range(0, height, band_rows):
+            band = padded[:, :, top + r0:top + r0 + band_rows, :]
+            s = band.stride()
+            shifted = band.as_strided((span, channels, band_rows, width), (s[3], s[1], s[2], s[3]))
+            diff = current[:, :, r0:r0 + band_rows] - shifted
+            diff.abs_()
+            absdiff = diff.sum(dim=1, keepdim=True)
+            bands.append(F.avg_pool2d(absdiff, block_size)[:, 0] * (block_size * block_size))
+        rows_per_dy.append(torch.cat(bands, dim=1))
+    cost = torch.cat(rows_per_dy, dim=0)                            # [K, by, bx], (dy, dx) order
+
+    keys = torch.tensor([float(abs(dy) + abs(dx)) for dy, dx in offsets],
+                        device=cost.device, dtype=cost.dtype).view(-1, 1, 1)
+    lowest = cost == cost.amin(dim=0, keepdim=True)
+    key = torch.where(lowest, keys.expand_as(cost), torch.full_like(cost, float("inf")))
+    chosen = (key == key.amin(dim=0, keepdim=True)).to(torch.uint8)
+    index = chosen.argmax(dim=0)                                    # first in visiting order
+    best_dy = index // span - search_range
+    best_dx = index % span - search_range
+    return torch.stack([best_dy, best_dx], dim=0).long()
+
+
+@torch.no_grad()
+def _estimate_block_motion_loop(
     reference: torch.Tensor,
     current: torch.Tensor,
     *,

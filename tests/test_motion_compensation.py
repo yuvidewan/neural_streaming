@@ -512,3 +512,21 @@ def test_calibrate_grids_restores_cudnn_settings_afterward(tmp_path):
 
     assert torch.backends.cudnn.deterministic is False
     assert torch.backends.cudnn.benchmark is True
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="the batched search runs on CUDA only")
+def test_batched_search_matches_loop_on_cuda():
+    """docs/PLAN_speed.md: the batched GPU search must return the loop search's exact field,
+    including on ties (flat frames, 8-bit content) and when frames need several bands."""
+    mc = _load_script("m10h_motion_compensation")
+    torch.manual_seed(0)
+    for height, width in ((64, 96), (256, 256), (1088, 128)):
+        ref = torch.rand(1, 3, height, width, device="cuda")
+        cur = torch.roll(ref, (3, -5), (2, 3)) + 0.01 * torch.rand_like(ref)
+        flat = torch.full_like(ref, 0.5)
+        q = (ref * 255).round() / 255
+        for a, b in ((ref, cur), (flat, flat), (q, torch.roll(q, (1, 2), (2, 3))), (cur, ref)):
+            for search_range in (4, 16):
+                assert torch.equal(
+                    mc._estimate_block_motion_loop(a, b, search_range=search_range),
+                    mc.estimate_block_motion(a, b, search_range=search_range))

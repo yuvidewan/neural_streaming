@@ -1,0 +1,171 @@
+{
+  "device": "NVIDIA GeForce RTX 5060 Laptop GPU",
+  "frames": 31,
+  "gop": 30,
+  "results": {
+    "davis_256/1e-2": {
+      "sequence": "bmx-bumps",
+      "frames": 31,
+      "size": [
+        256,
+        256
+      ],
+      "decode_exact": true,
+      "encode_s_per_frame": 0.03685749032264275,
+      "decode_s_per_frame": 0.014727354839241372,
+      "encode_fps": 27.131527167102522,
+      "decode_fps": 67.90085598640411,
+      "encode_stages_s_per_frame": {
+        "motion/estimate_block_motion": 0.0164909161309967,
+        "net/synthesis+refine": 0.007710509679107476,
+        "net/encoder+glue(remainder)": 0.006453709674984097,
+        "net/y_prior": 0.002606874191945779,
+        "range/ideal_bits(report only)": 0.0011911290348507464,
+        "range/encode_symbols": 0.000710283872678936,
+        "motion/warp_blocks": 0.0005402612901713339,
+        "range/scale_index": 0.00037969032118487505,
+        "net/x_prior": 0.0003762580613951169,
+        "motion/encode_motion_payload": 0.0003082838722489654,
+        "motion/decode_motion_payload": 8.957419307872413e-05
+      },
+      "decode_stages_s_per_frame": {
+        "net/synthesis+refine": 0.00762147419323634,
+        "net/y_prior": 0.0025970999990785194,
+        "net/glue(remainder)": 0.0014861645205171718,
+        "range/decode_symbols": 0.0012099096774979825,
+        "motion/warp_blocks": 0.0006450032242648904,
+        "range/scale_index": 0.0005085193505135155,
+        "net/x_prior": 0.0005033225836908264,
+        "motion/decode_motion_payload": 0.0001558612904421264
+      },
+      "bytes_per_p_frame": {
+        "motion": 338.13793103448273,
+        "residual": 576.6551724137931
+      },
+      "bytes_per_i_frame": 1284.0
+    },
+    "uvg_1080p/1e-2": {
+      "sequence": "Beauty",
+      "frames": 31,
+      "size": [
+        1072,
+        1920
+      ],
+      "decode_exact": true,
+      "encode_s_per_frame": 1.1899265419351943,
+      "decode_s_per_frame": 0.44346403870956913,
+      "encode_fps": 0.8403880111571307,
+      "decode_fps": 2.2549742768543046,
+      "encode_stages_s_per_frame": {
+        "motion/estimate_block_motion": 0.5818239032232668,
+        "net/synthesis+refine": 0.2955937903241119,
+        "net/encoder+glue(remainder)": 0.18853035806058605,
+        "net/y_prior": 0.09698514193352763,
+        "range/encode_symbols": 0.018421264515528755,
+        "net/x_prior": 0.0021048225837969974,
+        "motion/encode_motion_payload": 0.001829458064504809,
+        "range/ideal_bits(report only)": 0.0012784548415501991,
+        "motion/warp_blocks": 0.0012569032241440108,
+        "motion/decode_motion_payload": 0.0011819225854255379,
+        "range/scale_index": 0.0009205225787516083
+      },
+      "decode_stages_s_per_frame": {
+        "net/synthesis+refine": 0.2941980419366906,
+        "net/y_prior": 0.09856662580803517,
+        "range/decode_symbols": 0.02935355483749581,
+        "net/glue(remainder)": 0.015335167743145459,
+        "net/x_prior": 0.0021840129028855553,
+        "motion/warp_blocks": 0.0015015129033746498,
+        "motion/decode_motion_payload": 0.0012037290312770393,
+        "range/scale_index": 0.001121393546664847
+      },
+      "bytes_per_p_frame": {
+        "motion": 11090.620689655172,
+        "residual": 3936.896551724138
+      },
+      "bytes_per_i_frame": 16766.5
+    },
+    "davis_256/1e-3": {
+      "sequence": "bmx-bumps",
+      "frames": 31,
+      "size": [
+        256,
+        256
+      ],
+      "decode_exact": true,
+      "encode_s_per_frame": 0.03664038709699056,
+      "decode_s_per_frame": 0.014127193548296007,
+      "encode_fps": 27.292288079623876,
+      "decode_fps": 70.78546751563533,
+      "encode_stages_s_per_frame": {
+        "motion/estimate_block_motion": 0.01648741935646432,
+        "net/synthesis+refine": 0.007716912902974253,
+        "net/encoder+glue(remainder)": 0.006274806446350751,
+        "net/y_prior": 0.0025348516139802675,
+        "range/ideal_bits(report only)": 0.001037945161618653,
+        "range/encode_symbols": 0.0009133354845201416,
+        "motion/warp_blocks": 0.0005300419373182399,
+        "net/x_prior": 0.00036079354486578415,
+        "range/scale_index": 0.0003561999999933065,
+        "motion/encode_motion_payload": 0.00033275484137477415,
+        "motion/decode_motion_payload": 9.532580753007243e-05
+      },
+      "decode_stages_s_per_frame": {
+        "net/synthesis+refine": 0.007299364517225073,
+        "net/y_prior": 0.0024245580622640948,
+        "net/glue(remainder)": 0.0014738903292680098,
+        "range/decode_symbols": 0.0013566451595960966,
+        "motion/warp_blocks": 0.0005937774164316755,
+        "net/x_prior": 0.0004141000005596828,
+        "range/scale_index": 0.00041351612796255895,
+        "motion/decode_motion_payload": 0.00015134193498881593
+      },
+      "bytes_per_p_frame": {
+        "motion": 333.9310344827586,
+        "residual": 2438.7586206896553
+      },
+      "bytes_per_i_frame": 4088.0
+    },
+    "uvg_1080p/1e-3": {
+      "sequence": "Beauty",
+      "frames": 31,
+      "size": [
+        1072,
+        1920
+      ],
+      "decode_exact": true,
+      "encode_s_per_frame": 1.1959614483874306,
+      "decode_s_per_frame": 0.446680474193624,
+      "encode_fps": 0.8361473535358064,
+      "decode_fps": 2.2387367654815526,
+      "encode_stages_s_per_frame": {
+        "motion/estimate_block_motion": 0.5836985354835633,
+        "net/synthesis+refine": 0.29523923870780683,
+        "net/encoder+glue(remainder)": 0.18975724516560383,
+        "net/y_prior": 0.09661491613012678,
+        "range/encode_symbols": 0.021509254839451562,
+        "net/x_prior": 0.0021652967721644428,
+        "motion/encode_motion_payload": 0.001883312901144006,
+        "range/ideal_bits(report only)": 0.0015515870942298562,
+        "motion/warp_blocks": 0.0013143903230346979,
+        "motion/decode_motion_payload": 0.0012793709681699834,
+        "range/scale_index": 0.0009483000021352763
+      },
+      "decode_stages_s_per_frame": {
+        "net/synthesis+refine": 0.2926704064527932,
+        "net/y_prior": 0.09850975806306626,
+        "range/decode_symbols": 0.03177450644978953,
+        "net/glue(remainder)": 0.01719261934856824,
+        "net/x_prior": 0.0022016290346190573,
+        "motion/warp_blocks": 0.001803858062034593,
+        "motion/decode_motion_payload": 0.001359403227275658,
+        "range/scale_index": 0.001168293555477454
+      },
+      "bytes_per_p_frame": {
+        "motion": 10394.793103448275,
+        "residual": 14694.51724137931
+      },
+      "bytes_per_i_frame": 56445.5
+    }
+  }
+}
