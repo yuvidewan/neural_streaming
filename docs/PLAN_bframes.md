@@ -1,5 +1,7 @@
 # Plan: B-frames, oracle first (fixed 2026-11-19, before any code or result)
 
+**Status (2026-11-19): NOT PASSED.** No B-frames (M = 1) won on VAL-B at every lambda, so the oracle equals the current codec; B-frames close for now. Write-up: [`outputs/p9_bframes/README.md`](../outputs/p9_bframes/README.md).
+
 Roadmap item 3 (`docs/ROADMAP_2026-11-17.md`): "Oracle first: the P-coder with a two-sided
 reference. Then train a B-coder." The current codec is the one that passed
 `docs/PLAN_motion_rate.md`: A2 wide-latent P-coder + wide I-coder, GOP 30, bit-aware motion
