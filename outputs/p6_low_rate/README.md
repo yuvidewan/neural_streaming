@@ -112,7 +112,18 @@ A likely reason, not yet measured: the new points barely lower the bits on UVG (
 bpp from 3e-3 to 1e-2, while PSNR drops 2.4 dB). On Beauty, for example, 1e-2 costs 0.058 bpp
 against 0.065 at 3e-3. That looks like a fixed cost per frame that does not shrink with λ. The
 borrowed λ 1e-3 motion table and header, the I-frames, and the hyperprior side information are
-the candidates. A breakdown of the bytes per stream part would tell which.
+the candidates. The I/P split already saved in `uvg_low_rate.json` narrows it:
+
+| λ | bytes per I-frame | bytes per P-frame | P-frame / I-frame |
+|---|---|---|---|
+| 1e-2 | 23,662 | 14,525 | 61% |
+| 3e-3 | 40,488 | 19,086 | 47% |
+| 1e-3 | 69,793 | 30,457 | 44% |
+
+From 3e-3 to 1e-2 the I-frames shrink by 42% but the P-frames only by 24%, and the P-frames
+are 96% of the bytes. So the floor is in the P-frames. Block motion at 1080p (about 8,000
+16x16 blocks per frame, coded with the λ 1e-3 table) is the prime suspect, but the report
+does not split motion from residual bytes, so this is not yet shown.
 
 Per video, BD-rate PSNR vs x264 4:4:4:
 
