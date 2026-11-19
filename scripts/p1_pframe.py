@@ -398,7 +398,7 @@ def complete_clip_dirs(group_root: Path) -> list[Path]:
 
 
 def unrolled_step(model: ConditionalPFrameCoder, intra: nn.Module, clip: torch.Tensor,
-                  lam: float | None = None) -> tuple[torch.Tensor, torch.Tensor]:
+                  lam: float | None = None, distortion=None) -> tuple[torch.Tensor, torch.Tensor]:
     """Mean MSE and bits per P-frame of `clip` [N, T, 3, H, W] in [0, 1].
 
     Frame 0 is the I-frame (the frozen intra codec). Each P-frame references the
@@ -426,7 +426,9 @@ def unrolled_step(model: ConditionalPFrameCoder, intra: nn.Module, clip: torch.T
         frame_mse = F.mse_loss(result["reconstruction"], frame)
         frame_bits = result["bits"].mean()
         if lam is not None:
-            ((frame_mse + lam * frame_bits / pixels) / steps).backward()
+            # `distortion` (docs/PLAN_msssim.md) replaces MSE in the loss; MSE is still returned
+            d = frame_mse if distortion is None else distortion(result["reconstruction"], frame)
+            ((d + lam * frame_bits / pixels) / steps).backward()
             frame_mse, frame_bits = frame_mse.detach(), frame_bits.detach()
         mse = mse + frame_mse
         bits = bits + frame_bits

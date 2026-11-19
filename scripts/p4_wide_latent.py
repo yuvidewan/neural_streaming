@@ -304,12 +304,26 @@ def load_vimeo(role: str, lam: str, device, directory: Path = VIMEO_DIR) -> Wide
     return model.to(device).eval()
 
 
-def intra_step(model: WideLatentPFrameCoder, images: torch.Tensor, lam: float):
+# docs/PLAN_msssim.md: k * (1 - MS-SSIM) + lambda * bpp, k = 1280 / 255^2. CompressAI pairs its MSE
+# lambda l (loss l * 255^2 * MSE + bpp) with MS-SSIM lambda 1280 * l (loss 1280 l (1 - MS-SSIM)
+# + bpp); in this repo's form (MSE + lambda * bpp, so l * 255^2 = 1 / lambda) that is one k for
+# every lambda.
+MSSSIM_K = 1280 / 255 ** 2
+
+
+def msssim_distortion(reconstruction: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+    from pytorch_msssim import ms_ssim
+    return MSSSIM_K * (1 - ms_ssim(reconstruction.clamp(0, 1).contiguous(), target.contiguous(),
+                                   data_range=1.0, size_average=True))
+
+
+def intra_step(model: WideLatentPFrameCoder, images: torch.Tensor, lam: float, distortion=None):
     """One I-frame training step's loss pieces on `images` [N, 3, H, W] in [0, 1]."""
     result = code_intra(model, images)
     mse = F.mse_loss(result["reconstruction"], images)
     bpp = result["bits"].mean() / (images.shape[-1] * images.shape[-2])
-    (mse + lam * bpp).backward()
+    d = mse if distortion is None else distortion(result["reconstruction"], images)
+    (d + lam * bpp).backward()
     return mse.detach(), bpp.detach()
 
 
@@ -344,18 +358,21 @@ def train_role_on_chunk(role: str, lam: str, chunk: int, clip_dirs: list[Path], 
     out.mkdir(parents=True, exist_ok=True)
     latest = out / "latest.pt"
     saved, start_step, history = None, 0, []
+    init = None
+    if args.init_dir:
+        init_lam = lam if args.init_lambda == "same" else args.init_lambda
+        candidates = [Path(d) / role / f"lambda{init_lam}" / "model.pt" for d in args.init_dir]
+        init = next((c for c in candidates if c.is_file()), candidates[0])
     if latest.is_file():
         model, saved = load_checkpoint_model(latest)
         source = f"resumed {latest}"
-    elif args.init_dir:
-        init = Path(args.init_dir) / role / f"lambda{args.init_lambda}" / "model.pt"
+    elif init is not None:
         model, _ = load_checkpoint_model(init)
         source = f"init from {init}"
     else:
         model = load_arm("a2", lam, "cpu")
         source = f"init from {OUTPUT_DIR / 'finetune_a2'}"
-    init_record = (str(Path(args.init_dir) / role / f"lambda{args.init_lambda}") if args.init_dir
-                   else str(OUTPUT_DIR / "finetune_a2"))
+    init_record = str(init.parent) if init is not None else str(OUTPUT_DIR / "finetune_a2")
     model.to(device).train()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     if saved is not None:
@@ -397,6 +414,7 @@ def train_role_on_chunk(role: str, lam: str, chunk: int, clip_dirs: list[Path], 
                 time.sleep(2)
 
     lam_value, pixels = float(lam), args.crop * args.crop
+    distortion = msssim_distortion if args.distortion == "msssim" else None
     step, started, seen = start_step, time.time(), 0
     running = {"mse": 0.0, "bpp": 0.0}
     while step < steps:
@@ -404,10 +422,11 @@ def train_role_on_chunk(role: str, lam: str, chunk: int, clip_dirs: list[Path], 
             clip = clip.to(device, non_blocking=True).float() / 255
             optimizer.zero_grad(set_to_none=True)
             if role == "p":
-                mse, bits = p1.unrolled_step(model, intra, clip, lam_value)   # backpropagates
+                mse, bits = p1.unrolled_step(model, intra, clip, lam_value,   # backpropagates
+                                             distortion=distortion)
                 bpp = bits / pixels
             else:
-                mse, bpp = intra_step(model, clip.flatten(0, 1), lam_value)
+                mse, bpp = intra_step(model, clip.flatten(0, 1), lam_value, distortion)
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
             step += 1
@@ -430,7 +449,8 @@ def train_role_on_chunk(role: str, lam: str, chunk: int, clip_dirs: list[Path], 
         checkpoint(step)
     torch.save({"model_state_dict": model.state_dict(), "config": model.config_dict(),
                 "lambda": lam, "role": role, "chunks_done_through": chunk, "data": "vimeo90k",
-                "init": init_record, "wide_intra_refs": bool(args.wide_intra_refs)},
+                "init": init_record, "wide_intra_refs": bool(args.wide_intra_refs),
+                "distortion": args.distortion},
                out / "model.pt")
     p1._save_json(out / "history.json", history)
 
@@ -564,9 +584,12 @@ def main(argv: list[str] | None = None) -> int:
     vimeo.add_argument("--local-chunk", type=int, default=None)
     vimeo.add_argument("--delete-local-after", default=None)
     vimeo.add_argument("--max-clips", type=int, default=0, help="smoke tests only")
-    vimeo.add_argument("--init-dir", default=None,
+    vimeo.add_argument("--init-dir", nargs="+", default=None,
                        help="warm-start new models from <init-dir>/<role>/lambda<init-lambda>")
-    vimeo.add_argument("--init-lambda", default="1e-3")
+    vimeo.add_argument("--init-lambda", default="1e-3",
+                       help="'same' warm-starts each lambda from its own model")
+    vimeo.add_argument("--distortion", choices=("mse", "msssim"), default="mse",
+                       help="docs/PLAN_msssim.md: k (1 - MS-SSIM) in place of MSE in the loss")
     vimeo.add_argument("--wide-intra-refs", action="store_true",
                        help="P-coder training I-frames from the same lambda's wide I-coder")
     train = sub.add_parser("train")
