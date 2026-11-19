@@ -1,5 +1,7 @@
 # Plan: bit-aware motion search + predicted motion coding, fixed 2026-11-19 before any result
 
+**Status (2026-11-19): PASS.** UVG −10.68%, DAVIS TEST −4.75% BD-rate PSNR vs the current codec, every stream decode-exact. Write-up: [`outputs/p8_motion/README.md`](../outputs/p8_motion/README.md).
+
 Roadmap item 5 (`docs/ROADMAP_2026-11-17.md`), moved ahead of item 3 by the user on 2026-11-19.
 
 ## Why (`scripts/p8_motion_share.py` → `outputs/p8_motion/share.json`)

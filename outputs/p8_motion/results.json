@@ -1,0 +1,874 @@
+{
+  "selection": {
+    "choice": {
+      "1e-2": "0.25",
+      "3e-3": "0.25",
+      "1e-3": "0.125",
+      "3e-4": "0.125",
+      "1e-4": "0.0625"
+    },
+    "table": {
+      "1e-2": {
+        "0.03125": {
+          "cost": 0.002560535748650066,
+          "mse": 0.0015386385540477933,
+          "bpp": 0.10218971946022727,
+          "psnr": 28.20926528655398,
+          "motion_bytes": 54607,
+          "report": "outputs\\p8_motion\\valb_m0.03125.json"
+        },
+        "0.0625": {
+          "cost": 0.00253777590080757,
+          "mse": 0.0015413714263757517,
+          "bpp": 0.09964044744318182,
+          "psnr": 28.20209697190458,
+          "motion_bytes": 48494,
+          "report": "outputs\\p8_motion\\valb_m0.0625.json"
+        },
+        "0.125": {
+          "cost": 0.0025196962612088433,
+          "mse": 0.0015507864600724796,
+          "bpp": 0.09689098011363637,
+          "psnr": 28.1744128443762,
+          "motion_bytes": 42290,
+          "report": "outputs\\p8_motion\\valb_m0.125.json"
+        },
+        "0.25": {
+          "cost": 0.002506953447633846,
+          "mse": 0.001559532460417937,
+          "bpp": 0.09474209872159091,
+          "psnr": 28.147157505525296,
+          "motion_bytes": 35537,
+          "report": "outputs\\p8_motion\\valb_m0.25.json"
+        },
+        "0.5": {
+          "cost": 0.002511953251817349,
+          "mse": 0.0015726332944309854,
+          "bpp": 0.09393199573863636,
+          "psnr": 28.107590702507572,
+          "motion_bytes": 28798,
+          "report": "outputs\\p8_motion\\valb_m0.5.json"
+        },
+        "0.0": {
+          "cost": 0.0025937183225866064,
+          "mse": 0.001538231816904788,
+          "bpp": 0.10554865056818181,
+          "psnr": 28.21180063982924,
+          "motion_bytes": 62156,
+          "report": "outputs\\p8_motion\\valb_m0.json"
+        },
+        "1.0": {
+          "cost": 0.002562737208918076,
+          "mse": 0.001592588948974894,
+          "bpp": 0.09701482599431818,
+          "psnr": 28.045844490215682,
+          "motion_bytes": 22549,
+          "report": "outputs\\p8_motion\\valb_m1.json"
+        },
+        "16.0": {
+          "cost": 0.00432376754493876,
+          "mse": 0.0020920736528933052,
+          "bpp": 0.22316938920454546,
+          "psnr": 26.932510739335097,
+          "motion_bytes": 1423,
+          "report": "outputs\\p8_motion\\valb_m16.json"
+        },
+        "2.0": {
+          "cost": 0.0027155792652967985,
+          "mse": 0.0016417910905808892,
+          "bpp": 0.1073788174715909,
+          "psnr": 27.908427229131767,
+          "motion_bytes": 16223,
+          "report": "outputs\\p8_motion\\valb_m2.json"
+        },
+        "4.0": {
+          "cost": 0.0031089742858470834,
+          "mse": 0.0017552145202220835,
+          "bpp": 0.1353759765625,
+          "psnr": 27.624667703598032,
+          "motion_bytes": 10161,
+          "report": "outputs\\p8_motion\\valb_m4.json"
+        },
+        "8.0": {
+          "cost": 0.003761774622919885,
+          "mse": 0.0019367346726357941,
+          "bpp": 0.18250399502840908,
+          "psnr": 27.21452281369131,
+          "motion_bytes": 4546,
+          "report": "outputs\\p8_motion\\valb_m8.json"
+        }
+      },
+      "3e-3": {
+        "0.03125": {
+          "cost": 0.0013812030704353348,
+          "mse": 0.0008540657302364711,
+          "bpp": 0.17571244673295455,
+          "psnr": 30.76086722765973,
+          "motion_bytes": 47843,
+          "report": "outputs\\p8_motion\\valb_m0.03125.json"
+        },
+        "0.0625": {
+          "cost": 0.001373467411572452,
+          "mse": 0.0008544559591576792,
+          "bpp": 0.1730038174715909,
+          "psnr": 30.759031858844494,
+          "motion_bytes": 41706,
+          "report": "outputs\\p8_motion\\valb_m0.0625.json"
+        },
+        "0.125": {
+          "cost": 0.001369770939229056,
+          "mse": 0.0008546453177801924,
+          "bpp": 0.17170854048295456,
+          "psnr": 30.75861648601158,
+          "motion_bytes": 37532,
+          "report": "outputs\\p8_motion\\valb_m0.125.json"
+        },
+        "0.25": {
+          "cost": 0.0013692271464047106,
+          "mse": 0.000856639699671756,
+          "bpp": 0.1708624822443182,
+          "psnr": 30.747891820571343,
+          "motion_bytes": 32873,
+          "report": "outputs\\p8_motion\\valb_m0.25.json"
+        },
+        "0.5": {
+          "cost": 0.0013760165533186356,
+          "mse": 0.0008607724126936357,
+          "bpp": 0.171748046875,
+          "psnr": 30.725750155698922,
+          "motion_bytes": 27625,
+          "report": "outputs\\p8_motion\\valb_m0.5.json"
+        },
+        "0.0": {
+          "cost": 0.0013898070279314096,
+          "mse": 0.0008521121593234552,
+          "bpp": 0.17923162286931818,
+          "psnr": 30.771407080147767,
+          "motion_bytes": 55671,
+          "report": "outputs\\p8_motion\\valb_m0.json"
+        },
+        "1.0": {
+          "cost": 0.0014029667389934713,
+          "mse": 0.0008679352226582439,
+          "bpp": 0.1783438387784091,
+          "psnr": 30.68631634798248,
+          "motion_bytes": 22387,
+          "report": "outputs\\p8_motion\\valb_m1.json"
+        },
+        "16.0": {
+          "cost": 0.002480122786089778,
+          "mse": 0.0012498644409193235,
+          "bpp": 0.4100861150568182,
+          "psnr": 29.28301555334804,
+          "motion_bytes": 1425,
+          "report": "outputs\\p8_motion\\valb_m16.json"
+        },
+        "2.0": {
+          "cost": 0.0014819034828330306,
+          "mse": 0.0008906712385148488,
+          "bpp": 0.19707741477272728,
+          "psnr": 30.567224642406966,
+          "motion_bytes": 16414,
+          "report": "outputs\\p8_motion\\valb_m2.json"
+        },
+        "4.0": {
+          "cost": 0.0016828345891308379,
+          "mse": 0.0009525580443865197,
+          "bpp": 0.24342551491477274,
+          "psnr": 30.282048413631394,
+          "motion_bytes": 10703,
+          "report": "outputs\\p8_motion\\valb_m4.json"
+        },
+        "8.0": {
+          "cost": 0.00223054165108976,
+          "mse": 0.0012054892718283965,
+          "bpp": 0.34168412642045454,
+          "psnr": 29.497517995211222,
+          "motion_bytes": 4581,
+          "report": "outputs\\p8_motion\\valb_m8.json"
+        }
+      },
+      "1e-3": {
+        "0.03125": {
+          "cost": 0.0008448017098648822,
+          "mse": 0.0005464791779046549,
+          "bpp": 0.2983225319602273,
+          "psnr": 32.77409746750783,
+          "motion_bytes": 42186,
+          "report": "outputs\\p8_motion\\valb_m0.03125.json"
+        },
+        "0.0625": {
+          "cost": 0.0008439226791050959,
+          "mse": 0.0005468323914630504,
+          "bpp": 0.2970902876420455,
+          "psnr": 32.77186717607618,
+          "motion_bytes": 38732,
+          "report": "outputs\\p8_motion\\valb_m0.0625.json"
+        },
+        "0.125": {
+          "cost": 0.000843689584814181,
+          "mse": 0.0005473632353823628,
+          "bpp": 0.2963263494318182,
+          "psnr": 32.76737313036418,
+          "motion_bytes": 35420,
+          "report": "outputs\\p8_motion\\valb_m0.125.json"
+        },
+        "0.25": {
+          "cost": 0.0008446857048499144,
+          "mse": 0.0005481986664976416,
+          "bpp": 0.29648703835227275,
+          "psnr": 32.760478914914565,
+          "motion_bytes": 31501,
+          "report": "outputs\\p8_motion\\valb_m0.25.json"
+        },
+        "0.5": {
+          "cost": 0.0008486148949869144,
+          "mse": 0.0005493419901573689,
+          "bpp": 0.29927290482954544,
+          "psnr": 32.75136220933078,
+          "motion_bytes": 27147,
+          "report": "outputs\\p8_motion\\valb_m0.5.json"
+        },
+        "0.0": {
+          "cost": 0.000848254276255823,
+          "mse": 0.0005459455937274139,
+          "bpp": 0.3023086825284091,
+          "psnr": 32.77806801651938,
+          "motion_bytes": 51047,
+          "report": "outputs\\p8_motion\\valb_m0.json"
+        },
+        "1.0": {
+          "cost": 0.0008641855676480647,
+          "mse": 0.0005532178829889738,
+          "bpp": 0.3109676846590909,
+          "psnr": 32.71736947056073,
+          "motion_bytes": 22515,
+          "report": "outputs\\p8_motion\\valb_m1.json"
+        },
+        "16.0": {
+          "cost": 0.0014372848562345924,
+          "mse": 0.0007777567134789106,
+          "bpp": 0.6595281427556818,
+          "psnr": 31.362849937234973,
+          "motion_bytes": 1441,
+          "report": "outputs\\p8_motion\\valb_m16.json"
+        },
+        "2.0": {
+          "cost": 0.0009128445613443509,
+          "mse": 0.0005690310847818509,
+          "bpp": 0.3438134765625,
+          "psnr": 32.5858441348148,
+          "motion_bytes": 16637,
+          "report": "outputs\\p8_motion\\valb_m2.json"
+        },
+        "4.0": {
+          "cost": 0.0010265265071375128,
+          "mse": 0.0006127978139556946,
+          "bpp": 0.4137286931818182,
+          "psnr": 32.276691863057486,
+          "motion_bytes": 10818,
+          "report": "outputs\\p8_motion\\valb_m4.json"
+        },
+        "8.0": {
+          "cost": 0.0012666462594126777,
+          "mse": 0.0007088834753217685,
+          "bpp": 0.5577627840909091,
+          "psnr": 31.693143613786134,
+          "motion_bytes": 4674,
+          "report": "outputs\\p8_motion\\valb_m8.json"
+        }
+      },
+      "3e-4": {
+        "0.03125": {
+          "cost": 0.0004962808151963081,
+          "mse": 0.00031463233330710356,
+          "bpp": 0.6054949396306818,
+          "psnr": 35.18911331649861,
+          "motion_bytes": 41127,
+          "report": "outputs\\p8_motion\\valb_m0.03125.json"
+        },
+        "0.0625": {
+          "cost": 0.000496123810903254,
+          "mse": 0.0003148980030197312,
+          "bpp": 0.6040860262784091,
+          "psnr": 35.18525240362818,
+          "motion_bytes": 37403,
+          "report": "outputs\\p8_motion\\valb_m0.0625.json"
+        },
+        "0.125": {
+          "cost": 0.0004961122341741891,
+          "mse": 0.00031498963119123454,
+          "bpp": 0.6037420099431818,
+          "psnr": 35.18421676212331,
+          "motion_bytes": 34445,
+          "report": "outputs\\p8_motion\\valb_m0.125.json"
+        },
+        "0.25": {
+          "cost": 0.0004973874225415794,
+          "mse": 0.00031564945201601125,
+          "bpp": 0.6057932350852273,
+          "psnr": 35.177776679065516,
+          "motion_bytes": 31223,
+          "report": "outputs\\p8_motion\\valb_m0.25.json"
+        },
+        "0.5": {
+          "cost": 0.0004999267617769712,
+          "mse": 0.00031613880900708484,
+          "bpp": 0.6126265092329546,
+          "psnr": 35.169168433489304,
+          "motion_bytes": 26975,
+          "report": "outputs\\p8_motion\\valb_m0.5.json"
+        },
+        "0.0": {
+          "cost": 0.0004975069562081585,
+          "mse": 0.0003149172456257722,
+          "bpp": 0.6086323686079546,
+          "psnr": 35.18675679282175,
+          "motion_bytes": 48331,
+          "report": "outputs\\p8_motion\\valb_m0.json"
+        },
+        "1.0": {
+          "cost": 0.0005090654305288228,
+          "mse": 0.00031958789146632283,
+          "bpp": 0.631591796875,
+          "psnr": 35.11925472952833,
+          "motion_bytes": 22554,
+          "report": "outputs\\p8_motion\\valb_m1.json"
+        },
+        "16.0": {
+          "cost": 0.0009836401425003158,
+          "mse": 0.0006387263019463386,
+          "bpp": 1.149712801846591,
+          "psnr": 32.59875827848518,
+          "motion_bytes": 1437,
+          "report": "outputs\\p8_motion\\valb_m16.json"
+        },
+        "2.0": {
+          "cost": 0.000539834982472641,
+          "mse": 0.00033323155562605013,
+          "bpp": 0.6886780894886364,
+          "psnr": 34.93543403815178,
+          "motion_bytes": 16784,
+          "report": "outputs\\p8_motion\\valb_m2.json"
+        },
+        "4.0": {
+          "cost": 0.0006148836240247739,
+          "mse": 0.0003757111275759103,
+          "bpp": 0.7972416548295455,
+          "psnr": 34.442511203095606,
+          "motion_bytes": 10902,
+          "report": "outputs\\p8_motion\\valb_m4.json"
+        },
+        "8.0": {
+          "cost": 0.0008006507824919271,
+          "mse": 0.000500472870560109,
+          "bpp": 1.0005930397727272,
+          "psnr": 33.386087936099806,
+          "motion_bytes": 4642,
+          "report": "outputs\\p8_motion\\valb_m8.json"
+        }
+      },
+      "1e-4": {
+        "0.03125": {
+          "cost": 0.0002635924390764398,
+          "mse": 0.00016201844227246254,
+          "bpp": 1.0157399680397727,
+          "psnr": 38.12879331329284,
+          "motion_bytes": 37440,
+          "report": "outputs\\p8_motion\\valb_m0.03125.json"
+        },
+        "0.0625": {
+          "cost": 0.0002635492928158493,
+          "mse": 0.00016200437094084926,
+          "bpp": 1.01544921875,
+          "psnr": 38.129254993710234,
+          "motion_bytes": 35663,
+          "report": "outputs\\p8_motion\\valb_m0.0625.json"
+        },
+        "0.125": {
+          "cost": 0.0002636366917576471,
+          "mse": 0.00016203042400196526,
+          "bpp": 1.0160626775568182,
+          "psnr": 38.128916812307054,
+          "motion_bytes": 33815,
+          "report": "outputs\\p8_motion\\valb_m0.125.json"
+        },
+        "0.25": {
+          "cost": 0.0002642094706023874,
+          "mse": 0.00016219779624159194,
+          "bpp": 1.0201167436079546,
+          "psnr": 38.12410965896599,
+          "motion_bytes": 31331,
+          "report": "outputs\\p8_motion\\valb_m0.25.json"
+        },
+        "0.5": {
+          "cost": 0.00026585878801709884,
+          "mse": 0.0001624882269375534,
+          "bpp": 1.0337056107954545,
+          "psnr": 38.117732448642144,
+          "motion_bytes": 27039,
+          "report": "outputs\\p8_motion\\valb_m0.5.json"
+        },
+        "0.0": {
+          "cost": 0.00026397011296764347,
+          "mse": 0.00016200606822332528,
+          "bpp": 1.0196404474431817,
+          "psnr": 38.12871778126322,
+          "motion_bytes": 46376,
+          "report": "outputs\\p8_motion\\valb_m0.json"
+        },
+        "1.0": {
+          "cost": 0.00026956849859324696,
+          "mse": 0.00016357178339438332,
+          "bpp": 1.0599671519886364,
+          "psnr": 38.08607294814474,
+          "motion_bytes": 22611,
+          "report": "outputs\\p8_motion\\valb_m1.json"
+        },
+        "16.0": {
+          "cost": 0.00041429517458413173,
+          "mse": 0.0002444016198966317,
+          "bpp": 1.698935546875,
+          "psnr": 36.4976294303481,
+          "motion_bytes": 1487,
+          "report": "outputs\\p8_motion\\valb_m16.json"
+        },
+        "2.0": {
+          "cost": 0.00028167446825953866,
+          "mse": 0.0001681530282737432,
+          "bpp": 1.1352143998579545,
+          "psnr": 37.9541787840968,
+          "motion_bytes": 16926,
+          "report": "outputs\\p8_motion\\valb_m2.json"
+        },
+        "4.0": {
+          "cost": 0.0003104499948119575,
+          "mse": 0.00018279179168695746,
+          "bpp": 1.27658203125,
+          "psnr": 37.601241708125194,
+          "motion_bytes": 11147,
+          "report": "outputs\\p8_motion\\valb_m4.json"
+        },
+        "8.0": {
+          "cost": 0.00037150380351682287,
+          "mse": 0.00021819374492307284,
+          "bpp": 1.5331005859375,
+          "psnr": 36.89862551535906,
+          "motion_bytes": 4846,
+          "report": "outputs\\p8_motion\\valb_m8.json"
+        }
+      }
+    }
+  },
+  "davis_test": {
+    "decode_exact": true,
+    "bd_vs_current": {
+      "psnr": -4.75,
+      "msssim": -5.54
+    },
+    "bd_vs_current_low_band_psnr": -7.63,
+    "points": {
+      "1e-2": {
+        "motion_lambda": 0.25,
+        "bpp_new": 0.0874,
+        "bpp_old": 0.1011,
+        "psnr_new": 28.514,
+        "psnr_old": 28.602,
+        "motion_share_of_stream": 0.1899,
+        "encode_s_per_frame": 0.035,
+        "decode_s_per_frame": 0.011
+      },
+      "3e-3": {
+        "motion_lambda": 0.25,
+        "bpp_new": 0.1602,
+        "bpp_old": 0.1739,
+        "psnr_new": 31.026,
+        "psnr_old": 31.063,
+        "motion_share_of_stream": 0.0944,
+        "encode_s_per_frame": 0.035,
+        "decode_s_per_frame": 0.011
+      },
+      "1e-3": {
+        "motion_lambda": 0.125,
+        "bpp_new": 0.2858,
+        "bpp_old": 0.2983,
+        "psnr_new": 33.03,
+        "psnr_old": 33.045,
+        "motion_share_of_stream": 0.0572,
+        "encode_s_per_frame": 0.035,
+        "decode_s_per_frame": 0.011
+      },
+      "3e-4": {
+        "motion_lambda": 0.125,
+        "bpp_new": 0.6035,
+        "bpp_old": 0.616,
+        "psnr_new": 35.243,
+        "psnr_old": 35.251,
+        "motion_share_of_stream": 0.0262,
+        "encode_s_per_frame": 0.035,
+        "decode_s_per_frame": 0.012
+      },
+      "1e-4": {
+        "motion_lambda": 0.0625,
+        "bpp_new": 1.0158,
+        "bpp_old": 1.0276,
+        "psnr_new": 37.921,
+        "psnr_old": 37.923,
+        "motion_share_of_stream": 0.0164,
+        "encode_s_per_frame": 0.036,
+        "decode_s_per_frame": 0.012
+      }
+    },
+    "vs_anchors": {
+      "h264/psnr": {
+        "new_5pt": 27.6,
+        "old_5pt": 33.97,
+        "new_low": 24.81,
+        "old_low": 35.12
+      },
+      "h264/msssim": {
+        "new_5pt": 49.93,
+        "old_5pt": 58.69,
+        "new_low": 51.93,
+        "old_low": 62.87
+      },
+      "h264_444/psnr": {
+        "new_5pt": 55.8,
+        "old_5pt": 63.88,
+        "new_low": 35.64,
+        "old_low": 47.07
+      },
+      "h264_444/msssim": {
+        "new_5pt": 56.09,
+        "old_5pt": 65.68,
+        "new_low": 54.6,
+        "old_low": 66.2
+      },
+      "h264_444_lowdelay/psnr": {
+        "new_5pt": 31.42,
+        "old_5pt": 38.22,
+        "new_low": 15.33,
+        "old_low": 25.01
+      },
+      "h264_444_lowdelay/msssim": {
+        "new_5pt": 31.46,
+        "old_5pt": 39.44,
+        "new_low": 30.82,
+        "old_low": 40.54
+      },
+      "h264_lowdelay/psnr": {
+        "new_5pt": 7.57,
+        "old_5pt": 12.92,
+        "new_low": 5.47,
+        "old_low": 14.13
+      },
+      "h264_lowdelay/msssim": {
+        "new_5pt": 26.37,
+        "old_5pt": 33.6,
+        "new_low": 28.56,
+        "old_low": 37.63
+      },
+      "h265/psnr": {
+        "new_5pt": 36.23,
+        "old_5pt": 43.04,
+        "new_low": 32.53,
+        "old_low": 43.46
+      },
+      "h265/msssim": {
+        "new_5pt": 48.57,
+        "old_5pt": 57.03,
+        "new_low": 50.42,
+        "old_low": 60.94
+      },
+      "h265_444/psnr": {
+        "new_5pt": 59.46,
+        "old_5pt": 67.75,
+        "new_low": 36.15,
+        "old_low": 47.6
+      },
+      "h265_444/msssim": {
+        "new_5pt": 46.26,
+        "old_5pt": 54.86,
+        "new_low": 44.99,
+        "old_low": 55.34
+      },
+      "h265_444_lowdelay/psnr": {
+        "new_5pt": 30.56,
+        "old_5pt": 37.32,
+        "new_low": 12.8,
+        "old_low": 22.24
+      },
+      "h265_444_lowdelay/msssim": {
+        "new_5pt": 17.7,
+        "old_5pt": 24.52,
+        "new_low": 17.47,
+        "old_low": 25.75
+      },
+      "h265_lowdelay/psnr": {
+        "new_5pt": 13.02,
+        "old_5pt": 18.64,
+        "new_low": 10.64,
+        "old_low": 19.71
+      },
+      "h265_lowdelay/msssim": {
+        "new_5pt": 20.56,
+        "old_5pt": 27.21,
+        "new_low": 23.14,
+        "old_low": 31.5
+      }
+    },
+    "per_video_bd_vs_current_psnr": {
+      "bmx-bumps": -4.63,
+      "car-turn": -7.87,
+      "cat-girl": -4.48,
+      "cows": -4.04,
+      "drift-chicane": -9.7,
+      "drone": -5.14,
+      "gold-fish": -3.53,
+      "schoolgirls": -3.32,
+      "surf": -9.47
+    },
+    "per_video_bd_vs_x264_444_psnr": {
+      "bmx-bumps": {
+        "new": 67.11,
+        "old": 75.34
+      },
+      "car-turn": {
+        "new": 82.65,
+        "old": 98.97
+      },
+      "cat-girl": {
+        "new": 3.05,
+        "old": 7.9
+      },
+      "cows": {
+        "new": 176.72,
+        "old": 188.85
+      },
+      "drift-chicane": {
+        "new": 72.84,
+        "old": 91.68
+      },
+      "drone": {
+        "new": -2.42,
+        "old": 2.91
+      },
+      "gold-fish": {
+        "new": -1.74,
+        "old": 1.91
+      },
+      "schoolgirls": {
+        "new": 197.82,
+        "old": 208.7
+      },
+      "surf": {
+        "new": -4.54,
+        "old": 5.3
+      }
+    }
+  },
+  "uvg_1080p": {
+    "decode_exact": true,
+    "bd_vs_current": {
+      "psnr": -10.68,
+      "msssim": -10.42
+    },
+    "bd_vs_current_low_band_psnr": -18.48,
+    "points": {
+      "1e-2": {
+        "motion_lambda": 0.25,
+        "bpp_new": 0.0386,
+        "bpp_old": 0.058,
+        "psnr_new": 32.014,
+        "psnr_old": 32.408,
+        "motion_share_of_stream": 0.2477,
+        "encode_s_per_frame": 1.197,
+        "decode_s_per_frame": 0.4
+      },
+      "3e-3": {
+        "motion_lambda": 0.25,
+        "bpp_new": 0.0612,
+        "bpp_old": 0.0777,
+        "psnr_new": 34.601,
+        "psnr_old": 34.782,
+        "motion_share_of_stream": 0.1415,
+        "encode_s_per_frame": 1.194,
+        "decode_s_per_frame": 0.398
+      },
+      "1e-3": {
+        "motion_lambda": 0.125,
+        "bpp_new": 0.1152,
+        "bpp_old": 0.1248,
+        "psnr_new": 36.727,
+        "psnr_old": 36.808,
+        "motion_share_of_stream": 0.1016,
+        "encode_s_per_frame": 1.195,
+        "decode_s_per_frame": 0.406
+      },
+      "3e-4": {
+        "motion_lambda": 0.125,
+        "bpp_new": 0.2673,
+        "bpp_old": 0.2729,
+        "psnr_new": 38.704,
+        "psnr_old": 38.721,
+        "motion_share_of_stream": 0.05,
+        "encode_s_per_frame": 1.196,
+        "decode_s_per_frame": 0.407
+      },
+      "1e-4": {
+        "motion_lambda": 0.0625,
+        "bpp_new": 0.5921,
+        "bpp_old": 0.594,
+        "psnr_new": 40.92,
+        "psnr_old": 40.925,
+        "motion_share_of_stream": 0.0267,
+        "encode_s_per_frame": 1.198,
+        "decode_s_per_frame": 0.408
+      }
+    },
+    "vs_anchors": {
+      "h264/psnr": {
+        "new_5pt": -18.09,
+        "old_5pt": -12.4,
+        "new_low": 42.43,
+        "old_low": 64.98
+      },
+      "h264/msssim": {
+        "new_5pt": 48.21,
+        "old_5pt": 52.45,
+        "new_low": 86.36,
+        "old_low": 102.81
+      },
+      "h264_444/psnr": {
+        "new_5pt": 17.88,
+        "old_5pt": 27.86,
+        "new_low": 65.82,
+        "old_low": 95.63
+      },
+      "h264_444/msssim": {
+        "new_5pt": 57.9,
+        "old_5pt": 64.36,
+        "new_low": 91.37,
+        "old_low": 110.46
+      },
+      "h264_444_lowdelay/psnr": {
+        "new_5pt": -3.73,
+        "old_5pt": 4.65,
+        "new_low": 25.5,
+        "old_low": 47.68
+      },
+      "h264_444_lowdelay/msssim": {
+        "new_5pt": 28.29,
+        "old_5pt": 33.78,
+        "new_low": 50.73,
+        "old_low": 65.04
+      },
+      "h264_lowdelay/psnr": {
+        "new_5pt": -34.13,
+        "old_5pt": -29.62,
+        "new_low": 9.81,
+        "old_low": 27.05
+      },
+      "h264_lowdelay/msssim": {
+        "new_5pt": 20.96,
+        "old_5pt": 24.9,
+        "new_low": 47.72,
+        "old_low": 60.64
+      },
+      "h265/psnr": {
+        "new_5pt": 20.94,
+        "old_5pt": 29.4,
+        "new_low": 109.47,
+        "old_low": 141.12
+      },
+      "h265/msssim": {
+        "new_5pt": 86.02,
+        "old_5pt": 85.32,
+        "new_low": 155.13,
+        "old_low": 169.04
+      },
+      "h265_444/psnr": {
+        "new_5pt": 68.12,
+        "old_5pt": 82.2,
+        "new_low": 133.86,
+        "old_low": 175.32
+      },
+      "h265_444/msssim": {
+        "new_5pt": 84.0,
+        "old_5pt": 86.17,
+        "new_low": 142.29,
+        "old_low": 159.58
+      },
+      "h265_444_lowdelay/psnr": {
+        "new_5pt": 20.19,
+        "old_5pt": 30.8,
+        "new_low": 57.69,
+        "old_low": 86.18
+      },
+      "h265_444_lowdelay/msssim": {
+        "new_5pt": 34.92,
+        "old_5pt": 38.2,
+        "new_low": 68.19,
+        "old_low": 81.38
+      },
+      "h265_lowdelay/psnr": {
+        "new_5pt": -18.12,
+        "old_5pt": -12.69,
+        "new_low": 41.48,
+        "old_low": 63.49
+      },
+      "h265_lowdelay/msssim": {
+        "new_5pt": 36.15,
+        "old_5pt": 37.36,
+        "new_low": 77.54,
+        "old_low": 88.72
+      }
+    },
+    "per_video_bd_vs_current_psnr": {
+      "Beauty": -6.34,
+      "Bosphorus": -20.48,
+      "HoneyBee": -20.22,
+      "Jockey": -8.17,
+      "ReadySetGo": -14.95,
+      "ShakeNDry": -0.07,
+      "YachtRide": -9.71
+    },
+    "per_video_bd_vs_x264_444_psnr": {
+      "Beauty": {
+        "new": -20.26,
+        "old": -21.86
+      },
+      "Bosphorus": {
+        "new": 14.57,
+        "old": 38.17
+      },
+      "HoneyBee": {
+        "new": 147.64,
+        "old": 197.74
+      },
+      "Jockey": {
+        "new": 85.92,
+        "old": 96.68
+      },
+      "ReadySetGo": {
+        "new": 37.65,
+        "old": 60.32
+      },
+      "ShakeNDry": {
+        "new": 12.35,
+        "old": 10.02
+      },
+      "YachtRide": {
+        "new": -18.53,
+        "old": -11.02
+      }
+    }
+  },
+  "gate": {
+    "uvg_bd_vs_current_psnr": -10.68,
+    "davis_bd_vs_current_psnr": -4.75,
+    "decode_exact": true,
+    "verdict": "PASS",
+    "rule": "PASS: UVG <= -10% and DAVIS <= 0%; SMALL WIN: UVG -10..-3%, DAVIS <= 0%"
+  }
+}

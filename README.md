@@ -35,6 +35,11 @@ part is done. The bar now is to win.
 > and +35.1% vs x264 4:2:0. On UVG 1080p the low rate is weak: **+95.6% vs x264 4:4:4**
 > over 32.4-36.8 dB, and +27.9% over the full 32.4-40.9 dB, so the UVG win above holds
 > only at high quality.
+> **Update 2026-11-19, motion** ([`outputs/p8_motion/README.md`](outputs/p8_motion/README.md)):
+> bit-aware motion search with predicted motion coding passed its pre-registered gate:
+> **−10.7% bits on UVG and −4.75% on DAVIS TEST** vs the codec above, decode-exact. Over
+> all five λ, DAVIS is now +27.6% vs x264 4:2:0 and +55.8% vs x264 4:4:4. UVG is −18.1% vs
+> x264 4:2:0 and +17.9% vs x264 4:4:4; at low rate it is +65.8% vs x264 4:4:4 (was +95.6%).
 > The rest of this README still describes the older M22 codec.
 
 Measured in a single pass on the DAVIS test split (9 sequences, 719 frames):
