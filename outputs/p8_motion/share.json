@@ -1,0 +1,641 @@
+{
+  "lambdas": [
+    "1e-2",
+    "3e-3",
+    "1e-3",
+    "3e-4",
+    "1e-4"
+  ],
+  "results": {
+    "davis_test/1e-2": {
+      "bpp": 0.0983632051894993,
+      "share_of_stream": {
+        "i": 0.06415828391132346,
+        "motion": 0.32068613168923166,
+        "residual": 0.615155584399445
+      },
+      "motion_share_of_p": 0.3426713365904761,
+      "motion_bytes_coded": 185794,
+      "motion_entropy_bytes_raw": 179806.94446356758,
+      "motion_entropy_bytes_median_pred": 157347.5622998703,
+      "zero_mvd_fraction": 0.41184688854768786,
+      "per_video": {
+        "bmx-bumps": {
+          "i": 3594,
+          "motion": 30356,
+          "residual": 50097,
+          "motion_share_of_p": 0.3773134625184891
+        },
+        "car-turn": {
+          "i": 3230,
+          "motion": 19635,
+          "residual": 26334,
+          "motion_share_of_p": 0.4271356783919598
+        },
+        "cat-girl": {
+          "i": 4624,
+          "motion": 27774,
+          "residual": 70542,
+          "motion_share_of_p": 0.28249725375320395
+        },
+        "cows": {
+          "i": 7379,
+          "motion": 18497,
+          "residual": 62597,
+          "motion_share_of_p": 0.228093323797075
+        },
+        "drift-chicane": {
+          "i": 1611,
+          "motion": 12281,
+          "residual": 9834,
+          "motion_share_of_p": 0.5553244404250509
+        },
+        "drone": {
+          "i": 4625,
+          "motion": 31693,
+          "residual": 45875,
+          "motion_share_of_p": 0.40858343646864687
+        },
+        "gold-fish": {
+          "i": 4113,
+          "motion": 16923,
+          "residual": 30538,
+          "motion_share_of_p": 0.356566444027728
+        },
+        "schoolgirls": {
+          "i": 5882,
+          "motion": 11711,
+          "residual": 46236,
+          "motion_share_of_p": 0.20209846929090375
+        },
+        "surf": {
+          "i": 2113,
+          "motion": 16924,
+          "residual": 14346,
+          "motion_share_of_p": 0.5412216181643748
+        }
+      }
+    },
+    "uvg_1080p_31f/1e-2": {
+      "bpp": 0.05854725150170805,
+      "share_of_stream": {
+        "i": 0.10252184445153531,
+        "motion": 0.5122479142185574,
+        "residual": 0.3852302413299073
+      },
+      "motion_share_of_p": 0.570763657089251,
+      "motion_bytes_coded": 1674374,
+      "motion_entropy_bytes_raw": 1594132.7538038641,
+      "motion_entropy_bytes_median_pred": 1609673.019714334,
+      "zero_mvd_fraction": 0.3594361934171507,
+      "per_video": {
+        "Beauty": {
+          "i": 33533,
+          "motion": 321628,
+          "residual": 114170,
+          "motion_share_of_p": 0.7380208261625799
+        },
+        "Bosphorus": {
+          "i": 43417,
+          "motion": 230817,
+          "residual": 133302,
+          "motion_share_of_p": 0.6339053990590988
+        },
+        "HoneyBee": {
+          "i": 52841,
+          "motion": 162371,
+          "residual": 132600,
+          "motion_share_of_p": 0.5504642829295083
+        },
+        "Jockey": {
+          "i": 42154,
+          "motion": 286916,
+          "residual": 199656,
+          "motion_share_of_p": 0.5896681272247478
+        },
+        "ReadySetGo": {
+          "i": 60942,
+          "motion": 214313,
+          "residual": 235908,
+          "motion_share_of_p": 0.47601733370944493
+        },
+        "ShakeNDry": {
+          "i": 50915,
+          "motion": 193832,
+          "residual": 231485,
+          "motion_share_of_p": 0.4557353691481883
+        },
+        "YachtRide": {
+          "i": 51309,
+          "motion": 264497,
+          "residual": 212073,
+          "motion_share_of_p": 0.5550013639129614
+        }
+      }
+    },
+    "davis_test/3e-3": {
+      "bpp": 0.1711368056762865,
+      "share_of_stream": {
+        "i": 0.07010388847663303,
+        "motion": 0.1775588192110349,
+        "residual": 0.752337292312332
+      },
+      "motion_share_of_p": 0.19094479158554162,
+      "motion_bytes_coded": 178980,
+      "motion_entropy_bytes_raw": 173445.8387128407,
+      "motion_entropy_bytes_median_pred": 140400.14197937274,
+      "zero_mvd_fraction": 0.4930822118858382,
+      "per_video": {
+        "bmx-bumps": {
+          "i": 6781,
+          "motion": 29977,
+          "residual": 105315,
+          "motion_share_of_p": 0.22157259852762912
+        },
+        "car-turn": {
+          "i": 6468,
+          "motion": 18890,
+          "residual": 59069,
+          "motion_share_of_p": 0.24230685360253468
+        },
+        "cat-girl": {
+          "i": 8349,
+          "motion": 27576,
+          "residual": 140755,
+          "motion_share_of_p": 0.1638200925557384
+        },
+        "cows": {
+          "i": 15607,
+          "motion": 17539,
+          "residual": 155002,
+          "motion_share_of_p": 0.10165120174335375
+        },
+        "drift-chicane": {
+          "i": 2949,
+          "motion": 11096,
+          "residual": 18257,
+          "motion_share_of_p": 0.3780192825264879
+        },
+        "drone": {
+          "i": 7926,
+          "motion": 31398,
+          "residual": 85137,
+          "motion_share_of_p": 0.2694297850431201
+        },
+        "gold-fish": {
+          "i": 6571,
+          "motion": 15391,
+          "residual": 59199,
+          "motion_share_of_p": 0.20634133261831344
+        },
+        "schoolgirls": {
+          "i": 12078,
+          "motion": 10876,
+          "residual": 98564,
+          "motion_share_of_p": 0.09937865497076023
+        },
+        "surf": {
+          "i": 3936,
+          "motion": 16237,
+          "residual": 37061,
+          "motion_share_of_p": 0.3046455776952231
+        }
+      }
+    },
+    "uvg_1080p_31f/3e-3": {
+      "bpp": 0.07947071597656877,
+      "share_of_stream": {
+        "i": 0.12989676640827655,
+        "motion": 0.3572407873998356,
+        "residual": 0.5128624461918878
+      },
+      "motion_share_of_p": 0.4105728764219981,
+      "motion_bytes_coded": 1585017,
+      "motion_entropy_bytes_raw": 1504631.66870151,
+      "motion_entropy_bytes_median_pred": 1452642.5498730917,
+      "zero_mvd_fraction": 0.4362531554052398,
+      "per_video": {
+        "Beauty": {
+          "i": 58149,
+          "motion": 311313,
+          "residual": 168259,
+          "motion_share_of_p": 0.6491475732528171
+        },
+        "Bosphorus": {
+          "i": 73905,
+          "motion": 212760,
+          "residual": 213017,
+          "motion_share_of_p": 0.49969819882238825
+        },
+        "HoneyBee": {
+          "i": 84057,
+          "motion": 146011,
+          "residual": 182551,
+          "motion_share_of_p": 0.4443940565251003
+        },
+        "Jockey": {
+          "i": 69413,
+          "motion": 277114,
+          "residual": 332924,
+          "motion_share_of_p": 0.454256947927834
+        },
+        "ReadySetGo": {
+          "i": 107456,
+          "motion": 202328,
+          "residual": 439606,
+          "motion_share_of_p": 0.3151850501764979
+        },
+        "ShakeNDry": {
+          "i": 93913,
+          "motion": 183884,
+          "residual": 537912,
+          "motion_share_of_p": 0.2547589623660979
+        },
+        "YachtRide": {
+          "i": 89437,
+          "motion": 251607,
+          "residual": 401215,
+          "motion_share_of_p": 0.385414400862716
+        }
+      }
+    },
+    "davis_test/1e-3": {
+      "bpp": 0.2955582025817107,
+      "share_of_stream": {
+        "i": 0.0666053173963094,
+        "motion": 0.10038590299462562,
+        "residual": 0.8330087796090649
+      },
+      "motion_share_of_p": 0.10754925527816447,
+      "motion_bytes_coded": 174757,
+      "motion_entropy_bytes_raw": 169445.06303181828,
+      "motion_entropy_bytes_median_pred": 130069.42532326982,
+      "zero_mvd_fraction": 0.5419272714956648,
+      "per_video": {
+        "bmx-bumps": {
+          "i": 11417,
+          "motion": 29924,
+          "residual": 200230,
+          "motion_share_of_p": 0.13001729276918933
+        },
+        "car-turn": {
+          "i": 11784,
+          "motion": 18097,
+          "residual": 124801,
+          "motion_share_of_p": 0.12664278016487285
+        },
+        "cat-girl": {
+          "i": 13059,
+          "motion": 27533,
+          "residual": 250090,
+          "motion_share_of_p": 0.09917405978611282
+        },
+        "cows": {
+          "i": 25225,
+          "motion": 17401,
+          "residual": 309819,
+          "motion_share_of_p": 0.05317828983558462
+        },
+        "drift-chicane": {
+          "i": 5338,
+          "motion": 9860,
+          "residual": 35857,
+          "motion_share_of_p": 0.21567469431502503
+        },
+        "drone": {
+          "i": 12553,
+          "motion": 31224,
+          "residual": 150174,
+          "motion_share_of_p": 0.1721297919491946
+        },
+        "gold-fish": {
+          "i": 10346,
+          "motion": 14447,
+          "residual": 113704,
+          "motion_share_of_p": 0.11273419637771066
+        },
+        "schoolgirls": {
+          "i": 19476,
+          "motion": 10637,
+          "residual": 185863,
+          "motion_share_of_p": 0.0541323155216285
+        },
+        "surf": {
+          "i": 6752,
+          "motion": 15634,
+          "residual": 79607,
+          "motion_share_of_p": 0.1641519933642024
+        }
+      }
+    },
+    "uvg_1080p_31f/1e-3": {
+      "bpp": 0.12862312143201046,
+      "share_of_stream": {
+        "i": 0.13842560602300683,
+        "motion": 0.21094630579203616,
+        "residual": 0.650628088184957
+      },
+      "motion_share_of_p": 0.24483817911337452,
+      "motion_bytes_coded": 1514805,
+      "motion_entropy_bytes_raw": 1433084.4249429798,
+      "motion_entropy_bytes_median_pred": 1312860.777758981,
+      "zero_mvd_fraction": 0.501994645001593,
+      "per_video": {
+        "Beauty": {
+          "i": 112891,
+          "motion": 301449,
+          "residual": 426141,
+          "motion_share_of_p": 0.41431163155073597
+        },
+        "Bosphorus": {
+          "i": 127984,
+          "motion": 195449,
+          "residual": 418773,
+          "motion_share_of_p": 0.3182057952987682
+        },
+        "HoneyBee": {
+          "i": 138066,
+          "motion": 138666,
+          "residual": 327711,
+          "motion_share_of_p": 0.2973259830566259
+        },
+        "Jockey": {
+          "i": 118767,
+          "motion": 268414,
+          "residual": 683414,
+          "motion_share_of_p": 0.2819984282874637
+        },
+        "ReadySetGo": {
+          "i": 182351,
+          "motion": 191978,
+          "residual": 871656,
+          "motion_share_of_p": 0.1804925378466653
+        },
+        "ShakeNDry": {
+          "i": 162935,
+          "motion": 179479,
+          "residual": 1185800,
+          "motion_share_of_p": 0.13145957712672648
+        },
+        "YachtRide": {
+          "i": 151040,
+          "motion": 239370,
+          "residual": 758664,
+          "motion_share_of_p": 0.2398415284449227
+        }
+      }
+    },
+    "davis_test/3e-4": {
+      "bpp": 0.6132043406097879,
+      "share_of_stream": {
+        "i": 0.06026574539087542,
+        "motion": 0.04786556741882102,
+        "residual": 0.8918686871903035
+      },
+      "motion_share_of_p": 0.05093521618910267,
+      "motion_bytes_coded": 172881,
+      "motion_entropy_bytes_raw": 166964.760894068,
+      "motion_entropy_bytes_median_pred": 122247.47399240678,
+      "zero_mvd_fraction": 0.5789181042268786,
+      "per_video": {
+        "bmx-bumps": {
+          "i": 21362,
+          "motion": 30376,
+          "residual": 426765,
+          "motion_share_of_p": 0.0664477699440654
+        },
+        "car-turn": {
+          "i": 23274,
+          "motion": 17520,
+          "residual": 304263,
+          "motion_share_of_p": 0.054446630182452146
+        },
+        "cat-girl": {
+          "i": 23287,
+          "motion": 27785,
+          "residual": 506055,
+          "motion_share_of_p": 0.05204742994155552
+        },
+        "cows": {
+          "i": 49253,
+          "motion": 17087,
+          "residual": 732399,
+          "motion_share_of_p": 0.02279829109549745
+        },
+        "drift-chicane": {
+          "i": 10298,
+          "motion": 9000,
+          "residual": 87468,
+          "motion_share_of_p": 0.09329518596840403
+        },
+        "drone": {
+          "i": 21575,
+          "motion": 31464,
+          "residual": 315354,
+          "motion_share_of_p": 0.09072193484767227
+        },
+        "gold-fish": {
+          "i": 18551,
+          "motion": 13875,
+          "residual": 251241,
+          "motion_share_of_p": 0.052335581405875166
+        },
+        "schoolgirls": {
+          "i": 37379,
+          "motion": 10191,
+          "residual": 422373,
+          "motion_share_of_p": 0.0235595195161872
+        },
+        "surf": {
+          "i": 12689,
+          "motion": 15583,
+          "residual": 175336,
+          "motion_share_of_p": 0.08162100157658483
+        }
+      }
+    },
+    "uvg_1080p_31f/3e-4": {
+      "bpp": 0.28103912680262283,
+      "share_of_stream": {
+        "i": 0.11461964480454129,
+        "motion": 0.09470676461138813,
+        "residual": 0.7906735905840706
+      },
+      "motion_share_of_p": 0.10696732094364172,
+      "motion_bytes_coded": 1485982,
+      "motion_entropy_bytes_raw": 1392266.7709366127,
+      "motion_entropy_bytes_median_pred": 1226236.1094890933,
+      "zero_mvd_fraction": 0.5482375683160552,
+      "per_video": {
+        "Beauty": {
+          "i": 269529,
+          "motion": 300430,
+          "residual": 2543739,
+          "motion_share_of_p": 0.10563015066966837
+        },
+        "Bosphorus": {
+          "i": 217737,
+          "motion": 190278,
+          "residual": 953567,
+          "motion_share_of_p": 0.16634946168405684
+        },
+        "HoneyBee": {
+          "i": 241134,
+          "motion": 132633,
+          "residual": 955989,
+          "motion_share_of_p": 0.1218356784999752
+        },
+        "Jockey": {
+          "i": 202226,
+          "motion": 269469,
+          "residual": 1690904,
+          "motion_share_of_p": 0.137458024569814
+        },
+        "ReadySetGo": {
+          "i": 326033,
+          "motion": 184710,
+          "residual": 2027606,
+          "motion_share_of_p": 0.08349168925234912
+        },
+        "ShakeNDry": {
+          "i": 285018,
+          "motion": 174449,
+          "residual": 2616789,
+          "motion_share_of_p": 0.06249879085910983
+        },
+        "YachtRide": {
+          "i": 256745,
+          "motion": 234013,
+          "residual": 1617349,
+          "motion_share_of_p": 0.12640045544847522
+        }
+      }
+    },
+    "davis_test/1e-4": {
+      "bpp": 1.0248600690520688,
+      "share_of_stream": {
+        "i": 0.055735176572420164,
+        "motion": 0.028327624979810236,
+        "residual": 0.9159371984477696
+      },
+      "motion_share_of_p": 0.02999966140535025,
+      "motion_bytes_coded": 170999,
+      "motion_entropy_bytes_raw": 164832.42222179467,
+      "motion_entropy_bytes_median_pred": 116030.19911810412,
+      "zero_mvd_fraction": 0.6078960440751445,
+      "per_video": {
+        "bmx-bumps": {
+          "i": 34054,
+          "motion": 30566,
+          "residual": 717037,
+          "motion_share_of_p": 0.04088533620116559
+        },
+        "car-turn": {
+          "i": 37699,
+          "motion": 17224,
+          "residual": 562004,
+          "motion_share_of_p": 0.02973613154060232
+        },
+        "cat-girl": {
+          "i": 36144,
+          "motion": 27823,
+          "residual": 848495,
+          "motion_share_of_p": 0.03174988988015766
+        },
+        "cows": {
+          "i": 71682,
+          "motion": 17031,
+          "residual": 1177366,
+          "motion_share_of_p": 0.014259078011749863
+        },
+        "drift-chicane": {
+          "i": 17721,
+          "motion": 8277,
+          "residual": 187267,
+          "motion_share_of_p": 0.04232806938591826
+        },
+        "drone": {
+          "i": 34282,
+          "motion": 31488,
+          "residual": 530106,
+          "motion_share_of_p": 0.05606897509588778
+        },
+        "gold-fish": {
+          "i": 30132,
+          "motion": 13261,
+          "residual": 477979,
+          "motion_share_of_p": 0.026994951551176614
+        },
+        "schoolgirls": {
+          "i": 54639,
+          "motion": 9953,
+          "residual": 728359,
+          "motion_share_of_p": 0.013480750685347116
+        },
+        "surf": {
+          "i": 20091,
+          "motion": 15376,
+          "residual": 300419,
+          "motion_share_of_p": 0.04868981459491126
+        }
+      }
+    },
+    "uvg_1080p_31f/1e-4": {
+      "bpp": 0.6092839732787675,
+      "share_of_stream": {
+        "i": 0.09331586282268396,
+        "motion": 0.0432481862012834,
+        "residual": 0.8634359509760327
+      },
+      "motion_share_of_p": 0.04769928625411206,
+      "motion_bytes_coded": 1471138,
+      "motion_entropy_bytes_raw": 1373979.108819894,
+      "motion_entropy_bytes_median_pred": 1185014.7174715016,
+      "zero_mvd_fraction": 0.5734397593314217,
+      "per_video": {
+        "Beauty": {
+          "i": 575055,
+          "motion": 301557,
+          "residual": 7247177,
+          "motion_share_of_p": 0.03994802307247811
+        },
+        "Bosphorus": {
+          "i": 362776,
+          "motion": 187477,
+          "residual": 2203421,
+          "motion_share_of_p": 0.07841279720004785
+        },
+        "HoneyBee": {
+          "i": 434050,
+          "motion": 129876,
+          "residual": 3010822,
+          "motion_share_of_p": 0.041352591048231954
+        },
+        "Jockey": {
+          "i": 355265,
+          "motion": 268649,
+          "residual": 3824119,
+          "motion_share_of_p": 0.0656399287719216
+        },
+        "ReadySetGo": {
+          "i": 539668,
+          "motion": 181081,
+          "residual": 4256416,
+          "motion_share_of_p": 0.04080701350333307
+        },
+        "ShakeNDry": {
+          "i": 489314,
+          "motion": 171993,
+          "residual": 5744559,
+          "motion_share_of_p": 0.029069802817587
+        },
+        "YachtRide": {
+          "i": 418121,
+          "motion": 230505,
+          "residual": 3084277,
+          "motion_share_of_p": 0.0695385096214472
+        }
+      }
+    }
+  }
+}
