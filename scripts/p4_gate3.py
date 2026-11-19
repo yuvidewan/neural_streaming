@@ -295,6 +295,7 @@ def _code_motion(mc, reference, frame, *, block_size, search_range, motion_lambd
                                     search_range=search_range).cpu()
 
 
+@torch.no_grad()
 def encode_sequence_b(mc, intra, icoder, pcoder, bcoder, frames, path, rig, tables, *, gop,
                       bframes, block_size, search_range, identity, tune,
                       motion_lambda) -> dict[str, Any]:
