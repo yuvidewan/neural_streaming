@@ -41,6 +41,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 import benchmark_parity as bp  # noqa: E402
 import p1_gate3 as g3  # noqa: E402
 import p1_pframe as p1  # noqa: E402
+import motion_pred as mp  # noqa: E402
 import p4_wide_latent as p4  # noqa: E402
 
 from nvc.compression.range_coder import decode_symbols, encode_symbols  # noqa: E402
@@ -188,8 +189,13 @@ def gray(frame: torch.Tensor) -> torch.Tensor:
 
 @torch.no_grad()
 def encode_sequence(mc, m21, intra, icoder, pcoder, frames, path, rig, tables, *, gop,
-                    block_size, search_range, identity, tune=None) -> dict[str, Any]:
-    """`p1_gate3.encode_sequence` with A2 P-frames, and wide I-frames when `icoder` is set."""
+                    block_size, search_range, identity, tune=None,
+                    motion_lambda=None) -> dict[str, Any]:
+    """`p1_gate3.encode_sequence` with A2 P-frames, and wide I-frames when `icoder` is set.
+
+    `motion_lambda` None codes motion as before (SAD search, the rig's fixed tables). A number
+    switches to `motion_pred` (docs/PLAN_motion_rate.md): predicted motion coding, and for
+    lambda_m > 0 the bit-aware search; 0 keeps the SAD-only field."""
     device = next(pcoder.parameters()).device
     count = frames.shape[0]
     types = mc.gop_frame_types(count, gop)
@@ -207,8 +213,10 @@ def encode_sequence(mc, m21, intra, icoder, pcoder, frames, path, rig, tables, *
         motion_bits=rig["motion_entropy_model"].bits, reference_mode="mc",
         intra_entropy_model_id=rig["intra_entropy_model"].model_id(),
         residual_entropy_model_id=identity,
-        motion_entropy_model_id=rig["motion_entropy_model"].model_id())
+        motion_entropy_model_id=(rig["motion_entropy_model"].model_id() if motion_lambda is None
+                                 else mp.model_id()))
     writer = mc.TemporalStreamWriter(path, header, intra_params, intra_params)
+    motion_scales = (mp.DEFAULT_SCALE_INDEX, mp.DEFAULT_SCALE_INDEX)
     grid = (frames.shape[2] // block_size, frames.shape[3] // block_size)
     reconstructions, records, previous = [], [], None
     with mc.deterministic_kernels():
@@ -229,7 +237,8 @@ def encode_sequence(mc, m21, intra, icoder, pcoder, frames, path, rig, tables, *
                 writer.append_frame(types[t], b"", payload)
                 records.append({"type": "I", "motion": 0, "residual": len(payload),
                                 "ideal_bits": ideal})
-            else:
+                motion_scales = (mp.DEFAULT_SCALE_INDEX, mp.DEFAULT_SCALE_INDEX)
+            elif motion_lambda is None:
                 motion = mc.estimate_block_motion(previous, frame, block_size=block_size,
                                                   search_range=search_range)
                 motion_payload = mc.encode_motion_payload(
@@ -238,6 +247,21 @@ def encode_sequence(mc, m21, intra, icoder, pcoder, frames, path, rig, tables, *
                 decoded_motion = mc.decode_motion_payload(
                     motion_payload, grid, search_range=search_range,
                     entropy_model=rig["motion_entropy_model"])
+            else:
+                if motion_lambda > 0:
+                    cost = mc.block_sad_costs(previous, frame, block_size=block_size,
+                                              search_range=search_range)
+                    motion = mp.search_rate_aware(cost, search_range=search_range,
+                                                  lambda_m=motion_lambda,
+                                                  scale_indices=motion_scales)
+                else:
+                    motion = mc.estimate_block_motion(previous, frame, block_size=block_size,
+                                                      search_range=search_range)
+                motion_payload, motion_scales = mp.encode_field(motion)
+                decoded_motion, _ = mp.decode_field(motion_payload, grid)
+                if not torch.equal(decoded_motion, motion.cpu()):
+                    raise RuntimeError("motion_pred round trip failed")
+            if types[t] != mc.FRAME_TYPE_I:
                 warped = mc.warp_blocks(previous, decoded_motion, block_size=block_size)
                 payload, reconstruction, ideal = encode_frame(pcoder, frame, warped, tables,
                                                               tune)
@@ -255,10 +279,13 @@ def decode_sequence(mc, m21, intra, icoder, pcoder, path, rig, tables, *, identi
     device = next(pcoder.parameters()).device
     reader = mc.TemporalStreamReader(path)
     header = reader.header
+    # The motion model id names the motion coder: the rig's fixed tables or motion_pred.
+    predicted_motion = header.motion_entropy_model_id[:8] == mp.model_id()
+    motion_id = mp.model_id() if predicted_motion else rig["motion_entropy_model"].model_id()
     for label, declared, supplied in (
             ("coder", header.residual_entropy_model_id, identity),
             ("intra", header.intra_entropy_model_id, rig["intra_entropy_model"].model_id()),
-            ("motion", header.motion_entropy_model_id, rig["motion_entropy_model"].model_id())):
+            ("motion", header.motion_entropy_model_id, motion_id)):
         if declared[:8] != supplied[:8]:
             raise mc.TemporalFormatError(f"{label} model mismatch: stream declares "
                                          f"{declared.hex()}, supplied is {supplied.hex()}")
@@ -276,9 +303,12 @@ def decode_sequence(mc, m21, intra, icoder, pcoder, path, rig, tables, *, identi
                     flat = torch.full(shape, p4.GRAY, device=device)
                     reconstruction = decode_frame(icoder, payload, flat, tables)
             else:
-                motion = mc.decode_motion_payload(
-                    motion_payload, header.block_grid, search_range=header.search_range,
-                    entropy_model=rig["motion_entropy_model"])
+                if predicted_motion:
+                    motion, _ = mp.decode_field(motion_payload, header.block_grid)
+                else:
+                    motion = mc.decode_motion_payload(
+                        motion_payload, header.block_grid, search_range=header.search_range,
+                        entropy_model=rig["motion_entropy_model"])
                 warped = mc.warp_blocks(previous, motion, block_size=header.block_size)
                 reconstruction = decode_frame(pcoder, payload, warped, tables)
             previous = reconstruction
@@ -342,9 +372,30 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--eval-manifest", type=Path, default=None,
                         help="code the test split of another manifest (e.g. UVG from "
                              "prepare_uvg.py); the coding tables still come from --manifest")
+    parser.add_argument("--motion-lambda", default=None,
+                        help="docs/PLAN_motion_rate.md: code motion with motion_pred. One number "
+                             "for every lambda, or 'lam:value,...' per lambda; 0 = predicted "
+                             "coding of the SAD-only field. Default: the rig's fixed tables")
+    parser.add_argument("--low-rate-dir", type=Path, default=None,
+                        help="models for lambdas outside the original three "
+                             "(e.g. outputs/p6_low_rate/vimeo)")
     parser.add_argument("--val-b", action="store_true",
                         help="code the 4 VAL-B videos instead of TEST (for choosing settings)")
     args = parser.parse_args(argv)
+
+    def motion_lambda_for(lam: str):
+        if args.motion_lambda is None:
+            return None
+        if ":" not in args.motion_lambda:
+            return float(args.motion_lambda)
+        table = dict(item.split(":") for item in args.motion_lambda.split(","))
+        return float(table[lam])
+
+    def models_dir_for(lam: str) -> Path:
+        if args.low_rate_dir is not None and lam not in p1.LAMBDAS:
+            return args.low_rate_dir
+        return args.models_dir
+
     if args.verdict:
         return command_verdict(args.gop)
     seed_everything(args.seed)
@@ -387,7 +438,9 @@ def main(argv: list[str] | None = None) -> int:
         "models_dir": str(args.models_dir), "i_frames": args.i_frames, "gop": args.gop,
         "smoke": smoke, "split": split_tag,
         "eval_manifest": str(args.eval_manifest) if external else None, "tune_steps": args.tune_steps,
-        "tune_lr": args.tune_lr if args.tune_steps > 0 else None, "dataset": {"sequences": [s.sequence_id for s in sequences],
+        "tune_lr": args.tune_lr if args.tune_steps > 0 else None,
+        "motion_lambda": args.motion_lambda,
+        "low_rate_dir": str(args.low_rate_dir) if args.low_rate_dir else None, "dataset": {"sequences": [s.sequence_id for s in sequences],
                                     "frames": sum(s.frame_count for s in sequences)},
         "points": {}}
     print(f"p4 gate 3: {len(sequences)} sequences, GOP {args.gop}, {args.i_frames} I-frames, "
@@ -398,7 +451,7 @@ def main(argv: list[str] | None = None) -> int:
     # finished video is saved to a sidecar file, so a crash costs one video, not a whole run.
     def same_settings(old: dict) -> bool:
         keys = ("models_dir", "i_frames", "gop", "smoke", "split", "eval_manifest",
-                "tune_steps", "tune_lr", "dataset")
+                "tune_steps", "tune_lr", "dataset", "motion_lambda", "low_rate_dir")
         return all(old.get(k) == report.get(k) for k in keys)
 
     if report_path.is_file() and not args.no_resume:
@@ -420,12 +473,13 @@ def main(argv: list[str] | None = None) -> int:
         bits = g3.BITS[rig_lam]
         intra, _ = load_model_from_checkpoint(Path(p1.CHECKPOINT.format(rig_lam)), device=device)
         intra.eval()
-        pcoder = p4.load_vimeo("p", lam, device, args.models_dir)
-        icoder = p4.load_vimeo("i", lam, device, args.models_dir) if args.i_frames == "wide" else None
+        pcoder = p4.load_vimeo("p", lam, device, models_dir_for(lam))
+        icoder = (p4.load_vimeo("i", lam, device, models_dir_for(lam)) if args.i_frames == "wide"
+                  else None)
         identity = identity_of(pcoder, *([icoder] if icoder is not None else []))
         rig = g3.build_rig(args, m21, md, intra, rig_lam, bits, device, train_full, motion_train)
         rows, exact = [], True
-        tally = {"i_bytes": 0, "p_bytes": 0, "framing_bytes": 0, "i_frames": 0, "p_frames": 0,
+        tally = {"i_bytes": 0, "p_bytes": 0, "motion_bytes": 0, "framing_bytes": 0, "i_frames": 0, "p_frames": 0,
                  "ideal_bits": 0.0, "coded_bytes": 0, "i_mse": [], "p_mse": []}
         sidecar_path = report_path.with_name(f"{report_path.stem}.{lam}.videos.json")
         sidecar = {"settings": {k: report[k] for k in report if k != "points"},
@@ -445,6 +499,7 @@ def main(argv: list[str] | None = None) -> int:
                 tally[f"{key}_frames"] += 1
                 tally[f"{key}_mse"].append(mse)
                 tally[f"{key}_bytes"] += record["motion"] + record["residual"]
+                tally["motion_bytes"] += record["motion"]
                 if record["ideal_bits"]:
                     tally["ideal_bits"] += record["ideal_bits"]
                     tally["coded_bytes"] += record["residual"]
@@ -467,7 +522,8 @@ def main(argv: list[str] | None = None) -> int:
                                       gop=args.gop, block_size=args.block_size,
                                       search_range=args.search_range, identity=identity,
                                       tune=((float(lam), args.tune_steps, args.tune_lr)
-                                            if args.tune_steps > 0 else None))
+                                            if args.tune_steps > 0 else None),
+                                      motion_lambda=motion_lambda_for(lam))
             encode_seconds = time.perf_counter() - started
             size = path.stat().st_size
             started = time.perf_counter()
@@ -497,12 +553,12 @@ def main(argv: list[str] | None = None) -> int:
             "bytes_per_i_frame": tally["i_bytes"] / max(tally["i_frames"], 1),
             "bytes_per_p_frame": tally["p_bytes"] / max(tally["p_frames"], 1),
             "i_bytes": tally["i_bytes"], "p_bytes": tally["p_bytes"],
-            "framing_bytes": tally["framing_bytes"],
+            "framing_bytes": tally["framing_bytes"], "motion_bytes": tally["motion_bytes"],
             "coder_overhead_vs_ideal": tally["coded_bytes"] * 8 / max(tally["ideal_bits"], 1.0) - 1,
             "pooled_psnr_i": psnr_of(tally["i_mse"]), "pooled_psnr_p": psnr_of(tally["p_mse"]),
         }
         point = bp.summarize_point(f"learned_p/{lam}", "learned_p", lam, rows, extra={
-            "bits": bits, "lambda": lam, "rig_lambda": rig_lam, "decode_reconstruction_exact": exact,
+            "motion_lambda": motion_lambda_for(lam), "bits": bits, "lambda": lam, "rig_lambda": rig_lam, "decode_reconstruction_exact": exact,
             "coder_identity": identity.hex(), "split": split})
         report["points"][lam] = point
         args.output_dir.mkdir(parents=True, exist_ok=True)

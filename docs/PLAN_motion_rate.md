@@ -45,6 +45,11 @@ Every stream must decode bit for bit.
 ## Choosing λ_m (VAL-B only)
 
 - Grid: λ_m in {0, 0.25, 0.5, 1, 2, 4, 8, 16} (SAD units per bit).
+- **Amendment (2026-11-19, before any TEST or UVG coding):** a VAL-B smoke run (2 videos, 12
+  frames) showed λ_m = 2 already over-smooths: motion bytes −84%, residual bytes +42%. The
+  grid is extended downward with {0.03125, 0.0625, 0.125}. Selection is still on VAL-B only,
+  and the gate below is unchanged.
+- MSE is the global pooled MSE on [0, 1] (from the report's `global_pooled` PSNR).
 - For each codec λ, the λ_m with the lowest **VAL-B** `MSE + λ · bpp` (real bytes, the
   models' own training objective) is chosen. That is one λ_m per rate point, fixed before
   TEST or UVG are coded.

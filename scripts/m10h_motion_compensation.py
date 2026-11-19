@@ -178,6 +178,46 @@ def motion_alphabet_bits(search_range: int) -> int:
 # --- motion estimation -------------------------------------------------------
 
 @torch.no_grad()
+def block_sad_costs(reference: torch.Tensor, current: torch.Tensor, *,
+                    block_size: int = DEFAULT_BLOCK_SIZE,
+                    search_range: int = DEFAULT_SEARCH_RANGE) -> torch.Tensor:
+    """Per-block SAD of every integer candidate, [K, by, bx] with K = (2R+1)^2 in (dy, dx)
+    visiting order (dy outer). The values are exactly the ones the loop search compares.
+    Shapes are not checked here; callers do."""
+    _, channels, height, width = reference.shape
+    if reference.device.type != "cuda":
+        padded = F.pad(reference, (search_range,) * 4, mode="replicate")
+        out = []
+        for dy in range(-search_range, search_range + 1):
+            for dx in range(-search_range, search_range + 1):
+                top, left = search_range + dy, search_range + dx
+                shifted = padded[:, :, top:top + height, left:left + width]
+                absdiff = (current - shifted).abs().sum(dim=1, keepdim=True)
+                out.append(F.avg_pool2d(absdiff, block_size)[0, 0] * (block_size * block_size))
+        return torch.stack(out)
+    span = 2 * search_range + 1
+    padded = F.pad(reference, (search_range,) * 4, mode="replicate").contiguous()
+    # For one dy, all 2R+1 horizontal shifts are a strided VIEW of the padded reference (no
+    # copy). Large frames are cut into bands of block rows so each call's working set stays
+    # small; a band is a whole number of blocks, so every block's SAD is computed whole.
+    band_rows = height if channels * height * width <= (1 << 20) else block_size
+    rows_per_dy = []
+    for dy in range(-search_range, search_range + 1):
+        top = search_range + dy
+        bands = []
+        for r0 in range(0, height, band_rows):
+            band = padded[:, :, top + r0:top + r0 + band_rows, :]
+            s = band.stride()
+            shifted = band.as_strided((span, channels, band_rows, width), (s[3], s[1], s[2], s[3]))
+            diff = current[:, :, r0:r0 + band_rows] - shifted
+            diff.abs_()
+            absdiff = diff.sum(dim=1, keepdim=True)
+            bands.append(F.avg_pool2d(absdiff, block_size)[:, 0] * (block_size * block_size))
+        rows_per_dy.append(torch.cat(bands, dim=1))
+    return torch.cat(rows_per_dy, dim=0)
+
+
+@torch.no_grad()
 def estimate_block_motion(
     reference: torch.Tensor,
     current: torch.Tensor,
@@ -209,27 +249,9 @@ def estimate_block_motion(
         return _estimate_block_motion_loop(reference, current, block_size=block_size,
                                            search_range=search_range)
     span = 2 * search_range + 1
-    padded = F.pad(reference, (search_range,) * 4, mode="replicate").contiguous()
     offsets = [(dy, dx) for dy in range(-search_range, search_range + 1)
                for dx in range(-search_range, search_range + 1)]
-    # For one dy, all 2R+1 horizontal shifts are a strided VIEW of the padded reference (no
-    # copy). Large frames are cut into bands of block rows so each call's working set stays
-    # small; a band is a whole number of blocks, so every block's SAD is computed whole.
-    band_rows = height if channels * height * width <= (1 << 20) else block_size
-    rows_per_dy = []
-    for dy in range(-search_range, search_range + 1):
-        top = search_range + dy
-        bands = []
-        for r0 in range(0, height, band_rows):
-            band = padded[:, :, top + r0:top + r0 + band_rows, :]
-            s = band.stride()
-            shifted = band.as_strided((span, channels, band_rows, width), (s[3], s[1], s[2], s[3]))
-            diff = current[:, :, r0:r0 + band_rows] - shifted
-            diff.abs_()
-            absdiff = diff.sum(dim=1, keepdim=True)
-            bands.append(F.avg_pool2d(absdiff, block_size)[:, 0] * (block_size * block_size))
-        rows_per_dy.append(torch.cat(bands, dim=1))
-    cost = torch.cat(rows_per_dy, dim=0)                            # [K, by, bx], (dy, dx) order
+    cost = block_sad_costs(reference, current, block_size=block_size, search_range=search_range)
 
     keys = torch.tensor([float(abs(dy) + abs(dx)) for dy, dx in offsets],
                         device=cost.device, dtype=cost.dtype).view(-1, 1, 1)
