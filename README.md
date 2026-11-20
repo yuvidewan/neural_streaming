@@ -41,6 +41,7 @@ part is done. The bar now is to win.
 > all five λ, DAVIS is now +27.6% vs x264 4:2:0 and +55.8% vs x264 4:4:4. UVG is −18.1% vs
 > x264 4:2:0 and +17.9% vs x264 4:4:4; at low rate it is +65.8% vs x264 4:4:4 (was +95.6%).
 > **B-frames (2026-11-19, NOT PASSED,** [`outputs/p9_bframes/README.md`](outputs/p9_bframes/README.md)**):** two-sided prediction into the existing P-coder lost to no B-frames at every rate on VAL-B (+0.1% to +10.1% bits).
+> **MS-SSIM model set (2026-11-21, SMALL WIN,** [`outputs/p10_msssim/README.md`](outputs/p10_msssim/README.md)**):** a second set fine-tuned on `k·(1−MS-SSIM) + λ·bpp` is −22.4% (DAVIS TEST) and −9.7% (UVG) BD-rate MS-SSIM vs the MSE set. On MS-SSIM it ties x264 4:2:0 on UVG (+0.4%), and beats x264 and x265 low-delay on both sets; DAVIS is +16.3% vs x264 4:2:0. It is far worse on PSNR, so the MSE set stays the PSNR codec.
 > The rest of this README still describes the older M22 codec.
 
 Measured in a single pass on the DAVIS test split (9 sequences, 719 frames):

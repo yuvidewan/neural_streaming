@@ -1,5 +1,7 @@
 # Plan: an MS-SSIM model set (fixed 2026-11-19, before any training or result)
 
+**Status (2026-11-21): SMALL WIN.** BD-rate MS-SSIM vs the MSE set: DAVIS TEST −22.43%, UVG −9.66% (PASS needed ≤ −10% on both), decode-exact. Kept as a second model set. Write-up: [`outputs/p10_msssim/README.md`](../outputs/p10_msssim/README.md).
+
 Roadmap item 6 (`docs/ROADMAP_2026-11-17.md`): "MS-SSIM barely improved. A fine-tune with an
 MS-SSIM loss, reported as a second model set." It is next in the queue now that B-frames closed
 (`docs/PLAN_bframes.md`, NOT PASSED).
