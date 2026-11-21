@@ -1,0 +1,81 @@
+# Handoff for Aditya: three figures for the updated paper
+
+From Yuvraj, 21 Nov 2026. The paper now carries the November results (wide latent, motion coder,
+UVG, 4:4:4 anchors, GOP 30). Text, tables and Fig. 2 are done. Figs. 1, 3 and 4 still show the
+first (593k) codec and need you, because the current codec's models are only on your machine.
+
+**The paper:** `docs/paper/Research_Paper_NCC2027_with_authors.docx` (6 pages, IEEE two-column).
+Every figure sits at column width (3.0 in, 2,743,200 EMU). In Word, right-click the picture,
+choose Change Picture, then From a File: that keeps the size and position. The paper must stay at
+6 pages.
+
+All figure files are in `docs/paper_figures/`.
+
+## 1. Fig. 1: render the new architecture diagram
+
+- Source: `docs/paper_figures/Fig1_architecture_current.puml` (the old one,
+  `Fig1_architecture.puml`, is kept for reference). Same style and colours as the old figure. It
+  shows GOP 30, the wide I-coder, the two-scale latent (64 ch at 1/16 + 32 ch at 1/8), bit-aware
+  motion with median-predicted MV coding, the context network and conditional P-coder with its
+  Laplace prior, optional encode-time tuning, the range coder with 64 Laplace tables, and the
+  decoder feedback loop.
+- Render: `java -jar plantuml.jar -tpng docs/paper_figures/Fig1_architecture_current.puml`
+  (or paste it into plantuml.com). Save as `docs/paper_figures/fig1_architecture_current.png`.
+- In the paper: replace Fig. 1's picture, and change the caption from "Fig. 1. Architecture of
+  the first codec" back to **"Fig. 1. Overall system architecture"**. Then edit the last sentence of
+  the first Method paragraph (Section III) from "Fig. 1 shows the first codec's architecture." to
+  "Fig. 1 shows the current codec's architecture."
+- Check every box against the code before rendering, and fix anything I got wrong (parameter
+  counts are 9,053,670 per coder, from instantiating `p4_wide_latent.WideLatentPFrameCoder(base, "a2")`).
+
+## 2. Fig. 3: decoded frame, current codec vs x264 (replaces the first codec's car-turn figure)
+
+Use the deployed current codec: A2 P-coder + wide I-coder, bit-aware motion (`--motion-lambda`),
+GOP 30, untuned, as in `outputs/p8_motion/`.
+
+- **Clip:** car-turn, frames 1-40, show frame 37 (a P-frame at GOP 30), for continuity with the old
+  figure. If car-turn looks unrepresentative, drone or cows are fine, but say which in the caption.
+- **Panels (2×2, each with a 2× zoom strip under it):** (a) original, (b) ours at λ 1e-3,
+  (c) ours at λ 3e-4, (d) x264 preset medium in **4:4:4** at about the same whole-clip bpp as (b).
+- **Under each panel:** whole-clip BPP and that frame's PSNR, as the old figure had.
+- **Template:** `docs/paper_figures/make_fig4.py`. It already does the layout, the zoom boxes, the
+  x264 encode through FFmpeg and the decode-exact check, but for the old codec. Replace
+  `run_proposed` with your `p4_gate3.py` encode path and keep the rest. Keep it decode-exact:
+  decode from the written file, and stop if it differs from the encoder's reconstruction.
+- Save as `docs/paper_figures/fig3_current.png`, 3.35 in wide, Times New Roman, 300 dpi.
+- **Caption:** "Fig. 3. Decoded P-frame (frame 37 of car-turn): the current codec at two rates
+  against x264 (4:4:4) at a matched bitrate." Add one honest clause on what it shows, for example
+  where texture is still lost.
+
+## 3. Fig. 4: per-frame views, current codec (or tell Yuvraj to drop it)
+
+The current Fig. 4 shows the first codec's demo panels: motion vectors, prediction, **latent
+residual** and error, for P-frames 13-16 of bmx-bumps. The current codec has no latent residual,
+because the conditional coder subtracts nothing.
+
+- **If you redo it:** keep the motion, prediction (x_warp) and error columns, and replace the
+  residual column with a **per-position bits map** from the P-coder's prior (−log2 of each
+  element's probability, summed over channels). That shows where the bits go in the current codec.
+  Template: `docs/paper_figures/make_perframe_figure_compact.py`. Use frames 13-16 of bmx-bumps
+  again, at λ 3e-4. Save as `docs/paper_figures/fig4_current.png`.
+- Then update the caption and the Fig. 4 paragraph in Section V ("Per-Frame Coding Behaviour"):
+  replace "magnitude of the latent residual" with the bits map, and remove "of the first codec".
+- **If there's no time:** leave it as it is. It is already captioned as the first codec, which is
+  honest.
+
+## When you're done
+
+1. Push the PNGs and any changed scripts to master.
+2. Put the updated docx back at `docs/paper/Research_Paper_NCC2027_with_authors.docx` and push,
+   or send it to Yuvraj.
+3. Check the page count is still 6 and that every number in the new captions matches the JSON it
+   came from.
+
+## Already done (no action needed)
+
+- **Fig. 2** (rate-distortion, DAVIS and UVG, current codec vs x264/x265 in 4:2:0 and 4:4:4):
+  `docs/paper_figures/fig2_current_rd.png`, generated by
+  `python docs/paper_figures/make_fig2_current.py`. It reads `outputs/p8_motion/{test,uvg}_motion.json`
+  and the committed classical anchor reports.
+- The original paper before this update is kept at
+  `docs/Research_Paper_NCC2027_with_authors (before 21 Nov update).docx` on Yuvraj's laptop.

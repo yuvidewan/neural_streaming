@@ -1,0 +1,62 @@
+@startuml Fig1_architecture
+' Fig. 1. Overall System Architecture
+skinparam dpi 300
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 16
+skinparam shadowing false
+skinparam ArrowColor #1F2933
+skinparam ArrowThickness 1.3
+skinparam nodesep 30
+skinparam ranksep 28
+skinparam rectangle {
+  RoundCorner 12
+  BorderThickness 1.6
+  BackgroundColor<<io>> #EEF2F5
+  BorderColor<<io>> #4B5563
+  BackgroundColor<<intra>> #DCE9F6
+  BorderColor<<intra>> #1F5C99
+  BackgroundColor<<inter>> #FCE8D6
+  BorderColor<<inter>> #B35C00
+  BackgroundColor<<coder>> #DDF0E3
+  BorderColor<<coder>> #2E7D4F
+  BackgroundColor<<dec>> #E9E3F4
+  BorderColor<<dec>> #5B3F8C
+}
+hide stereotype
+
+rectangle "Input frames x<sub>t</sub>  (256×256 RGB, DAVIS / Vimeo-90K)" <<io>> as IN
+rectangle "GOP controller: I-frame every 10 frames, P-frames otherwise" <<io>> as GOP
+
+rectangle "Analysis transform //E//\nConv/ReLU, stride 16 (593 k params)" <<intra>> as E
+rectangle "Latent z<sub>t</sub>: 64 × 16 × 16\nper-channel uniform quantizer" <<intra>> as Q
+rectangle "Static per-channel\nfrequency tables (3/4/5-bit)" <<intra>> as T
+
+rectangle "Block motion estimation\n16×16 blocks, ±16 px, SAD" <<inter>> as ME
+rectangle "Warp x̂<sub>t−1</sub> → //E//(x<sub>warp</sub>) = z<sub>ref</sub>\nresidual Δz = z<sub>t</sub> − z<sub>ref</sub>" <<inter>> as W
+rectangle "Channel-context model (G16)\n+ 512-entry shared codebook" <<inter>> as CM
+
+rectangle "**Range coder (native C, 32-bit, byte-exact)**" <<coder>> as RC
+rectangle ".nvct v2 container: header + intra / motion /\nresidual model identities + per-frame lengths" <<coder>> as NV
+
+rectangle "Decoder: ẑ<sub>t</sub> = z<sub>ref</sub> + Δẑ<sub>t</sub>  →  Synthesis transform //D//\n(ConvTranspose/ReLU, Sigmoid)  →  reconstructed frame x̂<sub>t</sub>" <<dec>> as DEC
+rectangle "Decoded reference buffer x̂<sub>t−1</sub>" <<dec>> as BUF
+
+IN -down-> GOP
+GOP -down-> E : <color:#1F5C99>//Intra path (I-frame)//</color>
+GOP -down-> ME : <color:#B35C00>//Inter path (P-frame)//</color>
+
+E -down-> Q
+Q -down-> T
+ME -down-> W
+W -down-> CM
+
+T -down-> RC
+CM -down-> RC
+RC -down-> NV
+NV -down-> DEC
+DEC -down-> BUF
+
+' feedback: the decoded frame becomes the next P-frame's reference.
+' Written right-to-left so it does not pull the Warp box below the buffer.
+W <-[#5B3F8C,dashed]- BUF
+@enduml
