@@ -116,6 +116,21 @@ objects, right after encoding, and then deletes the stream. These checks make it
   each must match what its plan says. UVG and MCL-JCV must never appear in a training or
   validation manifest.
 
+- **C2 amendment (2026-11-23, written after the ledger was drafted and before any re-pick
+  run):** the ledger found one *picked on test* entry. The A2 gate 3 (2026-11-16) ran two
+  arms on DAVIS TEST: A2 P-coder + old I-frames, +40.4% vs x264; and + wide I-frames, +39.9%.
+  The wide arm became the base of everything after it, so the choice was made on TEST.
+  - **Re-pick on VAL-B:** both arms, as in gate 3 (GOP 30, the 3 original lambdas, untuned,
+    the rig's motion coding, real bytes, decode-exact), coded on the 4 VAL-B videos with the
+    current code.
+  - **Rule:** BD-rate PSNR (piecewise-linear) of wide against old. Wide is confirmed if it is
+    at or below +0.5%; old wins if wide is above +0.5%. The 0.5-point tie band is the same
+    one `PLAN_encode_tuning.md` used; within it, wide stays because the later low-rate and
+    MS-SSIM models exist only with wide I-frames.
+  - **If old wins:** material. Every headline at the 3 original lambdas is re-quoted with old
+    I-frames, and it is stated that the later models (λ 3e-3 and 1e-2, and the MS-SSIM set)
+    have no old-I version.
+
 ## D. Docs
 
 - **D1. Headline numbers re-derived.** A script reads every headline in the README.md
