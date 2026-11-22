@@ -1,0 +1,16 @@
+{
+ "report_reruns": {
+  "p5_encode_tuning/report.py": "exit 0, results.json byte-identical",
+  "p6_low_rate/report.py": "exit 0, results.json byte-identical",
+  "p8_motion/report.py": "exit 0, results.json byte-identical",
+  "p9_bframes/report.py": "exit 0, results.json byte-identical",
+  "p10_msssim/report.py": "exit 0, results.json byte-identical",
+  "p11_mcljcv/report.py": "exit 0, results.json byte-identical",
+  "scripts/p4_gate3.py --verdict": "exit 0, gate3 verdict file unchanged (+40.4% old I / +39.9% wide I, PASSED)"
+ },
+ "help": {"p4_wide_latent": 0, "p4_gate3": 0, "prepare_uvg": 0, "prepare_mcljcv": 0,
+          "benchmark_parity": 0, "p7_check_search": 0, "p7_speed_profile": 0, "p8_select": 0,
+          "p9_bselect": 0},
+ "unit_tests": "229 passed (test_motion_pred, test_bframes, test_p1_gate3, test_motion_compensation, test_benchmark_parity, test_entropy_coding, test_container_v3, test_p1_pframe)",
+ "gap_found_and_fixed": "benchmark_parity --sequence-major (added for MCL-JCV) had no unit test; added test_sequence_major_anchors_match_the_per_point_measurement (identical bytes, scores within 1e-4 dB, resume codes nothing); test_benchmark_parity.py 25 passed"
+}

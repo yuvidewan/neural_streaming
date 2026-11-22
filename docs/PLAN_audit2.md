@@ -1,5 +1,9 @@
 # Plan: the second audit (fixed 2026-11-23, before any check runs)
 
+**Status: done (2026-11-23).** Every check has a written result in
+[`outputs/p12_audit2/README.md`](../outputs/p12_audit2/README.md). No overlap with training data; both
+test-picked settings confirmed on VAL-B; two material findings, both in our disfavour, left as quoted.
+
 Roadmap item 8 (`docs/ROADMAP_2026-11-17.md`): "Audit was one pass. A second audit of the
 entropy coder, the container and the docs." After item 7 (MCL-JCV) the user also asked
 whether there is data leakage. So this audit adds a fourth part: **leakage and test-set

@@ -1,0 +1,352 @@
+{
+ "headlines": [
+  {
+   "headline": "DAVIS tuned vs x264 4:2:0, PSNR",
+   "quoted": 20.6,
+   "recomputed_linear": 20.62,
+   "d1_mismatch": false,
+   "cubic": 24.13,
+   "pchip": 22.41,
+   "b2_finding": false,
+   "test_points": 3,
+   "overlap_db": [
+    33.21,
+    38.41
+   ]
+  },
+  {
+   "headline": "DAVIS tuned vs x264 4:4:4, PSNR",
+   "quoted": 69.4,
+   "recomputed_linear": 69.41,
+   "d1_mismatch": false,
+   "cubic": 74.1,
+   "pchip": 71.65,
+   "b2_finding": false,
+   "test_points": 3,
+   "overlap_db": [
+    33.21,
+    38.41
+   ]
+  },
+  {
+   "headline": "UVG untuned vs x264 4:4:4, PSNR",
+   "quoted": -18.9,
+   "recomputed_linear": -18.86,
+   "d1_mismatch": false,
+   "cubic": -18.5,
+   "pchip": -18.69,
+   "b2_finding": false,
+   "test_points": 3,
+   "overlap_db": [
+    36.81,
+    40.92
+   ]
+  },
+  {
+   "headline": "UVG untuned vs x265 4:4:4, PSNR",
+   "quoted": 17.2,
+   "recomputed_linear": 17.18,
+   "d1_mismatch": false,
+   "cubic": 18.08,
+   "pchip": 17.64,
+   "b2_finding": false,
+   "test_points": 3,
+   "overlap_db": [
+    36.81,
+    40.92
+   ]
+  },
+  {
+   "headline": "DAVIS low band vs x264 4:4:4, PSNR",
+   "quoted": 47.1,
+   "recomputed_linear": 47.07,
+   "d1_mismatch": false,
+   "cubic": 45.63,
+   "pchip": 46.41,
+   "b2_finding": false,
+   "test_points": 3,
+   "overlap_db": [
+    28.6,
+    33.05
+   ]
+  },
+  {
+   "headline": "DAVIS low band vs x264 4:2:0, PSNR",
+   "quoted": 35.1,
+   "recomputed_linear": 35.12,
+   "d1_mismatch": false,
+   "cubic": 33.83,
+   "pchip": 34.53,
+   "b2_finding": false,
+   "test_points": 3,
+   "overlap_db": [
+    28.6,
+    33.05
+   ]
+  },
+  {
+   "headline": "UVG low band vs x264 4:4:4, PSNR (p6)",
+   "quoted": 95.6,
+   "recomputed_linear": 95.63,
+   "d1_mismatch": false,
+   "cubic": 91.87,
+   "pchip": 94.1,
+   "b2_finding": false,
+   "test_points": 3,
+   "overlap_db": [
+    32.41,
+    36.81
+   ]
+  },
+  {
+   "headline": "UVG 5-point vs x264 4:4:4, PSNR (p6)",
+   "quoted": 27.9,
+   "recomputed_linear": 27.86,
+   "d1_mismatch": false,
+   "cubic": 26.94,
+   "pchip": 26.64,
+   "b2_finding": false,
+   "test_points": 5,
+   "overlap_db": [
+    32.41,
+    40.92
+   ]
+  },
+  {
+   "headline": "Motion: UVG new vs current, PSNR",
+   "quoted": -10.7,
+   "recomputed_linear": -10.68,
+   "d1_mismatch": false,
+   "cubic": -10.52,
+   "pchip": -10.62,
+   "b2_finding": false,
+   "test_points": 5,
+   "overlap_db": [
+    32.41,
+    40.92
+   ]
+  },
+  {
+   "headline": "Motion: DAVIS new vs current, PSNR",
+   "quoted": -4.75,
+   "recomputed_linear": -4.75,
+   "d1_mismatch": false,
+   "cubic": -4.67,
+   "pchip": -4.68,
+   "b2_finding": false,
+   "test_points": 5,
+   "overlap_db": [
+    28.6,
+    37.92
+   ]
+  },
+  {
+   "headline": "DAVIS vs x264 4:2:0, PSNR (p8)",
+   "quoted": 27.6,
+   "recomputed_linear": 27.6,
+   "d1_mismatch": false,
+   "cubic": 27.79,
+   "pchip": 28.13,
+   "b2_finding": false,
+   "test_points": 5,
+   "overlap_db": [
+    28.51,
+    37.92
+   ]
+  },
+  {
+   "headline": "DAVIS vs x264 4:4:4, PSNR (p8)",
+   "quoted": 55.8,
+   "recomputed_linear": 55.8,
+   "d1_mismatch": false,
+   "cubic": 56.1,
+   "pchip": 56.33,
+   "b2_finding": false,
+   "test_points": 5,
+   "overlap_db": [
+    28.51,
+    37.92
+   ]
+  },
+  {
+   "headline": "UVG vs x264 4:2:0, PSNR (p8)",
+   "quoted": -18.1,
+   "recomputed_linear": -18.09,
+   "d1_mismatch": false,
+   "cubic": -18.64,
+   "pchip": -18.76,
+   "b2_finding": false,
+   "test_points": 5,
+   "overlap_db": [
+    32.01,
+    40.7
+   ]
+  },
+  {
+   "headline": "UVG vs x264 4:4:4, PSNR (p8)",
+   "quoted": 17.9,
+   "recomputed_linear": 17.88,
+   "d1_mismatch": false,
+   "cubic": 17.7,
+   "pchip": 16.88,
+   "b2_finding": false,
+   "test_points": 5,
+   "overlap_db": [
+    32.01,
+    40.92
+   ]
+  },
+  {
+   "headline": "UVG low band vs x264 4:4:4, PSNR (p8)",
+   "quoted": 65.8,
+   "recomputed_linear": 65.82,
+   "d1_mismatch": false,
+   "cubic": 62.02,
+   "pchip": 64.24,
+   "b2_finding": false,
+   "test_points": 3,
+   "overlap_db": [
+    32.01,
+    36.73
+   ]
+  },
+  {
+   "headline": "MS-SSIM set vs MSE set, DAVIS, MS-SSIM",
+   "quoted": -22.4,
+   "recomputed_linear": -22.43,
+   "d1_mismatch": false,
+   "cubic": -20.73,
+   "pchip": -22.79,
+   "b2_finding": true,
+   "test_points": 5,
+   "overlap_db": [
+    0.94,
+    0.99
+   ]
+  },
+  {
+   "headline": "MS-SSIM set vs MSE set, UVG, MS-SSIM",
+   "quoted": -9.7,
+   "recomputed_linear": -9.66,
+   "d1_mismatch": false,
+   "cubic": -10.49,
+   "pchip": -10.25,
+   "b2_finding": false,
+   "test_points": 5,
+   "overlap_db": [
+    0.95,
+    0.99
+   ]
+  },
+  {
+   "headline": "MS-SSIM set, UVG vs x264 4:2:0, MS-SSIM",
+   "quoted": 0.4,
+   "recomputed_linear": 0.35,
+   "d1_mismatch": false,
+   "cubic": -2.81,
+   "pchip": -2.28,
+   "b2_finding": true,
+   "test_points": 5,
+   "overlap_db": [
+    0.95,
+    0.99
+   ]
+  },
+  {
+   "headline": "MS-SSIM set, DAVIS vs x264 4:2:0, MS-SSIM",
+   "quoted": 16.3,
+   "recomputed_linear": 16.27,
+   "d1_mismatch": false,
+   "cubic": 19.46,
+   "pchip": 13.7,
+   "b2_finding": false,
+   "test_points": 5,
+   "overlap_db": [
+    0.94,
+    0.99
+   ]
+  },
+  {
+   "headline": "MCL-JCV MSE set vs x264 4:2:0, PSNR",
+   "quoted": -1.4,
+   "recomputed_linear": -1.41,
+   "d1_mismatch": false,
+   "cubic": -2.54,
+   "pchip": -1.42,
+   "b2_finding": true,
+   "test_points": 5,
+   "overlap_db": [
+    32.23,
+    40.71
+   ]
+  },
+  {
+   "headline": "MCL-JCV MSE set vs x264 4:2:0 low-delay, PSNR",
+   "quoted": -12.3,
+   "recomputed_linear": -12.35,
+   "d1_mismatch": false,
+   "cubic": -13.88,
+   "pchip": -12.36,
+   "b2_finding": true,
+   "test_points": 5,
+   "overlap_db": [
+    32.23,
+    40.71
+   ]
+  },
+  {
+   "headline": "MCL-JCV MSE set vs x264 4:4:4, PSNR",
+   "quoted": 40.1,
+   "recomputed_linear": 40.09,
+   "d1_mismatch": false,
+   "cubic": 38.04,
+   "pchip": 40.05,
+   "b2_finding": false,
+   "test_points": 5,
+   "overlap_db": [
+    32.23,
+    40.71
+   ]
+  },
+  {
+   "headline": "MCL-JCV MS-SSIM set vs x264 4:2:0, MS-SSIM",
+   "quoted": -0.4,
+   "recomputed_linear": -0.42,
+   "d1_mismatch": false,
+   "cubic": -2.44,
+   "pchip": -2.77,
+   "b2_finding": true,
+   "test_points": 5,
+   "overlap_db": [
+    0.95,
+    0.99
+   ]
+  }
+ ],
+ "other_quoted": {
+  "UVG untuned PSNR range": [
+   36.8,
+   40.9
+  ],
+  "DAVIS low-band PSNR range": [
+   28.6,
+   33.0
+  ],
+  "B-frames M=2 bits vs all-P on VAL-B (quoted +0.1..+10.1%)": [
+   0.1,
+   10.1
+  ],
+  "MCL-JCV wins vs x264 4:4:4 (quoted 6/30 PSNR, 11/30 MS-SSIM)": [
+   6,
+   11
+  ]
+ },
+ "d1_mismatches": [],
+ "b2_findings": [
+  "MS-SSIM set vs MSE set, DAVIS, MS-SSIM",
+  "MS-SSIM set, UVG vs x264 4:2:0, MS-SSIM",
+  "MCL-JCV MSE set vs x264 4:2:0, PSNR",
+  "MCL-JCV MSE set vs x264 4:2:0 low-delay, PSNR",
+  "MCL-JCV MS-SSIM set vs x264 4:2:0, MS-SSIM"
+ ]
+}

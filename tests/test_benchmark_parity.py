@@ -302,3 +302,55 @@ def test_the_resume_check_goes_through_comparable_configuration(parity):
 
     assert "comparable_configuration(previous.get" in source
     assert 'previous.get("configuration") == configuration' not in source
+
+
+@pytest.mark.skipif(not has_encoders(["libx264", "libx265"]),
+                    reason="FFmpeg with libx264/libx265 not available")
+def test_sequence_major_anchors_match_the_per_point_measurement(parity):
+    """`--sequence-major` (added for MCL-JCV) swaps the loops but must measure the same thing:
+    identical bytes per sequence, scores equal to scoring each round trip directly (to the
+    float32 /255 difference), and a rerun with every row stored codes nothing again."""
+    import tempfile
+    from types import SimpleNamespace
+
+    rng = np.random.default_rng(1)
+
+    class FakeSequence:
+        def __init__(self, name):
+            self.sequence_id = name
+            self.frames = torch.from_numpy(
+                rng.integers(0, 256, size=(4, 3, 192, 192)).astype(np.float32) / 255.0)
+            self.total_pixels = 4 * 192 * 192
+
+        def load_frames(self):
+            return self.frames.clone()
+
+    sequences = [FakeSequence("a"), FakeSequence("b")]
+    args = SimpleNamespace(gop=4, classical_pix_fmt="yuv420p", crf=[30])
+    report = {"points": {}}
+    parity.run_classical_by_sequence(args, torch.device("cpu"), sequences, report, lambda: None)
+    assert "partial_rows" not in report
+    arms = parity.classical_arms(4)
+    assert sorted(report["points"]) == sorted(f"{a.name}/crf30" for a in arms)
+    for arm in arms:
+        point = report["points"][f"{arm.name}/crf30"]
+        expected_bytes, expected_psnr = 0, []
+        for s in sequences:
+            with tempfile.TemporaryDirectory() as work:
+                r = parity.ffmpeg_round_trip(parity.frames_to_uint8(s.frames), arm, 30, Path(work))
+            expected_bytes += r["bytes"]
+            scores = parity.score_frames(parity.uint8_to_frames(r["decoded"]), s.frames,
+                                         device=torch.device("cpu"))
+            expected_psnr.append(float(np.mean(scores["psnr"])))
+        assert point["total_bytes"] == expected_bytes
+        got = [s["mean_psnr"] for s in point["per_sequence"]]
+        assert np.allclose(got, expected_psnr, atol=1e-4)
+    # Resume: a second call with all points present codes nothing.
+    calls = []
+    original = parity.ffmpeg_round_trip
+    parity.ffmpeg_round_trip = lambda *a, **k: calls.append(1) or original(*a, **k)
+    try:
+        parity.run_classical_by_sequence(args, torch.device("cpu"), sequences, report, lambda: None)
+    finally:
+        parity.ffmpeg_round_trip = original
+    assert not calls

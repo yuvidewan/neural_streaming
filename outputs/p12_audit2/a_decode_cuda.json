@@ -1,0 +1,50 @@
+{
+ "davis_bmx-bumps_1e-2.nvct": {
+  "same": true,
+  "decode_s": 1.1
+ },
+ "davis_car-turn_1e-2.nvct": {
+  "same": true,
+  "decode_s": 0.9
+ },
+ "uvg_Beauty_1e-2.nvct": {
+  "same": true,
+  "decode_s": 41.0
+ },
+ "davis_bmx-bumps_3e-3.nvct": {
+  "same": true,
+  "decode_s": 1.1
+ },
+ "davis_car-turn_3e-3.nvct": {
+  "same": true,
+  "decode_s": 1.0
+ },
+ "davis_bmx-bumps_1e-3.nvct": {
+  "same": true,
+  "decode_s": 1.1
+ },
+ "davis_car-turn_1e-3.nvct": {
+  "same": true,
+  "decode_s": 1.0
+ },
+ "davis_bmx-bumps_3e-4.nvct": {
+  "same": true,
+  "decode_s": 1.2
+ },
+ "davis_car-turn_3e-4.nvct": {
+  "same": true,
+  "decode_s": 1.0
+ },
+ "davis_bmx-bumps_1e-4.nvct": {
+  "same": true,
+  "decode_s": 1.1
+ },
+ "davis_car-turn_1e-4.nvct": {
+  "same": true,
+  "decode_s": 1.0
+ },
+ "uvg_Beauty_1e-4.nvct": {
+  "same": true,
+  "decode_s": 42.1
+ }
+}

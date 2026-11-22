@@ -1,0 +1,202 @@
+{
+ "0": {
+  "outcome": "raised",
+  "error": "TemporalFormatError: Truncated residual payload on frame 88: declares 665 bytes, only 642 present",
+  "id": 0,
+  "stream": "davis_bmx-bumps_1e-2.nvct",
+  "kind": "truncate",
+  "at": 75462,
+  "seconds": 21
+ },
+ "1": {
+  "outcome": "raised",
+  "error": "TemporalFormatError: Truncated residual payload on frame 60: declares 3241 bytes, only 1897 present",
+  "id": 1,
+  "stream": "davis_bmx-bumps_1e-3.nvct",
+  "kind": "truncate",
+  "at": 171700,
+  "seconds": 21
+ },
+ "2": {
+  "outcome": "raised",
+  "error": "TemporalFormatError: Truncated residual payload on frame 54: declares 10013 bytes, only 4496 present",
+  "id": 2,
+  "stream": "davis_bmx-bumps_1e-4.nvct",
+  "kind": "truncate",
+  "at": 517854,
+  "seconds": 22
+ },
+ "3": {
+  "outcome": "raised",
+  "error": "TemporalFormatError: Truncated residual payload on frame 27: declares 1169 bytes, only 745 present",
+  "id": 3,
+  "stream": "davis_bmx-bumps_3e-3.nvct",
+  "kind": "truncate",
+  "at": 41921,
+  "seconds": 21
+ },
+ "4": {
+  "outcome": "raised",
+  "error": "TemporalFormatError: Truncated residual payload on frame 16: declares 5630 bytes, only 5533 present",
+  "id": 4,
+  "stream": "davis_bmx-bumps_3e-4.nvct",
+  "kind": "truncate",
+  "at": 90909,
+  "seconds": 23
+ },
+ "5": {
+  "outcome": "raised",
+  "error": "TemporalFormatError: Truncated residual payload on frame 75: declares 545 bytes, only 379 present",
+  "id": 5,
+  "stream": "davis_car-turn_1e-2.nvct",
+  "kind": "truncate",
+  "at": 36732,
+  "seconds": 21
+ },
+ "6": {
+  "outcome": "raised",
+  "error": "TemporalFormatError: Truncated residual payload on frame 21: declares 1063 bytes, only 634 present",
+  "id": 6,
+  "stream": "davis_car-turn_1e-3.nvct",
+  "kind": "truncate",
+  "at": 23281,
+  "seconds": 21
+ },
+ "7": {
+  "outcome": "raised",
+  "error": "TemporalFormatError: Truncated residual payload on frame 74: declares 9789 bytes, only 3238 present",
+  "id": 7,
+  "stream": "davis_car-turn_1e-4.nvct",
+  "kind": "truncate",
+  "at": 565530,
+  "seconds": 22
+ },
+ "8": {
+  "outcome": "raised",
+  "error": "TemporalFormatError: Truncated residual payload on frame 60: declares 2367 bytes, only 996 present",
+  "id": 8,
+  "stream": "davis_car-turn_3e-3.nvct",
+  "kind": "truncate",
+  "at": 49469,
+  "seconds": 21
+ },
+ "9": {
+  "outcome": "raised",
+  "error": "TemporalFormatError: Truncated residual payload on frame 54: declares 5257 bytes, only 730 present",
+  "id": 9,
+  "stream": "davis_car-turn_3e-4.nvct",
+  "kind": "truncate",
+  "at": 203756,
+  "seconds": 22
+ },
+ "10": {
+  "outcome": "returned frames",
+  "identical_to_original": false,
+  "finite": true,
+  "id": 10,
+  "stream": "davis_bmx-bumps_1e-2.nvct",
+  "kind": "bitflip",
+  "at": 24420,
+  "bit": 0,
+  "seconds": 23
+ },
+ "11": {
+  "outcome": "returned frames",
+  "identical_to_original": false,
+  "finite": true,
+  "id": 11,
+  "stream": "davis_bmx-bumps_1e-3.nvct",
+  "kind": "bitflip",
+  "at": 171623,
+  "bit": 1,
+  "seconds": 22
+ },
+ "12": {
+  "outcome": "returned frames",
+  "identical_to_original": false,
+  "finite": true,
+  "id": 12,
+  "stream": "davis_bmx-bumps_1e-4.nvct",
+  "kind": "bitflip",
+  "at": 105866,
+  "bit": 6,
+  "seconds": 23
+ },
+ "13": {
+  "outcome": "returned frames",
+  "identical_to_original": false,
+  "finite": true,
+  "id": 13,
+  "stream": "davis_bmx-bumps_3e-3.nvct",
+  "kind": "bitflip",
+  "at": 71271,
+  "bit": 1,
+  "seconds": 23
+ },
+ "14": {
+  "outcome": "returned frames",
+  "identical_to_original": false,
+  "finite": true,
+  "id": 14,
+  "stream": "davis_bmx-bumps_3e-4.nvct",
+  "kind": "bitflip",
+  "at": 353455,
+  "bit": 0,
+  "seconds": 23
+ },
+ "15": {
+  "outcome": "returned frames",
+  "identical_to_original": false,
+  "finite": true,
+  "id": 15,
+  "stream": "davis_car-turn_1e-2.nvct",
+  "kind": "bitflip",
+  "at": 18532,
+  "bit": 5,
+  "seconds": 22
+ },
+ "16": {
+  "outcome": "returned frames",
+  "identical_to_original": false,
+  "finite": true,
+  "id": 16,
+  "stream": "davis_car-turn_1e-3.nvct",
+  "kind": "bitflip",
+  "at": 122389,
+  "bit": 5,
+  "seconds": 22
+ },
+ "17": {
+  "outcome": "returned frames",
+  "identical_to_original": false,
+  "finite": true,
+  "id": 17,
+  "stream": "davis_car-turn_1e-4.nvct",
+  "kind": "bitflip",
+  "at": 47170,
+  "bit": 0,
+  "seconds": 24
+ },
+ "18": {
+  "outcome": "returned frames",
+  "identical_to_original": false,
+  "finite": true,
+  "id": 18,
+  "stream": "davis_car-turn_3e-3.nvct",
+  "kind": "bitflip",
+  "at": 35728,
+  "bit": 0,
+  "seconds": 24
+ },
+ "19": {
+  "outcome": "returned frames",
+  "identical_to_original": false,
+  "finite": true,
+  "id": 19,
+  "stream": "davis_car-turn_3e-4.nvct",
+  "kind": "bitflip",
+  "at": 247064,
+  "bit": 3,
+  "seconds": 23
+ }
+}

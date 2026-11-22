@@ -1,0 +1,116 @@
+{
+ "counts": {
+  "train": 72,
+  "val_a": 5,
+  "val_b": 4,
+  "test": 9
+ },
+ "val_a": [
+  "bmx-trees",
+  "dogs-scale",
+  "mallard-water",
+  "skate-park",
+  "upside-down"
+ ],
+ "val_b": [
+  "car-roundabout",
+  "drift-straight",
+  "pigs",
+  "stunt"
+ ],
+ "test": [
+  "bmx-bumps",
+  "car-turn",
+  "cat-girl",
+  "cows",
+  "drift-chicane",
+  "drone",
+  "gold-fish",
+  "schoolgirls",
+  "surf"
+ ],
+ "overlaps": {
+  "train&val_a": [],
+  "train&val_b": [],
+  "val_a&val_b": [],
+  "test&train": [],
+  "test&val_a": [],
+  "test&val_b": []
+ },
+ "disjoint": true,
+ "folders": {
+  "train": {
+   "videos_in_folder": 72,
+   "foreign": []
+  },
+  "val": {
+   "videos_in_folder": 9,
+   "foreign": []
+  },
+  "test": {
+   "videos_in_folder": 9,
+   "foreign": []
+  }
+ },
+ "external_names_in_manifests": {},
+ "davis_near_duplicates": {
+  "threshold": 6,
+  "pairs": {},
+  "closest_per_test_video": {
+   "car-turn": {
+    "distance": 14,
+    "frame": "00060.jpg",
+    "other": "snowboard",
+    "other_frame": "00021.jpg"
+   },
+   "cows": {
+    "distance": 16,
+    "frame": "00022.jpg",
+    "other": "shooting",
+    "other_frame": "00027.jpg"
+   },
+   "bmx-bumps": {
+    "distance": 12,
+    "frame": "00066.jpg",
+    "other": "parkour",
+    "other_frame": "00049.jpg"
+   },
+   "gold-fish": {
+    "distance": 14,
+    "frame": "00025.jpg",
+    "other": "motocross-bumps",
+    "other_frame": "00025.jpg"
+   },
+   "drift-chicane": {
+    "distance": 14,
+    "frame": "00006.jpg",
+    "other": "stroller",
+    "other_frame": "00020.jpg"
+   },
+   "schoolgirls": {
+    "distance": 16,
+    "frame": "00024.jpg",
+    "other": "car-roundabout",
+    "other_frame": "00001.jpg"
+   },
+   "surf": {
+    "distance": 14,
+    "frame": "00004.jpg",
+    "other": "classic-car",
+    "other_frame": "00051.jpg"
+   },
+   "cat-girl": {
+    "distance": 14,
+    "frame": "00005.jpg",
+    "other": "libby",
+    "other_frame": "00044.jpg"
+   },
+   "drone": {
+    "distance": 12,
+    "frame": "00015.jpg",
+    "other": "libby",
+    "other_frame": "00012.jpg"
+   }
+  }
+ }
+}

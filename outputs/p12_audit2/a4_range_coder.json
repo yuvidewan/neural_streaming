@@ -1,0 +1,69 @@
+{
+ "cases": {
+  "symbols at +R and -R, smallest scale": {
+   "ok": true,
+   "bytes": 12289,
+   "python_same_bytes": true,
+   "python_decodes": true
+  },
+  "symbols at +R and -R, largest scale": {
+   "ok": true,
+   "bytes": 6514,
+   "python_same_bytes": true,
+   "python_decodes": true
+  },
+  "all zero, smallest scale": {
+   "ok": true,
+   "bytes": 8,
+   "python_same_bytes": true,
+   "python_decodes": true
+  },
+  "all zero, largest scale": {
+   "ok": true,
+   "bytes": 3572,
+   "python_same_bytes": true,
+   "python_decodes": true
+  },
+  "one symbol": {
+   "ok": true,
+   "bytes": 1,
+   "python_same_bytes": true,
+   "python_decodes": true
+  },
+  "one symbol at +R, smallest scale": {
+   "ok": true,
+   "bytes": 4,
+   "python_same_bytes": true,
+   "python_decodes": true
+  },
+  "every scale, alternating extremes": {
+   "ok": true,
+   "bytes": 9045,
+   "python_same_bytes": true,
+   "python_decodes": true
+  },
+  "symbol R+1 through p4_gate3._code": {
+   "raised": "ValueError: symbol 256 is outside the coded range +-255"
+  },
+  "decode 0 symbols": {
+   "raised": "ValueError: num_symbols_to_decode must be positive, got 0"
+  },
+  "encode 0 symbols": {
+   "raised": "ValueError: encode_symbols: refusing to encode an empty symbol sequence"
+  },
+  "scale_index at and beyond the table ends": {
+   "indices": [
+    0,
+    0,
+    63,
+    63
+   ]
+  }
+ },
+ "random_1000": {
+  "round_trip_ok": 1000,
+  "c_equals_python_bytes": 1000
+ },
+ "min_frequency": 1,
+ "all_ok": true
+}

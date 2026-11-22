@@ -1,0 +1,218 @@
+{
+ "structure": {
+  "h264": {
+   "frames": 90,
+   "i_positions": [
+    0
+   ],
+   "b_frames": 35,
+   "lowdelay": false,
+   "described_as": "encoder default GOP and B-frames"
+  },
+  "h265": {
+   "frames": 90,
+   "i_positions": [
+    0
+   ],
+   "b_frames": 47,
+   "lowdelay": false,
+   "described_as": "encoder default GOP and B-frames"
+  },
+  "h264_lowdelay": {
+   "frames": 90,
+   "i_positions": [
+    0,
+    30,
+    60
+   ],
+   "b_frames": 0,
+   "lowdelay": true,
+   "described_as": "I every 30, P only"
+  },
+  "h265_lowdelay": {
+   "frames": 90,
+   "i_positions": [
+    0,
+    30,
+    60
+   ],
+   "b_frames": 0,
+   "lowdelay": true,
+   "described_as": "I every 30, P only"
+  },
+  "h264_444": {
+   "frames": 90,
+   "i_positions": [
+    0
+   ],
+   "b_frames": 35,
+   "lowdelay": false,
+   "described_as": "encoder default GOP and B-frames"
+  },
+  "h265_444": {
+   "frames": 90,
+   "i_positions": [
+    0
+   ],
+   "b_frames": 47,
+   "lowdelay": false,
+   "described_as": "encoder default GOP and B-frames"
+  },
+  "h264_444_lowdelay": {
+   "frames": 90,
+   "i_positions": [
+    0,
+    30,
+    60
+   ],
+   "b_frames": 0,
+   "lowdelay": true,
+   "described_as": "I every 30, P only"
+  },
+  "h265_444_lowdelay": {
+   "frames": 90,
+   "i_positions": [
+    0,
+    30,
+    60
+   ],
+   "b_frames": 0,
+   "lowdelay": true,
+   "described_as": "I every 30, P only"
+  }
+ },
+ "fps": {
+  "uvg/Beauty/h264": {
+   "real_fps": 120,
+   "points_30fps": [
+    [
+     0.1266084130130597,
+     34.15614945574305
+    ],
+    [
+     0.02220602715588723,
+     33.23358143904945
+    ],
+    [
+     0.008258957491189885,
+     31.663469160642194
+    ]
+   ],
+   "points_real_fps": [
+    [
+     0.0395032487303068,
+     33.584776409548255
+    ],
+    [
+     0.013172743055555556,
+     32.554913853116624
+    ],
+    [
+     0.004778394809805141,
+     30.450360132375792
+    ]
+   ],
+   "bd_rate_real_vs_30": 1.6162168515660325,
+   "material": true
+  },
+  "uvg/Beauty/h264_444": {
+   "real_fps": 120,
+   "points_30fps": [
+    [
+     0.11830508104011193,
+     34.335426735812426
+    ],
+    [
+     0.02324955625518242,
+     33.306198027614435
+    ],
+    [
+     0.008557392076077943,
+     31.689594478359613
+    ]
+   ],
+   "points_real_fps": [
+    [
+     0.04314778645833333,
+     33.794590313836736
+    ],
+    [
+     0.013760300062189054,
+     32.614758726407324
+    ],
+    [
+     0.005075857690713101,
+     30.065986625908636
+    ]
+   ],
+   "bd_rate_real_vs_30": 1.0500217218534003,
+   "material": true
+  },
+  "mcljcv/videoSRC05/h264": {
+   "real_fps": 25,
+   "points_30fps": [
+    [
+     0.1724956354296227,
+     34.16142921656889
+    ],
+    [
+     0.06072311780939055,
+     31.468582947629
+    ],
+    [
+     0.026389941568200664,
+     28.10044653589448
+    ]
+   ],
+   "points_real_fps": [
+    [
+     0.1936297921201285,
+     34.35000539142616
+    ],
+    [
+     0.06516360256011608,
+     31.70285449871075
+    ],
+    [
+     0.02799329362303068,
+     28.378016139573464
+    ]
+   ],
+   "bd_rate_real_vs_30": 0.39575287652671154,
+   "material": false
+  },
+  "mcljcv/videoSRC05/h264_444": {
+   "real_fps": 25,
+   "points_30fps": [
+    [
+     0.16998527868470148,
+     34.733444283038956
+    ],
+    [
+     0.062781510740568,
+     31.836111352366515
+    ],
+    [
+     0.0299267821050995,
+     28.3342849858092
+    ]
+   ],
+   "points_real_fps": [
+    [
+     0.18987573525601162,
+     34.93762340149767
+    ],
+    [
+     0.06716498885779436,
+     32.091596039742264
+    ],
+    [
+     0.031404500932835824,
+     28.630357485340387
+    ]
+   ],
+   "bd_rate_real_vs_30": 0.24260471193904287,
+   "material": false
+  }
+ }
+}

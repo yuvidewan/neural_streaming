@@ -1,0 +1,27 @@
+{
+ "davis": {
+  "same_videos": true,
+  "same_pixel_counts": true,
+  "loader_equals_png_on_disk": true,
+  "checked_video": "bmx-bumps",
+  "anchor_report": "outputs/benchmarks/parity_classical_444_gop30/parity_classical_444_gop30.json",
+  "codec_report": "outputs/p8_motion/test_motion.json"
+ },
+ "uvg": {
+  "same_videos": true,
+  "same_pixel_counts": true,
+  "loader_equals_png_on_disk": true,
+  "checked_video": "Beauty",
+  "anchor_report": "outputs/benchmarks/uvg_classical_444_gop30/parity.json",
+  "codec_report": "outputs/p8_motion/uvg_motion.json"
+ },
+ "mcljcv": {
+  "same_videos": true,
+  "same_pixel_counts": true,
+  "loader_equals_png_on_disk": true,
+  "checked_video": "videoSRC01",
+  "anchor_report": "outputs/benchmarks/mcljcv_classical_444_gop30/parity.json",
+  "codec_report": "outputs/p11_mcljcv/mcljcv_mse.json"
+ },
+ "scoring": "both paths call benchmark_parity.score_frames with the frames from Sequence.load_frames() as the reference (p4_gate3.main and run_classical_by_sequence / the per-point path)"
+}

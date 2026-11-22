@@ -1,0 +1,32 @@
+{
+ "right coders (control)": {
+  "raised": null,
+  "returned_frames": [
+   90,
+   3,
+   256,
+   256
+  ]
+ },
+ "P- and I-coder of 3e-4": {
+  "raised": "TemporalFormatError",
+  "message": "coder model mismatch: stream declares bd78e18c13907219, supplied is ab422480dddcd2f7"
+ },
+ "P-coder of 3e-4 only": {
+  "raised": "TemporalFormatError",
+  "message": "coder model mismatch: stream declares bd78e18c13907219, supplied is 0ae6adf380dfaae9"
+ },
+ "I-coder of 3e-4 only": {
+  "raised": "TemporalFormatError",
+  "message": "coder model mismatch: stream declares bd78e18c13907219, supplied is 38bd6aaee2a9e15c"
+ },
+ "low-rate 3e-3 coders": {
+  "raised": "TemporalFormatError",
+  "message": "coder model mismatch: stream declares bd78e18c13907219, supplied is 8945feefa787eb5f"
+ },
+ "rig of 3e-4, right coders": {
+  "raised": "TemporalFormatError",
+  "message": "intra model mismatch: stream declares 35a2e3759fece60b, supplied is 30352c12b77b94c5"
+ },
+ "identity_covers": "sha256 over every tensor of the P-coder and I-coder state_dicts, first 8 bytes; intra and motion entropy models by their own ids"
+}

@@ -1,0 +1,514 @@
+{
+ "A1_fresh_process_decode": {
+  "streams": 12,
+  "identical": 12,
+  "ok": true
+ },
+ "A3_byte_accounting": {
+  "adds_up": true,
+  "records_match_payloads": true,
+  "unused_quant_block_bytes_per_stream": 1024,
+  "unused_share_max": 0.02628,
+  "unused_share_of_smallest_stream": "davis_car-turn_1e-2.nvct"
+ },
+ "A2_wrong_models": {
+  "control_decodes": true,
+  "all_wrong_cases_raise": true,
+  "cases": {
+   "P- and I-coder of 3e-4": {
+    "raised": "TemporalFormatError",
+    "message": "coder model mismatch: stream declares bd78e18c13907219, supplied is ab422480dddcd2f7"
+   },
+   "P-coder of 3e-4 only": {
+    "raised": "TemporalFormatError",
+    "message": "coder model mismatch: stream declares bd78e18c13907219, supplied is 0ae6adf380dfaae9"
+   },
+   "I-coder of 3e-4 only": {
+    "raised": "TemporalFormatError",
+    "message": "coder model mismatch: stream declares bd78e18c13907219, supplied is 38bd6aaee2a9e15c"
+   },
+   "low-rate 3e-3 coders": {
+    "raised": "TemporalFormatError",
+    "message": "coder model mismatch: stream declares bd78e18c13907219, supplied is 8945feefa787eb5f"
+   },
+   "rig of 3e-4, right coders": {
+    "raised": "TemporalFormatError",
+    "message": "intra model mismatch: stream declares 35a2e3759fece60b, supplied is 30352c12b77b94c5"
+   }
+  }
+ },
+ "A4_range_coder": {
+  "ok": true,
+  "random_1000": {
+   "round_trip_ok": 1000,
+   "c_equals_python_bytes": 1000
+  }
+ },
+ "A5_damaged_streams": {
+  "outcomes": {
+   "raised": 10,
+   "returned frames, different": 10
+  },
+  "no_hang_or_crash": true
+ },
+ "A6_cpu_decode": {
+  "streams": 10,
+  "identical": 0
+ },
+ "B1_lossless_floor": {
+  "summary": {
+   "davis": {
+    "yuv420p": {
+     "sequence_mean_psnr": 40.55001229096874,
+     "lowest_video_psnr": 37.41615618438818,
+     "sequence_mean_msssim": 0.9988332112214964
+    },
+    "yuv444p": {
+     "sequence_mean_psnr": 52.112566726190565,
+     "lowest_video_psnr": 51.89343325335897,
+     "sequence_mean_msssim": 0.999625053116371
+    }
+   },
+   "uvg": {
+    "yuv420p": {
+     "sequence_mean_psnr": 42.95688697153307,
+     "lowest_video_psnr": 41.708018565307704,
+     "sequence_mean_msssim": 0.9983773235941218
+    },
+    "yuv444p": {
+     "sequence_mean_psnr": 52.10519351988878,
+     "lowest_video_psnr": 52.02285585788207,
+     "sequence_mean_msssim": 0.9995115424195925
+    }
+   },
+   "mcljcv": {
+    "yuv420p": {
+     "sequence_mean_psnr": 43.26967391617325,
+     "lowest_video_psnr": 37.83854666699819,
+     "sequence_mean_msssim": 0.9981192889105942
+    },
+    "yuv444p": {
+     "sequence_mean_psnr": 52.45690219518461,
+     "lowest_video_psnr": 51.9689752432101,
+     "sequence_mean_msssim": 0.9994290979786052
+    }
+   }
+  },
+  "material": false,
+  "conversion": {
+   "pix_fmt": "yuv420p"
+  }
+ },
+ "D1_headlines": {
+  "checked": 23,
+  "mismatches": []
+ },
+ "B2_bd_method": {
+  "findings": [
+   {
+    "headline": "MS-SSIM set vs MSE set, DAVIS, MS-SSIM",
+    "quoted": -22.4,
+    "recomputed_linear": -22.43,
+    "d1_mismatch": false,
+    "cubic": -20.73,
+    "pchip": -22.79,
+    "b2_finding": true,
+    "test_points": 5,
+    "overlap_db": [
+     0.94,
+     0.99
+    ]
+   },
+   {
+    "headline": "MS-SSIM set, UVG vs x264 4:2:0, MS-SSIM",
+    "quoted": 0.4,
+    "recomputed_linear": 0.35,
+    "d1_mismatch": false,
+    "cubic": -2.81,
+    "pchip": -2.28,
+    "b2_finding": true,
+    "test_points": 5,
+    "overlap_db": [
+     0.95,
+     0.99
+    ]
+   },
+   {
+    "headline": "MCL-JCV MSE set vs x264 4:2:0, PSNR",
+    "quoted": -1.4,
+    "recomputed_linear": -1.41,
+    "d1_mismatch": false,
+    "cubic": -2.54,
+    "pchip": -1.42,
+    "b2_finding": true,
+    "test_points": 5,
+    "overlap_db": [
+     32.23,
+     40.71
+    ]
+   },
+   {
+    "headline": "MCL-JCV MSE set vs x264 4:2:0 low-delay, PSNR",
+    "quoted": -12.3,
+    "recomputed_linear": -12.35,
+    "d1_mismatch": false,
+    "cubic": -13.88,
+    "pchip": -12.36,
+    "b2_finding": true,
+    "test_points": 5,
+    "overlap_db": [
+     32.23,
+     40.71
+    ]
+   },
+   {
+    "headline": "MCL-JCV MS-SSIM set vs x264 4:2:0, MS-SSIM",
+    "quoted": -0.4,
+    "recomputed_linear": -0.42,
+    "d1_mismatch": false,
+    "cubic": -2.44,
+    "pchip": -2.77,
+    "b2_finding": true,
+    "test_points": 5,
+    "overlap_db": [
+     0.95,
+     0.99
+    ]
+   }
+  ]
+ },
+ "B3_anchor_settings": {
+  "structure": {
+   "h264": {
+    "i_positions": [
+     0
+    ],
+    "b_frames": 35,
+    "as_designed": null
+   },
+   "h265": {
+    "i_positions": [
+     0
+    ],
+    "b_frames": 47,
+    "as_designed": null
+   },
+   "h264_lowdelay": {
+    "i_positions": [
+     0,
+     30,
+     60
+    ],
+    "b_frames": 0,
+    "as_designed": true
+   },
+   "h265_lowdelay": {
+    "i_positions": [
+     0,
+     30,
+     60
+    ],
+    "b_frames": 0,
+    "as_designed": true
+   },
+   "h264_444": {
+    "i_positions": [
+     0
+    ],
+    "b_frames": 35,
+    "as_designed": null
+   },
+   "h265_444": {
+    "i_positions": [
+     0
+    ],
+    "b_frames": 47,
+    "as_designed": null
+   },
+   "h264_444_lowdelay": {
+    "i_positions": [
+     0,
+     30,
+     60
+    ],
+    "b_frames": 0,
+    "as_designed": true
+   },
+   "h265_444_lowdelay": {
+    "i_positions": [
+     0,
+     30,
+     60
+    ],
+    "b_frames": 0,
+    "as_designed": true
+   }
+  },
+  "fps": {
+   "uvg/Beauty/h264": {
+    "real_fps": 120,
+    "points_30fps": [
+     [
+      0.1266084130130597,
+      34.15614945574305
+     ],
+     [
+      0.02220602715588723,
+      33.23358143904945
+     ],
+     [
+      0.008258957491189885,
+      31.663469160642194
+     ]
+    ],
+    "points_real_fps": [
+     [
+      0.0395032487303068,
+      33.584776409548255
+     ],
+     [
+      0.013172743055555556,
+      32.554913853116624
+     ],
+     [
+      0.004778394809805141,
+      30.450360132375792
+     ]
+    ],
+    "bd_rate_real_vs_30": 1.6162168515660325,
+    "material": true
+   },
+   "uvg/Beauty/h264_444": {
+    "real_fps": 120,
+    "points_30fps": [
+     [
+      0.11830508104011193,
+      34.335426735812426
+     ],
+     [
+      0.02324955625518242,
+      33.306198027614435
+     ],
+     [
+      0.008557392076077943,
+      31.689594478359613
+     ]
+    ],
+    "points_real_fps": [
+     [
+      0.04314778645833333,
+      33.794590313836736
+     ],
+     [
+      0.013760300062189054,
+      32.614758726407324
+     ],
+     [
+      0.005075857690713101,
+      30.065986625908636
+     ]
+    ],
+    "bd_rate_real_vs_30": 1.0500217218534003,
+    "material": true
+   },
+   "mcljcv/videoSRC05/h264": {
+    "real_fps": 25,
+    "points_30fps": [
+     [
+      0.1724956354296227,
+      34.16142921656889
+     ],
+     [
+      0.06072311780939055,
+      31.468582947629
+     ],
+     [
+      0.026389941568200664,
+      28.10044653589448
+     ]
+    ],
+    "points_real_fps": [
+     [
+      0.1936297921201285,
+      34.35000539142616
+     ],
+     [
+      0.06516360256011608,
+      31.70285449871075
+     ],
+     [
+      0.02799329362303068,
+      28.378016139573464
+     ]
+    ],
+    "bd_rate_real_vs_30": 0.39575287652671154,
+    "material": false
+   },
+   "mcljcv/videoSRC05/h264_444": {
+    "real_fps": 25,
+    "points_30fps": [
+     [
+      0.16998527868470148,
+      34.733444283038956
+     ],
+     [
+      0.062781510740568,
+      31.836111352366515
+     ],
+     [
+      0.0299267821050995,
+      28.3342849858092
+     ]
+    ],
+    "points_real_fps": [
+     [
+      0.18987573525601162,
+      34.93762340149767
+     ],
+     [
+      0.06716498885779436,
+      32.091596039742264
+     ],
+     [
+      0.031404500932835824,
+      28.630357485340387
+     ]
+    ],
+    "bd_rate_real_vs_30": 0.24260471193904287,
+    "material": false
+   }
+  }
+ },
+ "B4_same_frames": {
+  "davis": {
+   "same_videos": true,
+   "same_pixel_counts": true,
+   "loader_equals_png_on_disk": true,
+   "checked_video": "bmx-bumps",
+   "anchor_report": "outputs/benchmarks/parity_classical_444_gop30/parity_classical_444_gop30.json",
+   "codec_report": "outputs/p8_motion/test_motion.json"
+  },
+  "uvg": {
+   "same_videos": true,
+   "same_pixel_counts": true,
+   "loader_equals_png_on_disk": true,
+   "checked_video": "Beauty",
+   "anchor_report": "outputs/benchmarks/uvg_classical_444_gop30/parity.json",
+   "codec_report": "outputs/p8_motion/uvg_motion.json"
+  },
+  "mcljcv": {
+   "same_videos": true,
+   "same_pixel_counts": true,
+   "loader_equals_png_on_disk": true,
+   "checked_video": "videoSRC01",
+   "anchor_report": "outputs/benchmarks/mcljcv_classical_444_gop30/parity.json",
+   "codec_report": "outputs/p11_mcljcv/mcljcv_mse.json"
+  }
+ },
+ "C1_vimeo_overlap": {
+  "threshold": 6,
+  "test_frames": 4271,
+  "vimeo_frames": 641907,
+  "candidates": 21,
+  "candidates_by_video": {
+   "mcljcv/videoSRC06": 1,
+   "mcljcv/videoSRC28": 4,
+   "mcljcv/videoSRC08": 16
+  },
+  "nearest_distance_by_video": {
+   "davis/bmx-bumps": 10,
+   "davis/car-turn": 10,
+   "davis/cat-girl": 10,
+   "davis/cows": 10,
+   "davis/drift-chicane": 8,
+   "davis/drone": 10,
+   "davis/gold-fish": 10,
+   "davis/schoolgirls": 12,
+   "davis/surf": 10,
+   "mcljcv/videoSRC01": 14,
+   "mcljcv/videoSRC02": 10,
+   "mcljcv/videoSRC03": 10,
+   "mcljcv/videoSRC04": 8,
+   "mcljcv/videoSRC05": 8,
+   "mcljcv/videoSRC06": 6,
+   "mcljcv/videoSRC07": 10,
+   "mcljcv/videoSRC08": 6,
+   "mcljcv/videoSRC09": 10,
+   "mcljcv/videoSRC10": 8,
+   "mcljcv/videoSRC11": 10,
+   "mcljcv/videoSRC12": 10,
+   "mcljcv/videoSRC13": 14,
+   "mcljcv/videoSRC14": 10,
+   "mcljcv/videoSRC15": 8,
+   "mcljcv/videoSRC16": 8,
+   "mcljcv/videoSRC17": 10,
+   "mcljcv/videoSRC18": 10,
+   "mcljcv/videoSRC19": 8,
+   "mcljcv/videoSRC20": 10,
+   "mcljcv/videoSRC21": 8,
+   "mcljcv/videoSRC22": 10,
+   "mcljcv/videoSRC23": 8,
+   "mcljcv/videoSRC24": 8,
+   "mcljcv/videoSRC25": 8,
+   "mcljcv/videoSRC26": 10,
+   "mcljcv/videoSRC27": 10,
+   "mcljcv/videoSRC28": 6,
+   "mcljcv/videoSRC29": 10,
+   "mcljcv/videoSRC30": 12,
+   "uvg/Beauty": 8,
+   "uvg/Bosphorus": 12,
+   "uvg/HoneyBee": 14,
+   "uvg/Jockey": 8,
+   "uvg/ReadySetGo": 10,
+   "uvg/ShakeNDry": 10,
+   "uvg/YachtRide": 8
+  }
+ },
+ "C3_splits": {
+  "disjoint": true,
+  "foreign_in_folders": {
+   "train": [],
+   "val": [],
+   "test": []
+  },
+  "external_names_in_manifests": {},
+  "davis_near_duplicate_pairs": {}
+ },
+ "C2_repick_i_frames": {
+  "bd_wide_vs_old_valb": -0.59,
+  "valid": true,
+  "verdict": "wide confirmed"
+ },
+ "C2_repick_gop": {
+  "bd_vs_gop30_valb": {
+   "10": 8.05,
+   "20": 1.27
+  },
+  "valid": true,
+  "verdict": "GOP 30 confirmed"
+ },
+ "D3_commands": {
+  "report_reruns": {
+   "p5_encode_tuning/report.py": "exit 0, results.json byte-identical",
+   "p6_low_rate/report.py": "exit 0, results.json byte-identical",
+   "p8_motion/report.py": "exit 0, results.json byte-identical",
+   "p9_bframes/report.py": "exit 0, results.json byte-identical",
+   "p10_msssim/report.py": "exit 0, results.json byte-identical",
+   "p11_mcljcv/report.py": "exit 0, results.json byte-identical",
+   "scripts/p4_gate3.py --verdict": "exit 0, gate3 verdict file unchanged (+40.4% old I / +39.9% wide I, PASSED)"
+  },
+  "help": {
+   "p4_wide_latent": 0,
+   "p4_gate3": 0,
+   "prepare_uvg": 0,
+   "prepare_mcljcv": 0,
+   "benchmark_parity": 0,
+   "p7_check_search": 0,
+   "p7_speed_profile": 0,
+   "p8_select": 0,
+   "p9_bselect": 0
+  },
+  "unit_tests": "229 passed (test_motion_pred, test_bframes, test_p1_gate3, test_motion_compensation, test_benchmark_parity, test_entropy_coding, test_container_v3, test_p1_pframe)",
+  "gap_found_and_fixed": "benchmark_parity --sequence-major (added for MCL-JCV) had no unit test; added test_sequence_major_anchors_match_the_per_point_measurement (identical bytes, scores within 1e-4 dB, resume codes nothing); test_benchmark_parity.py 25 passed"
+ }
+}

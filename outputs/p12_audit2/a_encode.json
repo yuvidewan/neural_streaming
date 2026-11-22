@@ -1,0 +1,242 @@
+{
+ "davis_bmx-bumps_1e-2.nvct": {
+  "tag": "davis",
+  "video": "bmx-bumps",
+  "lambda": "1e-2",
+  "frames": 90,
+  "encoder_hash": "4de0fba83928e9a6f98f6d9b2e97a4c90f13b9fb38a77a4a6cee26313f99ed1d",
+  "identity": "db889e4e405d5bef",
+  "bytes": {
+   "file": 76069,
+   "header": 56,
+   "quant_blocks": 1024,
+   "frame_records": 810,
+   "motion": 19456,
+   "residual": 54723,
+   "adds_up": true,
+   "unused_by_wide_i_frames": 1024,
+   "records_match_payloads": true
+  },
+  "encode_s": 3.3
+ },
+ "davis_car-turn_1e-2.nvct": {
+  "tag": "davis",
+  "video": "car-turn",
+  "lambda": "1e-2",
+  "frames": 80,
+  "encoder_hash": "badd7a7ed3c4219ed77e49fa38cba6ab3d5d11000b2e52082c7cd508cd0e2de3",
+  "identity": "db889e4e405d5bef",
+  "bytes": {
+   "file": 38965,
+   "header": 56,
+   "quant_blocks": 1024,
+   "frame_records": 720,
+   "motion": 6492,
+   "residual": 30673,
+   "adds_up": true,
+   "unused_by_wide_i_frames": 1024,
+   "records_match_payloads": true
+  },
+  "encode_s": 2.9
+ },
+ "uvg_Beauty_1e-2.nvct": {
+  "tag": "uvg",
+  "video": "Beauty",
+  "lambda": "1e-2",
+  "frames": 96,
+  "encoder_hash": "3dfe3cfcc9f9cbdf19e9c829a6ea9d1412baadf9c18be4d07411c1fe8c6e6f3d",
+  "identity": "db889e4e405d5bef",
+  "bytes": {
+   "file": 668779,
+   "header": 56,
+   "quant_blocks": 1024,
+   "frame_records": 864,
+   "motion": 188274,
+   "residual": 478561,
+   "adds_up": true,
+   "unused_by_wide_i_frames": 1024,
+   "records_match_payloads": true
+  },
+  "encode_s": 123.8
+ },
+ "davis_bmx-bumps_3e-3.nvct": {
+  "tag": "davis",
+  "video": "bmx-bumps",
+  "lambda": "3e-3",
+  "frames": 90,
+  "encoder_hash": "a233f7a2f7ce83fdf91589931ef8cb532b896b9211d6bf84ab176a6a7112e4fb",
+  "identity": "8945feefa787eb5f",
+  "bytes": {
+   "file": 133558,
+   "header": 56,
+   "quant_blocks": 1024,
+   "frame_records": 810,
+   "motion": 18333,
+   "residual": 113335,
+   "adds_up": true,
+   "unused_by_wide_i_frames": 1024,
+   "records_match_payloads": true
+  },
+  "encode_s": 3.4
+ },
+ "davis_car-turn_3e-3.nvct": {
+  "tag": "davis",
+  "video": "car-turn",
+  "lambda": "3e-3",
+  "frames": 80,
+  "encoder_hash": "b7664b26a394f98d456bfa63f1fb4f6884878c8a38538b6e1844f7c706f85505",
+  "identity": "8945feefa787eb5f",
+  "bytes": {
+   "file": 74384,
+   "header": 56,
+   "quant_blocks": 1024,
+   "frame_records": 720,
+   "motion": 5614,
+   "residual": 66970,
+   "adds_up": true,
+   "unused_by_wide_i_frames": 1024,
+   "records_match_payloads": true
+  },
+  "encode_s": 2.8
+ },
+ "davis_bmx-bumps_1e-3.nvct": {
+  "tag": "davis",
+  "video": "bmx-bumps",
+  "lambda": "1e-3",
+  "frames": 90,
+  "encoder_hash": "0e470f157ffce2975608556b021c3c60b025f7f123932eee5a3b18cb15802e2c",
+  "identity": "bd78e18c13907219",
+  "bytes": {
+   "file": 233852,
+   "header": 56,
+   "quant_blocks": 1024,
+   "frame_records": 810,
+   "motion": 19413,
+   "residual": 212549,
+   "adds_up": true,
+   "unused_by_wide_i_frames": 1024,
+   "records_match_payloads": true
+  },
+  "encode_s": 3.4
+ },
+ "davis_car-turn_1e-3.nvct": {
+  "tag": "davis",
+  "video": "car-turn",
+  "lambda": "1e-3",
+  "frames": 80,
+  "encoder_hash": "fef290674c119aba5619afefa7b739b3fd739f841bc2171cd6ff9358a99f6f71",
+  "identity": "bd78e18c13907219",
+  "bytes": {
+   "file": 146598,
+   "header": 56,
+   "quant_blocks": 1024,
+   "frame_records": 720,
+   "motion": 6316,
+   "residual": 138482,
+   "adds_up": true,
+   "unused_by_wide_i_frames": 1024,
+   "records_match_payloads": true
+  },
+  "encode_s": 3.0
+ },
+ "davis_bmx-bumps_3e-4.nvct": {
+  "tag": "davis",
+  "video": "bmx-bumps",
+  "lambda": "3e-4",
+  "frames": 90,
+  "encoder_hash": "3fd93eea001b61efa12fa09abb45c2797a4776dccfa2cd5cb5c678778eba843d",
+  "identity": "ab422480dddcd2f7",
+  "bytes": {
+   "file": 469883,
+   "header": 56,
+   "quant_blocks": 1024,
+   "frame_records": 810,
+   "motion": 18940,
+   "residual": 449053,
+   "adds_up": true,
+   "unused_by_wide_i_frames": 1024,
+   "records_match_payloads": true
+  },
+  "encode_s": 3.2
+ },
+ "davis_car-turn_3e-4.nvct": {
+  "tag": "davis",
+  "video": "car-turn",
+  "lambda": "3e-4",
+  "frames": 80,
+  "encoder_hash": "808ae1bef492efdb23b25033cb4164c8bff0767faa968ae8a8b9bd04e389f8e7",
+  "identity": "ab422480dddcd2f7",
+  "bytes": {
+   "file": 339471,
+   "header": 56,
+   "quant_blocks": 1024,
+   "frame_records": 720,
+   "motion": 6506,
+   "residual": 331165,
+   "adds_up": true,
+   "unused_by_wide_i_frames": 1024,
+   "records_match_payloads": true
+  },
+  "encode_s": 3.1
+ },
+ "davis_bmx-bumps_1e-4.nvct": {
+  "tag": "davis",
+  "video": "bmx-bumps",
+  "lambda": "1e-4",
+  "frames": 90,
+  "encoder_hash": "691096c539474ad86c55b55bcef51080ad121d7f5921ec5858ea16c141ce1e82",
+  "identity": "eb68ea7cc96f89b8",
+  "bytes": {
+   "file": 773276,
+   "header": 56,
+   "quant_blocks": 1024,
+   "frame_records": 810,
+   "motion": 19620,
+   "residual": 751766,
+   "adds_up": true,
+   "unused_by_wide_i_frames": 1024,
+   "records_match_payloads": true
+  },
+  "encode_s": 3.3
+ },
+ "davis_car-turn_1e-4.nvct": {
+  "tag": "davis",
+  "video": "car-turn",
+  "lambda": "1e-4",
+  "frames": 80,
+  "encoder_hash": "4e0699c8f6d9594969cc017331a21807ff0f463c44bedb069cfe0266a493f345",
+  "identity": "eb68ea7cc96f89b8",
+  "bytes": {
+   "file": 611550,
+   "header": 56,
+   "quant_blocks": 1024,
+   "frame_records": 720,
+   "motion": 7648,
+   "residual": 602102,
+   "adds_up": true,
+   "unused_by_wide_i_frames": 1024,
+   "records_match_payloads": true
+  },
+  "encode_s": 3.0
+ },
+ "uvg_Beauty_1e-4.nvct": {
+  "tag": "uvg",
+  "video": "Beauty",
+  "lambda": "1e-4",
+  "frames": 96,
+  "encoder_hash": "71baed9f8db9b6239fdfb6a8055bb82a67fb78dadfefc96bec711dfd3a44afb9",
+  "identity": "eb68ea7cc96f89b8",
+  "bytes": {
+   "file": 24413473,
+   "header": 56,
+   "quant_blocks": 1024,
+   "frame_records": 864,
+   "motion": 874036,
+   "residual": 23537493,
+   "adds_up": true,
+   "unused_by_wide_i_frames": 1024,
+   "records_match_payloads": true
+  },
+  "encode_s": 123.3
+ }
+}

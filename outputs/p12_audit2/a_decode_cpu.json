@@ -1,0 +1,42 @@
+{
+ "davis_bmx-bumps_1e-2.nvct": {
+  "same": false,
+  "error": "TemporalFormatError: intra model mismatch: stream declares 35a2e3759fece60b, supplied is 77d3fed529eedde8"
+ },
+ "davis_car-turn_1e-2.nvct": {
+  "same": false,
+  "error": "TemporalFormatError: intra model mismatch: stream declares 35a2e3759fece60b, supplied is 77d3fed529eedde8"
+ },
+ "davis_bmx-bumps_3e-3.nvct": {
+  "same": false,
+  "error": "TemporalFormatError: intra model mismatch: stream declares 35a2e3759fece60b, supplied is 77d3fed529eedde8"
+ },
+ "davis_car-turn_3e-3.nvct": {
+  "same": false,
+  "error": "TemporalFormatError: intra model mismatch: stream declares 35a2e3759fece60b, supplied is 77d3fed529eedde8"
+ },
+ "davis_bmx-bumps_1e-3.nvct": {
+  "same": false,
+  "error": "TemporalFormatError: intra model mismatch: stream declares 35a2e3759fece60b, supplied is 77d3fed529eedde8"
+ },
+ "davis_car-turn_1e-3.nvct": {
+  "same": false,
+  "error": "TemporalFormatError: intra model mismatch: stream declares 35a2e3759fece60b, supplied is 77d3fed529eedde8"
+ },
+ "davis_bmx-bumps_3e-4.nvct": {
+  "same": false,
+  "error": "TemporalFormatError: intra model mismatch: stream declares 30352c12b77b94c5, supplied is 311944c59f89c508"
+ },
+ "davis_car-turn_3e-4.nvct": {
+  "same": false,
+  "error": "TemporalFormatError: intra model mismatch: stream declares 30352c12b77b94c5, supplied is 311944c59f89c508"
+ },
+ "davis_bmx-bumps_1e-4.nvct": {
+  "same": false,
+  "error": "TemporalFormatError: intra model mismatch: stream declares 387b57c5aefb5f64, supplied is 2e886d2c86a57952"
+ },
+ "davis_car-turn_1e-4.nvct": {
+  "same": false,
+  "error": "TemporalFormatError: intra model mismatch: stream declares 387b57c5aefb5f64, supplied is 2e886d2c86a57952"
+ }
+}
