@@ -1,5 +1,7 @@
 # Plan: MCL-JCV, a second 1080p test set (fixed 2026-11-21, before any download or result)
 
+> **Status 2026-11-23: measured** ([`outputs/p11_mcljcv/README.md`](../outputs/p11_mcljcv/README.md)). MSE set −1.4% vs x264 4:2:0 (PSNR), MS-SSIM set −0.4% (MS-SSIM); UVG consistency: 16.7 points worse than UVG, inside the 20-point rule, so not UVG-specific. All 300 streams decode-exact.
+
 Roadmap item 7 (`docs/ROADMAP_2026-11-17.md`): "Few test sets. UVG (done), then MCL-JCV."
 DAVIS TEST is 256×256 and UVG is only 7 videos, so one more standard 1080p set guards against
 results that only hold on those videos. MCL-JCV is the third set that learned video codecs

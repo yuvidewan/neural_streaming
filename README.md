@@ -42,6 +42,7 @@ part is done. The bar now is to win.
 > x264 4:2:0 and +17.9% vs x264 4:4:4; at low rate it is +65.8% vs x264 4:4:4 (was +95.6%).
 > **B-frames (2026-11-19, NOT PASSED,** [`outputs/p9_bframes/README.md`](outputs/p9_bframes/README.md)**):** two-sided prediction into the existing P-coder lost to no B-frames at every rate on VAL-B (+0.1% to +10.1% bits).
 > **MS-SSIM model set (2026-11-21, SMALL WIN,** [`outputs/p10_msssim/README.md`](outputs/p10_msssim/README.md)**):** a second set fine-tuned on `k·(1−MS-SSIM) + λ·bpp` is −22.4% (DAVIS TEST) and −9.7% (UVG) BD-rate MS-SSIM vs the MSE set. On MS-SSIM it ties x264 4:2:0 on UVG (+0.4%), and beats x264 and x265 low-delay on both sets; DAVIS is +16.3% vs x264 4:2:0. It is far worse on PSNR, so the MSE set stays the PSNR codec.
+> **MCL-JCV, second 1080p test set (2026-11-23, measured,** [`outputs/p11_mcljcv/README.md`](outputs/p11_mcljcv/README.md)**):** on 30 fresh videos never used for any choice, the MSE set is **−1.4% vs x264 4:2:0** (PSNR; UVG was −18.1%, inside the pre-set 20-point consistency rule) and −12.3% vs x264 low-delay, but +40.1% vs x264 4:4:4; the MS-SSIM set is −0.4% vs x264 4:2:0 on MS-SSIM. Wins vs x264 4:4:4 on 6/30 (PSNR) and 11/30 (MS-SSIM) videos; a few hard videos cost 2–5× the bits.
 > The rest of this README still describes the older M22 codec.
 
 Measured in a single pass on the DAVIS test split (9 sequences, 719 frames):

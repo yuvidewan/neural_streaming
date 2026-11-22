@@ -1,0 +1,488 @@
+{
+  "mse": {
+    "decode_exact": true,
+    "headline_metric": "psnr",
+    "points": {
+      "1e-2": {
+        "bpp": 0.0533,
+        "psnr": 32.234,
+        "msssim": 0.94,
+        "motion_share_of_stream": 0.2825,
+        "encode_s_per_frame": 1.191,
+        "decode_s_per_frame": 0.408
+      },
+      "3e-3": {
+        "bpp": 0.0808,
+        "psnr": 34.828,
+        "msssim": 0.9627,
+        "motion_share_of_stream": 0.1723,
+        "encode_s_per_frame": 1.275,
+        "decode_s_per_frame": 0.453
+      },
+      "1e-3": {
+        "bpp": 0.1363,
+        "psnr": 36.703,
+        "msssim": 0.9748,
+        "motion_share_of_stream": 0.1179,
+        "encode_s_per_frame": 1.26,
+        "decode_s_per_frame": 0.445
+      },
+      "3e-4": {
+        "bpp": 0.3119,
+        "psnr": 38.086,
+        "msssim": 0.983,
+        "motion_share_of_stream": 0.0535,
+        "encode_s_per_frame": 1.197,
+        "decode_s_per_frame": 0.425
+      },
+      "1e-4": {
+        "bpp": 0.5893,
+        "psnr": 40.713,
+        "msssim": 0.9905,
+        "motion_share_of_stream": 0.0318,
+        "encode_s_per_frame": 1.263,
+        "decode_s_per_frame": 0.465
+      }
+    },
+    "vs_anchors": {
+      "h264/psnr": {
+        "5pt": -1.41,
+        "low": 37.61
+      },
+      "h264/msssim": {
+        "5pt": 41.39,
+        "low": 64.44
+      },
+      "h264_444/psnr": {
+        "5pt": 40.09,
+        "low": 58.13
+      },
+      "h264_444/msssim": {
+        "5pt": 51.26,
+        "low": 67.52
+      },
+      "h264_444_lowdelay/psnr": {
+        "5pt": 23.59,
+        "low": 34.81
+      },
+      "h264_444_lowdelay/msssim": {
+        "5pt": 32.28,
+        "low": 44.95
+      },
+      "h264_lowdelay/psnr": {
+        "5pt": -12.35,
+        "low": 17.67
+      },
+      "h264_lowdelay/msssim": {
+        "5pt": 24.15,
+        "low": 42.87
+      },
+      "h265/psnr": {
+        "5pt": 26.58,
+        "low": 85.93
+      },
+      "h265/msssim": {
+        "5pt": 66.68,
+        "low": 107.86
+      },
+      "h265_444/psnr": {
+        "5pt": 81.95,
+        "low": 108.14
+      },
+      "h265_444/msssim": {
+        "5pt": 69.38,
+        "low": 102.62
+      },
+      "h265_444_lowdelay/psnr": {
+        "5pt": 48.62,
+        "low": 64.78
+      },
+      "h265_444_lowdelay/msssim": {
+        "5pt": 37.3,
+        "low": 60.93
+      },
+      "h265_lowdelay/psnr": {
+        "5pt": 6.32,
+        "low": 47.76
+      },
+      "h265_lowdelay/msssim": {
+        "5pt": 36.44,
+        "low": 66.21
+      }
+    },
+    "per_video_vs_x264_444": {
+      "videoSRC01": {
+        "psnr": 55.24,
+        "msssim": 67.32
+      },
+      "videoSRC02": {
+        "psnr": 44.42,
+        "msssim": 74.03
+      },
+      "videoSRC03": {
+        "psnr": 70.4,
+        "msssim": 99.67
+      },
+      "videoSRC04": {
+        "psnr": -9.05,
+        "msssim": -8.07
+      },
+      "videoSRC05": {
+        "psnr": 12.85,
+        "msssim": 20.81
+      },
+      "videoSRC06": {
+        "psnr": -5.86,
+        "msssim": -32.75
+      },
+      "videoSRC07": {
+        "psnr": -5.91,
+        "msssim": 6.06
+      },
+      "videoSRC08": {
+        "psnr": 25.53,
+        "msssim": 67.29
+      },
+      "videoSRC09": {
+        "psnr": 18.55,
+        "msssim": 38.18
+      },
+      "videoSRC10": {
+        "psnr": 18.89,
+        "msssim": 65.36
+      },
+      "videoSRC11": {
+        "psnr": 7.23,
+        "msssim": 24.98
+      },
+      "videoSRC12": {
+        "psnr": 102.22,
+        "msssim": 116.28
+      },
+      "videoSRC13": {
+        "psnr": 289.66,
+        "msssim": 344.78
+      },
+      "videoSRC14": {
+        "psnr": -32.26,
+        "msssim": -12.86
+      },
+      "videoSRC15": {
+        "psnr": 86.17,
+        "msssim": 106.8
+      },
+      "videoSRC16": {
+        "psnr": -24.39,
+        "msssim": -20.75
+      },
+      "videoSRC17": {
+        "psnr": -35.25,
+        "msssim": -18.85
+      },
+      "videoSRC18": {
+        "psnr": 172.8,
+        "msssim": 142.63
+      },
+      "videoSRC19": {
+        "psnr": 18.1,
+        "msssim": 41.44
+      },
+      "videoSRC20": {
+        "psnr": 422.57,
+        "msssim": 462.69
+      },
+      "videoSRC21": {
+        "psnr": 47.36,
+        "msssim": 63.78
+      },
+      "videoSRC22": {
+        "psnr": 9.82,
+        "msssim": 33.03
+      },
+      "videoSRC23": {
+        "psnr": 9.09,
+        "msssim": 43.83
+      },
+      "videoSRC24": {
+        "psnr": 34.14,
+        "msssim": 48.82
+      },
+      "videoSRC25": {
+        "psnr": 32.85,
+        "msssim": 34.91
+      },
+      "videoSRC26": {
+        "psnr": 147.15,
+        "msssim": 146.91
+      },
+      "videoSRC27": {
+        "psnr": 19.96,
+        "msssim": 51.66
+      },
+      "videoSRC28": {
+        "psnr": 19.27,
+        "msssim": 44.49
+      },
+      "videoSRC29": {
+        "psnr": 135.81,
+        "msssim": 255.51
+      },
+      "videoSRC30": {
+        "psnr": 174.62,
+        "msssim": 198.51
+      }
+    },
+    "wins_vs_x264_444": {
+      "metric": "psnr",
+      "wins": 6,
+      "losses": 24,
+      "no_overlap": 0
+    }
+  },
+  "msssim": {
+    "decode_exact": true,
+    "headline_metric": "msssim",
+    "points": {
+      "1e-2": {
+        "bpp": 0.0565,
+        "psnr": 30.225,
+        "msssim": 0.953,
+        "motion_share_of_stream": 0.2742,
+        "encode_s_per_frame": 1.262,
+        "decode_s_per_frame": 0.46
+      },
+      "3e-3": {
+        "bpp": 0.0859,
+        "psnr": 32.709,
+        "msssim": 0.9693,
+        "motion_share_of_stream": 0.1739,
+        "encode_s_per_frame": 1.197,
+        "decode_s_per_frame": 0.421
+      },
+      "1e-3": {
+        "bpp": 0.1917,
+        "psnr": 35.508,
+        "msssim": 0.9824,
+        "motion_share_of_stream": 0.0909,
+        "encode_s_per_frame": 1.281,
+        "decode_s_per_frame": 0.461
+      },
+      "3e-4": {
+        "bpp": 0.4184,
+        "psnr": 37.405,
+        "msssim": 0.9893,
+        "motion_share_of_stream": 0.0427,
+        "encode_s_per_frame": 1.252,
+        "decode_s_per_frame": 0.441
+      },
+      "1e-4": {
+        "bpp": 0.7537,
+        "psnr": 39.158,
+        "msssim": 0.9929,
+        "motion_share_of_stream": 0.0277,
+        "encode_s_per_frame": 1.297,
+        "decode_s_per_frame": 0.477
+      }
+    },
+    "vs_anchors": {
+      "h264/psnr": {
+        "5pt": 132.17,
+        "low": 185.85
+      },
+      "h264/msssim": {
+        "5pt": -0.42,
+        "low": 16.17
+      },
+      "h264_444/psnr": {
+        "5pt": 185.9,
+        "low": 195.96
+      },
+      "h264_444/msssim": {
+        "5pt": 10.29,
+        "low": 24.59
+      },
+      "h264_444_lowdelay/psnr": {
+        "5pt": 148.41,
+        "low": 156.18
+      },
+      "h264_444_lowdelay/msssim": {
+        "5pt": -3.24,
+        "low": 7.06
+      },
+      "h264_lowdelay/psnr": {
+        "5pt": 102.51,
+        "low": 146.36
+      },
+      "h264_lowdelay/msssim": {
+        "5pt": -12.27,
+        "low": 0.46
+      },
+      "h265/psnr": {
+        "5pt": 222.9,
+        "low": 321.4
+      },
+      "h265/msssim": {
+        "5pt": 10.0,
+        "low": 34.96
+      },
+      "h265_444/psnr": {
+        "5pt": 289.38,
+        "low": 324.7
+      },
+      "h265_444/msssim": {
+        "5pt": 15.46,
+        "low": 36.64
+      },
+      "h265_444_lowdelay/psnr": {
+        "5pt": 209.67,
+        "low": 232.66
+      },
+      "h265_444_lowdelay/msssim": {
+        "5pt": -5.06,
+        "low": 9.33
+      },
+      "h265_lowdelay/psnr": {
+        "5pt": 160.7,
+        "low": 231.28
+      },
+      "h265_lowdelay/msssim": {
+        "5pt": -8.53,
+        "low": 8.84
+      }
+    },
+    "per_video_vs_x264_444": {
+      "videoSRC01": {
+        "psnr": 158.48,
+        "msssim": -31.48
+      },
+      "videoSRC02": {
+        "psnr": 239.81,
+        "msssim": 48.98
+      },
+      "videoSRC03": {
+        "psnr": 226.47,
+        "msssim": 29.5
+      },
+      "videoSRC04": {
+        "psnr": 38.68,
+        "msssim": -32.56
+      },
+      "videoSRC05": {
+        "psnr": 152.2,
+        "msssim": -11.36
+      },
+      "videoSRC06": {
+        "psnr": 537.08,
+        "msssim": -51.24
+      },
+      "videoSRC07": {
+        "psnr": 88.13,
+        "msssim": -24.17
+      },
+      "videoSRC08": {
+        "psnr": 170.58,
+        "msssim": -24.54
+      },
+      "videoSRC09": {
+        "psnr": 133.37,
+        "msssim": 19.05
+      },
+      "videoSRC10": {
+        "psnr": 131.27,
+        "msssim": 43.5
+      },
+      "videoSRC11": {
+        "psnr": 100.07,
+        "msssim": -8.61
+      },
+      "videoSRC12": {
+        "psnr": 343.44,
+        "msssim": 74.92
+      },
+      "videoSRC13": {
+        "psnr": 1513.66,
+        "msssim": 207.09
+      },
+      "videoSRC14": {
+        "psnr": 18.92,
+        "msssim": -33.19
+      },
+      "videoSRC15": {
+        "psnr": 305.49,
+        "msssim": 31.21
+      },
+      "videoSRC16": {
+        "psnr": 29.32,
+        "msssim": -30.44
+      },
+      "videoSRC17": {
+        "psnr": 8.21,
+        "msssim": -40.83
+      },
+      "videoSRC18": {
+        "psnr": 368.0,
+        "msssim": 86.17
+      },
+      "videoSRC19": {
+        "psnr": 103.5,
+        "msssim": 9.07
+      },
+      "videoSRC20": {
+        "psnr": 599.17,
+        "msssim": 361.17
+      },
+      "videoSRC21": {
+        "psnr": 324.12,
+        "msssim": -2.86
+      },
+      "videoSRC22": {
+        "psnr": 121.13,
+        "msssim": 16.05
+      },
+      "videoSRC23": {
+        "psnr": 165.35,
+        "msssim": 11.2
+      },
+      "videoSRC24": {
+        "psnr": 140.63,
+        "msssim": 25.8
+      },
+      "videoSRC25": {
+        "psnr": 83.51,
+        "msssim": 22.79
+      },
+      "videoSRC26": {
+        "psnr": 444.99,
+        "msssim": 115.68
+      },
+      "videoSRC27": {
+        "psnr": 124.52,
+        "msssim": 7.39
+      },
+      "videoSRC28": {
+        "psnr": 162.17,
+        "msssim": 68.99
+      },
+      "videoSRC29": {
+        "psnr": 322.19,
+        "msssim": 20.95
+      },
+      "videoSRC30": {
+        "psnr": 905.71,
+        "msssim": 87.01
+      }
+    },
+    "wins_vs_x264_444": {
+      "metric": "msssim",
+      "wins": 11,
+      "losses": 19,
+      "no_overlap": 0
+    }
+  },
+  "uvg_consistency": {
+    "mcljcv_vs_x264_420_psnr_mse_5pt": -1.41,
+    "uvg": -18.1,
+    "uvg_specific": false,
+    "rule": "UVG result called UVG-specific if MCL-JCV is more than 20 points worse"
+  }
+}

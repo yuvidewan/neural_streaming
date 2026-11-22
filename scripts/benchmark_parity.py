@@ -400,6 +400,9 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
     parser.add_argument("--skip-nvc", action="store_true",
                         help="classical arms only (for a quick harness check)")
     parser.add_argument("--no-resume", action="store_true")
+    parser.add_argument("--sequence-major", action="store_true",
+                        help="load each sequence once and code it at every arm and CRF "
+                             "(same rows, much faster on big 1080p sets)")
     parser.add_argument("--max-sequences", type=int, default=None,
                         help="smoke runs only; a truncated run cannot reproduce M22's totals")
     parser.add_argument("--max-frames", type=int, default=None,
@@ -614,6 +617,52 @@ def run_classical(args, device, sequences, frame_cache, report, persist) -> None
                   f"PSNR {q['psnr']:.3f}  MS-SSIM {q['msssim']:.4f}", flush=True)
 
 
+def run_classical_by_sequence(args, device, sequences, report, persist) -> None:
+    """The same measurement as `run_classical`, with the loops swapped: each sequence is loaded
+    (and checked as exact 8-bit) once, then coded at every arm and CRF. For big 1080p sets this
+    avoids reloading every PNG for every operating point, which was most of the time. Bytes are
+    identical; scores match to ~1e-7 (the /255 runs on the GPU); finished sequences are kept in report["partial_rows"] so a rerun resumes."""
+    workdir = Path(tempfile.mkdtemp(prefix="parity_ffmpeg_"))
+    labels = [(arm, crf, f"{arm.name}/crf{crf}")
+              for arm in classical_arms(args.gop, args.classical_pix_fmt) for crf in args.crf]
+    todo = [(arm, crf, label) for arm, crf, label in labels if label not in report["points"]]
+    partial = report.setdefault("partial_rows", {})
+    for index, sequence in enumerate(sequences):
+        name = sequence.sequence_id
+        missing = [item for item in todo if name not in partial.get(item[2], {})]
+        if not missing:
+            continue
+        started = time.perf_counter()
+        frames = sequence.load_frames()
+        source = frames_to_uint8(frames)
+        references = frames.to(device, torch.float32)
+        del frames
+        for arm, crf, label in missing:
+            result = ffmpeg_round_trip(source, arm, crf, workdir)
+            decoded = (torch.from_numpy(result["decoded"].copy()).to(device)
+                       .permute(0, 3, 1, 2).contiguous().to(torch.float32) / 255.0)
+            scores = score_frames(decoded, references, device=device)
+            del decoded
+            partial.setdefault(label, {})[name] = {
+                "sequence": name, "bytes": result["bytes"], "pixels": sequence.total_pixels,
+                "encode_seconds": result["encode_seconds"],
+                "decode_seconds": result["decode_seconds"], **scores}
+        del references
+        persist()
+        print(f"  [{index + 1}/{len(sequences)}] {name}: {len(missing)} points in "
+              f"{time.perf_counter() - started:.0f} s", flush=True)
+    for arm, crf, label in todo:
+        rows = [partial[label][s.sequence_id] for s in sequences]
+        point = summarize_point(label, arm.name, f"crf{crf}", rows,
+                                extra={"crf": crf, **arm.describe()})
+        report["points"][label] = point
+        q = point["quality"][PRIMARY_CONVENTION]
+        print(f"  {label:24s} {point['total_bytes']:>10,} B  bpp {point['bpp']:.4f}  "
+              f"PSNR {q['psnr']:.3f}  MS-SSIM {q['msssim']:.4f}", flush=True)
+    report.pop("partial_rows", None)
+    persist()
+
+
 def compare(report: dict[str, Any]) -> dict[str, Any]:
     """BD-rate of each NVC arm against each classical arm, under every
     convention and both metrics, plus the bit ratio at each NVC operating point."""
@@ -684,6 +733,8 @@ def main(argv: list[str] | None = None) -> int:
             # Only the points this run actually asks for; a resumed report may
             # hold arms or rate points that are not in this run's selection.
             report["points"] = previous.get("points", {})
+            if previous.get("partial_rows"):
+                report["partial_rows"] = previous["partial_rows"]
             print(f"[resume] {len(report['points'])} operating points already measured",
                   flush=True)
         else:
@@ -712,7 +763,10 @@ def main(argv: list[str] | None = None) -> int:
               "apply at this GOP.")
     print("=" * 110, flush=True)
 
-    run_classical(args, device, sequences, frame_cache, report, persist)
+    if args.sequence_major:
+        run_classical_by_sequence(args, device, sequences, report, persist)
+    else:
+        run_classical(args, device, sequences, frame_cache, report, persist)
     if not args.skip_nvc:
         run_nvc(args, device, sequences, frame_cache, report, persist)
 

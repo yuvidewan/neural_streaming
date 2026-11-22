@@ -1,0 +1,1407 @@
+{
+  "models_dir": "outputs\\p4_wide_latent\\vimeo",
+  "i_frames": "wide",
+  "gop": 30,
+  "smoke": false,
+  "split": "test",
+  "eval_manifest": "C:\\mcljcv_scratch\\mcljcv\\manifest.json",
+  "tune_steps": 0,
+  "tune_lr": null,
+  "motion_lambda": "1e-2:0.25,3e-3:0.25,1e-3:0.125,3e-4:0.125,1e-4:0.0625",
+  "bframes": 1,
+  "b_model": null,
+  "low_rate_dir": "outputs\\p6_low_rate\\vimeo",
+  "dataset": {
+    "sequences": [
+      "videoSRC01",
+      "videoSRC02",
+      "videoSRC03",
+      "videoSRC04",
+      "videoSRC05",
+      "videoSRC06",
+      "videoSRC07",
+      "videoSRC08",
+      "videoSRC09",
+      "videoSRC10",
+      "videoSRC11",
+      "videoSRC12",
+      "videoSRC13",
+      "videoSRC14",
+      "videoSRC15",
+      "videoSRC16",
+      "videoSRC17",
+      "videoSRC18",
+      "videoSRC19",
+      "videoSRC20",
+      "videoSRC21",
+      "videoSRC22",
+      "videoSRC23",
+      "videoSRC24",
+      "videoSRC25",
+      "videoSRC26",
+      "videoSRC27",
+      "videoSRC28",
+      "videoSRC29",
+      "videoSRC30"
+    ],
+    "frames": 2880
+  },
+  "points": {
+    "1e-2": {
+      "label": "learned_p/1e-2",
+      "arm": "learned_p",
+      "setting": "1e-2",
+      "total_bytes": 39476257,
+      "total_pixels": 5927731200,
+      "frames": 2880,
+      "bpp": 0.05327671673101506,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 32.23395196561164,
+          "msssim": 0.9399836007091734
+        },
+        "frame_mean": {
+          "psnr": 32.23395196561164,
+          "msssim": 0.9399836007091734
+        },
+        "sequence_pooled": {
+          "psnr": 32.05011818574263,
+          "msssim": 0.9399836007091734
+        },
+        "global_pooled": {
+          "psnr": 31.281870970108795,
+          "msssim": 0.9399836007091734
+        }
+      },
+      "encode_seconds": 3431.2947197998874,
+      "decode_seconds": 1175.9995942999667,
+      "per_sequence": [
+        {
+          "sequence": "videoSRC01",
+          "bytes": 437738,
+          "bpp": 0.0177229898683665,
+          "mean_psnr": 35.081294678608735,
+          "mean_msssim": 0.9459854581703743
+        },
+        {
+          "sequence": "videoSRC02",
+          "bytes": 1203418,
+          "bpp": 0.04872358584680763,
+          "mean_psnr": 35.34861609851726,
+          "mean_msssim": 0.9624942025790612
+        },
+        {
+          "sequence": "videoSRC03",
+          "bytes": 665000,
+          "bpp": 0.026924297781923713,
+          "mean_psnr": 32.96243766088308,
+          "mean_msssim": 0.9448753433922926
+        },
+        {
+          "sequence": "videoSRC04",
+          "bytes": 3296824,
+          "bpp": 0.13348070843698176,
+          "mean_psnr": 30.122399859526894,
+          "mean_msssim": 0.9193563107401133
+        },
+        {
+          "sequence": "videoSRC05",
+          "bytes": 1673089,
+          "bpp": 0.06773946834836235,
+          "mean_psnr": 31.155819383045365,
+          "mean_msssim": 0.9289062569538752
+        },
+        {
+          "sequence": "videoSRC06",
+          "bytes": 480711,
+          "bpp": 0.0194628663324005,
+          "mean_psnr": 30.481663280212583,
+          "mean_msssim": 0.8519706794371208
+        },
+        {
+          "sequence": "videoSRC07",
+          "bytes": 1499834,
+          "bpp": 0.060724777803689886,
+          "mean_psnr": 31.868046412514555,
+          "mean_msssim": 0.9082777164876461
+        },
+        {
+          "sequence": "videoSRC08",
+          "bytes": 648836,
+          "bpp": 0.0262698551513267,
+          "mean_psnr": 33.20317092659733,
+          "mean_msssim": 0.9312144735207161
+        },
+        {
+          "sequence": "videoSRC09",
+          "bytes": 1864797,
+          "bpp": 0.07550127779073383,
+          "mean_psnr": 28.06829002228993,
+          "mean_msssim": 0.9416198469698429
+        },
+        {
+          "sequence": "videoSRC10",
+          "bytes": 2790679,
+          "bpp": 0.1129880788116708,
+          "mean_psnr": 30.540363555284177,
+          "mean_msssim": 0.9687993843108416
+        },
+        {
+          "sequence": "videoSRC11",
+          "bytes": 1274466,
+          "bpp": 0.05160015352922886,
+          "mean_psnr": 34.166851262292305,
+          "mean_msssim": 0.9638794908920923
+        },
+        {
+          "sequence": "videoSRC12",
+          "bytes": 834545,
+          "bpp": 0.033788779086339135,
+          "mean_psnr": 30.317432757761043,
+          "mean_msssim": 0.9352651176353296
+        },
+        {
+          "sequence": "videoSRC13",
+          "bytes": 1352564,
+          "bpp": 0.05476215925580431,
+          "mean_psnr": 27.707552834035734,
+          "mean_msssim": 0.9548976353059212
+        },
+        {
+          "sequence": "videoSRC14",
+          "bytes": 1227072,
+          "bpp": 0.049681281094527366,
+          "mean_psnr": 32.356340898509686,
+          "mean_msssim": 0.9491246206065019
+        },
+        {
+          "sequence": "videoSRC15",
+          "bytes": 880523,
+          "bpp": 0.03565032098621476,
+          "mean_psnr": 29.674163334435296,
+          "mean_msssim": 0.9050201165179411
+        },
+        {
+          "sequence": "videoSRC16",
+          "bytes": 537257,
+          "bpp": 0.0217522818848466,
+          "mean_psnr": 35.754142547263925,
+          "mean_msssim": 0.9482326656579971
+        },
+        {
+          "sequence": "videoSRC17",
+          "bytes": 1051600,
+          "bpp": 0.0425768293946932,
+          "mean_psnr": 32.89399632129135,
+          "mean_msssim": 0.9318599415322145
+        },
+        {
+          "sequence": "videoSRC18",
+          "bytes": 1193343,
+          "bpp": 0.04831567261349502,
+          "mean_psnr": 29.641930297989816,
+          "mean_msssim": 0.9249157955249151
+        },
+        {
+          "sequence": "videoSRC19",
+          "bytes": 1465298,
+          "bpp": 0.0593264957763267,
+          "mean_psnr": 32.10198825715168,
+          "mean_msssim": 0.9302722172190746
+        },
+        {
+          "sequence": "videoSRC20",
+          "bytes": 2496882,
+          "bpp": 0.10109292405161692,
+          "mean_psnr": 29.365179978810758,
+          "mean_msssim": 0.918722465634346
+        },
+        {
+          "sequence": "videoSRC21",
+          "bytes": 1082759,
+          "bpp": 0.043838384574523215,
+          "mean_psnr": 36.55217648695069,
+          "mean_msssim": 0.956889446824789
+        },
+        {
+          "sequence": "videoSRC22",
+          "bytes": 2285086,
+          "bpp": 0.09251779837790215,
+          "mean_psnr": 32.65103281993954,
+          "mean_msssim": 0.9428273377319177
+        },
+        {
+          "sequence": "videoSRC23",
+          "bytes": 904266,
+          "bpp": 0.03661161963619403,
+          "mean_psnr": 33.253552130048426,
+          "mean_msssim": 0.9582366924732924
+        },
+        {
+          "sequence": "videoSRC24",
+          "bytes": 995411,
+          "bpp": 0.040301867938951075,
+          "mean_psnr": 33.96059066952369,
+          "mean_msssim": 0.9656733355174462
+        },
+        {
+          "sequence": "videoSRC25",
+          "bytes": 3101954,
+          "bpp": 0.12559087699523216,
+          "mean_psnr": 27.87041759443525,
+          "mean_msssim": 0.9467428413530191
+        },
+        {
+          "sequence": "videoSRC26",
+          "bytes": 1346661,
+          "bpp": 0.05452316056436567,
+          "mean_psnr": 31.99702481448612,
+          "mean_msssim": 0.9486487129082283
+        },
+        {
+          "sequence": "videoSRC27",
+          "bytes": 1274103,
+          "bpp": 0.05158545650652985,
+          "mean_psnr": 31.96073868857106,
+          "mean_msssim": 0.9509156495332718
+        },
+        {
+          "sequence": "videoSRC28",
+          "bytes": 671551,
+          "bpp": 0.027189532480825042,
+          "mean_psnr": 34.26184094606991,
+          "mean_msssim": 0.955775976801912
+        },
+        {
+          "sequence": "videoSRC29",
+          "bytes": 429318,
+          "bpp": 0.017382083722014927,
+          "mean_psnr": 37.96773847679022,
+          "mean_msssim": 0.9593160760899385
+        },
+        {
+          "sequence": "videoSRC30",
+          "bytes": 510672,
+          "bpp": 0.020675917288557215,
+          "mean_psnr": 33.73176597451286,
+          "mean_msssim": 0.9487922129531702
+        }
+      ],
+      "motion_lambda": 0.25,
+      "bframes": 1,
+      "b_lambda": null,
+      "bits": 7,
+      "lambda": "1e-2",
+      "rig_lambda": "1e-3",
+      "decode_reconstruction_exact": true,
+      "coder_identity": "db889e4e405d5bef",
+      "split": {
+        "i_frames": 120,
+        "p_frames": 2760,
+        "bytes_per_i_frame": 25021.091666666667,
+        "bytes_per_p_frame": 13193.98768115942,
+        "i_bytes": 3002531,
+        "p_bytes": 36415406,
+        "framing_bytes": 58320,
+        "motion_bytes": 11151720,
+        "b_frames": 0,
+        "b_bytes": 0,
+        "bytes_per_b_frame": 0.0,
+        "pooled_psnr_b": null,
+        "b_modes_fwd_bwd_avg": [
+          0,
+          0,
+          0
+        ],
+        "coder_overhead_vs_ideal": -0.0032420939275402683,
+        "pooled_psnr_i": 30.720370157057427,
+        "pooled_psnr_p": 31.3080110183525
+      }
+    },
+    "3e-3": {
+      "label": "learned_p/3e-3",
+      "arm": "learned_p",
+      "setting": "3e-3",
+      "total_bytes": 59846342,
+      "total_pixels": 5927731200,
+      "frames": 2880,
+      "bpp": 0.08076795654971669,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 34.827597064408806,
+          "msssim": 0.9627324700769451
+        },
+        "frame_mean": {
+          "psnr": 34.827597064408806,
+          "msssim": 0.9627324700769451
+        },
+        "sequence_pooled": {
+          "psnr": 34.70752088784093,
+          "msssim": 0.9627324700769451
+        },
+        "global_pooled": {
+          "psnr": 33.94851714525117,
+          "msssim": 0.9627324700769451
+        }
+      },
+      "encode_seconds": 3672.2351085000555,
+      "decode_seconds": 1303.2335192999162,
+      "per_sequence": [
+        {
+          "sequence": "videoSRC01",
+          "bytes": 549593,
+          "bpp": 0.022251737730617744,
+          "mean_psnr": 37.09878247241465,
+          "mean_msssim": 0.9618336129933596
+        },
+        {
+          "sequence": "videoSRC02",
+          "bytes": 1513438,
+          "bpp": 0.06127557200974295,
+          "mean_psnr": 38.38798404394884,
+          "mean_msssim": 0.9783743818600973
+        },
+        {
+          "sequence": "videoSRC03",
+          "bytes": 923435,
+          "bpp": 0.03738772770263267,
+          "mean_psnr": 35.68598188410082,
+          "mean_msssim": 0.9674446818729242
+        },
+        {
+          "sequence": "videoSRC04",
+          "bytes": 5695657,
+          "bpp": 0.23060385734089967,
+          "mean_psnr": 32.44950264832142,
+          "mean_msssim": 0.9544223335882028
+        },
+        {
+          "sequence": "videoSRC05",
+          "bytes": 2534678,
+          "bpp": 0.10262319586961029,
+          "mean_psnr": 33.17830429714093,
+          "mean_msssim": 0.9533735637863477
+        },
+        {
+          "sequence": "videoSRC06",
+          "bytes": 670652,
+          "bpp": 0.027153134069237146,
+          "mean_psnr": 31.02521294575548,
+          "mean_msssim": 0.860684330885609
+        },
+        {
+          "sequence": "videoSRC07",
+          "bytes": 2018511,
+          "bpp": 0.08172479885727611,
+          "mean_psnr": 33.385088467181646,
+          "mean_msssim": 0.933276915922761
+        },
+        {
+          "sequence": "videoSRC08",
+          "bytes": 935894,
+          "bpp": 0.03789216353130182,
+          "mean_psnr": 35.3945916910029,
+          "mean_msssim": 0.9560628371934096
+        },
+        {
+          "sequence": "videoSRC09",
+          "bytes": 3365403,
+          "bpp": 0.13625731207245026,
+          "mean_psnr": 31.013823596787105,
+          "mean_msssim": 0.9712619110941887
+        },
+        {
+          "sequence": "videoSRC10",
+          "bytes": 4123400,
+          "bpp": 0.16694684131426202,
+          "mean_psnr": 33.18800896597842,
+          "mean_msssim": 0.9790177239725987
+        },
+        {
+          "sequence": "videoSRC11",
+          "bytes": 1765164,
+          "bpp": 0.07146737018034825,
+          "mean_psnr": 36.952781741355004,
+          "mean_msssim": 0.9791936855763197
+        },
+        {
+          "sequence": "videoSRC12",
+          "bytes": 1382799,
+          "bpp": 0.0559863038324005,
+          "mean_psnr": 33.028650875857,
+          "mean_msssim": 0.9652400954316059
+        },
+        {
+          "sequence": "videoSRC13",
+          "bytes": 2517350,
+          "bpp": 0.10192162559597844,
+          "mean_psnr": 30.6576720293872,
+          "mean_msssim": 0.9769068310658137
+        },
+        {
+          "sequence": "videoSRC14",
+          "bytes": 1762284,
+          "bpp": 0.07135076570273632,
+          "mean_psnr": 34.84890688399013,
+          "mean_msssim": 0.9688419171919426
+        },
+        {
+          "sequence": "videoSRC15",
+          "bytes": 1670308,
+          "bpp": 0.06762687214966832,
+          "mean_psnr": 32.14315937714989,
+          "mean_msssim": 0.9461505680034558
+        },
+        {
+          "sequence": "videoSRC16",
+          "bytes": 685187,
+          "bpp": 0.02774162229218491,
+          "mean_psnr": 38.08010350354409,
+          "mean_msssim": 0.9664564349999031
+        },
+        {
+          "sequence": "videoSRC17",
+          "bytes": 1516186,
+          "bpp": 0.06138683211546434,
+          "mean_psnr": 35.27095828192902,
+          "mean_msssim": 0.9579425292710463
+        },
+        {
+          "sequence": "videoSRC18",
+          "bytes": 1970557,
+          "bpp": 0.07978325332970564,
+          "mean_psnr": 32.38955585642322,
+          "mean_msssim": 0.9597879263261954
+        },
+        {
+          "sequence": "videoSRC19",
+          "bytes": 2160612,
+          "bpp": 0.08747813666044776,
+          "mean_psnr": 34.76768918657125,
+          "mean_msssim": 0.9597488852838675
+        },
+        {
+          "sequence": "videoSRC20",
+          "bytes": 3194158,
+          "bpp": 0.1293240017361111,
+          "mean_psnr": 33.66353484796716,
+          "mean_msssim": 0.9555003208418688
+        },
+        {
+          "sequence": "videoSRC21",
+          "bytes": 1438003,
+          "bpp": 0.0582213849372927,
+          "mean_psnr": 39.403337627554826,
+          "mean_msssim": 0.9740338418632746
+        },
+        {
+          "sequence": "videoSRC22",
+          "bytes": 3280478,
+          "bpp": 0.1328188970512023,
+          "mean_psnr": 35.505842072110646,
+          "mean_msssim": 0.9678151402622461
+        },
+        {
+          "sequence": "videoSRC23",
+          "bytes": 1333755,
+          "bpp": 0.054000626749067165,
+          "mean_psnr": 36.262619967774434,
+          "mean_msssim": 0.9771360736340284
+        },
+        {
+          "sequence": "videoSRC24",
+          "bytes": 1445220,
+          "bpp": 0.05851358442164179,
+          "mean_psnr": 36.609066966384155,
+          "mean_msssim": 0.9812418191383282
+        },
+        {
+          "sequence": "videoSRC25",
+          "bytes": 5546036,
+          "bpp": 0.22454605229063018,
+          "mean_psnr": 30.454806272757697,
+          "mean_msssim": 0.9714724527051052
+        },
+        {
+          "sequence": "videoSRC26",
+          "bytes": 1725688,
+          "bpp": 0.06986907908374793,
+          "mean_psnr": 35.987656137678776,
+          "mean_msssim": 0.9700807022551695
+        },
+        {
+          "sequence": "videoSRC27",
+          "bytes": 2013896,
+          "bpp": 0.08153794827943615,
+          "mean_psnr": 34.717827600082934,
+          "mean_msssim": 0.9726880639791489
+        },
+        {
+          "sequence": "videoSRC28",
+          "bytes": 946387,
+          "bpp": 0.0383170006089345,
+          "mean_psnr": 36.81599599079809,
+          "mean_msssim": 0.9724744707345963
+        },
+        {
+          "sequence": "videoSRC29",
+          "bytes": 535221,
+          "bpp": 0.021669848997201493,
+          "mean_psnr": 40.47303099516393,
+          "mean_msssim": 0.9766702453295389
+        },
+        {
+          "sequence": "videoSRC30",
+          "bytes": 626392,
+          "bpp": 0.025361149979270314,
+          "mean_psnr": 35.987434705152495,
+          "mean_msssim": 0.9668398052453995
+        }
+      ],
+      "motion_lambda": 0.25,
+      "bframes": 1,
+      "b_lambda": null,
+      "bits": 7,
+      "lambda": "3e-3",
+      "rig_lambda": "1e-3",
+      "decode_reconstruction_exact": true,
+      "coder_identity": "8945feefa787eb5f",
+      "split": {
+        "i_frames": 120,
+        "p_frames": 2760,
+        "bytes_per_i_frame": 43837.01666666667,
+        "bytes_per_p_frame": 19756.369565217392,
+        "i_bytes": 5260442,
+        "p_bytes": 54527580,
+        "framing_bytes": 58320,
+        "motion_bytes": 10312737,
+        "b_frames": 0,
+        "b_bytes": 0,
+        "bytes_per_b_frame": 0.0,
+        "pooled_psnr_b": null,
+        "b_modes_fwd_bwd_avg": [
+          0,
+          0,
+          0
+        ],
+        "coder_overhead_vs_ideal": -0.0028473049400532524,
+        "pooled_psnr_i": 33.30586141664325,
+        "pooled_psnr_p": 33.97873680783421
+      }
+    },
+    "1e-3": {
+      "label": "learned_p/1e-3",
+      "arm": "learned_p",
+      "setting": "1e-3",
+      "total_bytes": 101003501,
+      "total_pixels": 5927731200,
+      "frames": 2880,
+      "bpp": 0.13631319989678345,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 36.70344088975771,
+          "msssim": 0.9748131916754776
+        },
+        "frame_mean": {
+          "psnr": 36.70344088975771,
+          "msssim": 0.9748131916754775
+        },
+        "sequence_pooled": {
+          "psnr": 36.566953130398936,
+          "msssim": 0.9748131916754776
+        },
+        "global_pooled": {
+          "psnr": 35.7039781024977,
+          "msssim": 0.9748131916754775
+        }
+      },
+      "encode_seconds": 3629.9427788999747,
+      "decode_seconds": 1280.6260612999613,
+      "per_sequence": [
+        {
+          "sequence": "videoSRC01",
+          "bytes": 968176,
+          "bpp": 0.03919918635986733,
+          "mean_psnr": 38.12598708287016,
+          "mean_msssim": 0.9681219340612491
+        },
+        {
+          "sequence": "videoSRC02",
+          "bytes": 2133429,
+          "bpp": 0.08637756043998757,
+          "mean_psnr": 40.57812301801147,
+          "mean_msssim": 0.9863152727484703
+        },
+        {
+          "sequence": "videoSRC03",
+          "bytes": 1661102,
+          "bpp": 0.06725414269796849,
+          "mean_psnr": 37.75825672410597,
+          "mean_msssim": 0.9787324958791336
+        },
+        {
+          "sequence": "videoSRC04",
+          "bytes": 9067945,
+          "bpp": 0.367139926992641,
+          "mean_psnr": 34.45551715537808,
+          "mean_msssim": 0.9749438924094042
+        },
+        {
+          "sequence": "videoSRC05",
+          "bytes": 4231258,
+          "bpp": 0.17131375997616086,
+          "mean_psnr": 34.59572659311534,
+          "mean_msssim": 0.9685752652585506
+        },
+        {
+          "sequence": "videoSRC06",
+          "bytes": 2254935,
+          "bpp": 0.09129705476523632,
+          "mean_psnr": 31.290207153165273,
+          "mean_msssim": 0.8709730089952549
+        },
+        {
+          "sequence": "videoSRC07",
+          "bytes": 3437949,
+          "bpp": 0.139194530278296,
+          "mean_psnr": 34.531047799735,
+          "mean_msssim": 0.9514662815878788
+        },
+        {
+          "sequence": "videoSRC08",
+          "bytes": 1582919,
+          "bpp": 0.06408869551979685,
+          "mean_psnr": 36.73908944933962,
+          "mean_msssim": 0.9653401983280977
+        },
+        {
+          "sequence": "videoSRC09",
+          "bytes": 6307057,
+          "bpp": 0.2553580162339345,
+          "mean_psnr": 33.15013209167876,
+          "mean_msssim": 0.9833346058924993
+        },
+        {
+          "sequence": "videoSRC10",
+          "bytes": 6503598,
+          "bpp": 0.2633155025652985,
+          "mean_psnr": 35.1370701557398,
+          "mean_msssim": 0.9850258864462376
+        },
+        {
+          "sequence": "videoSRC11",
+          "bytes": 2745572,
+          "bpp": 0.11116180166873964,
+          "mean_psnr": 39.30867060758546,
+          "mean_msssim": 0.9881019232173761
+        },
+        {
+          "sequence": "videoSRC12",
+          "bytes": 2774371,
+          "bpp": 0.1123278059571932,
+          "mean_psnr": 35.621573132355834,
+          "mean_msssim": 0.9825718520830075
+        },
+        {
+          "sequence": "videoSRC13",
+          "bytes": 4623496,
+          "bpp": 0.18719456104892207,
+          "mean_psnr": 32.42589359877912,
+          "mean_msssim": 0.9864534251391888
+        },
+        {
+          "sequence": "videoSRC14",
+          "bytes": 2959485,
+          "bpp": 0.11982263973103234,
+          "mean_psnr": 36.87589417692407,
+          "mean_msssim": 0.9805057290941477
+        },
+        {
+          "sequence": "videoSRC15",
+          "bytes": 4172050,
+          "bpp": 0.1689165662572554,
+          "mean_psnr": 34.06301215411051,
+          "mean_msssim": 0.9680718767146269
+        },
+        {
+          "sequence": "videoSRC16",
+          "bytes": 1066866,
+          "bpp": 0.04319491410136816,
+          "mean_psnr": 39.44097209813385,
+          "mean_msssim": 0.9747349762668213
+        },
+        {
+          "sequence": "videoSRC17",
+          "bytes": 2608522,
+          "bpp": 0.1056129670657131,
+          "mean_psnr": 37.113861741031194,
+          "mean_msssim": 0.9728925054272016
+        },
+        {
+          "sequence": "videoSRC18",
+          "bytes": 3507089,
+          "bpp": 0.14199384749429933,
+          "mean_psnr": 34.510801597546525,
+          "mean_msssim": 0.9775261872758468
+        },
+        {
+          "sequence": "videoSRC19",
+          "bytes": 3581810,
+          "bpp": 0.14501912637334163,
+          "mean_psnr": 37.15760668711267,
+          "mean_msssim": 0.9785130204011997
+        },
+        {
+          "sequence": "videoSRC20",
+          "bytes": 4650307,
+          "bpp": 0.18828007585769072,
+          "mean_psnr": 35.62753440492372,
+          "mean_msssim": 0.9733554174502691
+        },
+        {
+          "sequence": "videoSRC21",
+          "bytes": 2119541,
+          "bpp": 0.08581526773683665,
+          "mean_psnr": 41.5763606572466,
+          "mean_msssim": 0.983486752336224
+        },
+        {
+          "sequence": "videoSRC22",
+          "bytes": 4938654,
+          "bpp": 0.19995457283893034,
+          "mean_psnr": 37.610190141338926,
+          "mean_msssim": 0.980511753509442
+        },
+        {
+          "sequence": "videoSRC23",
+          "bytes": 2274489,
+          "bpp": 0.09208875058302239,
+          "mean_psnr": 38.76995438469936,
+          "mean_msssim": 0.9860917391876379
+        },
+        {
+          "sequence": "videoSRC24",
+          "bytes": 2302036,
+          "bpp": 0.09320406431384742,
+          "mean_psnr": 38.681162128092176,
+          "mean_msssim": 0.9885164635876814
+        },
+        {
+          "sequence": "videoSRC25",
+          "bytes": 9112126,
+          "bpp": 0.36892871255700666,
+          "mean_psnr": 32.154944083630625,
+          "mean_msssim": 0.9826444027324518
+        },
+        {
+          "sequence": "videoSRC26",
+          "bytes": 2530634,
+          "bpp": 0.10245946374896352,
+          "mean_psnr": 37.797363324293244,
+          "mean_msssim": 0.9802601666500171
+        },
+        {
+          "sequence": "videoSRC27",
+          "bytes": 3546613,
+          "bpp": 0.14359408199885987,
+          "mean_psnr": 37.15295818427106,
+          "mean_msssim": 0.984848277643323
+        },
+        {
+          "sequence": "videoSRC28",
+          "bytes": 1541469,
+          "bpp": 0.06241048177083333,
+          "mean_psnr": 39.085034284923445,
+          "mean_msssim": 0.9828059822320938
+        },
+        {
+          "sequence": "videoSRC29",
+          "bytes": 746376,
+          "bpp": 0.030219022077114428,
+          "mean_psnr": 42.378180706434065,
+          "mean_msssim": 0.9843538595984379
+        },
+        {
+          "sequence": "videoSRC30",
+          "bytes": 1053627,
+          "bpp": 0.042658897893345774,
+          "mean_psnr": 37.390101376159286,
+          "mean_msssim": 0.9753205981105566
+        }
+      ],
+      "motion_lambda": 0.125,
+      "bframes": 1,
+      "b_lambda": null,
+      "bits": 7,
+      "lambda": "1e-3",
+      "rig_lambda": "1e-3",
+      "decode_reconstruction_exact": true,
+      "coder_identity": "bd78e18c13907219",
+      "split": {
+        "i_frames": 120,
+        "p_frames": 2760,
+        "bytes_per_i_frame": 74885.475,
+        "bytes_per_p_frame": 33318.45072463768,
+        "i_bytes": 8986257,
+        "p_bytes": 91958924,
+        "framing_bytes": 58320,
+        "motion_bytes": 11908453,
+        "b_frames": 0,
+        "b_bytes": 0,
+        "bytes_per_b_frame": 0.0,
+        "pooled_psnr_b": null,
+        "b_modes_fwd_bwd_avg": [
+          0,
+          0,
+          0
+        ],
+        "coder_overhead_vs_ideal": -0.001888584557900419,
+        "pooled_psnr_i": 35.19699535499075,
+        "pooled_psnr_p": 35.72742215731333
+      }
+    },
+    "3e-4": {
+      "label": "learned_p/3e-4",
+      "arm": "learned_p",
+      "setting": "3e-4",
+      "total_bytes": 231083016,
+      "total_pixels": 5927731200,
+      "frames": 2880,
+      "bpp": 0.31186706441749584,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 38.08581970085375,
+          "msssim": 0.9829725970617599
+        },
+        "frame_mean": {
+          "psnr": 38.08581970085375,
+          "msssim": 0.9829725970617599
+        },
+        "sequence_pooled": {
+          "psnr": 37.755806919544355,
+          "msssim": 0.9829725970617599
+        },
+        "global_pooled": {
+          "psnr": 36.78452147658154,
+          "msssim": 0.9829725970617599
+        }
+      },
+      "encode_seconds": 3446.2622214999574,
+      "decode_seconds": 1224.9164576000476,
+      "per_sequence": [
+        {
+          "sequence": "videoSRC01",
+          "bytes": 3098700,
+          "bpp": 0.125459130130597,
+          "mean_psnr": 39.57692667641892,
+          "mean_msssim": 0.9784192324926456
+        },
+        {
+          "sequence": "videoSRC02",
+          "bytes": 4004572,
+          "bpp": 0.16213577295812603,
+          "mean_psnr": 40.90696008703787,
+          "mean_msssim": 0.9894556974371275
+        },
+        {
+          "sequence": "videoSRC03",
+          "bytes": 3695595,
+          "bpp": 0.1496260154306592,
+          "mean_psnr": 40.08158542004348,
+          "mean_msssim": 0.9875898162523905
+        },
+        {
+          "sequence": "videoSRC04",
+          "bytes": 16872508,
+          "bpp": 0.6831284657441957,
+          "mean_psnr": 36.7276795392526,
+          "mean_msssim": 0.9863387271761894
+        },
+        {
+          "sequence": "videoSRC05",
+          "bytes": 9318735,
+          "bpp": 0.37729382870802236,
+          "mean_psnr": 35.59945797742894,
+          "mean_msssim": 0.9775241495420536
+        },
+        {
+          "sequence": "videoSRC06",
+          "bytes": 16095708,
+          "bpp": 0.6516776469216418,
+          "mean_psnr": 32.90939355477791,
+          "mean_msssim": 0.9245742199321588
+        },
+        {
+          "sequence": "videoSRC07",
+          "bytes": 9563968,
+          "bpp": 0.38722274046434496,
+          "mean_psnr": 35.747114882263965,
+          "mean_msssim": 0.96678208373487
+        },
+        {
+          "sequence": "videoSRC08",
+          "bytes": 4234662,
+          "bpp": 0.17145157999067165,
+          "mean_psnr": 37.777805402405974,
+          "mean_msssim": 0.9715546959390243
+        },
+        {
+          "sequence": "videoSRC09",
+          "bytes": 14434839,
+          "bpp": 0.5844329378498134,
+          "mean_psnr": 35.460209106530094,
+          "mean_msssim": 0.990308832998077
+        },
+        {
+          "sequence": "videoSRC10",
+          "bytes": 13858122,
+          "bpp": 0.5610830126710199,
+          "mean_psnr": 33.9082331653045,
+          "mean_msssim": 0.9867227499683698
+        },
+        {
+          "sequence": "videoSRC11",
+          "bytes": 5181086,
+          "bpp": 0.20977007864324212,
+          "mean_psnr": 41.24304524183652,
+          "mean_msssim": 0.992576519648234
+        },
+        {
+          "sequence": "videoSRC12",
+          "bytes": 6290574,
+          "bpp": 0.25469065803793534,
+          "mean_psnr": 38.448692073007074,
+          "mean_msssim": 0.991082169736425
+        },
+        {
+          "sequence": "videoSRC13",
+          "bytes": 11279805,
+          "bpp": 0.45669297555192784,
+          "mean_psnr": 35.68068159986877,
+          "mean_msssim": 0.9916438149909178
+        },
+        {
+          "sequence": "videoSRC14",
+          "bytes": 6303961,
+          "bpp": 0.2552326664205017,
+          "mean_psnr": 38.61003780668747,
+          "mean_msssim": 0.987509603301684
+        },
+        {
+          "sequence": "videoSRC15",
+          "bytes": 12136531,
+          "bpp": 0.4913798115542081,
+          "mean_psnr": 36.30940488617748,
+          "mean_msssim": 0.9827181907991568
+        },
+        {
+          "sequence": "videoSRC16",
+          "bytes": 2224633,
+          "bpp": 0.09007019751502902,
+          "mean_psnr": 40.77988736200499,
+          "mean_msssim": 0.9822825565934181
+        },
+        {
+          "sequence": "videoSRC17",
+          "bytes": 5480772,
+          "bpp": 0.22190366526741293,
+          "mean_psnr": 38.691591982887665,
+          "mean_msssim": 0.9823626161863407
+        },
+        {
+          "sequence": "videoSRC18",
+          "bytes": 7067093,
+          "bpp": 0.2861300998263889,
+          "mean_psnr": 37.02598063562912,
+          "mean_msssim": 0.9873887325326601
+        },
+        {
+          "sequence": "videoSRC19",
+          "bytes": 7156046,
+          "bpp": 0.2897315991656302,
+          "mean_psnr": 38.893895437162406,
+          "mean_msssim": 0.9871501258263985
+        },
+        {
+          "sequence": "videoSRC20",
+          "bytes": 11206469,
+          "bpp": 0.4537237720900705,
+          "mean_psnr": 33.97681268520648,
+          "mean_msssim": 0.9709557319680849
+        },
+        {
+          "sequence": "videoSRC21",
+          "bytes": 3926466,
+          "bpp": 0.15897344333022387,
+          "mean_psnr": 41.2050134902623,
+          "mean_msssim": 0.9877272819479307
+        },
+        {
+          "sequence": "videoSRC22",
+          "bytes": 10694153,
+          "bpp": 0.43298129307887645,
+          "mean_psnr": 37.376175211327826,
+          "mean_msssim": 0.9825072232633829
+        },
+        {
+          "sequence": "videoSRC23",
+          "bytes": 4471682,
+          "bpp": 0.181047966547471,
+          "mean_psnr": 41.17579215458253,
+          "mean_msssim": 0.9920512406776348
+        },
+        {
+          "sequence": "videoSRC24",
+          "bytes": 4491240,
+          "bpp": 0.18183982431592038,
+          "mean_psnr": 39.92998404426353,
+          "mean_msssim": 0.9917703966299692
+        },
+        {
+          "sequence": "videoSRC25",
+          "bytes": 17919036,
+          "bpp": 0.7254999416977612,
+          "mean_psnr": 33.54415421584863,
+          "mean_msssim": 0.9868232719600201
+        },
+        {
+          "sequence": "videoSRC26",
+          "bytes": 6187054,
+          "bpp": 0.2504993748704395,
+          "mean_psnr": 37.01899142339957,
+          "mean_msssim": 0.9787198584526777
+        },
+        {
+          "sequence": "videoSRC27",
+          "bytes": 7021087,
+          "bpp": 0.2842674242718698,
+          "mean_psnr": 39.6553580889049,
+          "mean_msssim": 0.9913336522877216
+        },
+        {
+          "sequence": "videoSRC28",
+          "bytes": 3016727,
+          "bpp": 0.12214023469890133,
+          "mean_psnr": 41.03290604916228,
+          "mean_msssim": 0.9886311137427887
+        },
+        {
+          "sequence": "videoSRC29",
+          "bytes": 1202687,
+          "bpp": 0.048693989363080434,
+          "mean_psnr": 44.32836194441043,
+          "mean_msssim": 0.9906981997191906
+        },
+        {
+          "sequence": "videoSRC30",
+          "bytes": 2648505,
+          "bpp": 0.10723178540889304,
+          "mean_psnr": 38.952458881518034,
+          "mean_msssim": 0.9839754061152538
+        }
+      ],
+      "motion_lambda": 0.125,
+      "bframes": 1,
+      "b_lambda": null,
+      "bits": 8,
+      "lambda": "3e-4",
+      "rig_lambda": "3e-4",
+      "decode_reconstruction_exact": true,
+      "coder_identity": "ab422480dddcd2f7",
+      "split": {
+        "i_frames": 120,
+        "p_frames": 2760,
+        "bytes_per_i_frame": 137967.725,
+        "bytes_per_p_frame": 77706.00326086956,
+        "i_bytes": 16556127,
+        "p_bytes": 214468569,
+        "framing_bytes": 58320,
+        "motion_bytes": 12356575,
+        "b_frames": 0,
+        "b_bytes": 0,
+        "bytes_per_b_frame": 0.0,
+        "pooled_psnr_b": null,
+        "b_modes_fwd_bwd_avg": [
+          0,
+          0,
+          0
+        ],
+        "coder_overhead_vs_ideal": -0.0015696821116597537,
+        "pooled_psnr_i": 37.366495306790846,
+        "pooled_psnr_p": 36.76090470916735
+      }
+    },
+    "1e-4": {
+      "label": "learned_p/1e-4",
+      "arm": "learned_p",
+      "setting": "1e-4",
+      "total_bytes": 436666399,
+      "total_pixels": 5927731200,
+      "frames": 2880,
+      "bpp": 0.5893201081722464,
+      "quality": {
+        "sequence_mean": {
+          "psnr": 40.71317498903536,
+          "msssim": 0.9904572107104792
+        },
+        "frame_mean": {
+          "psnr": 40.71317498903536,
+          "msssim": 0.9904572107104792
+        },
+        "sequence_pooled": {
+          "psnr": 40.57066999460944,
+          "msssim": 0.9904572107104792
+        },
+        "global_pooled": {
+          "psnr": 39.81046994878256,
+          "msssim": 0.9904572107104792
+        }
+      },
+      "encode_seconds": 3636.7281933998747,
+      "decode_seconds": 1338.5533502999751,
+      "per_sequence": [
+        {
+          "sequence": "videoSRC01",
+          "bytes": 9691145,
+          "bpp": 0.39237184034255806,
+          "mean_psnr": 40.89173518755085,
+          "mean_msssim": 0.9856287905325493
+        },
+        {
+          "sequence": "videoSRC02",
+          "bytes": 5864599,
+          "bpp": 0.2374439245828151,
+          "mean_psnr": 44.163394765109615,
+          "mean_msssim": 0.9944344889372587
+        },
+        {
+          "sequence": "videoSRC03",
+          "bytes": 8712674,
+          "bpp": 0.35275583346289385,
+          "mean_psnr": 42.04734470324975,
+          "mean_msssim": 0.9920284493515888
+        },
+        {
+          "sequence": "videoSRC04",
+          "bytes": 26629938,
+          "bpp": 1.078184031016791,
+          "mean_psnr": 39.80521671036828,
+          "mean_msssim": 0.9936350205292305
+        },
+        {
+          "sequence": "videoSRC05",
+          "bytes": 20922901,
+          "bpp": 0.8471194240386609,
+          "mean_psnr": 37.672714510323054,
+          "mean_msssim": 0.986702607323726
+        },
+        {
+          "sequence": "videoSRC06",
+          "bytes": 36604285,
+          "bpp": 1.482022059299855,
+          "mean_psnr": 34.80046289506259,
+          "mean_msssim": 0.9565253922094902
+        },
+        {
+          "sequence": "videoSRC07",
+          "bytes": 23022977,
+          "bpp": 0.932146599359971,
+          "mean_psnr": 37.774242327389956,
+          "mean_msssim": 0.9807856859018406
+        },
+        {
+          "sequence": "videoSRC08",
+          "bytes": 12243536,
+          "bpp": 0.4957121942371476,
+          "mean_psnr": 39.13975555223216,
+          "mean_msssim": 0.9794332527865967
+        },
+        {
+          "sequence": "videoSRC09",
+          "bytes": 27663912,
+          "bpp": 1.1200472248134328,
+          "mean_psnr": 38.00409542193193,
+          "mean_msssim": 0.9949604676415523
+        },
+        {
+          "sequence": "videoSRC10",
+          "bytes": 21829638,
+          "bpp": 0.8838310886971393,
+          "mean_psnr": 39.63829841477641,
+          "mean_msssim": 0.9946300784746805
+        },
+        {
+          "sequence": "videoSRC11",
+          "bytes": 8970560,
+          "bpp": 0.36319703565505806,
+          "mean_psnr": 44.03555432785955,
+          "mean_msssim": 0.9956802719583114
+        },
+        {
+          "sequence": "videoSRC12",
+          "bytes": 12816695,
+          "bpp": 0.5189180643008914,
+          "mean_psnr": 41.40067004810254,
+          "mean_msssim": 0.9955650754272938
+        },
+        {
+          "sequence": "videoSRC13",
+          "bytes": 19845333,
+          "bpp": 0.8034912109375,
+          "mean_psnr": 37.94801512414004,
+          "mean_msssim": 0.994673136000832
+        },
+        {
+          "sequence": "videoSRC14",
+          "bytes": 14517709,
+          "bpp": 0.5877881507177654,
+          "mean_psnr": 40.66846227671622,
+          "mean_msssim": 0.9926752752314011
+        },
+        {
+          "sequence": "videoSRC15",
+          "bytes": 26113742,
+          "bpp": 1.0572844598621476,
+          "mean_psnr": 38.68112547662243,
+          "mean_msssim": 0.9913023374974728
+        },
+        {
+          "sequence": "videoSRC16",
+          "bytes": 5756485,
+          "bpp": 0.23306664107846187,
+          "mean_psnr": 41.764375381093465,
+          "mean_msssim": 0.987090589478612
+        },
+        {
+          "sequence": "videoSRC17",
+          "bytes": 12734434,
+          "bpp": 0.5155875084214345,
+          "mean_psnr": 40.382924115889914,
+          "mean_msssim": 0.9890176442762216
+        },
+        {
+          "sequence": "videoSRC18",
+          "bytes": 13191327,
+          "bpp": 0.5340860395289179,
+          "mean_psnr": 39.582387028558344,
+          "mean_msssim": 0.9938170301417509
+        },
+        {
+          "sequence": "videoSRC19",
+          "bytes": 12854258,
+          "bpp": 0.5204389024927446,
+          "mean_psnr": 42.02553691733676,
+          "mean_msssim": 0.9937312882393599
+        },
+        {
+          "sequence": "videoSRC20",
+          "bytes": 13900510,
+          "bpp": 0.5627992038505389,
+          "mean_psnr": 39.13141543955671,
+          "mean_msssim": 0.9904390530039867
+        },
+        {
+          "sequence": "videoSRC21",
+          "bytes": 5822513,
+          "bpp": 0.23573996067837893,
+          "mean_psnr": 44.88720526087232,
+          "mean_msssim": 0.9926128908991814
+        },
+        {
+          "sequence": "videoSRC22",
+          "bytes": 15190351,
+          "bpp": 0.615021855242019,
+          "mean_psnr": 42.172524838386344,
+          "mean_msssim": 0.9934294664611419
+        },
+        {
+          "sequence": "videoSRC23",
+          "bytes": 8748700,
+          "bpp": 0.35421444211235487,
+          "mean_psnr": 43.571124733765906,
+          "mean_msssim": 0.9950958664218584
+        },
+        {
+          "sequence": "videoSRC24",
+          "bytes": 8116415,
+          "bpp": 0.3286146983183043,
+          "mean_psnr": 42.336093454417004,
+          "mean_msssim": 0.9949278539667527
+        },
+        {
+          "sequence": "videoSRC25",
+          "bytes": 27084927,
+          "bpp": 1.09660547360852,
+          "mean_psnr": 36.45020046737045,
+          "mean_msssim": 0.9941483723620573
+        },
+        {
+          "sequence": "videoSRC26",
+          "bytes": 8670068,
+          "bpp": 0.35103081597222224,
+          "mean_psnr": 41.28979292265195,
+          "mean_msssim": 0.9908431116491556
+        },
+        {
+          "sequence": "videoSRC27",
+          "bytes": 12567219,
+          "bpp": 0.5088173633784204,
+          "mean_psnr": 42.46440690822228,
+          "mean_msssim": 0.9954184573143721
+        },
+        {
+          "sequence": "videoSRC28",
+          "bytes": 6757970,
+          "bpp": 0.2736144310997098,
+          "mean_psnr": 42.849022583478295,
+          "mean_msssim": 0.9921046222249666
+        },
+        {
+          "sequence": "videoSRC29",
+          "bytes": 2384289,
+          "bpp": 0.09653429629197761,
+          "mean_psnr": 45.49066517816264,
+          "mean_msssim": 0.9933278268824021
+        },
+        {
+          "sequence": "videoSRC30",
+          "bytes": 7437289,
+          "bpp": 0.3011184717687604,
+          "mean_psnr": 40.326486699863054,
+          "mean_msssim": 0.9890519181887308
+        }
+      ],
+      "motion_lambda": 0.0625,
+      "bframes": 1,
+      "b_lambda": null,
+      "bits": 8,
+      "lambda": "1e-4",
+      "rig_lambda": "1e-4",
+      "decode_reconstruction_exact": true,
+      "coder_identity": "eb68ea7cc96f89b8",
+      "split": {
+        "i_frames": 120,
+        "p_frames": 2760,
+        "bytes_per_i_frame": 235823.45,
+        "bytes_per_p_frame": 147938.13949275363,
+        "i_bytes": 28298814,
+        "p_bytes": 408309265,
+        "framing_bytes": 58320,
+        "motion_bytes": 13885981,
+        "b_frames": 0,
+        "b_bytes": 0,
+        "bytes_per_b_frame": 0.0,
+        "pooled_psnr_b": null,
+        "b_modes_fwd_bwd_avg": [
+          0,
+          0,
+          0
+        ],
+        "coder_overhead_vs_ideal": -0.0009337333301299156,
+        "pooled_psnr_i": 39.17806882984425,
+        "pooled_psnr_p": 39.84016968695149
+      }
+    }
+  },
+  "valid": true
+}
