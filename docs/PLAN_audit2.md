@@ -131,6 +131,18 @@ objects, right after encoding, and then deletes the stream. These checks make it
     I-frames, and it is stated that the later models (λ 3e-3 and 1e-2, and the MS-SSIM set)
     have no old-I version.
 
+- **C2 amendment 2 (2026-11-23, before any GOP re-pick run):** the paper itself says it: "The
+  I-frame spacing of 30 was chosen on the test set." `outputs/p1_pframe/README.md` (2026-11-14)
+  compared GOP 10, 20 and 30 on DAVIS TEST and adopted 30. That is before the ledger's start
+  date, but it is the same class (*picked on test*) and it touches every headline, so it is
+  treated the same way.
+  - **Re-pick on VAL-B:** the current codec (A2 + wide I-frames, the production motion lambdas,
+    untuned, all 5 lambdas, real bytes, decode-exact) on the 4 VAL-B videos at GOP 10, 20 and 30.
+  - **Rule:** BD-rate PSNR (piecewise-linear) of GOP 10 and of GOP 20 against GOP 30. GOP 30 is
+    confirmed unless one of them is below −0.5%. Otherwise the lowest wins, and that is material:
+    every headline is re-measured at that GOP. Spacings above 30 were never tried; that is stated,
+    not tested here.
+
 ## D. Docs
 
 - **D1. Headline numbers re-derived.** A script reads every headline in the README.md
