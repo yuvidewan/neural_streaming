@@ -23,6 +23,7 @@ from pathlib import Path
 
 NAMES = ("Beauty", "Bosphorus", "HoneyBee", "Jockey", "ReadySetGo", "ShakeNDry", "YachtRide")
 WIDTH, HEIGHT, CROPPED_HEIGHT = 1920, 1080, 1072
+FPS = 120   # all seven UVG 1080p sources are 120 fps (used by benchmark_parity --real-fps)
 
 
 def convert(yuv: Path, out_dir: Path, name: str, frames: int) -> int:
@@ -67,7 +68,7 @@ def main() -> int:
             count = len(done)
         print(f"[{name}] {count} frames", flush=True)
         items.append({"source_type": "uvg_yuv420", "source_name": name, "split": "test",
-                      "frame_count": count, "original_resolution": [WIDTH, HEIGHT],
+                      "frame_count": count, "fps": FPS, "original_resolution": [WIDTH, HEIGHT],
                       "processed_resolution": [WIDTH, CROPPED_HEIGHT],
                       "frame_directory": "frames",
                       "frame_filename_pattern": name + "_{index:06d}.png"})

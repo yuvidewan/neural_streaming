@@ -201,6 +201,10 @@ def encode_sequence(mc, m21, intra, icoder, pcoder, frames, path, rig, tables, *
     count = frames.shape[0]
     types = mc.gop_frame_types(count, gop)
     intra_params = rig["intra_params"]
+    # Wide I-frames never read the old intra quantizer, so its two blocks (1,024 B) are not
+    # written (docs/PLAN_audit2_fixes.md, fix 1); the old-I-frame path keeps them.
+    blocks = intra_params if icoder is None else None
+    params_count = 0 if blocks is None else intra_params.scale.numel()
     latent_shape = tuple(intra.encode(frames[0:1].to(device)).shape[1:])
     header = mc.TemporalStreamHeader(
         gop_size=gop, quantization_bits=intra_params.bits,
@@ -208,15 +212,15 @@ def encode_sequence(mc, m21, intra, icoder, pcoder, frames, path, rig, tables, *
         image_height=frames.shape[2], image_channels=frames.shape[1],
         latent_channels=latent_shape[0], latent_height=latent_shape[1],
         latent_width=latent_shape[2], frame_count=count,
-        num_intra_quantization_params=intra_params.scale.numel(),
-        num_residual_quantization_params=intra_params.scale.numel(),
+        num_intra_quantization_params=params_count,
+        num_residual_quantization_params=params_count,
         block_size=block_size, search_range=search_range,
         motion_bits=rig["motion_entropy_model"].bits, reference_mode="mc",
         intra_entropy_model_id=rig["intra_entropy_model"].model_id(),
         residual_entropy_model_id=identity,
         motion_entropy_model_id=(rig["motion_entropy_model"].model_id() if motion_lambda is None
                                  else mp.model_id()))
-    writer = mc.TemporalStreamWriter(path, header, intra_params, intra_params)
+    writer = mc.TemporalStreamWriter(path, header, blocks, blocks)
     motion_scales = (mp.DEFAULT_SCALE_INDEX, mp.DEFAULT_SCALE_INDEX)
     grid = (frames.shape[2] // block_size, frames.shape[3] // block_size)
     reconstructions, records, previous = [], [], None
@@ -306,6 +310,7 @@ def encode_sequence_b(mc, intra, icoder, pcoder, bcoder, frames, path, rig, tabl
     order = bf.coding_order(count, gop, bframes)
     last = _last_use(order)
     intra_params = rig["intra_params"]
+    blocks, params_count = None, 0       # always wide I-frames: no quantization blocks
     latent_shape = tuple(intra.encode(frames[0:1].to(device)).shape[1:])
     header = mc.TemporalStreamHeader(
         gop_size=gop, quantization_bits=intra_params.bits,
@@ -313,13 +318,13 @@ def encode_sequence_b(mc, intra, icoder, pcoder, bcoder, frames, path, rig, tabl
         image_height=frames.shape[2], image_channels=frames.shape[1],
         latent_channels=latent_shape[0], latent_height=latent_shape[1],
         latent_width=latent_shape[2], frame_count=count,
-        num_intra_quantization_params=intra_params.scale.numel(),
-        num_residual_quantization_params=intra_params.scale.numel(),
+        num_intra_quantization_params=params_count,
+        num_residual_quantization_params=params_count,
         block_size=block_size, search_range=search_range,
         motion_bits=rig["motion_entropy_model"].bits, reference_mode="mc",
         intra_entropy_model_id=rig["intra_entropy_model"].model_id(),
         residual_entropy_model_id=identity, motion_entropy_model_id=mp.model_id())
-    writer = mc.TemporalStreamWriter(path, header, intra_params, intra_params)
+    writer = mc.TemporalStreamWriter(path, header, blocks, blocks)
     default = (mp.DEFAULT_SCALE_INDEX, mp.DEFAULT_SCALE_INDEX)
     p_scales = b_forward = b_backward = default
     grid = (frames.shape[2] // block_size, frames.shape[3] // block_size)
@@ -413,6 +418,10 @@ def decode_sequence(mc, m21, intra, icoder, pcoder, path, rig, tables, *, identi
                 zip(records, order)):
             if frame_type == mc.FRAME_TYPE_I:
                 if icoder is None:
+                    if reader.intra_params is None:
+                        raise mc.TemporalFormatError(
+                            "stream carries no intra quantization block (wide I-frames); "
+                            "it cannot be decoded with the old I-frame coder")
                     latent, _ = m21.decode_payload_to_latent(
                         payload, entropy_model=rig["intra_entropy_model"],
                         params=reader.intra_params, shape=header.latent_shape)
@@ -583,7 +592,11 @@ def main(argv: list[str] | None = None) -> int:
         "tune_lr": args.tune_lr if args.tune_steps > 0 else None,
         "motion_lambda": args.motion_lambda, "bframes": args.bframes,
         "b_model": args.b_model if args.bframes > 1 else None,
-        "low_rate_dir": str(args.low_rate_dir) if args.low_rate_dir else None, "dataset": {"sequences": [s.sequence_id for s in sequences],
+        "low_rate_dir": str(args.low_rate_dir) if args.low_rate_dir else None,
+        # docs/PLAN_audit2_fixes.md fix 1: wide-I-frame streams no longer carry the two unused
+        # quantization blocks. A report without this key was coded with them (1,024 B/stream).
+        "container": "nvct2-no-quant-blocks" if args.i_frames == "wide" else "nvct2",
+        "dataset": {"sequences": [s.sequence_id for s in sequences],
                                     "frames": sum(s.frame_count for s in sequences)},
         "points": {}}
     print(f"p4 gate 3: {len(sequences)} sequences, GOP {args.gop}, {args.i_frames} I-frames, "
@@ -595,7 +608,7 @@ def main(argv: list[str] | None = None) -> int:
     def same_settings(old: dict) -> bool:
         keys = ("models_dir", "i_frames", "gop", "smoke", "split", "eval_manifest",
                 "tune_steps", "tune_lr", "dataset", "motion_lambda", "low_rate_dir",
-                "bframes", "b_model")
+                "bframes", "b_model", "container")
         return all(old.get(k) == report.get(k) for k in keys)
 
     if report_path.is_file() and not args.no_resume:

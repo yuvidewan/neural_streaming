@@ -306,7 +306,7 @@ def classical_arms(gop: int, pix_fmt: str = "yuv420p") -> list[ClassicalArm]:
 
 
 def ffmpeg_round_trip(frames_uint8: np.ndarray, arm: ClassicalArm, crf: int,
-                      workdir: Path) -> dict[str, Any]:
+                      workdir: Path, framerate: float = FRAMERATE) -> dict[str, Any]:
     """Encode [N, H, W, 3] uint8 RGB through FFmpeg into an .mp4, measure the
     file, decode it back to uint8 RGB. The frame count is checked by exact byte
     length of the decoded raw stream, so a dropped or duplicated frame fails."""
@@ -315,7 +315,7 @@ def ffmpeg_round_trip(frames_uint8: np.ndarray, arm: ClassicalArm, crf: int,
     video = workdir / f"{arm.name}_crf{crf}.mp4"
     encode = [ffmpeg, "-hide_banner", "-loglevel", "error", "-y",
               "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{width}x{height}",
-              "-framerate", str(FRAMERATE), "-i", "pipe:0",
+              "-framerate", str(framerate), "-i", "pipe:0",
               *arm.encoder_arguments(crf), str(video)]
     started = time.perf_counter()
     completed = subprocess.run(encode, input=np.ascontiguousarray(frames_uint8).tobytes(),
@@ -400,6 +400,9 @@ def build_arg_parser(defaults) -> argparse.ArgumentParser:
     parser.add_argument("--skip-nvc", action="store_true",
                         help="classical arms only (for a quick harness check)")
     parser.add_argument("--no-resume", action="store_true")
+    parser.add_argument("--real-fps", action="store_true",
+                        help="feed each video to x264/x265 at its own frame rate from the "
+                             "manifest's 'fps' field instead of 30 (fails if one is missing)")
     parser.add_argument("--sequence-major", action="store_true",
                         help="load each sequence once and code it at every arm and CRF "
                              "(same rows, much faster on big 1080p sets)")
@@ -592,6 +595,21 @@ class _OneAtATime:
         return self._frames
 
 
+def frame_rate(args, sequence) -> float:
+    """The frame rate x264/x265 are told: 30 unless --real-fps took each video's own rate from
+    the manifest (docs/PLAN_audit2_fixes.md, fix 2). CRF rate control depends on it."""
+    rates = getattr(args, "frame_rates", None)
+    return FRAMERATE if rates is None else rates[sequence.sequence_id]
+
+
+def manifest_frame_rates(manifest: Path) -> dict[str, float]:
+    items = json.loads(Path(manifest).read_text(encoding="utf-8"))["items"]
+    missing = [i["source_name"] for i in items if i["split"] == "test" and not i.get("fps")]
+    if missing:
+        raise SystemExit(f"--real-fps: the manifest records no fps for {missing}")
+    return {i["source_name"]: i["fps"] for i in items if i["split"] == "test"}
+
+
 def run_classical(args, device, sequences, frame_cache, report, persist) -> None:
     workdir = Path(tempfile.mkdtemp(prefix="parity_ffmpeg_"))
     for arm in classical_arms(args.gop, args.classical_pix_fmt):
@@ -602,7 +620,8 @@ def run_classical(args, device, sequences, frame_cache, report, persist) -> None
             rows = []
             for sequence in sequences:
                 frames = frame_cache[sequence.sequence_id]
-                result = ffmpeg_round_trip(frames_to_uint8(frames), arm, crf, workdir)
+                result = ffmpeg_round_trip(frames_to_uint8(frames), arm, crf, workdir,
+                                           frame_rate(args, sequence))
                 scores = score_frames(uint8_to_frames(result["decoded"]), frames, device=device)
                 rows.append({"sequence": sequence.sequence_id, "bytes": result["bytes"],
                              "pixels": sequence.total_pixels,
@@ -638,7 +657,7 @@ def run_classical_by_sequence(args, device, sequences, report, persist) -> None:
         references = frames.to(device, torch.float32)
         del frames
         for arm, crf, label in missing:
-            result = ffmpeg_round_trip(source, arm, crf, workdir)
+            result = ffmpeg_round_trip(source, arm, crf, workdir, frame_rate(args, sequence))
             decoded = (torch.from_numpy(result["decoded"].copy()).to(device)
                        .permute(0, 3, 1, 2).contiguous().to(torch.float32) / 255.0)
             scores = score_frames(decoded, references, device=device)
@@ -715,6 +734,10 @@ def main(argv: list[str] | None = None) -> int:
                      "m10k_dir": str(args.m10k_dir),
                      "primary_convention": PRIMARY_CONVENTION,
                      "max_sequences": args.max_sequences, "max_frames": args.max_frames}
+    if args.real_fps:
+        # Only present when set, so reports from before the option still resume.
+        args.frame_rates = manifest_frame_rates(args.manifest)
+        configuration["framerate"] = args.frame_rates
     intra_only = args.gop == 1
     report: dict[str, Any] = {
         "stage": ("PARITY_ROADMAP Stage 1 gate - intra-only scoreboard (every frame an I-frame)"

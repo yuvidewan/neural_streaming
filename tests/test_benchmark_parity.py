@@ -354,3 +354,25 @@ def test_sequence_major_anchors_match_the_per_point_measurement(parity):
     finally:
         parity.ffmpeg_round_trip = original
     assert not calls
+
+
+def test_real_fps_reads_the_manifest_and_defaults_to_30(parity, tmp_path):
+    """docs/PLAN_audit2_fixes.md fix 2: --real-fps feeds each video at its manifest frame rate;
+    without it every video is fed at 30; a test video with no recorded fps is an error."""
+    import json
+    from types import SimpleNamespace
+
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(json.dumps({"items": [
+        {"source_name": "a", "split": "test", "fps": 120},
+        {"source_name": "b", "split": "test", "fps": 25},
+        {"source_name": "c", "split": "train"}]}), encoding="utf-8")
+    rates = parity.manifest_frame_rates(manifest)
+    assert rates == {"a": 120, "b": 25}
+    video = SimpleNamespace(sequence_id="b")
+    assert parity.frame_rate(SimpleNamespace(), video) == parity.FRAMERATE == 30
+    assert parity.frame_rate(SimpleNamespace(frame_rates=rates), video) == 25
+    manifest.write_text(json.dumps({"items": [{"source_name": "a", "split": "test"}]}),
+                        encoding="utf-8")
+    with pytest.raises(SystemExit):
+        parity.manifest_frame_rates(manifest)

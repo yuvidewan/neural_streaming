@@ -585,14 +585,20 @@ class TemporalStreamHeader:
             entropy_coder_id=coder, format_version=version)
 
 
-def _pack_quantization_block(params: QuantizationParams) -> bytes:
+def _pack_quantization_block(params: QuantizationParams | None) -> bytes:
+    # None = no block (the header declares 0 parameters): wide I-frame streams never read the
+    # old intra quantizer, so they do not carry it (docs/PLAN_audit2_fixes.md, fix 1).
+    if params is None:
+        return b""
     scale = params.scale.detach().flatten().cpu().numpy().astype(np.float32)
     zero = params.zero_point.detach().flatten().cpu().numpy().astype(np.float32)
     return b"".join(struct.pack("<ff", float(s), float(z)) for s, z in zip(scale, zero))
 
 
 def _unpack_quantization_block(data: bytes, count: int, *, bits: int, mode: str,
-                               latent_channels: int) -> QuantizationParams:
+                               latent_channels: int) -> QuantizationParams | None:
+    if count == 0:
+        return None
     if len(data) < count * 8:
         raise TemporalFormatError(
             f"Truncated quantization block: need {count * 8} bytes, got {len(data)}")
@@ -609,7 +615,16 @@ class TemporalStreamWriter:
     motion and residual lengths."""
 
     def __init__(self, path, header: TemporalStreamHeader,
-                 intra_params: QuantizationParams, residual_params: QuantizationParams) -> None:
+                 intra_params: QuantizationParams | None,
+                 residual_params: QuantizationParams | None) -> None:
+        for label, params, declared in (
+                ("intra", intra_params, header.num_intra_quantization_params),
+                ("residual", residual_params, header.num_residual_quantization_params)):
+            supplied = 0 if params is None else params.scale.numel()
+            if supplied != declared:
+                raise TemporalFormatError(
+                    f"header declares {declared} {label} quantization parameters, "
+                    f"{supplied} supplied")
         self._path = Path(path)
         self._path.parent.mkdir(parents=True, exist_ok=True)
         self._expected = header.frame_count

@@ -78,3 +78,27 @@ itself) are records of what each gate measured at the time, and stay as they wer
 
 If proof 1 or 2 fails, the chain stops before any re-run. MCL-JCV goes last because it moves
 numbers least. Stopping there leaves every other result complete.
+
+## Amendment 1 (2026-11-24, after the UVG 4:2:0 run at 120 fps, before any further run)
+
+**What the 4:2:0 run showed.** Per video, x264 at 120 fps is as efficient as at 30 fps (BD
+within ±0.6% on all 7 videos). But the same CRF lands about 1.4 dB lower: CRF 8 now tops out
+at 38.4–40.8 dB, below our top point on every UVG video. BD-rate is only averaged where the
+two curves overlap, so the comparison window moves down to where we are weaker: UVG vs x264
+4:2:0 goes from −18.1% to −1.9%. That change comes from the window, not from x264 getting
+better. So this plan's "same CRF lists" rule was wrong at 120 fps. The expectation above that
+both fixes "can only lower our BD-rate" was also wrong: the audit had measured one video.
+
+**Change (the user agreed, 2026-11-24).** The UVG anchors at 120 fps add **CRF 0, 2, 4 and 6**
+in both formats, so they again reach our quality range. The finished 4:2:0 run keeps its 76
+points and only codes the new CRFs. MCL-JCV keeps CRF 8–44: its non-30 videos are 24/25 fps,
+so the same CRF lands higher, not lower.
+
+**Added checks (report-only, the headline method is unchanged):**
+- **Coverage:** for every video and both x264 formats, the top anchor PSNR against our top
+  PSNR, at 30 fps (old) and 120 fps (new). Any video whose anchor still ends below our top
+  point is listed.
+- **Per-video mean BD-rate** next to the quoted pooled number, for every UVG and MCL-JCV row,
+  so it is visible how much a headline depends on the comparison window.
+
+The −1.9% from the uncovered run is reported as a lesson, not quoted.
