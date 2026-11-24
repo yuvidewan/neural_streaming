@@ -1,5 +1,7 @@
 # Plan: fixing the second audit's two material findings (fixed 2026-11-24, before any run)
 
+**Status (2026-11-25): done, all checks passed.** Results: [`outputs/p13_audit_fixes/README.md`](../outputs/p13_audit_fixes/README.md). One slip: the check below says 18 MCL-JCV videos are 30 fps; the manifest has 16, and the check ran on all 16.
+
 The second audit ([`outputs/p12_audit2/README.md`](../outputs/p12_audit2/README.md)) found two
 things over its 1-point rule. Both make our quoted numbers stricter than they should be. The
 user asked to fix both. The audit plan's rule for a material finding: re-measure, and re-quote

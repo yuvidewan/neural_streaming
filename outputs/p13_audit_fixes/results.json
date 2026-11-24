@@ -1,0 +1,187 @@
+{
+ "checks": {
+  "proof2_streams": 12,
+  "proof2_pass": true,
+  "rerun_davis_mse_exactly_1024_smaller": true,
+  "rerun_davis_msssim_exactly_1024_smaller": true,
+  "rerun_uvg_mse_exactly_1024_smaller": true,
+  "mcljcv_30fps_anchors_unchanged": {
+   "videos": 16,
+   "rows_checked": 2432,
+   "all_identical": true
+  },
+  "uvg_coverage": {
+   "per_video": {
+    "Beauty": {
+     "ours_top": 38.14,
+     "h264_30fps_top": 40.65,
+     "h264_120fps_top": 42.51,
+     "h264_444_30fps_top": 42.82,
+     "h264_444_120fps_top": 52.14
+    },
+    "Bosphorus": {
+     "ours_top": 42.95,
+     "h264_30fps_top": 41.99,
+     "h264_120fps_top": 44.28,
+     "h264_444_30fps_top": 43.89,
+     "h264_444_120fps_top": 52.02
+    },
+    "HoneyBee": {
+     "ours_top": 40.28,
+     "h264_30fps_top": 39.76,
+     "h264_120fps_top": 41.71,
+     "h264_444_30fps_top": 42.33,
+     "h264_444_120fps_top": 52.11
+    },
+    "Jockey": {
+     "ours_top": 41.2,
+     "h264_30fps_top": 40.78,
+     "h264_120fps_top": 42.98,
+     "h264_444_30fps_top": 43.04,
+     "h264_444_120fps_top": 52.13
+    },
+    "ReadySetGo": {
+     "ours_top": 41.15,
+     "h264_30fps_top": 40.27,
+     "h264_120fps_top": 42.61,
+     "h264_444_30fps_top": 42.41,
+     "h264_444_120fps_top": 52.13
+    },
+    "ShakeNDry": {
+     "ours_top": 40.37,
+     "h264_30fps_top": 40.12,
+     "h264_120fps_top": 42.75,
+     "h264_444_30fps_top": 42.05,
+     "h264_444_120fps_top": 52.12
+    },
+    "YachtRide": {
+     "ours_top": 42.35,
+     "h264_30fps_top": 41.34,
+     "h264_120fps_top": 43.85,
+     "h264_444_30fps_top": 43.37,
+     "h264_444_120fps_top": 52.09
+    }
+   },
+   "anchor_ends_below_ours_at_120fps": []
+  }
+ },
+ "table": [
+  {
+   "headline": "DAVIS MSE set vs x264 4:2:0, PSNR",
+   "fix1": "real",
+   "old": 27.6,
+   "after_fix1": 26.72,
+   "after_both": 26.72
+  },
+  {
+   "headline": "DAVIS MSE set vs x264 4:4:4, PSNR",
+   "fix1": "real",
+   "old": 55.8,
+   "after_fix1": 54.73,
+   "after_both": 54.73
+  },
+  {
+   "headline": "UVG MSE set vs x264 4:2:0, PSNR",
+   "fix1": "real",
+   "old": -18.09,
+   "after_fix1": -18.13,
+   "after_both": -20.22,
+   "per_video_mean_old": -5.83,
+   "per_video_mean_after_both": -14.14
+  },
+  {
+   "headline": "UVG MSE set vs x264 4:4:4, PSNR",
+   "fix1": "real",
+   "old": 17.88,
+   "after_fix1": 17.83,
+   "after_both": 17.96,
+   "per_video_mean_old": 37.05,
+   "per_video_mean_after_both": 37.06
+  },
+  {
+   "headline": "UVG MSE set vs x264 4:2:0 low-delay, PSNR",
+   "fix1": "real",
+   "old": -34.13,
+   "after_fix1": -34.16,
+   "after_both": -34.23,
+   "per_video_mean_old": -29.33,
+   "per_video_mean_after_both": -31.69
+  },
+  {
+   "headline": "UVG low band vs x264 4:4:4, PSNR",
+   "fix1": "real",
+   "old": 65.82,
+   "after_fix1": 65.7,
+   "after_both": 65.89,
+   "per_video_mean_old": 99.05,
+   "per_video_mean_after_both": 98.94
+  },
+  {
+   "headline": "MS-SSIM set vs MSE set, DAVIS, MS-SSIM",
+   "fix1": "real",
+   "old": -22.43,
+   "after_fix1": -22.6,
+   "after_both": -22.6
+  },
+  {
+   "headline": "MS-SSIM set vs MSE set, UVG, MS-SSIM",
+   "fix1": "real/derived",
+   "old": -9.66,
+   "after_fix1": -9.66,
+   "after_both": -9.66
+  },
+  {
+   "headline": "MS-SSIM set, DAVIS vs x264 4:2:0, MS-SSIM",
+   "fix1": "real",
+   "old": 16.27,
+   "after_fix1": 14.88,
+   "after_both": 14.88
+  },
+  {
+   "headline": "MS-SSIM set, UVG vs x264 4:2:0, MS-SSIM",
+   "fix1": "derived",
+   "old": 0.35,
+   "after_fix1": 0.32,
+   "after_both": 0.43,
+   "per_video_mean_old": 20.69,
+   "per_video_mean_after_both": 19.04
+  },
+  {
+   "headline": "MCL-JCV MSE set vs x264 4:2:0, PSNR",
+   "fix1": "derived",
+   "old": -1.41,
+   "after_fix1": -1.44,
+   "after_both": -2.33,
+   "per_video_mean_old": 19.81,
+   "per_video_mean_after_both": 19.32
+  },
+  {
+   "headline": "MCL-JCV MSE set vs x264 4:2:0 low-delay, PSNR",
+   "fix1": "derived",
+   "old": -12.35,
+   "after_fix1": -12.38,
+   "after_both": -13.12,
+   "per_video_mean_old": -1.01,
+   "per_video_mean_after_both": -1.37
+  },
+  {
+   "headline": "MCL-JCV MSE set vs x264 4:4:4, PSNR",
+   "fix1": "derived",
+   "old": 40.09,
+   "after_fix1": 40.04,
+   "after_both": 38.68,
+   "per_video_mean_old": 62.07,
+   "per_video_mean_after_both": 62.12
+  },
+  {
+   "headline": "MCL-JCV MS-SSIM set vs x264 4:2:0, MS-SSIM",
+   "fix1": "derived",
+   "old": -0.42,
+   "after_fix1": -0.46,
+   "after_both": -0.62,
+   "per_video_mean_old": 19.41,
+   "per_video_mean_after_both": 19.21
+  }
+ ],
+ "note": "DAVIS has no recorded frame rate, so its anchors stay at 30 fps; 'derived' = bpp from (bytes - 1,024 per video), not re-coded"
+}

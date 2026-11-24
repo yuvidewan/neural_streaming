@@ -1,0 +1,110 @@
+{
+ "davis_bmx-bumps_1e-2.nvct": {
+  "lambda": "1e-2",
+  "old_bytes": 76069,
+  "new_bytes": 75045,
+  "saved": 1024,
+  "equals_old_minus_blocks": true,
+  "same_reconstruction_as_audit": true,
+  "encoder_hash": "4de0fba83928e9a6f98f6d9b2e97a4c90f13b9fb38a77a4a6cee26313f99ed1d"
+ },
+ "davis_car-turn_1e-2.nvct": {
+  "lambda": "1e-2",
+  "old_bytes": 38965,
+  "new_bytes": 37941,
+  "saved": 1024,
+  "equals_old_minus_blocks": true,
+  "same_reconstruction_as_audit": true,
+  "encoder_hash": "badd7a7ed3c4219ed77e49fa38cba6ab3d5d11000b2e52082c7cd508cd0e2de3"
+ },
+ "uvg_Beauty_1e-2.nvct": {
+  "lambda": "1e-2",
+  "old_bytes": 668779,
+  "new_bytes": 667755,
+  "saved": 1024,
+  "equals_old_minus_blocks": true,
+  "same_reconstruction_as_audit": true,
+  "encoder_hash": "3dfe3cfcc9f9cbdf19e9c829a6ea9d1412baadf9c18be4d07411c1fe8c6e6f3d"
+ },
+ "davis_bmx-bumps_3e-3.nvct": {
+  "lambda": "3e-3",
+  "old_bytes": 133558,
+  "new_bytes": 132534,
+  "saved": 1024,
+  "equals_old_minus_blocks": true,
+  "same_reconstruction_as_audit": true,
+  "encoder_hash": "a233f7a2f7ce83fdf91589931ef8cb532b896b9211d6bf84ab176a6a7112e4fb"
+ },
+ "davis_car-turn_3e-3.nvct": {
+  "lambda": "3e-3",
+  "old_bytes": 74384,
+  "new_bytes": 73360,
+  "saved": 1024,
+  "equals_old_minus_blocks": true,
+  "same_reconstruction_as_audit": true,
+  "encoder_hash": "b7664b26a394f98d456bfa63f1fb4f6884878c8a38538b6e1844f7c706f85505"
+ },
+ "davis_bmx-bumps_1e-3.nvct": {
+  "lambda": "1e-3",
+  "old_bytes": 233852,
+  "new_bytes": 232828,
+  "saved": 1024,
+  "equals_old_minus_blocks": true,
+  "same_reconstruction_as_audit": true,
+  "encoder_hash": "0e470f157ffce2975608556b021c3c60b025f7f123932eee5a3b18cb15802e2c"
+ },
+ "davis_car-turn_1e-3.nvct": {
+  "lambda": "1e-3",
+  "old_bytes": 146598,
+  "new_bytes": 145574,
+  "saved": 1024,
+  "equals_old_minus_blocks": true,
+  "same_reconstruction_as_audit": true,
+  "encoder_hash": "fef290674c119aba5619afefa7b739b3fd739f841bc2171cd6ff9358a99f6f71"
+ },
+ "davis_bmx-bumps_3e-4.nvct": {
+  "lambda": "3e-4",
+  "old_bytes": 469883,
+  "new_bytes": 468859,
+  "saved": 1024,
+  "equals_old_minus_blocks": true,
+  "same_reconstruction_as_audit": true,
+  "encoder_hash": "3fd93eea001b61efa12fa09abb45c2797a4776dccfa2cd5cb5c678778eba843d"
+ },
+ "davis_car-turn_3e-4.nvct": {
+  "lambda": "3e-4",
+  "old_bytes": 339471,
+  "new_bytes": 338447,
+  "saved": 1024,
+  "equals_old_minus_blocks": true,
+  "same_reconstruction_as_audit": true,
+  "encoder_hash": "808ae1bef492efdb23b25033cb4164c8bff0767faa968ae8a8b9bd04e389f8e7"
+ },
+ "davis_bmx-bumps_1e-4.nvct": {
+  "lambda": "1e-4",
+  "old_bytes": 773276,
+  "new_bytes": 772252,
+  "saved": 1024,
+  "equals_old_minus_blocks": true,
+  "same_reconstruction_as_audit": true,
+  "encoder_hash": "691096c539474ad86c55b55bcef51080ad121d7f5921ec5858ea16c141ce1e82"
+ },
+ "davis_car-turn_1e-4.nvct": {
+  "lambda": "1e-4",
+  "old_bytes": 611550,
+  "new_bytes": 610526,
+  "saved": 1024,
+  "equals_old_minus_blocks": true,
+  "same_reconstruction_as_audit": true,
+  "encoder_hash": "4e0699c8f6d9594969cc017331a21807ff0f463c44bedb069cfe0266a493f345"
+ },
+ "uvg_Beauty_1e-4.nvct": {
+  "lambda": "1e-4",
+  "old_bytes": 24413473,
+  "new_bytes": 24412449,
+  "saved": 1024,
+  "equals_old_minus_blocks": true,
+  "same_reconstruction_as_audit": true,
+  "encoder_hash": "71baed9f8db9b6239fdfb6a8055bb82a67fb78dadfefc96bec711dfd3a44afb9"
+ }
+}

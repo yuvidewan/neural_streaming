@@ -82,6 +82,11 @@ The DAVIS MS-SSIM win (−20.7% cubic) still clears its −10% bar. Any "tie" cl
 
 ## The two material findings, and why nothing is re-quoted yet
 
+> **Update 2026-11-25:** the user asked to fix both, and both are now fixed and re-quoted in
+> [`outputs/p13_audit_fixes/README.md`](../p13_audit_fixes/README.md). The header fix moved DAVIS by
+> about a point as expected. The frame-rate fix needed extra CRFs (0–6) at 120 fps to cover our quality
+> range; with them UVG vs x264 4:2:0 moved −18.1 → −20.2%.
+
 Both are real, both are over the plan's 1-point limit, and both mean the codec is **better**
 than quoted:
 1. **UVG anchors at 30 fps.** x264's CRF rate control depends on the frame rate. Fed at the
