@@ -7,6 +7,9 @@
 > gets re-sized in amendment 2, written after the fair evaluation (`docs/PLAN_fair_eval.md`), and
 > that amendment also moves gates 3 and 6 to the fair protocol. No v2 code before then. Whether a
 > decoder this light can beat H.264 at all is now the first thing v2 must test.
+> Gate 2's bar (25% fewer bits than the current codec) has to go too: a decoder about 40 times
+> lighter than the current one is unlikely to beat it, and the goal is H.264, not our old codec.
+> Amendment 2 judges v2 against H.264 under the fair protocol at every gate.
 
 ## Why
 
