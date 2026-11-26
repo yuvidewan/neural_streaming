@@ -22,6 +22,24 @@ part is done. The bar now is to win.
 
 ### Where that stands today
 
+> **Warning (2026-11-26): the H.264 comparisons below are not fair, and the codec does not beat
+> H.264 when measured fairly.** The whole-project flaw check
+> ([`docs/FLAW_CHECK_2026-11-26.md`](docs/FLAW_CHECK_2026-11-26.md)) found the problem. Our 1080p
+> sources are 4:2:0 YUV. They were converted to RGB, then converted back to 4:2:0 with a different
+> matrix before x264 saw them, and both codecs were scored in RGB. That caps x264 4:2:0 at about
+> 42–44 dB on UVG, so the "wins" against x264 4:2:0 come from the setup, not from the codec.
+>
+> Against x264 in 4:4:4 (the fair RGB comparison), averaged per video, the codec needs 64% more
+> bits on DAVIS, 37% more on UVG and 62% more on MCL-JCV, and it wins 11 of 46 videos. At
+> streaming bitrates (about 2–8 Mbps at 1080p) it needs 73–81% more bits even than the
+> handicapped x264 4:2:0. It also cannot code a 1080-row frame, decodes correctly only on the GPU
+> that encoded it, and is about 100 times slower than x264.
+>
+> A fair re-measure is planned ([`docs/PLAN_fair_eval.md`](docs/PLAN_fair_eval.md)): x264 and x265
+> get the original YUV, scoring is in YUV, the anchors are tuned for PSNR, and BD-rates are
+> averaged per video. Until it is done, read every "vs x264 4:2:0" number below as measured
+> against a handicapped anchor.
+
 > **Latest (2026-11-18), superseding the M22 table below** (full write-up in
 > [`outputs/p4_wide_latent/README.md`](outputs/p4_wide_latent/README.md)):
 > the current codec (A2 wide-latent P-coder + wide I-coder, GOP 30) with
