@@ -1,6 +1,6 @@
 # Plan: one-day check with the published DCVC-RT (fixed 2026-11-26, before any run)
 
-**Status (2026-11-26): done, GO.** Results: [`outputs/p14_dcvcrt_check/README.md`](../outputs/p14_dcvcrt_check/README.md). DCVC-RT wins 16/16 videos against every x264 arm and needs 54.5% (DAVIS) and 76.2% (UVG) fewer bits than our codec, within its own quality range, which tops out 0.9-4.1 dB below ours.
+**Status (2026-11-26): done, GO.** Results: [`outputs/p14_dcvcrt_check/README.md`](../outputs/p14_dcvcrt_check/README.md). DCVC-RT wins 16/16 videos against every x264 arm and needs 54.5% (DAVIS) and 76.2% (UVG) fewer bits than our codec, within its own quality range, which tops out 0.9-4.1 dB below ours. *Correction (2026-11-26, after the run):* the "larger latent at 1/8" below is wrong as written; DCVC-RT's code shows a 128-channel coded latent at 1/16 (0.5 values per pixel), with 256-channel features at 1/8 carrying the temporal context. See `docs/PLAN_v2_codec.md`.
 
 ## Why
 

@@ -68,9 +68,10 @@ BODY = [
     ("p", "DVC [@lu2019] coded optical flow and a pixel residual. The DCVC family [@li2021,@li2023,@li2024] "
           "replaced the residual by conditional coding, where the warped reference is an input to the "
           "encoder, decoder and prior. Our P-frame coder is conditional in this sense but keeps "
-          "integer block motion. DCVC-RT [@jia2025] drops explicit motion altogether, codes one latent "
-          "at 1/8 resolution, runs 1080p in real time on a data-centre GPU, and integerizes its "
-          "network so that decoding is identical across devices. Cool-chic video [@leguay2024] shows "
+          "integer block motion. DCVC-RT [@jia2025] drops explicit motion altogether: it codes a "
+          "128-channel latent at 1/16 resolution given 256-channel features of the previous frame at "
+          "1/8, runs 1080p in real time on a data-centre GPU, and integerizes its network so that "
+          "decoding is identical across devices. Cool-chic video [@leguay2024] shows "
           "that small learned video codecs can approach H.264 by fitting a decoder per video. Codecs "
           "are compared by BD-rate [@bjontegaard2001] on PSNR and MS-SSIM [@wang2003], usually after "
           "training on Vimeo-90K [@xue2019] and testing on UVG [@mercat2020] and MCL-JCV [@wang2016]."),
@@ -253,9 +254,9 @@ BODY = [
     ("p", "*Limitations.* Results use one seed and the first 96 frames of each 1080p video. DAVIS and "
           "UVG were reused across gates. BD-rates within about ±3% depend on the interpolation method. "
           "Decoding is identical only on the same GPU. The low-rate and textured-scene losses point to "
-          "latent capacity and to motion cost at 1080p; a design along the lines of DCVC-RT "
-          "[@jia2025], with no explicit motion, a larger latent at 1/8 resolution and integer "
-          "arithmetic, targets both, and real-time decoding as well."),
+          "the transform's capacity and to motion cost at 1080p. A design along the lines of DCVC-RT "
+          "[@jia2025], which carries the previous frame as decoded features in place of motion "
+          "vectors and uses integer arithmetic, is aimed at both, and at real-time decoding."),
 ]
 
 TABLES = {
