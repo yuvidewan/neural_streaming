@@ -70,11 +70,18 @@ ladders go down to about 0.4 Mbps at lower resolutions (R3).
 | R15 | Models and code can be rebuilt and shipped: weights versioned and backed up, a decoder that installs on another PC | release artefacts; a clean-machine install test | **fails**: 346 MB of weights only on this laptop; never installed elsewhere | to plan |
 | R16 | 10-bit and HDR video | | **not required now**, listed as a known gap | |
 | R17 | Training data licensed for the intended use | licence check of each dataset | **partial**: Vimeo-90K is research-only, fine for research, not for a product | to check before any release |
+| R18 | Viewers can play it: a player people can install, or run in a web browser through WebGPU. Browsers and streaming platforms play only H.264, HEVC, VP9 and AV1 | play a stream on a PC that never had Python or PyTorch installed | **fails**: decoding needs Python, PyTorch and CUDA; there is no player | to plan |
+| R19 | Stream timing: timestamps and the frame rate are in the stream, so video stays in sync with audio and plays at the right speed; segments start with an I-frame for adaptive streaming | sync check against an audio track; segment cut at every I-frame | **fails**: the `.nvct` format carries no timestamps and no frame rate | v2 bitstream |
+| R20 | A damaged or malicious stream is rejected without crashing or reading out of bounds (the C range coder and the parser included) | fuzz test: millions of mutated streams, no crash, no memory error | **untested** | to plan |
+| R21 | Real-time encoding while the streamer's GPU also runs a game or screen capture | encode frames/s at 1080p with a fixed GPU load running | **untested** (our encoder is not real time even with the GPU to itself) | v2 gate 4 |
+| R22 | Old streams keep decoding after the models change: every stream names its model version, and the player keeps or fetches that version | decode a stream made with an older model after an update | **partial**: streams carry 8-byte model identities and the decoder refuses a mismatch; there is no versioned model store | with R15 |
 
 ## How this list is used
 
 - A plan states which R-numbers it moves and how it will measure them.
 - A result is never quoted without the status of R1, R2, R7 and R9 next to it.
+- 2026-11-26: R18 to R22 added after thinking through live streaming from capture to the
+  viewer's screen (playback, timing, damaged streams, a shared GPU, model versions).
 - 2026-11-26: R7 widened from CPU-only to any GPU, integrated included, with a 10,000
   multiply-add per pixel decoder budget (C1).
 - Any requirement that turns out wrong or missing is fixed here first, with the date.
