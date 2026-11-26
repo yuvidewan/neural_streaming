@@ -1,0 +1,106 @@
+cannot import cuda implementation for inference, fallback to pytorch.
+testing 6 rates, using qp: 0, 13, 25, 38, 50, 63, 
+  0%|          | 0/96 [00:00<?, ?it/s]  1%|1         | 1/96 [00:10<16:27, 10.40s/it]  2%|2         | 2/96 [00:13<09:14,  5.90s/it]  3%|3         | 3/96 [00:15<06:45,  4.36s/it]  4%|4         | 4/96 [00:18<05:40,  3.70s/it]  5%|5         | 5/96 [00:20<05:01,  3.31s/it]  6%|6         | 6/96 [00:23<04:36,  3.07s/it]  7%|7         | 7/96 [00:26<04:18,  2.91s/it]  8%|8         | 8/96 [00:29<04:29,  3.07s/it]  9%|9         | 9/96 [00:34<05:22,  3.71s/it] 10%|#         | 10/96 [00:37<04:50,  3.38s/it] 11%|#1        | 11/96 [00:40<04:32,  3.21s/it] 12%|#2        | 12/96 [00:43<04:25,  3.16s/it] 14%|#3        | 13/96 [00:46<04:14,  3.07s/it] 15%|#4        | 14/96 [00:48<04:02,  2.95s/it] 16%|#5        | 15/96 [00:51<03:58,  2.95s/it] 17%|#6        | 16/96 [00:54<03:52,  2.90s/it] 18%|#7        | 17/96 [00:57<03:43,  2.82s/it] 19%|#8        | 18/96 [00:59<03:32,  2.72s/it] 20%|#9        | 19/96 [01:02<03:40,  2.86s/it] 21%|##        | 20/96 [01:05<03:44,  2.95s/it] 22%|##1       | 21/96 [01:08<03:37,  2.90s/it] 23%|##2       | 22/96 [01:11<03:31,  2.85s/it] 24%|##3       | 23/96 [01:14<03:27,  2.84s/it] 25%|##5       | 24/96 [01:17<03:24,  2.84s/it] 26%|##6       | 25/96 [01:18<02:54,  2.46s/it] 27%|##7       | 26/96 [01:20<02:33,  2.19s/it] 28%|##8       | 27/96 [01:21<02:17,  1.99s/it] 29%|##9       | 28/96 [01:23<02:04,  1.83s/it] 30%|###       | 29/96 [01:24<01:54,  1.72s/it] 31%|###1      | 30/96 [01:26<01:46,  1.61s/it] 32%|###2      | 31/96 [01:28<02:05,  1.93s/it] 33%|###3      | 32/96 [01:31<02:15,  2.12s/it] 34%|###4      | 33/96 [01:33<02:22,  2.26s/it] 35%|###5      | 34/96 [01:36<02:22,  2.30s/it] 36%|###6      | 35/96 [01:38<02:21,  2.31s/it] 38%|###7      | 36/96 [01:41<02:22,  2.37s/it] 39%|###8      | 37/96 [01:43<02:23,  2.43s/it] 40%|###9      | 38/96 [01:45<02:17,  2.37s/it] 41%|####      | 39/96 [01:48<02:12,  2.33s/it] 42%|####1     | 40/96 [01:50<02:08,  2.29s/it] 43%|####2     | 41/96 [01:52<02:02,  2.23s/it] 44%|####3     | 42/96 [01:54<01:59,  2.21s/it] 45%|####4     | 43/96 [01:57<02:04,  2.34s/it] 46%|####5     | 44/96 [01:59<02:03,  2.38s/it] 47%|####6     | 45/96 [02:02<02:03,  2.43s/it] 48%|####7     | 46/96 [02:04<02:01,  2.44s/it] 49%|####8     | 47/96 [02:07<01:58,  2.42s/it] 50%|#####     | 48/96 [02:09<01:58,  2.47s/it] 51%|#####1    | 49/96 [02:11<01:46,  2.27s/it] 52%|#####2    | 50/96 [02:13<01:36,  2.09s/it] 53%|#####3    | 51/96 [02:14<01:28,  1.96s/it] 54%|#####4    | 52/96 [02:16<01:22,  1.88s/it] 55%|#####5    | 53/96 [02:18<01:17,  1.81s/it] 56%|#####6    | 54/96 [02:19<01:12,  1.72s/it] 57%|#####7    | 55/96 [03:10<11:15, 16.47s/it] 58%|#####8    | 56/96 [03:57<17:09, 25.74s/it] 59%|#####9    | 57/96 [04:47<21:20, 32.84s/it] 60%|######    | 58/96 [05:36<23:52, 37.69s/it] 61%|######1   | 59/96 [06:26<25:29, 41.33s/it] 62%|######2   | 60/96 [07:14<26:06, 43.52s/it] 64%|######3   | 61/96 [08:06<26:44, 45.84s/it] 65%|######4   | 62/96 [08:55<26:36, 46.94s/it] 66%|######5   | 63/96 [09:46<26:28, 48.12s/it] 67%|######6   | 64/96 [10:23<23:55, 44.86s/it] 68%|######7   | 65/96 [11:01<22:03, 42.68s/it] 69%|######8   | 66/96 [11:41<21:01, 42.04s/it] 70%|######9   | 67/96 [12:23<20:13, 41.86s/it] 71%|#######   | 68/96 [13:03<19:19, 41.43s/it] 72%|#######1  | 69/96 [13:43<18:27, 41.00s/it] 73%|#######2  | 70/96 [14:19<17:01, 39.30s/it] 74%|#######3  | 71/96 [14:52<15:36, 37.47s/it] 75%|#######5  | 72/96 [15:25<14:27, 36.16s/it] 76%|#######6  | 73/96 [15:57<13:24, 34.99s/it] 77%|#######7  | 74/96 [16:29<12:28, 34.02s/it] 78%|#######8  | 75/96 [17:00<11:36, 33.17s/it] 79%|#######9  | 76/96 [17:32<10:53, 32.67s/it] 80%|########  | 77/96 [18:02<10:09, 32.06s/it] 81%|########1 | 78/96 [18:33<09:31, 31.78s/it] 82%|########2 | 79/96 [19:05<09:01, 31.84s/it] 83%|########3 | 80/96 [19:38<08:33, 32.07s/it] 84%|########4 | 81/96 [20:10<08:03, 32.21s/it] 85%|########5 | 82/96 [20:45<07:39, 32.84s/it] 86%|########6 | 83/96 [21:19<07:11, 33.17s/it] 88%|########7 | 84/96 [21:52<06:40, 33.36s/it] 89%|########8 | 85/96 [22:26<06:09, 33.55s/it] 90%|########9 | 86/96 [23:01<05:38, 33.86s/it] 91%|######### | 87/96 [23:36<05:07, 34.18s/it] 92%|#########1| 88/96 [24:11<04:34, 34.33s/it] 93%|#########2| 89/96 [24:47<04:04, 34.88s/it] 94%|#########3| 90/96 [25:21<03:28, 34.67s/it] 95%|#########4| 91/96 [25:53<02:49, 33.83s/it] 96%|#########5| 92/96 [26:27<02:15, 33.80s/it] 97%|#########6| 93/96 [27:01<01:41, 34.00s/it] 98%|#########7| 94/96 [27:34<01:07, 33.69s/it] 99%|#########8| 95/96 [28:08<00:33, 33.86s/it]100%|##########| 96/96 [28:43<00:00, 34.13s/it]100%|##########| 96/96 [28:43<00:00, 17.95s/it]
+Test finished
+Tested 8346 frames from 16 sequences
+Total elapsed time: 28.7 min
+cannot import cuda implementation for inference, fallback to pytorch.
+created folder: ../streams\DAVIS
+encoding/decoding 90 frames, average encoding time 13.172 ms, average decoding time 11.581 ms.
+encoding/decoding 90 frames, average encoding time 12.443 ms, average decoding time 10.226 ms.
+encoding/decoding 90 frames, average encoding time 11.375 ms, average decoding time 10.136 ms.
+encoding/decoding 90 frames, average encoding time 11.878 ms, average decoding time 10.196 ms.
+encoding/decoding 90 frames, average encoding time 11.269 ms, average decoding time 10.369 ms.
+encoding/decoding 90 frames, average encoding time 11.074 ms, average decoding time 10.615 ms.
+encoding/decoding 80 frames, average encoding time 13.195 ms, average decoding time 10.225 ms.
+encoding/decoding 80 frames, average encoding time 13.116 ms, average decoding time 10.900 ms.
+encoding/decoding 80 frames, average encoding time 10.862 ms, average decoding time 14.593 ms.
+encoding/decoding 80 frames, average encoding time 13.508 ms, average decoding time 11.358 ms.
+encoding/decoding 80 frames, average encoding time 14.589 ms, average decoding time 12.638 ms.
+encoding/decoding 80 frames, average encoding time 15.749 ms, average decoding time 13.111 ms.
+encoding/decoding 89 frames, average encoding time 12.579 ms, average decoding time 10.405 ms.
+encoding/decoding 89 frames, average encoding time 11.791 ms, average decoding time 10.770 ms.
+encoding/decoding 89 frames, average encoding time 13.886 ms, average decoding time 10.927 ms.
+encoding/decoding 89 frames, average encoding time 11.931 ms, average decoding time 10.794 ms.
+encoding/decoding 89 frames, average encoding time 11.544 ms, average decoding time 10.323 ms.
+encoding/decoding 89 frames, average encoding time 10.765 ms, average decoding time 9.885 ms.
+encoding/decoding 104 frames, average encoding time 11.440 ms, average decoding time 10.972 ms.
+encoding/decoding 104 frames, average encoding time 12.413 ms, average decoding time 9.893 ms.
+encoding/decoding 104 frames, average encoding time 10.197 ms, average decoding time 9.282 ms.
+encoding/decoding 104 frames, average encoding time 10.098 ms, average decoding time 9.636 ms.
+encoding/decoding 104 frames, average encoding time 10.370 ms, average decoding time 9.342 ms.
+encoding/decoding 104 frames, average encoding time 11.237 ms, average decoding time 9.952 ms.
+encoding/decoding 52 frames, average encoding time 10.249 ms, average decoding time 9.997 ms.
+encoding/decoding 52 frames, average encoding time 11.829 ms, average decoding time 11.015 ms.
+encoding/decoding 52 frames, average encoding time 11.755 ms, average decoding time 9.401 ms.
+encoding/decoding 52 frames, average encoding time 10.892 ms, average decoding time 9.927 ms.
+encoding/decoding 52 frames, average encoding time 10.826 ms, average decoding time 10.645 ms.
+encoding/decoding 52 frames, average encoding time 9.893 ms, average decoding time 9.870 ms.
+encoding/decoding 91 frames, average encoding time 10.697 ms, average decoding time 10.973 ms.
+encoding/decoding 91 frames, average encoding time 11.424 ms, average decoding time 9.678 ms.
+encoding/decoding 91 frames, average encoding time 11.064 ms, average decoding time 9.723 ms.
+encoding/decoding 91 frames, average encoding time 10.053 ms, average decoding time 9.036 ms.
+encoding/decoding 91 frames, average encoding time 10.338 ms, average decoding time 9.071 ms.
+encoding/decoding 91 frames, average encoding time 11.189 ms, average decoding time 10.077 ms.
+encoding/decoding 78 frames, average encoding time 11.661 ms, average decoding time 10.980 ms.
+encoding/decoding 78 frames, average encoding time 11.373 ms, average decoding time 9.604 ms.
+encoding/decoding 78 frames, average encoding time 11.193 ms, average decoding time 9.797 ms.
+encoding/decoding 78 frames, average encoding time 10.319 ms, average decoding time 9.953 ms.
+encoding/decoding 78 frames, average encoding time 10.353 ms, average decoding time 9.643 ms.
+encoding/decoding 78 frames, average encoding time 10.370 ms, average decoding time 9.937 ms.
+encoding/decoding 80 frames, average encoding time 12.891 ms, average decoding time 10.987 ms.
+encoding/decoding 80 frames, average encoding time 12.165 ms, average decoding time 10.386 ms.
+encoding/decoding 80 frames, average encoding time 13.725 ms, average decoding time 10.355 ms.
+encoding/decoding 80 frames, average encoding time 11.268 ms, average decoding time 11.304 ms.
+encoding/decoding 80 frames, average encoding time 11.927 ms, average decoding time 10.645 ms.
+encoding/decoding 80 frames, average encoding time 12.229 ms, average decoding time 11.088 ms.
+encoding/decoding 55 frames, average encoding time 13.188 ms, average decoding time 11.076 ms.
+encoding/decoding 55 frames, average encoding time 11.612 ms, average decoding time 11.509 ms.
+encoding/decoding 55 frames, average encoding time 12.050 ms, average decoding time 11.434 ms.
+encoding/decoding 55 frames, average encoding time 11.937 ms, average decoding time 10.837 ms.
+encoding/decoding 55 frames, average encoding time 12.386 ms, average decoding time 11.457 ms.
+encoding/decoding 55 frames, average encoding time 10.594 ms, average decoding time 9.232 ms.
+created folder: ../streams\UVG
+encoding/decoding 96 frames, average encoding time 147.618 ms, average decoding time 141.615 ms.
+encoding/decoding 96 frames, average encoding time 153.104 ms, average decoding time 147.959 ms.
+encoding/decoding 96 frames, average encoding time 149.424 ms, average decoding time 145.576 ms.
+encoding/decoding 96 frames, average encoding time 151.785 ms, average decoding time 146.606 ms.
+encoding/decoding 96 frames, average encoding time 156.421 ms, average decoding time 145.872 ms.
+encoding/decoding 96 frames, average encoding time 157.847 ms, average decoding time 157.174 ms.
+encoding/decoding 96 frames, average encoding time 160.897 ms, average decoding time 145.236 ms.
+encoding/decoding 96 frames, average encoding time 159.193 ms, average decoding time 151.879 ms.
+encoding/decoding 96 frames, average encoding time 156.885 ms, average decoding time 134.732 ms.
+encoding/decoding 96 frames, average encoding time 97.557 ms, average decoding time 104.139 ms.
+encoding/decoding 96 frames, average encoding time 97.446 ms, average decoding time 104.828 ms.
+encoding/decoding 96 frames, average encoding time 98.218 ms, average decoding time 104.837 ms.
+encoding/decoding 96 frames, average encoding time 96.910 ms, average decoding time 104.429 ms.
+encoding/decoding 96 frames, average encoding time 98.106 ms, average decoding time 105.380 ms.
+encoding/decoding 96 frames, average encoding time 97.064 ms, average decoding time 99.140 ms.
+encoding/decoding 96 frames, average encoding time 74.783 ms, average decoding time 86.482 ms.
+encoding/decoding 96 frames, average encoding time 75.744 ms, average decoding time 86.174 ms.
+encoding/decoding 96 frames, average encoding time 75.111 ms, average decoding time 86.261 ms.
+encoding/decoding 96 frames, average encoding time 74.094 ms, average decoding time 84.985 ms.
+encoding/decoding 96 frames, average encoding time 74.370 ms, average decoding time 84.540 ms.
+encoding/decoding 96 frames, average encoding time 73.492 ms, average decoding time 83.652 ms.
+encoding/decoding 96 frames, average encoding time 72.712 ms, average decoding time 84.032 ms.
+encoding/decoding 96 frames, average encoding time 72.767 ms, average decoding time 81.792 ms.
+encoding/decoding 96 frames, average encoding time 73.246 ms, average decoding time 83.007 ms.
+encoding/decoding 96 frames, average encoding time 73.442 ms, average decoding time 83.770 ms.
+encoding/decoding 96 frames, average encoding time 73.687 ms, average decoding time 84.383 ms.
+encoding/decoding 96 frames, average encoding time 73.487 ms, average decoding time 84.883 ms.
+encoding/decoding 96 frames, average encoding time 75.259 ms, average decoding time 86.317 ms.
+encoding/decoding 96 frames, average encoding time 74.127 ms, average decoding time 86.327 ms.
+encoding/decoding 96 frames, average encoding time 74.414 ms, average decoding time 86.458 ms.
+encoding/decoding 96 frames, average encoding time 75.215 ms, average decoding time 85.887 ms.
+encoding/decoding 96 frames, average encoding time 73.760 ms, average decoding time 86.119 ms.
+encoding/decoding 96 frames, average encoding time 75.107 ms, average decoding time 86.002 ms.
+encoding/decoding 96 frames, average encoding time 74.042 ms, average decoding time 85.342 ms.
+encoding/decoding 96 frames, average encoding time 74.545 ms, average decoding time 86.254 ms.
+encoding/decoding 96 frames, average encoding time 75.910 ms, average decoding time 86.223 ms.
+encoding/decoding 96 frames, average encoding time 72.797 ms, average decoding time 83.409 ms.
+encoding/decoding 96 frames, average encoding time 73.937 ms, average decoding time 84.600 ms.
+encoding/decoding 96 frames, average encoding time 73.427 ms, average decoding time 85.117 ms.
+encoding/decoding 96 frames, average encoding time 73.254 ms, average decoding time 84.722 ms.
+encoding/decoding 96 frames, average encoding time 74.303 ms, average decoding time 84.967 ms.
+encoding/decoding 96 frames, average encoding time 74.018 ms, average decoding time 85.148 ms.
+exit 0

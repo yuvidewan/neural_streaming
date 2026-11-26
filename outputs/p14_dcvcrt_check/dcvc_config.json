@@ -1,0 +1,115 @@
+{
+ "root_path": "C:\\dcvc_scratch\\data",
+ "test_classes": {
+  "DAVIS": {
+   "test": 1,
+   "base_path": "DAVIS",
+   "src_type": "png",
+   "sequences": {
+    "bmx-bumps": {
+     "width": 256,
+     "height": 256,
+     "frames": 90,
+     "intra_period": 30
+    },
+    "car-turn": {
+     "width": 256,
+     "height": 256,
+     "frames": 80,
+     "intra_period": 30
+    },
+    "cat-girl": {
+     "width": 256,
+     "height": 256,
+     "frames": 89,
+     "intra_period": 30
+    },
+    "cows": {
+     "width": 256,
+     "height": 256,
+     "frames": 104,
+     "intra_period": 30
+    },
+    "drift-chicane": {
+     "width": 256,
+     "height": 256,
+     "frames": 52,
+     "intra_period": 30
+    },
+    "drone": {
+     "width": 256,
+     "height": 256,
+     "frames": 91,
+     "intra_period": 30
+    },
+    "gold-fish": {
+     "width": 256,
+     "height": 256,
+     "frames": 78,
+     "intra_period": 30
+    },
+    "schoolgirls": {
+     "width": 256,
+     "height": 256,
+     "frames": 80,
+     "intra_period": 30
+    },
+    "surf": {
+     "width": 256,
+     "height": 256,
+     "frames": 55,
+     "intra_period": 30
+    }
+   }
+  },
+  "UVG": {
+   "test": 1,
+   "base_path": "UVG",
+   "src_type": "png",
+   "sequences": {
+    "Beauty": {
+     "width": 1920,
+     "height": 1072,
+     "frames": 96,
+     "intra_period": 30
+    },
+    "Bosphorus": {
+     "width": 1920,
+     "height": 1072,
+     "frames": 96,
+     "intra_period": 30
+    },
+    "HoneyBee": {
+     "width": 1920,
+     "height": 1072,
+     "frames": 96,
+     "intra_period": 30
+    },
+    "Jockey": {
+     "width": 1920,
+     "height": 1072,
+     "frames": 96,
+     "intra_period": 30
+    },
+    "ReadySetGo": {
+     "width": 1920,
+     "height": 1072,
+     "frames": 96,
+     "intra_period": 30
+    },
+    "ShakeNDry": {
+     "width": 1920,
+     "height": 1072,
+     "frames": 96,
+     "intra_period": 30
+    },
+    "YachtRide": {
+     "width": 1920,
+     "height": 1072,
+     "frames": 96,
+     "intra_period": 30
+    }
+   }
+  }
+ }
+}

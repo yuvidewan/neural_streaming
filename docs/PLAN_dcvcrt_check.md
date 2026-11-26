@@ -1,5 +1,7 @@
 # Plan: one-day check with the published DCVC-RT (fixed 2026-11-26, before any run)
 
+**Status (2026-11-26): done, GO.** Results: [`outputs/p14_dcvcrt_check/README.md`](../outputs/p14_dcvcrt_check/README.md). DCVC-RT wins 16/16 videos against every x264 arm and needs 54.5% (DAVIS) and 76.2% (UVG) fewer bits than our codec, within its own quality range, which tops out 0.9-4.1 dB below ours.
+
 ## Why
 
 The goal is to beat H.264 on every video, in real time. Today we beat x264 (normal settings,
