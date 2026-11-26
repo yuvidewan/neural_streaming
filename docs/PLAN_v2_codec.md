@@ -134,3 +134,41 @@ also undertrain fine 1080p detail. If gate 2 fails only on the ceiling condition
 on higher-resolution training video (BVI-DVC, for example) gets its own plan; it is not added to
 this one after the fact. The whole plan takes weeks, and every stage resumes from its
 checkpoints.
+
+## Amendment 1 (2026-11-26, before any code or run): the same output on every device
+
+A stream has to decode to the same frames on any machine, or the codec cannot be used outside
+the computer that made it. The current codec decodes identically only on the GPU that encoded
+it: in the second audit, decoding on the laptop's CPU matched 0 of 10 times. The cause is
+floating point. Two devices add the same numbers in different orders, the predicted scale of a
+latent value moves in its last digits, a value near a table boundary picks a different table,
+and the range decoder loses its place. Each decoded frame is also the next frame's reference, so
+small differences grow through the GOP. The original plan checked this at gate 5, after the
+compression gates. Converting a finished floating-point model to integers at the end could cost
+compression that gates 2 and 3 had already counted, so the requirement moves to the start.
+
+What changes in the design. Every part of the decoder runs in exact integer arithmetic at
+inference: the hyperprior synthesis, the prior that predicts means and scales, the temporal
+context, and the reconstruction that becomes the next frame's reference. Weights and activations
+in these parts are quantized to integers with fixed scales, sums are exact, and each rescaling
+step uses an integer multiply and a fixed rounding rule, so that the result does not depend on
+the order of the arithmetic. The table index for each latent value is computed from integers.
+The encoder may run in floating point for its analysis transform, but it rebuilds every
+reference with the same integer decoder, so the two sides stay in step. Layers are chosen to be
+integer-friendly from the start. Training runs in floating point with the integer scheme
+simulated (quantization-aware) for the last part of each stage, as in Ballé et al. (integer
+networks) and DCVC-RT. The implementation may use int8 matrix products with int32 accumulation,
+or floating-point products of small integers whose sums stay exact; either way, cuDNN algorithms
+that change the arithmetic (TF32, Winograd) are switched off in this path. The gates measure the
+outcome, not the method.
+
+What changes in the gates.
+- Gate 1 adds a report: the P-frame BD-rate cost of the simulated integer decoder against the
+  floating-point one on VAL-B. It is reported, not judged, so that the cost is known early.
+- Gate 2 adds a third condition: every gate 2 stream decodes bit-identically on two devices,
+  the laptop GPU and the laptop CPU. One mismatch fails the gate. The −25% bar is measured with
+  the integer decoder, so the integer cost gets no allowance.
+- Gate 5 changes from "report only" to a requirement before gate 6: the gate 3 streams decode
+  bit-identically on a second physical machine with a different GPU model (the RTX 3060 desktop
+  offered on 2026-11-26, or any other), as well as on its CPU.
+- Gate 4 (speed) is measured on the integer decoder, since that is the decoder people would run.
