@@ -6,7 +6,8 @@ a footnote. A requirement is added here the moment it is found, before any work 
 it.
 
 The user's choices (2026-11-26) set the targets:
-- **Decoding devices:** any PC, including PCs without a GPU.
+- **Decoding devices:** any PC with a GPU, integrated graphics included. Changed on 2026-11-26
+  from "any PC, including PCs without a GPU" after conflict C1 (below).
 - **Use:** live streaming.
 - **Content:** camera video, screen sharing and text, and animation and games.
 
@@ -15,29 +16,31 @@ Status key: **fails**, **untested**, **partial**, **met**. Measurements quoted a
 
 ## Open conflicts (decide before v2 work starts)
 
-**C1. CPU-only decoding against the v2 design.** Real-time 1080p at 30 frames/s means decoding 62
-million pixels per second. This laptop's CPU (16 threads) runs our network at about 125 billion
-multiply-adds per second, so a CPU-only decoder can spend about 2,000 multiply-adds per pixel, with
-nothing left for entropy decoding or colour conversion. Weaker PCs have less; integer (int8)
-arithmetic might give 2 to 4 times more.
+**C1. Decoder cost: resolved on 2026-11-26.** Real-time 1080p at 30 frames/s means decoding 62
+million pixels per second. This laptop's CPU runs our network at about 125 billion multiply-adds
+per second, which allows only about 2,000 multiply-adds per pixel. Our decoder is about 300 times
+over that, and DCVC-RT's (about 172,000 per pixel) about 86 times. No known trained neural video
+codec is that cheap and beats H.264, so the user widened R7 from "no GPU" to "any GPU, integrated
+graphics included".
 
-| Decoder | Multiply-adds per pixel | Against the ~2,000 budget |
-|---|---|---|
-| Ours (encoder and decoder) | about 585,000 | about 300× over (measured: 9.8 s per 1080p P-frame on the CPU) |
-| DCVC-RT, decoder only | about 172,000 | about 86× over |
+Integrated GPUs differ a lot. This laptop's own Intel UHD Graphics (the small iGPU of the HX
+chips) is close to CPU class, about 3,000 multiply-adds per pixel at 1080p30. A mainstream Intel
+Iris Xe (about 2 TFLOPS in 16-bit) allows about 10,000, and an AMD Radeon 780M about 35,000, at
+realistic efficiency. The budget is therefore fixed as:
 
-The v2 plan (`docs/PLAN_v2_codec.md`) follows DCVC-RT, so it cannot meet requirement R7 as
-written. Neural codecs with decoders near 1,000 to 3,000 multiply-adds per pixel exist (Cool-chic,
-C3), but they fit a network to each video, so encoding takes minutes per frame. That cannot work
-for live streaming. I know of no trained neural video codec at that decoding cost that beats
-H.264.
+- **The whole decoder, at most 10,000 multiply-adds per pixel** (temporal context, entropy
+  parameters and reconstruction together, per P-frame and per I-frame).
+- That gives real-time 1080p30 on an Iris Xe-class iGPU and real-time 720p30 on weaker iGPUs like
+  this laptop's UHD Graphics.
+- DCVC-RT's decoder would have to be about 17 times lighter, and ours about 40 times.
+- Measured in three ways:
+  - the exact count (PyTorch's FLOP counter);
+  - real-time frames per second at 720p on this laptop's UHD Graphics through DirectML;
+  - before any final claim, 1080p on a real Iris Xe-class or Radeon-iGPU machine (none is
+    available yet).
 
-The options are:
-- keep R7 and design an ultra-light decoder, accepting a high risk of not beating H.264;
-- widen R7 to PCs with any GPU, including integrated graphics, which raises the budget to roughly
-  10,000 to 40,000 multiply-adds per pixel depending on the chip (DCVC-RT's decoder would still
-  have to be 4 to 17 times lighter);
-- keep CPU-only decoding for lower resolutions only.
+This is a heavy constraint on compression. Whether a decoder this light can beat H.264 is the
+main research risk of v2, and the plan has to test it early.
 
 **C2. Content against training data.** Every model so far was trained on Vimeo-90K camera footage,
 and every test set is camera footage. R6 needs screen, text, animation and game content in both
@@ -56,9 +59,9 @@ ladders go down to about 0.4 Mbps at lower resolutions (R3).
 | R4 | Any frame size: 360p to 4K, landscape and portrait, sizes not divisible by 16 | encode and decode exact at each size; memory fits the target device | **fails**: crashes when a side does not divide by 16; a 4K frame needs 10.8 GiB (8 GiB card), 34 s per frame | fair eval adds padding; v2 needs tiling or a lighter model |
 | R5 | Frame rates 24 to 60 (and 120) | coded and scored at real frame rate | **partial**: 24–120 coded at 1080p; rate control missing (R11) | |
 | R6 | Content: camera video, screen sharing and text, animation and games, each with its own test set | per-category BD-rate and win counts on sets fixed before use | **fails / untested**: camera only, in training and testing | test sets to choose in a plan; v2 training data |
-| R7 | Decodes in real time on any PC, including without a GPU (at least 1080p at the stream's frame rate) | frames/s of the full decoder on a CPU-only run, on this laptop and on a weaker PC | **fails**: about 0.1 frames/s on the CPU, 2 frames/s on the GPU; see C1 | open decision |
+| R7 | Decodes in real time on any PC with a GPU, integrated graphics included: decoder at most 10,000 multiply-adds per pixel; 1080p30 on an Iris Xe-class iGPU, 720p30 on weaker iGPUs | exact multiply-add count; frames/s at 720p on this laptop's UHD Graphics (DirectML); 1080p on an Iris Xe or Radeon iGPU machine before any final claim | **fails**: decoder about 400,000 multiply-adds per pixel, 2 frames/s at 1080p on the RTX 5060, about 0.1 frames/s on the CPU | v2 amendment 2 (design re-sized) |
 | R8 | Encodes in real time on the streamer's PC (assumed: a PC with a consumer NVIDIA GPU such as an RTX 3060), with under 2 s of delay | encode frames/s and delay at 1080p | **fails**: 0.8 frames/s at 1080p | v2 gate 4 |
-| R9 | Decodes to identical frames on every device and software version | bit-identical decode on a second machine and on the CPU | **fails**: same GPU only (CPU 0 of 10) | v2 amendment 1 |
+| R9 | Decodes to identical frames on every device and software version, NVIDIA, Intel and AMD GPUs included | bit-identical decode on a second machine, on the CPU and on an integrated GPU | **fails**: same GPU only (CPU 0 of 10) | v2 amendment 1; the integer arithmetic has to give the same result through DirectML on Intel and AMD as through CUDA |
 | R10 | Handles scene cuts | the cut clips of the fair eval; an I-frame (or equivalent) at cuts | **fails**: fixed I-frame every 30 frames, never measured | fair eval measures; v2 |
 | R11 | Rate control: holds a target bitrate with a buffer limit (CBR or capped VBR) | bitrate error and buffer use on streaming clips | **fails**: five fixed quality points | v2 |
 | R12 | Damaged data is detected, and a viewer can join or resync at a random-access point at least every 2 s | checksums per frame; join a stream mid-way | **partial**: I-frames every 30 frames; no checksum | v2 |
@@ -72,4 +75,6 @@ ladders go down to about 0.4 Mbps at lower resolutions (R3).
 
 - A plan states which R-numbers it moves and how it will measure them.
 - A result is never quoted without the status of R1, R2, R7 and R9 next to it.
+- 2026-11-26: R7 widened from CPU-only to any GPU, integrated included, with a 10,000
+  multiply-add per pixel decoder budget (C1).
 - Any requirement that turns out wrong or missing is fixed here first, with the date.

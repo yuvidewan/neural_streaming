@@ -1,5 +1,13 @@
 # Plan: our second-generation codec, v2 (fixed 2026-11-26, before any code or run)
 
+> **Partly superseded (2026-11-26), read first.** `docs/REQUIREMENTS.md` R7 now caps the whole
+> decoder at 10,000 multiply-adds per pixel, so that it runs in real time on integrated graphics.
+> DCVC-RT's decoder is about 172,000 per pixel, about 17 times over. The "Model size" paragraph
+> below (about 20 M parameters, or a small variant with 192/256 channels) is void. The design
+> gets re-sized in amendment 2, written after the fair evaluation (`docs/PLAN_fair_eval.md`), and
+> that amendment also moves gates 3 and 6 to the fair protocol. No v2 code before then. Whether a
+> decoder this light can beat H.264 at all is now the first thing v2 must test.
+
 ## Why
 
 The goal is to beat H.264 on every video, in real time. The current codec
