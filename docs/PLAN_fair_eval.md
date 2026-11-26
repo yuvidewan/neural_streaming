@@ -280,3 +280,17 @@ These wait for v2, and the requirements list keeps them as "untested":
 - identical decoding on Intel and AMD GPUs (R9);
 - encoding while a game shares the GPU (R21);
 - game content (R6).
+
+## Amendment 2 (2026-11-27, before any code or run): the pilot goes first
+
+The user chose to test the biggest unknown before the long runs. Can a decoder within R7's 10,000
+multiply-adds per pixel get near H.264? That is `docs/PLAN_budget_pilot.md`. Nothing in this plan's
+protocol, checks or proofs changes. Only the order does:
+
+1. Build this plan's tooling: the YUV pipeline, the anchors, the metrics, PCHIP BD-rate, padding,
+   and their tests. Proofs 1, 2, 3 and 5 run here.
+2. Run the pilot (its own plan): the development set, its anchors, training capped at 72 GPU
+   hours, then its verdict.
+3. Then the runs of this plan, whatever the pilot's verdict: the downloads, the anchors, our codec
+   on UVG and MCL-JCV, amendment 1's checks, and the report. The honest numbers for the README and
+   the paper are needed either way.
