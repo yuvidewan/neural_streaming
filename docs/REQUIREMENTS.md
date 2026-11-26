@@ -80,6 +80,10 @@ ladders go down to about 0.4 Mbps at lower resolutions (R3).
 
 - A plan states which R-numbers it moves and how it will measure them.
 - A result is never quoted without the status of R1, R2, R7 and R9 next to it.
+- **Stop rule (the user, 2026-11-27):** the moment any evidence suggests the current plan cannot
+  reach these requirements (a budget conflict, a result far off the needed trend, literature
+  showing nobody has done it), work on that plan stops right there, and the plan is changed
+  together with the user before anything else runs.
 - 2026-11-26: R18 to R22 added after thinking through live streaming from capture to the
   viewer's screen (playback, timing, damaged streams, a shared GPU, model versions).
 - 2026-11-26: R7 widened from CPU-only to any GPU, integrated included, with a 10,000
