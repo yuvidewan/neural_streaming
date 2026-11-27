@@ -150,3 +150,34 @@ These stay open in the requirements list.
 
 That is about five days in all. The long runs of the fair evaluation (the current codec on UVG,
 MCL-JCV, the ladder, animation and screen clips) come after the verdict, whatever it is.
+
+## Amendment 1 (2026-11-28, after the code and before any data or result)
+
+The code is written and tested. These choices were left open by the plan and are fixed here,
+from the MAC budget and measured speed only:
+
+- **Layer widths** (`configs/pilot_budget.json`): 96 feature channels at 1/8, a 128-channel
+  latent at 1/16, a 64-channel hyperprior at 1/64, 8 synthesis blocks, 2 context blocks, 6
+  encoder blocks of 160 channels. Counted by `tests/test_pilot_budget.py`: the decoder is
+  **9,029 MAC per pixel** for an I-frame and for a P-frame (limit 10,000), the encoder 20,357
+  (limit 60,000). 2.24 million parameters.
+- **Rates:** 64 levels, λ log-spaced from 0.0625 down to 1/8192 in the repository's
+  MSE + λ·bpp form. Our current codec spans 1e-2 to 1e-4, so the pilot reaches lower rates for
+  the streaming band and about the same top quality.
+- **Entropy model:** Laplace, the current codec's range coder and tables, so the rate check
+  uses real code that already ships.
+- **Points scored:** levels 0, 9, 18, 27, 36, 45, 54 and 63. The rate check uses CityAlley at
+  levels 18 and 45.
+- **Training data:** Vimeo-90K chunks 4 and 5 (8.70 and 8.86 GiB).
+- **Schedule** (`configs/pilot_schedule.json`), from measured speed on random data (stage 1:
+  52,600 steps per hour at batch 16; stage 2: 38,200 at batch 8):
+  - chunk 4, stage 1 (I-frame and one P-frame), batch 16, 22 hours;
+  - chunk 5, stage 1, batch 16, 22 hours;
+  - chunk 5, stage 2 (I-frame and three P-frames on the model's own decoded features), batch 8,
+    24 hours, learning rate 1e-4 cut to 1e-5 for the last 6 hours.
+
+  That is 68 GPU hours, under the 72-hour cap. Chunk 4 is deleted after its phase, chunk 5
+  after the last one.
+- **Speed** on the RTX 5060 is measured for the decoder networks in fp16 at 1088x1920. The
+  720p DirectML number on the Intel UHD Graphics needs the `onnxruntime-directml` package,
+  which is asked for separately before that step. Its absence does not change the verdict.

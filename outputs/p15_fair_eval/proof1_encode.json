@@ -1,0 +1,16 @@
+{
+ "1e-2": {
+  "old_bytes": 667755,
+  "new_bytes": 667755,
+  "byte_identical": true,
+  "same_reconstruction": true,
+  "encoder_hash": "3dfe3cfcc9f9cbdf19e9c829a6ea9d1412baadf9c18be4d07411c1fe8c6e6f3d"
+ },
+ "1e-4": {
+  "old_bytes": 24412449,
+  "new_bytes": 24412449,
+  "byte_identical": true,
+  "same_reconstruction": true,
+  "encoder_hash": "71baed9f8db9b6239fdfb6a8055bb82a67fb78dadfefc96bec711dfd3a44afb9"
+ }
+}

@@ -1,0 +1,8 @@
+{
+ "1e-2": {
+  "decode_exact": true
+ },
+ "1e-4": {
+  "decode_exact": true
+ }
+}

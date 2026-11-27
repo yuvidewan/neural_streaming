@@ -26,6 +26,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import struct
 import sys
 import tempfile
@@ -183,6 +184,27 @@ def gray(frame: torch.Tensor) -> torch.Tensor:
     return torch.full_like(frame, p4.GRAY)
 
 
+# docs/PLAN_fair_eval.md, padding: the networks need sides that divide by 16 (and motion by the
+# block size). Any other frame is padded at the right and bottom by repeating its edge pixels,
+# coded at the padded size and cropped back after decoding. The stream header records the
+# ORIGINAL size; the padded size is derived from it, so a frame that needs no padding codes
+# to exactly the same bytes as before.
+PAD_MULTIPLE = 16
+
+
+def padded_size(height: int, width: int, block_size: int = PAD_MULTIPLE) -> tuple[int, int]:
+    multiple = math.lcm(PAD_MULTIPLE, block_size)
+    return -(-height // multiple) * multiple, -(-width // multiple) * multiple
+
+
+def pad_frames(frames: torch.Tensor, block_size: int = PAD_MULTIPLE) -> torch.Tensor:
+    height, width = frames.shape[-2:]
+    target_h, target_w = padded_size(height, width, block_size)
+    if (target_h, target_w) == (height, width):
+        return frames
+    return F.pad(frames, (0, target_w - width, 0, target_h - height), mode="replicate")
+
+
 # --------------------------------------------------------------------------------------------
 # One sequence
 # --------------------------------------------------------------------------------------------
@@ -199,6 +221,8 @@ def encode_sequence(mc, m21, intra, icoder, pcoder, frames, path, rig, tables, *
     lambda_m > 0 the bit-aware search; 0 keeps the SAD-only field."""
     device = next(pcoder.parameters()).device
     count = frames.shape[0]
+    original_h, original_w = frames.shape[2], frames.shape[3]
+    frames = pad_frames(frames, block_size)
     types = mc.gop_frame_types(count, gop)
     intra_params = rig["intra_params"]
     # Wide I-frames never read the old intra quantizer, so its two blocks (1,024 B) are not
@@ -208,8 +232,8 @@ def encode_sequence(mc, m21, intra, icoder, pcoder, frames, path, rig, tables, *
     latent_shape = tuple(intra.encode(frames[0:1].to(device)).shape[1:])
     header = mc.TemporalStreamHeader(
         gop_size=gop, quantization_bits=intra_params.bits,
-        quantization_mode=intra_params.mode, image_width=frames.shape[3],
-        image_height=frames.shape[2], image_channels=frames.shape[1],
+        quantization_mode=intra_params.mode, image_width=original_w,
+        image_height=original_h, image_channels=frames.shape[1],
         latent_channels=latent_shape[0], latent_height=latent_shape[1],
         latent_width=latent_shape[2], frame_count=count,
         num_intra_quantization_params=params_count,
@@ -276,7 +300,8 @@ def encode_sequence(mc, m21, intra, icoder, pcoder, frames, path, rig, tables, *
             previous = reconstruction
             reconstructions.append(reconstruction.cpu())
     writer.close()
-    return {"reconstructions": torch.cat(reconstructions), "records": records}
+    return {"reconstructions": torch.cat(reconstructions)[..., :original_h, :original_w],
+            "records": records}
 
 
 
@@ -305,6 +330,8 @@ def encode_sequence_b(mc, intra, icoder, pcoder, bcoder, frames, path, rig, tabl
                       motion_lambda) -> dict[str, Any]:
     """docs/PLAN_bframes.md: anchors every `bframes` frames, B-frames between them coded by
     `bcoder` from a two-sided block prediction. Wide I-frames and motion_pred only."""
+    if padded_size(frames.shape[2], frames.shape[3], block_size) != tuple(frames.shape[2:]):
+        raise ValueError("B-frame coding does not pad: frame sides must divide by 16")
     device = next(pcoder.parameters()).device
     count = frames.shape[0]
     order = bf.coding_order(count, gop, bframes)
@@ -407,7 +434,9 @@ def decode_sequence(mc, m21, intra, icoder, pcoder, path, rig, tables, *, identi
         if declared[:8] != supplied[:8]:
             raise mc.TemporalFormatError(f"{label} model mismatch: stream declares "
                                          f"{declared.hex()}, supplied is {supplied.hex()}")
-    shape = (1, header.image_channels, header.image_height, header.image_width)
+    original_h, original_w = header.image_height, header.image_width
+    shape = (1, header.image_channels,
+             *padded_size(original_h, original_w, header.block_size))
     records = list(reader)
     order = bf.display_order([mc.FRAME_TYPE_NAMES[r[0]] for r in records])
     last = _last_use(order)
@@ -445,7 +474,7 @@ def decode_sequence(mc, m21, intra, icoder, pcoder, path, rig, tables, *, identi
                     mc.warp_blocks(live[refs[1]], backward, block_size=header.block_size),
                     modes, header.block_size)
                 reconstruction = decode_frame(bcoder, payload, prediction, tables)
-            outputs[t] = reconstruction.cpu()
+            outputs[t] = reconstruction.cpu()[..., :original_h, :original_w]
             if last.get(t, -1) > position:
                 live[t] = reconstruction
             for r in refs:

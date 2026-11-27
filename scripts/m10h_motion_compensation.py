@@ -534,7 +534,10 @@ class TemporalStreamHeader:
 
     @property
     def block_grid(self) -> tuple[int, int]:
-        return (self.image_height // self.block_size, self.image_width // self.block_size)
+        # Ceiling: a frame whose sides do not divide by the block size is coded padded
+        # (p4_gate3.pad_frames); for sides that divide, this is the old floor exactly.
+        return (-(-self.image_height // self.block_size),
+                -(-self.image_width // self.block_size))
 
     def pack(self) -> bytes:
         return _HEADER_STRUCT.pack(

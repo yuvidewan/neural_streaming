@@ -1,0 +1,13 @@
+{
+  "_comment": "docs/PLAN_budget_pilot.md amendment 1: the training schedule, fixed from measured throughput on random data before any data or result. 68 GPU hours of training, under the 72-hour cap. Chunk slots 0 and 1 are Vimeo-90K chunks 4 and 5.",
+  "seed": 0,
+  "crop": 256,
+  "lr": 0.0001,
+  "lr_final_factor": 0.1,
+  "checkpoint_minutes": 30,
+  "phases": [
+    {"chunk_slot": 0, "stage": 1, "batch": 16, "hours": 22},
+    {"chunk_slot": 1, "stage": 1, "batch": 16, "hours": 22},
+    {"chunk_slot": 1, "stage": 2, "batch": 8, "hours": 24, "decay_after_hours": 18}
+  ]
+}
