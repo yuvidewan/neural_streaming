@@ -181,3 +181,21 @@ from the MAC budget and measured speed only:
 - **Speed** on the RTX 5060 is measured for the decoder networks in fp16 at 1088x1920. The
   720p DirectML number on the Intel UHD Graphics needs the `onnxruntime-directml` package,
   which is asked for separately before that step. Its absence does not change the verdict.
+
+## Amendment 2 (2026-11-28, before any training step or result)
+
+The user asked why only two Vimeo chunks. Two was too few. Each chunk holds about 9,000 clips,
+and stage 1 shows the model about 840,000 clips per training hour (52,600 steps of 16), so each clip would
+have been seen about 2,000 times per chunk. A pilot short of data would score worse than its
+design can do and push the verdict toward GRAY or STOP for the wrong reason. In this project
+more data has helped before: the P-frame coder went from +91.1% to +77.8% against x264 mostly by
+training on more chunks.
+
+So the "at most 2 chunks" line above is replaced by six chunks, 4 to 9, with the same 68 GPU
+hours and the same 72-hour cap:
+- chunks 4, 5, 6, 7 and 8: stage 1, batch 16, 8.8 hours each;
+- chunk 9: stage 2, batch 8, 24 hours, learning rate cut to 1e-5 for the last 6 hours.
+
+Each chunk is downloaded when its phase starts and deleted when it ends, so only one is on disk
+at a time. The chunk list now lives in `configs/pilot_schedule.json`. Nothing else changes: the
+model, the levels, the development set and the verdict lines are as fixed above.

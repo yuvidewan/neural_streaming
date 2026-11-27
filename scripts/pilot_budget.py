@@ -4,9 +4,9 @@
         Decoder and encoder MAC per pixel at 1920x1088, I and P (the budget test's numbers).
     pilot_budget.py bench [--stage 1|2] [--batch N]
         Training steps per second on random data (to size the schedule, before any data).
-    pilot_budget.py train --out DIR --chunks A B [--scratch-dir DIR]
-        The fixed schedule in configs/pilot_schedule.json: phases of (chunk, stage, GPU hours),
-        72 GPU hours at most. Resumes from DIR/latest.pt. Each Vimeo chunk is downloaded when
+    pilot_budget.py train --out DIR [--chunks ...] [--scratch-dir DIR]
+        The fixed schedule in configs/pilot_schedule.json: its Vimeo chunks and phases of
+        (chunk slot, stage, GPU hours), 72 GPU hours at most. Resumes from DIR/latest.pt. Each Vimeo chunk is downloaded when
         its first phase starts and deleted after its last.
     pilot_budget.py eval --checkpoint C --manifest M --out R.json
         The development set under the fair protocol: GOP 30, P-only, RGB in and out, scored in
@@ -141,6 +141,10 @@ def cmd_train(args) -> int:
     import p1_pframe as p1
     chunks_mod = p1._load_script("train_vimeo_qat_combined")
     schedule = load_schedule()
+    chunks = args.chunks or schedule["chunks"]
+    slots = {p["chunk_slot"] for p in schedule["phases"]}
+    if max(slots) >= len(chunks):
+        raise SystemExit(f"schedule uses chunk slots {sorted(slots)}, only {len(chunks)} chunks")
     device = torch.device("cuda")
     torch.manual_seed(schedule.get("seed", 0))
     out = Path(args.out)
@@ -156,7 +160,7 @@ def cmd_train(args) -> int:
         state = saved["state"]
         print(f"[resume] phase {state['phase']}, {state['phase_seconds'] / 3600:.2f} h into it, "
               f"step {state['step']}", flush=True)
-    write_json(out / "schedule_used.json", {"schedule": schedule, "chunks": args.chunks,
+    write_json(out / "schedule_used.json", {"schedule": schedule, "chunks": chunks,
                                             "config": model.config})
     phases = schedule["phases"]
     last_use = {p["chunk_slot"]: i for i, p in enumerate(phases)}
@@ -174,7 +178,7 @@ def cmd_train(args) -> int:
 
     while state["phase"] < len(phases):
         phase = phases[state["phase"]]
-        chunk = args.chunks[phase["chunk_slot"]]
+        chunk = chunks[phase["chunk_slot"]]
         scratch = Path(args.scratch_dir) / f"chunk_{chunk}"
         root = next((p.parent.parent.parent for p in scratch.rglob("im1.png")), None) \
             if scratch.is_dir() else None
@@ -455,7 +459,8 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(func=cmd_bench)
     p = sub.add_parser("train")
     p.add_argument("--out", type=Path, required=True)
-    p.add_argument("--chunks", type=int, nargs="+", required=True)
+    p.add_argument("--chunks", type=int, nargs="+", default=None,
+                   help="override the schedule's chunk list (default: configs/pilot_schedule.json)")
     p.add_argument("--scratch-dir", type=Path, default=Path("C:/vimeo_scratch"))
     p.add_argument("--num-workers", type=int, default=4)
     p.add_argument("--log-every", type=int, default=500)

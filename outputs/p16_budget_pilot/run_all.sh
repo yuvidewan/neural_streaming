@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # docs/PLAN_budget_pilot.md, the whole chain, one heavy job at a time. Every step resumes.
 # Downloads (approved by the user before this runs): the 4 UVG 4K archives (10.88 GiB, deleted
-# once their frames are out) and Vimeo-90K chunks 4 and 5 (8.70 + 8.86 GiB, each deleted after
-# its last training phase).
+# once their frames are out) and Vimeo-90K chunks 4 to 9 (about 50 GiB, one at a time, each
+# deleted after its training phase; the list is in configs/pilot_schedule.json).
 cd "$(dirname "$0")/../.."
 set -uo pipefail
 export PYTHONIOENCODING=utf-8
@@ -49,7 +49,7 @@ log "budget test passed"
 
 # 4. Training: the fixed schedule, 72 GPU hours at most (configs/pilot_schedule.json).
 if [ ! -f $T/model.pt ]; then
-  $PY -u scripts/pilot_budget.py train --out $T --chunks 4 5 --scratch-dir $S/vimeo >> $O/train.log 2>&1 \
+  $PY -u scripts/pilot_budget.py train --out $T --scratch-dir $S/vimeo >> $O/train.log 2>&1 \
     || stop "training failed (it resumes from $T/latest.pt on a rerun)"
 fi
 log "training done"
